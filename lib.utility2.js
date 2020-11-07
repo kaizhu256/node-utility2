@@ -127,7 +127,7 @@
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -181,19 +181,20 @@
         });
     }
     // init local
-    local = {};
-    local.local = local;
+    local = {
+        assertJsonEqual,
+        assertOrThrow,
+        coalesce,
+        identity,
+        isBrowser,
+        isWebWorker,
+        local,
+        noop,
+        objectAssignDefault,
+        objectDeepCopyWithKeysSorted,
+        onErrorThrow
+    };
     globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.nop = nop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
-    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -372,7 +373,7 @@ local.assetsDict["/assets.utility2.header.js"] = '\
      */\n\
         return val;\n\
     }\n\
-    function nop() {\n\
+    function noop() {\n\
     /*\n\
      * this function will do nothing\n\
      */\n\
@@ -426,19 +427,20 @@ local.assetsDict["/assets.utility2.header.js"] = '\
         });\n\
     }\n\
     // init local\n\
-    local = {};\n\
-    local.local = local;\n\
+    local = {\n\
+        assertJsonEqual,\n\
+        assertOrThrow,\n\
+        coalesce,\n\
+        identity,\n\
+        isBrowser,\n\
+        isWebWorker,\n\
+        local,\n\
+        noop,\n\
+        objectAssignDefault,\n\
+        objectDeepCopyWithKeysSorted,\n\
+        onErrorThrow\n\
+    };\n\
     globalThis.globalLocal = local;\n\
-    local.assertJsonEqual = assertJsonEqual;\n\
-    local.assertOrThrow = assertOrThrow;\n\
-    local.coalesce = coalesce;\n\
-    local.identity = identity;\n\
-    local.isBrowser = isBrowser;\n\
-    local.isWebWorker = isWebWorker;\n\
-    local.nop = nop;\n\
-    local.objectAssignDefault = objectAssignDefault;\n\
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;\n\
-    local.onErrorThrow = onErrorThrow;\n\
 }());\n\
 // assets.utility2.header.js - end\n\
 '
@@ -768,7 +770,7 @@ pre {\n\
         evt.targetOnEvent = evt.target.closest("[data-onevent]");\n\
         if (\n\
             !evt.targetOnEvent\n\
-            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNoop"\n\
             || evt.target.closest(".disabled,.readonly")\n\
         ) {\n\
             return;\n\
@@ -1760,21 +1762,21 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         let exports;
         let mockDict;
         let mockList;
-        let nop;
-        nop = function () {
+        let noop;
+        noop = function () {
         /*
          * this function will do nothing
          */
             return;
         };
         // coverage-hack
-        nop();
+        noop();
         mockList = [
             [
                 globalThis, {
-                    setImmediate: nop,
-                    setInterval: nop,
-                    setTimeout: nop
+                    setImmediate: noop,
+                    setInterval: noop,
+                    setTimeout: noop
                 }
             ]
         ];
@@ -1805,7 +1807,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             require("vm"),
             {
                 // coverage-hack
-                "__zjqx1234__": nop
+                "__zjqx1234__": noop
             }
         ].forEach(function (dict) {
             mockDict = {};
@@ -1816,7 +1818,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
                     // coverage-hack
                     || key === "__zjqx1234__"
                 )) {
-                    mockDict[key] = nop;
+                    mockDict[key] = noop;
                 }
             });
             mockList.push([
@@ -1839,7 +1841,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
     local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", local.apidocCreate(
         Object.assign({
             blacklistDict: local,
-            modeNop: (
+            modeNoop: (
                 process.env.npm_config_mode_test_case
                 !== "testCase_buildApidoc_default"
             ),
@@ -2167,11 +2169,11 @@ local.ajax = function (opt, onError) {
                 type: "abort"
             });
         };
-        xhr.addEventListener = local.nop;
-        xhr.open = local.nop;
+        xhr.addEventListener = local.noop;
+        xhr.open = local.noop;
         xhr.reqStream = xhr;
         xhr.send = xhr.end;
-        xhr.setRequestHeader = local.nop;
+        xhr.setRequestHeader = local.noop;
         xhr.on("error", onEvent);
     }
     // init xhr
@@ -3739,7 +3741,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         "assertOrThrow",
         "coalesce",
         "identity",
-        "nop",
+        "noop",
         "objectAssignDefault",
         "objectDeepCopyWithKeysSorted",
         "onErrorThrow"
@@ -4126,8 +4128,8 @@ local.onParallel = function (onError, onEach, onRetry) {
  */
     let onParallel;
     onError = local.onErrorWithStack(onError);
-    onEach = onEach || local.nop;
-    onRetry = onRetry || local.nop;
+    onEach = onEach || local.noop;
+    onRetry = onRetry || local.noop;
     onParallel = function (err, data) {
         if (onRetry(err, data)) {
             return;
@@ -4373,7 +4375,7 @@ local.requireReadme = function () {
     env = (typeof process === "object" && process && process.env) || {};
     // library-mode
     if (env.npm_config_mode_lib) {
-        local.testRunDefault = local.nop;
+        local.testRunDefault = local.noop;
         return local;
     }
     // init module.exports
@@ -5233,11 +5235,11 @@ local.templateRenderMyApp = function (template) {
     return template;
 };
 
-local.testCase_nop_default = function (opt, onError) {
+local.testCase_noop_default = function (opt, onError) {
 /*
- * this function will test nop's default handling-behavior
+ * this function will test noop's default handling-behavior
  */
-    local.nop();
+    local.noop();
     onError(undefined, opt);
 };
 
@@ -5264,8 +5266,8 @@ local.testMock = function (mockList, onTestCase, onError) {
         console, {}
     ]);
     local.objectAssignDefault(mockList[0][1], {
-        error: local.nop,
-        log: local.nop
+        error: local.noop,
+        log: local.noop
     });
     // mock mock[0]
     mockList.forEach(function (mock) {
@@ -6002,7 +6004,7 @@ local.uiAnimateSlideDown = function (elem, onError) {
 /*
  * this function will slideDown dom-<elem>
  */
-    onError = onError || local.nop;
+    onError = onError || local.noop;
     if (!(
         elem
         && elem.style && elem.style.maxHeight !== "100%"
@@ -6150,7 +6152,7 @@ local.urlParse = function (url) {
         urlParsed.basename = urlParsed.pathname.replace((
             /^.*\//
         ), "");
-    }, local.nop);
+    }, local.noop);
     // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
     return {
         basename: urlParsed.basename || "",
@@ -6296,7 +6298,7 @@ if (local.isBrowser) {
         // try to JSON.parse string
         local.tryCatchOnError(function () {
             local[key] = JSON.parse(match0);
-        }, local.nop);
+        }, local.noop);
     });
 } else {
     local.timeoutDefault = local.env.npm_config_timeout_default;
@@ -6335,7 +6337,7 @@ globalThis.utility2_onReadyBefore = (
         local.eventListenerEmit("utility2_onReadyAfter", err);
     })
 );
-globalThis.utility2_onReadyAfter(local.nop);
+globalThis.utility2_onReadyAfter(local.noop);
 }());
 
 

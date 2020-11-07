@@ -1,4 +1,23 @@
 #!/usr/bin/env node
+
+
+// vim
+// ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+// ,$s/\(([^()]*)\) => {/function \1 {/gc
+/*
+        let that = this;
+*/
+// ,$s/\(\w\w*\) => {/function (\1) {/gc
+// ,$s/\<this\>/that/gc
+// ,$s/\(\w\w*\) => \(.*\)\([,)]\)/function (\1) { return \2; }\3/gc
+// ,$s/\(\w\w*\) => \([^)]*\)\([,)]\)/function (\1) { return \2; }\3/gc
+// ,$s/\(\w\w*\) => \([^,]*\)\([,)]\)/function (\1) { return \2; }\3/gc
+// ,$s/\<\(if\|else\) .*[^{]$/& {/gc
+// ,$s/^\( *\)\(\<\(if\|else\) .*[^{]\)\(\n.*\)/\1\2 {\4\r\1}/gc
+// ,$s/^\( *\)\(\<else\)\(\n.*\)/\1\2 {\3\r\1}/gc
+// ,$s/^\( *\)\<for (\(\w\w* \)*\(\w\w*\) of \(\w\S*\))\(\n.*\)/\1\4.forEach(function (\3) {\5\r\1});/gc // jslint ignore:line
+
+
 /*
  * lib.puppeteer.js (2019.8.12)
  * https://github.com/kaizhu256/node-puppeteer-lite
@@ -127,7 +146,7 @@
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -181,19 +200,20 @@
         });
     }
     // init local
-    local = {};
-    local.local = local;
+    local = {
+        assertJsonEqual,
+        assertOrThrow,
+        coalesce,
+        identity,
+        isBrowser,
+        isWebWorker,
+        local,
+        noop,
+        objectAssignDefault,
+        objectDeepCopyWithKeysSorted,
+        onErrorThrow
+    };
     globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.nop = nop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
-    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -390,11 +410,11 @@ local.cliRun = function (opt) {
 if (local.isBrowser) {
     return;
 }
-let BUFFER0;
-BUFFER0 = Buffer.alloc(0);
+//!! let BUFFER0;
+//!! BUFFER0 = Buffer.alloc(0);
 /* jslint ignore:start */
 const debugError = console.error;
-const debugProtocol = function () {
+function debugProtocol() {
     return;
 }
 const mime = {
@@ -537,7 +557,7 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
   * @public
   */
 function _mask(source, mask, output, offset, length) {
-    for (var ii = 0; ii < length; ii++) {
+    for (var ii = 0; ii < length; ii += 1) {
         output[offset + ii] = source[ii] ^ mask[ii & 3];
     }
 }
@@ -547,8 +567,11 @@ try {
     exports_websockets_ws_lib_buffer_util = {
         concat,
         mask(source, mask, output, offset, length) {
-            if (length < 48) _mask(source, mask, output, offset, length);
-            else bu.mask(source, mask, output, offset, length);
+            if (length < 48) {
+                _mask(source, mask, output, offset, length);
+            } else {
+                bu.mask(source, mask, output, offset, length);
+            }
         },
     };
 } catch (e) /* istanbul ignore next */ {
@@ -666,7 +689,9 @@ const EventTarget = {
       * @public
       */
     addEventListener(method, listener) {
-        if (typeof listener !== "function") return;
+        if (typeof listener !== "function") {
+            return;
+        }
         function onMessage(data) {
             listener.call(this, new MessageEvent(data, this));
         }
@@ -704,7 +729,7 @@ const EventTarget = {
       */
     removeEventListener(method, listener) {
         const listeners = this.listeners(method);
-        for (var ii = 0; ii < listeners.length; ii++) {
+        for (var ii = 0; ii < listeners.length; ii += 1) {
             if (listeners[ii] === listener || listeners[ii]._listener === listener) {
                 this.removeListener(method, listeners[ii]);
             }
@@ -723,7 +748,7 @@ function Socket2(socket) {
 /**
   * HyBi Sender implementation.
   */
-    let ERR_PAYLOADMAX;
+    let ERR_PAYLOAD_LENGTH;
     let READ_HEADER;
     let READ_LENGTH16;
     let READ_LENGTH63;
@@ -739,6 +764,7 @@ function Socket2(socket) {
         let header;
         let maskKey;
         let result;
+        // console.error("SEND ► " + payload.toString());
         // init header
         header = Buffer.alloc(2 + 8 + 4);
         // init fin = true
@@ -748,7 +774,6 @@ function Socket2(socket) {
         // init mask = true
         header[1] |= 0x80;
         // init payloadLength
-        payload = Buffer.from(payload);
         if (payload.length < 126) {
             header = header.slice(0, 2 + 0 + 4);
             header[1] |= payload.length;
@@ -799,6 +824,17 @@ function Socket2(socket) {
             }
         }
         return result;
+    }
+    function cdpSend(method, params = {}, sessionId = undefined) {
+        let id;
+        id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
+        that.write(Buffer.from(JSON.stringify({
+            id,
+            method,
+            params,
+            sessionId
+        })));
+        return id;
     }
     function frameRead() {
     /*
@@ -898,7 +934,10 @@ function Socket2(socket) {
             that.push(buf);
             break;
         }
-        local.assertOrThrow(payloadLength <= 256 * 1024 * 1024, ERR_PAYLOADMAX);
+        local.assertOrThrow(
+            0 <= payloadLength && payloadLength <= 256 * 1024 * 1024,
+            ERR_PAYLOAD_LENGTH
+        );
         return true;
     }
     // init that
@@ -906,6 +945,7 @@ function Socket2(socket) {
     require("stream").Duplex.call(that);
     that._read2 = _read;
     that._write2 = _write;
+    that.cdpSend = cdpSend;
     // init Reader
     function Reader() {
         require("stream").Transform.call(this);
@@ -928,7 +968,9 @@ function Socket2(socket) {
         }
     };
     // pipe Reader
-    ERR_PAYLOADMAX = new RangeError("Max payload size exceeded");
+    ERR_PAYLOAD_LENGTH = new RangeError(
+        "payload-length must be between 0 and 256 MiB"
+    );
     READ_HEADER = 0;
     READ_LENGTH16 = 1;
     READ_LENGTH63 = 2;
@@ -964,8 +1006,8 @@ function WebSocket(address) {
       * @param {Object} options Connection options
       */
     let cryptoKey;
+    let sck2;
     let ws2;
-    let wsSend;
     ws2 = this;
     require("stream").EventEmitter.call(ws2);
     function close() {
@@ -1021,43 +1063,8 @@ function WebSocket(address) {
         ws2.readyState = WebSocket.CLOSED;
         ws2.emit("close");
     }
-    function send(data, options, cb) {
-/**
-  * Send a data message.
-  *
-  * @param {*} data The message to send
-  * @param {Object} options Options object
-  * @param {Boolean} options.binary Specifies whether `data` is binary or text
-  * @param {Boolean} options.fin Specifies whether the fragment is the last one
-  * @param {Function} cb Callback which is executed when data is written out
-  * @public
-  */
-        if (typeof options === "function") {
-            cb = options;
-            options = {};
-        }
-        if (ws2.readyState !== WebSocket.OPEN) {
-            const err = new Error(
-                "WebSocket is not open: readyState " + ws2.readyState + "("
-                + Array.from([
-                    "CONNECTING", "OPEN", "CLOSING", "CLOSED"
-                ])[ws2.readyState] + ")"
-            );
-            if (cb) {
-                return cb(err);
-            }
-            throw err;
-        }
-        if (typeof data === "number") {
-            data = data.toString();
-        }
-        wsSend.write(data || BUFFER0, cb);
-    }
-    //!! ws2 = this;
-    //!! require("stream").Transform.call(ws2);
     ws2.close = close;
     ws2.emitClose = emitClose;
-    ws2.send = send;
     ws2.readyState = WebSocket.CONNECTING;
     ws2.protocol = "";
     // initAsClient
@@ -1086,10 +1093,8 @@ function WebSocket(address) {
             ws2.readyState = WebSocket.CLOSING;
             socket.end();
         }
-        wsSend = new Socket2(socket); // jslint ignore:line
-        wsSend.on("data", function (payload) {
-            ws2.emit("message", payload.toString());
-        });
+        sck2 = new Socket2(socket); // jslint ignore:line
+        ws2.sck2 = sck2;
         ws2.emit("upgrade", res);
         // The user may have closed the connection from a listener
         // of the `upgrade` event.
@@ -1136,7 +1141,7 @@ function WebSocket(address) {
         });
         socket.on("end", socketOnEnd);
         socket.once("error", function () {
-            socket.on("error", local.nop);
+            socket.on("error", local.noop);
             ws2.readyState = WebSocket.CLOSING;
             socket.destroy();
         });
@@ -1305,8 +1310,9 @@ class Helper {
     static valueFromRemoteObject(remoteObject) {
         assert(!remoteObject.objectId, "Cannot extract value when objectId is given");
         if (remoteObject.unserializableValue) {
-            if (remoteObject.type === "bigint" && typeof BigInt !== "undefined")
+            if (remoteObject.type === "bigint" && typeof BigInt !== "undefined") {
                 return BigInt(remoteObject.unserializableValue.replace("n", ""));
+            }
             switch (remoteObject.unserializableValue) {
                 case "-0":
                     return -0;
@@ -1327,9 +1333,12 @@ class Helper {
       * @param {!Protocol.Runtime.RemoteObject} remoteObject
       */
     static async releaseObject(client, remoteObject) {
-        if (!remoteObject.objectId)
+        if (!remoteObject.objectId) {
             return;
-        await client.send("Runtime.releaseObject", {objectId: remoteObject.objectId}).catch(error => {
+        }
+        await client.cdpSend3("Runtime.releaseObject", {
+            objectId: remoteObject.objectId
+        }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
             // Swallow these since they are harmless and we don't leak anything in this case.
             debugError(error);
@@ -1341,16 +1350,18 @@ class Helper {
     static installAsyncStackHooks(classType) {
         for (const methodName of Reflect.ownKeys(classType.prototype)) {
             const method = Reflect.get(classType.prototype, methodName);
-            if (methodName === "constructor" || typeof methodName !== "string" || methodName.startsWith("_") || typeof method !== "function" || method.constructor.name !== "AsyncFunction")
+            if (methodName === "constructor" || typeof methodName !== "string" || methodName.startsWith("_") || typeof method !== "function" || method.constructor.name !== "AsyncFunction") {
                 continue;
+            }
             Reflect.set(classType.prototype, methodName, function(...args) {
                 const syncStack = {};
                 Error.captureStackTrace(syncStack);
-                return method.call(this, ...args).catch(e => {
+                return method.call(this, ...args).catch(function (e) {
                     const stack = syncStack.stack.substring(syncStack.stack.indexOf("\n") + 1);
                     const clientStack = stack.substring(stack.indexOf("\n"));
-                    if (e instanceof Error && e.stack && !e.stack.includes(clientStack))
+                    if (e instanceof Error && e.stack && !e.stack.includes(clientStack)) {
                         e.stack += "\n  -- ASYNC --\n" + stack;
+                    }
                     throw e;
                 });
             });
@@ -1370,8 +1381,9 @@ class Helper {
       * @param {!Array<{emitter: !NodeJS.EventEmitter, eventName: (string|symbol), handler: function(?):void}>} listeners
       */
     static removeEventListeners(listeners) {
-        for (const listener of listeners)
+        listeners.forEach(function (listener) {
             listener.emitter.removeListener(listener.eventName, listener.handler);
+        });
         listeners.splice(0, listeners.length);
     }
     /**
@@ -1390,12 +1402,14 @@ class Helper {
     }
     static promisify(nodeFunction) {
         function promisified(...args) {
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 function callback(err, ...result) {
-                    if (err)
+                    if (err) {
                         return reject(err);
-                    if (result.length === 1)
+                    }
+                    if (result.length === 1) {
                         return resolve(result[0]);
+                    }
                     return resolve(result);
                 }
                 nodeFunction.call(null, ...args, callback);
@@ -1411,18 +1425,19 @@ class Helper {
       */
     static waitForEvent(emitter, eventName, predicate, timeout) {
         let eventTimeout, resolveCallback, rejectCallback;
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise(function (resolve, reject) {
             resolveCallback = resolve;
             rejectCallback = reject;
         });
-        const listener = Helper.addEventListener(emitter, eventName, event => {
-            if (!predicate(event))
+        const listener = Helper.addEventListener(emitter, eventName, function (event) {
+            if (!predicate(event)) {
                 return;
+            }
             cleanup();
             resolveCallback(event);
         });
         if (timeout) {
-            eventTimeout = setTimeout(() => {
+            eventTimeout = setTimeout(function () {
                 cleanup();
                 rejectCallback(new TimeoutError("Timeout exceeded while waiting for event"));
             }, timeout);
@@ -1443,15 +1458,17 @@ class Helper {
     static async waitWithTimeout(promise, taskName, timeout) {
         let reject;
         const timeoutError = new TimeoutError(`waiting for ${taskName} failed: timeout ${timeout}ms exceeded`);
-        const timeoutPromise = new Promise((resolve, x) => reject = x);
+        const timeoutPromise = new Promise(function (resolve, x) { return reject = x; });
         let timeoutTimer = null;
-        if (timeout)
-            timeoutTimer = setTimeout(() => reject(timeoutError), timeout);
+        if (timeout) {
+            timeoutTimer = setTimeout(function () { return reject(timeoutError); }, timeout);
+        }
         try {
             return await Promise.race([promise, timeoutPromise]);
         } finally {
-            if (timeoutTimer)
+            if (timeoutTimer) {
                 clearTimeout(timeoutTimer);
+            }
         }
     }
     /**
@@ -1463,20 +1480,23 @@ class Helper {
     static async readProtocolStream(client, handle, path) {
         let eof = false;
         let file;
-        if (path)
+        if (path) {
             file = await openAsync(path, "w");
+        }
         const bufs = [];
         while (!eof) {
-            const response = await client.send("IO.read", {handle});
+            const response = await client.cdpSend3("IO.read", {handle});
             eof = response.eof;
             const buf = Buffer.from(response.data, response.base64Encoded ? "base64" : undefined);
             bufs.push(buf);
-            if (path)
+            if (path) {
                 await writeAsync(file, buf);
+            }
         }
-        if (path)
+        if (path) {
             await closeAsync(file);
-        await client.send("IO.close", {handle});
+        }
+        await client.cdpSend3("IO.close", {handle});
         let resultBuffer = null;
         try {
             resultBuffer = Buffer.concat(bufs);
@@ -1493,8 +1513,9 @@ const closeAsync = Helper.promisify(fs.close);
   * @param {string=} message
   */
 function assert(value, message) {
-    if (!value)
+    if (!value) {
         throw new Error(message);
+    }
 }
 exports_puppeteer_puppeteer_lib_helper = {
     helper: Helper,
@@ -1537,7 +1558,7 @@ class Browser extends EventEmitter {
       */
     static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
         const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
-        await connection.send("Target.setDiscoverTargets", {discover: true});
+        await connection.cdpSend2("Target.setDiscoverTargets", {discover: true});
         return browser;
     }
     /**
@@ -1550,23 +1571,25 @@ class Browser extends EventEmitter {
       */
     constructor(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
         super();
-        this._ignoreHTTPSErrors = ignoreHTTPSErrors;
-        this._defaultViewport = defaultViewport;
-        this._process = process;
-        this._screenshotTaskQueue = new TaskQueue();
-        this._connection = connection;
-        this._closeCallback = closeCallback || new Function();
-        this._defaultContext = new BrowserContext(this._connection, this, null);
+        let that = this;
+        that._ignoreHTTPSErrors = ignoreHTTPSErrors;
+        that._defaultViewport = defaultViewport;
+        that._process = process;
+        that._screenshotTaskQueue = new TaskQueue();
+        that._connection = connection;
+        that._closeCallback = closeCallback || new Function();
+        that._defaultContext = new BrowserContext(that._connection, that, null);
         /** @type {Map<string, BrowserContext>} */
-        this._contexts = new Map();
-        for (const contextId of contextIds)
-            this._contexts.set(contextId, new BrowserContext(this._connection, this, contextId));
+        that._contexts = new Map();
+        contextIds.forEach(function (contextId) {
+            that._contexts.set(contextId, new BrowserContext(that._connection, that, contextId));
+        });
         /** @type {Map<string, Target>} */
-        this._targets = new Map();
-        this._connection.on(Events.Connection.Disconnected, () => this.emit(Events.Browser.Disconnected));
-        this._connection.on("Target.targetCreated", this._targetCreated.bind(this));
-        this._connection.on("Target.targetDestroyed", this._targetDestroyed.bind(this));
-        this._connection.on("Target.targetInfoChanged", this._targetInfoChanged.bind(this));
+        that._targets = new Map();
+        that._connection.on(Events.Connection.Disconnected, function () { return that.emit(Events.Browser.Disconnected); });
+        that._connection.on("Target.targetCreated", that._targetCreated.bind(that));
+        that._connection.on("Target.targetDestroyed", that._targetDestroyed.bind(that));
+        that._connection.on("Target.targetInfoChanged", that._targetInfoChanged.bind(that));
     }
     /**
       * @return {?Puppeteer.ChildProcess}
@@ -1578,7 +1601,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!BrowserContext>}
       */
     async createIncognitoBrowserContext() {
-        const {browserContextId} = await this._connection.send("Target.createBrowserContext");
+        const {browserContextId} = await this._connection.cdpSend2("Target.createBrowserContext");
         const context = new BrowserContext(this._connection, this, browserContextId);
         this._contexts.set(browserContextId, context);
         return context;
@@ -1599,21 +1622,22 @@ class Browser extends EventEmitter {
       * @param {?string} contextId
       */
     async _disposeContext(contextId) {
-        await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
+        await this._connection.cdpSend2("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
         this._contexts.delete(contextId);
     }
     /**
       * @param {!Protocol.Target.targetCreatedPayload} event
       */
     async _targetCreated(event) {
+        let that = this;
         const targetInfo = event.targetInfo;
         const {browserContextId} = targetInfo;
-        const context = (browserContextId && this._contexts.has(browserContextId)) ? this._contexts.get(browserContextId) : this._defaultContext;
-        const target = new Target(targetInfo, context, () => this._connection.createSession(targetInfo), this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue);
-        assert(!this._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
-        this._targets.set(event.targetInfo.targetId, target);
+        const context = (browserContextId && that._contexts.has(browserContextId)) ? that._contexts.get(browserContextId) : that._defaultContext;
+        const target = new Target(targetInfo, context, function () { return that._connection.createSession(targetInfo); }, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue);
+        assert(!that._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
+        that._targets.set(event.targetInfo.targetId, target);
         if (await target._initializedPromise) {
-            this.emit(Events.Browser.TargetCreated, target);
+            that.emit(Events.Browser.TargetCreated, target);
             context.emit(Events.BrowserContext.TargetCreated, target);
         }
     }
@@ -1661,7 +1685,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Puppeteer.Page>}
       */
     async _createPageInContext(contextId) {
-        const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+        const {targetId} = await this._connection.cdpSend2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
         const target = await this._targets.get(targetId);
         assert(await target._initializedPromise, "Failed to create target for page");
         const page = await target.page();
@@ -1671,13 +1695,13 @@ class Browser extends EventEmitter {
       * @return {!Array<!Target>}
       */
     targets() {
-        return Array.from(this._targets.values()).filter(target => target._isInitialized);
+        return Array.from(this._targets.values()).filter(function (target) { return target._isInitialized; });
     }
     /**
       * @return {!Target}
       */
     target() {
-        return this.targets().find(target => target.type() === "browser");
+        return this.targets().find(function (target) { return target.type() === "browser"; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1689,15 +1713,17 @@ class Browser extends EventEmitter {
             timeout = 30000
         } = options;
         const existingTarget = this.targets().find(predicate);
-        if (existingTarget)
+        if (existingTarget) {
             return existingTarget;
+        }
         let resolve;
-        const targetPromise = new Promise(x => resolve = x);
+        const targetPromise = new Promise(function (x) { return resolve = x; });
         this.on(Events.Browser.TargetCreated, check);
         this.on(Events.Browser.TargetChanged, check);
         try {
-            if (!timeout)
+            if (!timeout) {
                 return await targetPromise;
+            }
             return await helper.waitWithTimeout(targetPromise, "target", timeout);
         } finally {
             this.removeListener(Events.Browser.TargetCreated, check);
@@ -1707,17 +1733,18 @@ class Browser extends EventEmitter {
           * @param {!Target} target
           */
         function check(target) {
-            if (predicate(target))
+            if (predicate(target)) {
                 resolve(target);
+            }
         }
     }
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
       */
     async pages() {
-        const contextPages = await Promise.all(this.browserContexts().map(context => context.pages()));
+        const contextPages = await Promise.all(this.browserContexts().map(function (context) { return context.pages(); }));
         // Flatten array.
-        return contextPages.reduce((acc, x) => acc.concat(x), []);
+        return contextPages.reduce(function (acc, x) { return acc.concat(x); }, []);
     }
     /**
       * @return {!Promise<string>}
@@ -1750,7 +1777,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Object>}
       */
     _getVersion() {
-        return this._connection.send("Browser.getVersion");
+        return this._connection.cdpSend2("Browser.getVersion");
     }
 }
 class BrowserContext extends EventEmitter {
@@ -1769,7 +1796,8 @@ class BrowserContext extends EventEmitter {
       * @return {!Array<!Target>} target
       */
     targets() {
-        return this._browser.targets().filter(target => target.browserContext() === this);
+        let that = this;
+        return that._browser.targets().filter(function (target) { return target.browserContext() === that; });
     }
     /**
       * @param {function(!Target):boolean} predicate
@@ -1777,7 +1805,8 @@ class BrowserContext extends EventEmitter {
       * @return {!Promise<!Target>}
       */
     waitForTarget(predicate, options) {
-        return this._browser.waitForTarget(target => target.browserContext() === this && predicate(target), options);
+        let that = this;
+        return that._browser.waitForTarget(function (target) { return target.browserContext() === that && predicate(target); }, options);
     }
     /**
       * @return {!Promise<!Array<!Puppeteer.Page>>}
@@ -1785,10 +1814,10 @@ class BrowserContext extends EventEmitter {
     async pages() {
         const pages = await Promise.all(
                 this.targets()
-                        .filter(target => target.type() === "page")
-                        .map(target => target.page())
+                        .filter(function (target) { return target.type() === "page"; })
+                        .map(function (target) { return target.page(); })
         );
-        return pages.filter(page => !!page);
+        return pages.filter(function (page) { return !!page; });
     }
     /**
       * @return {boolean}
@@ -1820,16 +1849,17 @@ class BrowserContext extends EventEmitter {
             // chrome-specific permissions we have.
             ["midi-sysex", "midiSysex"],
         ]);
-        permissions = permissions.map(permission => {
+        permissions = permissions.map(function (permission) {
             const protocolPermission = webPermissionToProtocol.get(permission);
-            if (!protocolPermission)
+            if (!protocolPermission) {
                 throw new Error("Unknown permission: " + permission);
+            }
             return protocolPermission;
         });
-        await this._connection.send("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
+        await this._connection.cdpSend2("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
     }
     async clearPermissionOverrides() {
-        await this._connection.send("Browser.resetPermissions", {browserContextId: this._id || undefined});
+        await this._connection.cdpSend2("Browser.resetPermissions", {browserContextId: this._id || undefined});
     }
     /**
       * @return {!Promise<!Puppeteer.Page>}
@@ -1849,6 +1879,90 @@ class BrowserContext extends EventEmitter {
     }
 }
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
+
+
+/* jslint ignore:end */
+/*
+file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js
+*/
+/**
+  * Copyright 2019 Google Inc. All rights reserved.
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *     http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+const Events = {
+    Page: {
+        Close: "close",
+        Console: "console",
+        Dialog: "dialog",
+        DOMContentLoaded: "domcontentloaded",
+        Error: "error",
+        // Can't use just "error" due to node.js special treatment
+        // of error events.
+        // @see https://nodejs.org/api/events.html#events_error_events
+        PageError: "pageerror",
+        Request: "request",
+        Response: "response",
+        RequestFailed: "requestfailed",
+        RequestFinished: "requestfinished",
+        FrameAttached: "frameattached",
+        FrameDetached: "framedetached",
+        FrameNavigated: "framenavigated",
+        Load: "load",
+        Metrics: "metrics",
+        Popup: "popup",
+        WorkerCreated: "workercreated",
+        WorkerDestroyed: "workerdestroyed"
+    },
+    Browser: {
+        TargetCreated: "targetcreated",
+        TargetDestroyed: "targetdestroyed",
+        TargetChanged: "targetchanged",
+        Disconnected: "disconnected"
+    },
+    BrowserContext: {
+        TargetCreated: "targetcreated",
+        TargetDestroyed: "targetdestroyed",
+        TargetChanged: "targetchanged"
+    },
+    NetworkManager: {
+        Request: Symbol("Events.NetworkManager.Request"),
+        Response: Symbol("Events.NetworkManager.Response"),
+        RequestFailed: Symbol("Events.NetworkManager.RequestFailed"),
+        RequestFinished: Symbol("Events.NetworkManager.RequestFinished")
+    },
+    FrameManager: {
+        FrameAttached: Symbol("Events.FrameManager.FrameAttached"),
+        FrameNavigated: Symbol("Events.FrameManager.FrameNavigated"),
+        FrameDetached: Symbol("Events.FrameManager.FrameDetached"),
+        LifecycleEvent: Symbol("Events.FrameManager.LifecycleEvent"),
+        FrameNavigatedWithinDocument: Symbol(
+            "Events.FrameManager.FrameNavigatedWithinDocument"
+        ),
+        ExecutionContextCreated: Symbol(
+            "Events.FrameManager.ExecutionContextCreated"
+        ),
+        ExecutionContextDestroyed: Symbol(
+            "Events.FrameManager.ExecutionContextDestroyed"
+        )
+    },
+    Connection: {
+        Disconnected: Symbol("Events.Connection.Disconnected")
+    },
+    CDPSession: {
+        Disconnected: Symbol("Events.CDPSession.Disconnected")
+    }
+};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
 */
@@ -1867,205 +1981,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Connection.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-// const {assert} = exports_puppeteer_puppeteer_lib_helper;
-// const {Events} = exports_puppeteer_puppeteer_lib_Events;
-// const debugProtocol = require("debug")("puppeteer:protocol");
-// const EventEmitter = require("events");
-class Connection extends EventEmitter {
-    /**
-      * @param {string} url
-      * @param {!Puppeteer.ConnectionTransport} transport
-      * @param {number=} delay
-      */
-    constructor(url, ws, delay = 0) {
-        super();
-        this._url = url;
-        this._lastId = 0;
-        /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
-        this._callbacks = new Map();
-        this._delay = delay;
-        this._ws = ws;
-        let ws2 = this._ws;
-        ws2.addEventListener("message", event => {
-            if (this.onmessage)
-                this.onmessage.call(null, event.data);
-        });
-        ws2.addEventListener("close", event => {
-            if (this.onclose)
-                this.onclose.call(null);
-        });
-        // Silently ignore all errors - we don't know what to do with them.
-        ws2.addEventListener("error", local.nop);
-        this.onmessage = this._onMessage.bind(this);
-        this.onclose = this._onClose.bind(this);
-        /** @type {!Map<string, !CDPSession>}*/
-        this._sessions = new Map();
-        this._closed = false;
-    }
-    /**
-      * @param {!CDPSession} session
-      * @return {!Connection}
-      */
-    static fromSession(session) {
-        return session._connection;
-    }
-    /**
-      * @param {string} sessionId
-      * @return {?CDPSession}
-      */
-    session(sessionId) {
-        return this._sessions.get(sessionId) || null;
-    }
-    /**
-      * @return {string}
-      */
-    url() {
-        return this._url;
-    }
-    /**
-      * @param {string} method
-      * @param {!Object=} params
-      * @return {!Promise<?Object>}
-      */
-    send(method, params = {}) {
-        const id = this._rawSend({method, params});
-        return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
-        });
-    }
-    /**
-      * @param {*} message
-      * @return {number}
-      */
-    _rawSend(message) {
-        const id = ++this._lastId;
-        message = JSON.stringify(Object.assign({}, message, {id}));
-        debugProtocol("SEND ► " + message);
-        let ws2 = this._ws;
-        ws2.send(message);
-        return id;
-    }
-    /**
-      * @param {string} message
-      */
-    async _onMessage(message) {
-        if (this._delay)
-            await new Promise(f => setTimeout(f, this._delay));
-        debugProtocol("◀ RECV " + message);
-        const object = JSON.parse(message);
-        if (object.method === "Target.attachedToTarget") {
-            const sessionId = object.params.sessionId;
-            const session = new CDPSession(this, object.params.targetInfo.type, sessionId);
-            this._sessions.set(sessionId, session);
-        } else if (object.method === "Target.detachedFromTarget") {
-            const session = this._sessions.get(object.params.sessionId);
-            if (session) {
-                session._onClosed();
-                this._sessions.delete(object.params.sessionId);
-            }
-        }
-        if (object.sessionId) {
-            const session = this._sessions.get(object.sessionId);
-            if (session)
-                session._onMessage(object);
-        } else if (object.id) {
-            const callback = this._callbacks.get(object.id);
-            // Callbacks could be all rejected if someone has called `.dispose()`.
-            if (callback) {
-                this._callbacks.delete(object.id);
-                if (object.error)
-                    callback.reject(createProtocolError(callback.error, callback.method, object));
-                else
-                    callback.resolve(object.result);
-            }
-        } else {
-            this.emit(object.method, object.params);
-        }
-    }
-    _onClose() {
-        if (this._closed)
-            return;
-        this._closed = true;
-        this.onmessage = null;
-        this.onclose = null;
-        for (const callback of this._callbacks.values())
-            callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-        this._callbacks.clear();
-        for (const session of this._sessions.values())
-            session._onClosed();
-        this._sessions.clear();
-        this.emit(Events.Connection.Disconnected);
-    }
-    dispose() {
-        this._onClose();
-        let ws2 = this._ws;
-        ws2.close();
-    }
-    /**
-      * @param {Protocol.Target.TargetInfo} targetInfo
-      * @return {!Promise<!CDPSession>}
-      */
-    async createSession(targetInfo) {
-        const {sessionId} = await this.send("Target.attachToTarget", {targetId: targetInfo.targetId, flatten: true});
-        return this._sessions.get(sessionId);
-    }
-}
-class CDPSession extends EventEmitter {
-    /**
-      * @param {!Connection} connection
-      * @param {string} targetType
-      * @param {string} sessionId
-      */
-    constructor(connection, targetType, sessionId) {
-        super();
-        /** @type {!Map<number, {resolve: function, reject: function, error: !Error, method: string}>}*/
-        this._callbacks = new Map();
-        this._connection = connection;
-        this._targetType = targetType;
-        this._sessionId = sessionId;
-    }
-    /**
-      * @param {string} method
-      * @param {!Object=} params
-      * @return {!Promise<?Object>}
-      */
-    send(method, params = {}) {
-        if (!this._connection)
-            return Promise.reject(new Error(`Protocol error (${method}): Session closed. Most likely the ${this._targetType} has been closed.`));
-        const id = this._connection._rawSend({sessionId: this._sessionId, method, params});
-        return new Promise((resolve, reject) => {
-            this._callbacks.set(id, {resolve, reject, error: new Error(), method});
-        });
-    }
-    /**
-      * @param {{id?: number, method: string, params: Object, error: {message: string, data: any}, result?: *}} object
-      */
-    _onMessage(object) {
-        if (object.id && this._callbacks.has(object.id)) {
-            const callback = this._callbacks.get(object.id);
-            this._callbacks.delete(object.id);
-            if (object.error)
-                callback.reject(createProtocolError(callback.error, callback.method, object));
-            else
-                callback.resolve(object.result);
-        } else {
-            assert(!object.id);
-            this.emit(object.method, object.params);
-        }
-    }
-    async detach() {
-        if (!this._connection)
-            throw new Error(`Session already detached. Most likely the ${this._targetType} has been closed.`);
-        await this._connection.send("Target.detachFromTarget",  {sessionId: this._sessionId});
-    }
-    _onClosed() {
-        for (const callback of this._callbacks.values())
-            callback.reject(rewriteError(callback.error, `Protocol error (${callback.method}): Target closed.`));
-        this._callbacks.clear();
-        this._connection = null;
-        this.emit(Events.CDPSession.Disconnected);
-    }
-}
 /**
   * @param {!Error} error
   * @param {string} method
@@ -2073,20 +1988,246 @@ class CDPSession extends EventEmitter {
   * @return {!Error}
   */
 function createProtocolError(error, method, object) {
-    let message = `Protocol error (${method}): ${object.error.message}`;
-    if ("data" in object.error)
-        message += ` ${object.error.data}`;
-    return rewriteError(error, message);
-}
-/**
-  * @param {!Error} error
-  * @param {string} message
-  * @return {!Error}
-  */
-function rewriteError(error, message) {
-    error.message = message;
+    error.message = (
+        "Protocol error (" + method + "): " + object.error.message + (
+            object.error.data
+            ? " " + object.error.data
+            : ""
+        )
+    );
     return error;
 }
+/**
+  * @param {!Connection} connection
+  * @param {string} targetType
+  * @param {string} sessionId
+  */
+function CDPSession(connection, targetType, sessionId) {
+    require("stream").EventEmitter.call(this);
+    this._callbacks = new Map();
+    this._connection = connection;
+    this._targetType = targetType;
+    this._sessionId = sessionId;
+}
+require("util").inherits(CDPSession, require("stream").EventEmitter);
+/**
+  * @param {string} method
+  * @param {!Object=} params
+  * @return {!Promise<?Object>}
+  */
+CDPSession.prototype.cdpSend3 = function (method, params) {
+    let that = this;
+    let id = that._connection.sck2.cdpSend(
+        method,
+        params,
+        that._sessionId
+    );
+    return new Promise(function (resolve, reject) {
+        that._callbacks.set(id, {
+            resolve,
+            reject,
+            error: new Error(),
+            method
+        });
+    });
+};
+CDPSession.prototype._onMessage = function (object) {
+    if (object.id && this._callbacks.has(object.id)) {
+        const callback = this._callbacks.get(object.id);
+        this._callbacks.delete(object.id);
+        if (object.error) {
+            callback.reject(createProtocolError(
+                callback.error,
+                callback.method,
+                object
+            ));
+        } else {
+            callback.resolve(object.result);
+        }
+    } else {
+        local.assertOrThrow(!object.id, "missing object.id");
+        this.emit(object.method, object.params);
+    }
+};
+CDPSession.prototype.detach = async function () {
+    if (!this._connection) {
+        throw new Error(
+            "Session already detached. Most likely the "
+            + this._targetType
+            + "has been closed."
+        );
+    }
+    await this._connection.cdpSend2("Target.detachFromTarget", {
+        sessionId: this._sessionId
+    });
+};
+CDPSession.prototype._onClosed = function () {
+    this._callbacks.forEach(function (callback) {
+        callback.error.message = (
+            `Protocol error (${callback.method}): Target closed.`
+        );
+        callback.reject(callback.error);
+    });
+    this._callbacks.clear();
+    this._connection = null;
+    this.emit(Events.CDPSession.Disconnected);
+};
+/**
+  * @param {string} url
+  * @param {!Puppeteer.ConnectionTransport} transport
+  * @param {number=} delay
+  */
+function Connection(url, sck2, delay = 0) {
+    let that = this;
+    require("stream").EventEmitter.call(that);
+    that._url = url;
+    /** @type {
+     *    !Map<number,
+     *    {resolve: function, reject: function, error: !Error, method: string}>}
+     */
+    that._callbacks = new Map();
+    that._delay = delay;
+    that.sck2 = sck2.sck2;
+    that.sck2.on("data", async function (message) {
+        let session;
+        if (that._delay) {
+            await new Promise(function (f) {
+                setTimeout(f, that._delay);
+            });
+        }
+        // console.error("◀ RECV " + message);
+        const object = JSON.parse(message);
+        if (object.method === "Target.attachedToTarget") {
+            const sessionId = object.params.sessionId;
+            session = new CDPSession(
+                that,
+                object.params.targetInfo.type,
+                sessionId
+            );
+            that._sessions.set(sessionId, session);
+        } else if (object.method === "Target.detachedFromTarget") {
+            session = that._sessions.get(object.params.sessionId);
+            if (session) {
+                session._onClosed();
+                that._sessions.delete(object.params.sessionId);
+            }
+        }
+        if (object.sessionId) {
+            session = that._sessions.get(object.sessionId);
+            if (session) {
+                session._onMessage(object);
+            }
+        } else if (object.id) {
+            const callback = that._callbacks.get(object.id);
+            // Callbacks could be all rejected if someone has called
+            // `.dispose()`.
+            if (callback) {
+                that._callbacks.delete(object.id);
+                if (object.error) {
+                    callback.reject(createProtocolError(
+                        callback.error,
+                        callback.method,
+                        object
+                    ));
+                } else {
+                    callback.resolve(object.result);
+                }
+            }
+        } else {
+            that.emit(object.method, object.params);
+        }
+    });
+    //!! that.sck2.on("close", function () {
+        //!! if (that.onclose) {
+            //!! that.onclose.call(null);
+        //!! }
+    //!! });
+    //!! // Silently ignore all errors - we don't know what to do with them.
+    //!! that.sck2.on("error", local.noop);
+    that.onclose = that._onClose.bind(that);
+    /** @type {!Map<string, !CDPSession>}*/
+    that._sessions = new Map();
+    that._closed = false;
+}
+require("util").inherits(Connection, require("stream").EventEmitter);
+/**
+  * @param {!CDPSession} session
+  * @return {!Connection}
+  */
+Connection.fromSession = function (session) {
+    return session._connection;
+};
+/**
+  * @param {string} sessionId
+  * @return {?CDPSession}
+  */
+Connection.prototype.session = function (sessionId) {
+    return this._sessions.get(sessionId) || null;
+};
+/**
+  * @return {string}
+  */
+Connection.prototype.url = function () {
+    return this._url;
+};
+/**
+  * @param {string} method
+  * @param {!Object=} params
+  * @return {!Promise<?Object>}
+  */
+Connection.prototype.cdpSend2 = function (method, params = {}) {
+    let that = this;
+    let id = that.sck2.cdpSend(method, params);
+    return new Promise(function (resolve, reject) {
+        that._callbacks.set(id, {
+            resolve,
+            reject,
+            error: new Error(),
+            method
+        });
+    });
+};
+Connection.prototype._onClose = function () {
+    if (this._closed) {
+        return;
+    }
+    this._closed = true;
+    this.onmessage = null;
+    this.onclose = null;
+    this._callbacks.forEach(function (callback) {
+        callback.error.message = (
+            `Protocol error (${callback.method}): Target closed.`
+        );
+        callback.reject(callback.error);
+    });
+    this._callbacks.clear();
+    this._sessions.forEach(function (session) {
+        session._onClosed();
+    });
+    this._sessions.clear();
+    this.emit(Events.Connection.Disconnected);
+};
+Connection.prototype.dispose = function () {
+    this._onClose();
+    //!! this.sck2.close();
+};
+/**
+  * @param {Protocol.Target.TargetInfo} targetInfo
+  * @return {!Promise<!CDPSession>}
+  */
+Connection.prototype.createSession = async function (targetInfo) {
+    const {
+        sessionId
+    } = await this.cdpSend2("Target.attachToTarget", {
+        targetId: targetInfo.targetId,
+        flatten: true
+    });
+    return this._sessions.get(sessionId);
+};
+
+
+/* jslint ignore:start */
+exports_puppeteer_puppeteer_lib_Events = { Events };
 exports_puppeteer_puppeteer_lib_Connection = {Connection, CDPSession};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
@@ -2179,15 +2320,16 @@ class JSCoverage {
             helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
         ];
         await Promise.all([
-            this._client.send("Profiler.enable"),
-            this._client.send("Profiler.startPreciseCoverage", {callCount: false, detailed: true}),
-            this._client.send("Debugger.enable"),
-            this._client.send("Debugger.setSkipAllPauses", {skip: true})
+            this._client.cdpSend3("Profiler.enable"),
+            this._client.cdpSend3("Profiler.startPreciseCoverage", {callCount: false, detailed: true}),
+            this._client.cdpSend3("Debugger.enable"),
+            this._client.cdpSend3("Debugger.setSkipAllPauses", {skip: true})
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation)
+        if (!this._resetOnNavigation) {
             return;
+        }
         this._scriptURLs.clear();
         this._scriptSources.clear();
     }
@@ -2196,13 +2338,15 @@ class JSCoverage {
       */
     async _onScriptParsed(event) {
         // Ignore puppeteer-injected scripts
-        if (event.url === EVALUATION_SCRIPT_URL)
+        if (event.url === EVALUATION_SCRIPT_URL) {
             return;
+        }
         // Ignore other anonymous scripts unless the reportAnonymousScripts option is true.
-        if (!event.url && !this._reportAnonymousScripts)
+        if (!event.url && !this._reportAnonymousScripts) {
             return;
+        }
         try {
-            const response = await this._client.send("Debugger.getScriptSource", {scriptId: event.scriptId});
+            const response = await this._client.cdpSend3("Debugger.getScriptSource", {scriptId: event.scriptId});
             this._scriptURLs.set(event.scriptId, event.url);
             this._scriptSources.set(event.scriptId, response.scriptSource);
         } catch (e) {
@@ -2217,23 +2361,26 @@ class JSCoverage {
         assert(this._enabled, "JSCoverage is not enabled");
         this._enabled = false;
         const [profileResponse] = await Promise.all([
-            this._client.send("Profiler.takePreciseCoverage"),
-            this._client.send("Profiler.stopPreciseCoverage"),
-            this._client.send("Profiler.disable"),
-            this._client.send("Debugger.disable"),
+            this._client.cdpSend3("Profiler.takePreciseCoverage"),
+            this._client.cdpSend3("Profiler.stopPreciseCoverage"),
+            this._client.cdpSend3("Profiler.disable"),
+            this._client.cdpSend3("Debugger.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
         const coverage = [];
         for (const entry of profileResponse.result) {
             let url = this._scriptURLs.get(entry.scriptId);
-            if (!url && this._reportAnonymousScripts)
+            if (!url && this._reportAnonymousScripts) {
                 url = "debugger://VM" + entry.scriptId;
+            }
             const text = this._scriptSources.get(entry.scriptId);
-            if (text === undefined || url === undefined)
+            if (text === undefined || url === undefined) {
                 continue;
+            }
             const flattenRanges = [];
-            for (const func of entry.functions)
+            entry.functions.forEach(function (func) {
                 flattenRanges.push(...func.ranges);
+            });
             const ranges = convertToDisjointRanges(flattenRanges);
             coverage.push({url, ranges, text});
         }
@@ -2267,14 +2414,15 @@ class CSSCoverage {
             helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
         ];
         await Promise.all([
-            this._client.send("DOM.enable"),
-            this._client.send("CSS.enable"),
-            this._client.send("CSS.startRuleUsageTracking"),
+            this._client.cdpSend3("DOM.enable"),
+            this._client.cdpSend3("CSS.enable"),
+            this._client.cdpSend3("CSS.startRuleUsageTracking"),
         ]);
     }
     _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation)
+        if (!this._resetOnNavigation) {
             return;
+        }
         this._stylesheetURLs.clear();
         this._stylesheetSources.clear();
     }
@@ -2284,10 +2432,11 @@ class CSSCoverage {
     async _onStyleSheet(event) {
         const header = event.header;
         // Ignore anonymous scripts
-        if (!header.sourceURL)
+        if (!header.sourceURL) {
             return;
+        }
         try {
-            const response = await this._client.send("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
+            const response = await this._client.cdpSend3("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
             this._stylesheetURLs.set(header.styleSheetId, header.sourceURL);
             this._stylesheetSources.set(header.styleSheetId, response.text);
         } catch (e) {
@@ -2301,10 +2450,10 @@ class CSSCoverage {
     async stop() {
         assert(this._enabled, "CSSCoverage is not enabled");
         this._enabled = false;
-        const ruleTrackingResponse = await this._client.send("CSS.stopRuleUsageTracking");
+        const ruleTrackingResponse = await this._client.cdpSend3("CSS.stopRuleUsageTracking");
         await Promise.all([
-            this._client.send("CSS.disable"),
-            this._client.send("DOM.disable"),
+            this._client.cdpSend3("CSS.disable"),
+            this._client.cdpSend3("DOM.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
         // aggregate by styleSheetId
@@ -2342,18 +2491,21 @@ function convertToDisjointRanges(nestedRanges) {
         points.push({ offset: range.endOffset, type: 1, range });
     }
     // Sort points to form a valid parenthesis sequence.
-    points.sort((a, b) => {
+    points.sort(function (a, b) {
         // Sort with increasing offsets.
-        if (a.offset !== b.offset)
+        if (a.offset !== b.offset) {
             return a.offset - b.offset;
+        }
         // All "end" points should go before "start" points.
-        if (a.type !== b.type)
+        if (a.type !== b.type) {
             return b.type - a.type;
+        }
         const aLength = a.range.endOffset - a.range.startOffset;
         const bLength = b.range.endOffset - b.range.startOffset;
         // For two "start" points, the one with longer range goes first.
-        if (a.type === 0)
+        if (a.type === 0) {
             return bLength - aLength;
+        }
         // For two "end" points, the one with shorter range goes first.
         return aLength - bLength;
     });
@@ -2364,19 +2516,23 @@ function convertToDisjointRanges(nestedRanges) {
     for (const point of points) {
         if (hitCountStack.length && lastOffset < point.offset && hitCountStack[hitCountStack.length - 1] > 0) {
             const lastResult = results.length ? results[results.length - 1] : null;
-            if (lastResult && lastResult.end === lastOffset)
+            if (lastResult && lastResult.end === lastOffset) {
                 lastResult.end = point.offset;
-            else
+            }
+            else {
                 results.push({start: lastOffset, end: point.offset});
+            }
         }
         lastOffset = point.offset;
-        if (point.type === 0)
+        if (point.type === 0) {
             hitCountStack.push(point.range.count);
-        else
+        }
+        else {
             hitCountStack.pop();
+        }
     }
     // Filter out empty ranges.
-    return results.filter(range => range.end - range.start > 1);
+    return results.filter(function (range) { return range.end - range.start > 1; });
 }
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
@@ -2433,15 +2589,17 @@ class DOMWorld {
       * @param {?Puppeteer.ExecutionContext} context
       */
     _setContext(context) {
+        let that = this;
         if (context) {
             this._contextResolveCallback.call(null, context);
             this._contextResolveCallback = null;
-            for (const waitTask of this._waitTasks)
+            this._waitTasks.forEach(function (waitTask) {
                 waitTask.rerun();
+            });
         } else {
             this._documentPromise = null;
-            this._contextPromise = new Promise(fulfill => {
-                this._contextResolveCallback = fulfill;
+            this._contextPromise = new Promise(function (fulfill) {
+                that._contextResolveCallback = fulfill;
             });
         }
     }
@@ -2453,15 +2611,17 @@ class DOMWorld {
     }
     _detach() {
         this._detached = true;
-        for (const waitTask of this._waitTasks)
+        this._waitTasks.forEach(function (waitTask) {
             waitTask.terminate(new Error("waitForFunction failed: frame got detached."));
+        });
     }
     /**
       * @return {!Promise<!Puppeteer.ExecutionContext>}
       */
     executionContext() {
-        if (this._detached)
+        if (this._detached) {
             throw new Error(`Execution Context is not available in detached frame "${this._frame.url()}" (are you trying to evaluate?)`);
+        }
         return this._contextPromise;
     }
     /**
@@ -2541,7 +2701,7 @@ class Dialog {
     async accept(promptText) {
         assert(!this._handled, "Cannot accept dialog which is already handled!");
         this._handled = true;
-        await this._client.send("Page.handleJavaScriptDialog", {
+        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
             accept: true,
             promptText: promptText
         });
@@ -2549,7 +2709,7 @@ class Dialog {
     async dismiss() {
         assert(!this._handled, "Cannot dismiss dialog which is already handled!");
         this._handled = true;
-        await this._client.send("Page.handleJavaScriptDialog", {
+        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
             accept: false
         });
     }
@@ -2601,8 +2761,8 @@ class EmulationManager {
         const screenOrientation = viewport.isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
         const hasTouch = viewport.hasTouch || false;
         await Promise.all([
-            this._client.send("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
-            this._client.send("Emulation.setTouchEmulationEnabled", {
+            this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
+            this._client.cdpSend3("Emulation.setTouchEmulationEnabled", {
                 enabled: hasTouch
             })
         ]);
@@ -2642,81 +2802,6 @@ class TimeoutError extends CustomError {}
 exports_puppeteer_puppeteer_lib_Errors = {
     TimeoutError,
 };
-/*
-file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Events.js
-*/
-/**
-  * Copyright 2019 Google Inc. All rights reserved.
-  *
-  * Licensed under the Apache License, Version 2.0 (the "License");
-  * you may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at
-  *
-  *     http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
-const Events = {
-    Page: {
-        Close: "close",
-        Console: "console",
-        Dialog: "dialog",
-        DOMContentLoaded: "domcontentloaded",
-        Error: "error",
-        // Can't use just "error" due to node.js special treatment of error events.
-        // @see https://nodejs.org/api/events.html#events_error_events
-        PageError: "pageerror",
-        Request: "request",
-        Response: "response",
-        RequestFailed: "requestfailed",
-        RequestFinished: "requestfinished",
-        FrameAttached: "frameattached",
-        FrameDetached: "framedetached",
-        FrameNavigated: "framenavigated",
-        Load: "load",
-        Metrics: "metrics",
-        Popup: "popup",
-        WorkerCreated: "workercreated",
-        WorkerDestroyed: "workerdestroyed",
-    },
-    Browser: {
-        TargetCreated: "targetcreated",
-        TargetDestroyed: "targetdestroyed",
-        TargetChanged: "targetchanged",
-        Disconnected: "disconnected"
-    },
-    BrowserContext: {
-        TargetCreated: "targetcreated",
-        TargetDestroyed: "targetdestroyed",
-        TargetChanged: "targetchanged",
-    },
-    NetworkManager: {
-        Request: Symbol("Events.NetworkManager.Request"),
-        Response: Symbol("Events.NetworkManager.Response"),
-        RequestFailed: Symbol("Events.NetworkManager.RequestFailed"),
-        RequestFinished: Symbol("Events.NetworkManager.RequestFinished"),
-    },
-    FrameManager: {
-        FrameAttached: Symbol("Events.FrameManager.FrameAttached"),
-        FrameNavigated: Symbol("Events.FrameManager.FrameNavigated"),
-        FrameDetached: Symbol("Events.FrameManager.FrameDetached"),
-        LifecycleEvent: Symbol("Events.FrameManager.LifecycleEvent"),
-        FrameNavigatedWithinDocument: Symbol("Events.FrameManager.FrameNavigatedWithinDocument"),
-        ExecutionContextCreated: Symbol("Events.FrameManager.ExecutionContextCreated"),
-        ExecutionContextDestroyed: Symbol("Events.FrameManager.ExecutionContextDestroyed"),
-    },
-    Connection: {
-        Disconnected: Symbol("Events.Connection.Disconnected"),
-    },
-    CDPSession: {
-        Disconnected: Symbol("Events.CDPSession.Disconnected"),
-    },
-};
-exports_puppeteer_puppeteer_lib_Events = { Events };
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
 */
@@ -2784,19 +2869,21 @@ class ExecutionContext {
             const contextId = this._contextId;
             const expression = /** @type {string} */ (pageFunction);
             const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression) ? expression : expression + "\n" + suffix;
-            const {exceptionDetails, result: remoteObject} = await this._client.send("Runtime.evaluate", {
+            const {exceptionDetails, result: remoteObject} = await this._client.cdpSend3("Runtime.evaluate", {
                 expression: expressionWithSourceUrl,
                 contextId,
                 returnByValue,
                 awaitPromise: true,
                 userGesture: true
             }).catch(rewriteError);
-            if (exceptionDetails)
+            if (exceptionDetails) {
                 throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
+            }
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-        if (typeof pageFunction !== "function")
+        if (typeof pageFunction !== "function") {
             throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
+        }
         let functionText = pageFunction.toString();
         // hack-coverage - un-instrument
         functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
@@ -2805,10 +2892,12 @@ class ExecutionContext {
         } catch (e1) {
             // This means we might have a function shorthand. Try another
             // time prefixing "function ".
-            if (functionText.startsWith("async "))
+            if (functionText.startsWith("async ")) {
                 functionText = "async function " + functionText.substring("async ".length);
-            else
+            }
+            else {
                 functionText = "function " + functionText;
+            }
             try {
                 new Function("(" + functionText  + ")");
             } catch (e2) {
@@ -2818,7 +2907,7 @@ class ExecutionContext {
         }
         let callFunctionOnPromise;
         try {
-            callFunctionOnPromise = this._client.send("Runtime.callFunctionOn", {
+            callFunctionOnPromise = this._client.cdpSend3("Runtime.callFunctionOn", {
                 functionDeclaration: functionText + "\n" + suffix + "\n",
                 executionContextId: this._contextId,
                 arguments: args.map(convertArgument.bind(this)),
@@ -2827,13 +2916,15 @@ class ExecutionContext {
                 userGesture: true
             });
         } catch (err) {
-            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON"))
+            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON")) {
                 err.message += " Are you passing a nested JSHandle?";
+            }
             throw err;
         }
         const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-        if (exceptionDetails)
+        if (exceptionDetails) {
             throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
+        }
         return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         /**
           * @param {*} arg
@@ -2841,26 +2932,36 @@ class ExecutionContext {
           * @this {ExecutionContext}
           */
         function convertArgument(arg) {
-            if (typeof arg === "bigint") // eslint-disable-line valid-typeof
+            // eslint-disable-line valid-typeof
+            if (typeof arg === "bigint") {
                 return { unserializableValue: `${arg.toString()}n` };
-            if (Object.is(arg, -0))
+            }
+            if (Object.is(arg, -0)) {
                 return { unserializableValue: "-0" };
-            if (Object.is(arg, Infinity))
+            }
+            if (Object.is(arg, Infinity)) {
                 return { unserializableValue: "Infinity" };
-            if (Object.is(arg, -Infinity))
+            }
+            if (Object.is(arg, -Infinity)) {
                 return { unserializableValue: "-Infinity" };
-            if (Object.is(arg, NaN))
+            }
+            if (Object.is(arg, NaN)) {
                 return { unserializableValue: "NaN" };
+            }
             const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
             if (objectHandle) {
-                if (objectHandle._context !== this)
+                if (objectHandle._context !== this) {
                     throw new Error("JSHandles can be evaluated only in the context they were created!");
-                if (objectHandle._disposed)
+                }
+                if (objectHandle._disposed) {
                     throw new Error("JSHandle is disposed!");
-                if (objectHandle._remoteObject.unserializableValue)
+                }
+                if (objectHandle._remoteObject.unserializableValue) {
                     return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-                if (!objectHandle._remoteObject.objectId)
+                }
+                if (!objectHandle._remoteObject.objectId) {
                     return { value: objectHandle._remoteObject.value };
+                }
                 return { objectId: objectHandle._remoteObject.objectId };
             }
             return { value: arg };
@@ -2870,12 +2971,15 @@ class ExecutionContext {
           * @return {!Protocol.Runtime.evaluateReturnValue}
           */
         function rewriteError(error) {
-            if (error.message.includes("Object reference chain is too long"))
+            if (error.message.includes("Object reference chain is too long")) {
                 return {result: {type: "undefined"}};
-            if (error.message.includes("Object couldn't be returned by value"))
+            }
+            if (error.message.includes("Object couldn't be returned by value")) {
                 return {result: {type: "undefined"}};
-            if (error.message.endsWith("Cannot find context with specified id"))
+            }
+            if (error.message.endsWith("Cannot find context with specified id")) {
                 throw new Error("Execution context was destroyed, most likely because of a navigation.");
+            }
             throw error;
         }
     }
@@ -2886,7 +2990,7 @@ class ExecutionContext {
     async queryObjects(prototypeHandle) {
         assert(!prototypeHandle._disposed, "Prototype JSHandle is disposed!");
         assert(prototypeHandle._remoteObject.objectId, "Prototype JSHandle must not be referencing primitive value");
-        const response = await this._client.send("Runtime.queryObjects", {
+        const response = await this._client.cdpSend3("Runtime.queryObjects", {
             prototypeObjectId: prototypeHandle._remoteObject.objectId
         });
         return createJSHandle(this, response.objects);
@@ -2898,10 +3002,10 @@ class ExecutionContext {
     async _adoptElementHandle(elementHandle) {
         assert(elementHandle.executionContext() !== this, "Cannot adopt handle that already belongs to this execution context");
         assert(this._world, "Cannot adopt handle without DOMWorld");
-        const nodeInfo = await this._client.send("DOM.describeNode", {
+        const nodeInfo = await this._client.cdpSend3("DOM.describeNode", {
             objectId: elementHandle._remoteObject.objectId,
         });
-        const {object} = await this._client.send("DOM.resolveNode", {
+        const {object} = await this._client.cdpSend3("DOM.resolveNode", {
             backendNodeId: nodeInfo.node.backendNodeId,
             executionContextId: this._contextId,
         });
@@ -2944,37 +3048,39 @@ class FrameManager extends EventEmitter {
       */
     constructor(client, page, ignoreHTTPSErrors, timeoutSettings) {
         super();
-        this._client = client;
-        this._page = page;
-        this._networkManager = new NetworkManager(client, ignoreHTTPSErrors);
-        this._networkManager.setFrameManager(this);
-        this._timeoutSettings = timeoutSettings;
+        let that = this;
+        that._client = client;
+        that._page = page;
+        that._networkManager = new NetworkManager(client, ignoreHTTPSErrors);
+        that._networkManager.setFrameManager(that);
+        that._timeoutSettings = timeoutSettings;
         /** @type {!Map<string, !Frame>} */
-        this._frames = new Map();
+        that._frames = new Map();
         /** @type {!Map<number, !ExecutionContext>} */
-        this._contextIdToContext = new Map();
+        that._contextIdToContext = new Map();
         /** @type {!Set<string>} */
-        this._isolatedWorlds = new Set();
-        this._client.on("Page.frameAttached", event => this._onFrameAttached(event.frameId, event.parentFrameId));
-        this._client.on("Page.frameNavigated", event => this._onFrameNavigated(event.frame));
-        this._client.on("Page.navigatedWithinDocument", event => this._onFrameNavigatedWithinDocument(event.frameId, event.url));
-        this._client.on("Page.frameDetached", event => this._onFrameDetached(event.frameId));
-        this._client.on("Page.frameStoppedLoading", event => this._onFrameStoppedLoading(event.frameId));
-        this._client.on("Runtime.executionContextCreated", event => this._onExecutionContextCreated(event.context));
-        this._client.on("Runtime.executionContextDestroyed", event => this._onExecutionContextDestroyed(event.executionContextId));
-        this._client.on("Runtime.executionContextsCleared", event => this._onExecutionContextsCleared());
-        this._client.on("Page.lifecycleEvent", event => this._onLifecycleEvent(event));
+        that._isolatedWorlds = new Set();
+        that._client.on("Page.frameAttached", function (event) { return that._onFrameAttached(event.frameId, event.parentFrameId); });
+        that._client.on("Page.frameNavigated", function (event) { return that._onFrameNavigated(event.frame); });
+        that._client.on("Page.navigatedWithinDocument", function (event) { return that._onFrameNavigatedWithinDocument(event.frameId, event.url); });
+        that._client.on("Page.frameDetached", function (event) { return that._onFrameDetached(event.frameId); });
+        that._client.on("Page.frameStoppedLoading", function (event) { return that._onFrameStoppedLoading(event.frameId); });
+        that._client.on("Runtime.executionContextCreated", function (event) { return that._onExecutionContextCreated(event.context); });
+        that._client.on("Runtime.executionContextDestroyed", function (event) { return that._onExecutionContextDestroyed(event.executionContextId); });
+        that._client.on("Runtime.executionContextsCleared", function (event) { return that._onExecutionContextsCleared(); });
+        that._client.on("Page.lifecycleEvent", function (event) { return that._onLifecycleEvent(event); });
     }
     async initialize() {
+        let that = this;
         const [,{frameTree}] = await Promise.all([
-            this._client.send("Page.enable"),
-            this._client.send("Page.getFrameTree"),
+            that._client.cdpSend3("Page.enable"),
+            that._client.cdpSend3("Page.getFrameTree"),
         ]);
-        this._handleFrameTree(frameTree);
+        that._handleFrameTree(frameTree);
         await Promise.all([
-            this._client.send("Page.setLifecycleEventsEnabled", { enabled: true }),
-            this._client.send("Runtime.enable", {}).then(() => this._ensureIsolatedWorld(UTILITY_WORLD_NAME)),
-            this._networkManager.initialize(),
+            that._client.cdpSend3("Page.setLifecycleEventsEnabled", { enabled: true }),
+            that._client.cdpSend3("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
+            that._networkManager.initialize(),
         ]);
     }
     /**
@@ -3009,8 +3115,9 @@ class FrameManager extends EventEmitter {
             ]);
         }
         watcher.dispose();
-        if (error)
+        if (error) {
             throw error;
+        }
         return watcher.navigationResponse();
         /**
           * @param {!Puppeteer.CDPSession} client
@@ -3021,7 +3128,7 @@ class FrameManager extends EventEmitter {
           */
         async function navigate(client, url, referrer, frameId) {
             try {
-                const response = await client.send("Page.navigate", {url, referrer, frameId});
+                const response = await client.cdpSend3("Page.navigate", {url, referrer, frameId});
                 ensureNewDocumentNavigation = !!response.loaderId;
                 return response.errorText ? new Error(`${response.errorText} at ${url}`) : null;
             } catch (error) {
@@ -3047,8 +3154,9 @@ class FrameManager extends EventEmitter {
             watcher.newDocumentNavigationPromise()
         ]);
         watcher.dispose();
-        if (error)
+        if (error) {
             throw error;
+        }
         return watcher.navigationResponse();
     }
     /**
@@ -3056,8 +3164,9 @@ class FrameManager extends EventEmitter {
       */
     _onLifecycleEvent(event) {
         const frame = this._frames.get(event.frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._onLifecycleEvent(event.loaderId, event.name);
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3066,8 +3175,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameStoppedLoading(frameId) {
         const frame = this._frames.get(frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._onLoadingStopped();
         this.emit(Events.FrameManager.LifecycleEvent, frame);
     }
@@ -3075,13 +3185,17 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.FrameTree} frameTree
       */
     _handleFrameTree(frameTree) {
-        if (frameTree.frame.parentId)
-            this._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
-        this._onFrameNavigated(frameTree.frame);
-        if (!frameTree.childFrames)
+        let that = this;
+        if (frameTree.frame.parentId) {
+            that._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
+        }
+        that._onFrameNavigated(frameTree.frame);
+        if (!frameTree.childFrames) {
             return;
-        for (const child of frameTree.childFrames)
-            this._handleFrameTree(child);
+        }
+        frameTree.childFrames.forEach(function (child) {
+            that._handleFrameTree(child);
+        });
     }
     /**
       * @return {!Puppeteer.Page}
@@ -3113,8 +3227,9 @@ class FrameManager extends EventEmitter {
       * @param {?string} parentFrameId
       */
     _onFrameAttached(frameId, parentFrameId) {
-        if (this._frames.has(frameId))
+        if (this._frames.has(frameId)) {
             return;
+        }
         assert(parentFrameId);
         const parentFrame = this._frames.get(parentFrameId);
         const frame = new Frame(this, this._client, parentFrame, frameId);
@@ -3125,47 +3240,51 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.Frame} framePayload
       */
     _onFrameNavigated(framePayload) {
+        let that = this;
         const isMainFrame = !framePayload.parentId;
-        let frame = isMainFrame ? this._mainFrame : this._frames.get(framePayload.id);
+        let frame = isMainFrame ? that._mainFrame : that._frames.get(framePayload.id);
         assert(isMainFrame || frame, "We either navigate top level or have old version of the navigated frame");
         // Detach all child frames first.
         if (frame) {
-            for (const child of frame.childFrames())
-                this._removeFramesRecursively(child);
+            frame.childFrames().forEach(function (child) {
+                that._removeFramesRecursively(child);
+            });
         }
         // Update or create main frame.
         if (isMainFrame) {
             if (frame) {
                 // Update frame id to retain frame identity on cross-process navigation.
-                this._frames.delete(frame._id);
+                that._frames.delete(frame._id);
                 frame._id = framePayload.id;
             } else {
                 // Initial main frame navigation.
-                frame = new Frame(this, this._client, null, framePayload.id);
+                frame = new Frame(that, that._client, null, framePayload.id);
             }
-            this._frames.set(framePayload.id, frame);
-            this._mainFrame = frame;
+            that._frames.set(framePayload.id, frame);
+            that._mainFrame = frame;
         }
         // Update frame payload.
         frame._navigated(framePayload);
-        this.emit(Events.FrameManager.FrameNavigated, frame);
+        that.emit(Events.FrameManager.FrameNavigated, frame);
     }
     /**
       * @param {string} name
       */
     async _ensureIsolatedWorld(name) {
-        if (this._isolatedWorlds.has(name))
+        let that = this;
+        if (that._isolatedWorlds.has(name)) {
             return;
-        this._isolatedWorlds.add(name);
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", {
+        }
+        that._isolatedWorlds.add(name);
+        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
             worldName: name,
         }),
-        await Promise.all(this.frames().map(frame => this._client.send("Page.createIsolatedWorld", {
+        await Promise.all(that.frames().map(function (frame) { return that._client.cdpSend3("Page.createIsolatedWorld", {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
-        }).catch(debugError))); // frames might be removed before we send this
+        }).catch(debugError); })); // frames might be removed before we send this
     }
     /**
       * @param {string} frameId
@@ -3173,8 +3292,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameNavigatedWithinDocument(frameId, url) {
         const frame = this._frames.get(frameId);
-        if (!frame)
+        if (!frame) {
             return;
+        }
         frame._navigatedWithinDocument(url);
         this.emit(Events.FrameManager.FrameNavigatedWithinDocument, frame);
         this.emit(Events.FrameManager.FrameNavigated, frame);
@@ -3184,8 +3304,9 @@ class FrameManager extends EventEmitter {
       */
     _onFrameDetached(frameId) {
         const frame = this._frames.get(frameId);
-        if (frame)
+        if (frame) {
             this._removeFramesRecursively(frame);
+        }
     }
     _onExecutionContextCreated(contextPayload) {
         const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
@@ -3201,12 +3322,14 @@ class FrameManager extends EventEmitter {
                 world = frame._secondaryWorld;
             }
         }
-        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated")
+        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated") {
             this._isolatedWorlds.add(contextPayload.name);
+        }
         /** @type {!ExecutionContext} */
         const context = new ExecutionContext(this._client, contextPayload, world);
-        if (world)
+        if (world) {
             world._setContext(context);
+        }
         this._contextIdToContext.set(contextPayload.id, context);
     }
     /**
@@ -3214,16 +3337,19 @@ class FrameManager extends EventEmitter {
       */
     _onExecutionContextDestroyed(executionContextId) {
         const context = this._contextIdToContext.get(executionContextId);
-        if (!context)
+        if (!context) {
             return;
+        }
         this._contextIdToContext.delete(executionContextId);
-        if (context._world)
+        if (context._world) {
             context._world._setContext(null);
+        }
     }
     _onExecutionContextsCleared() {
         for (const context of this._contextIdToContext.values()) {
-            if (context._world)
+            if (context._world) {
                 context._world._setContext(null);
+            }
         }
         this._contextIdToContext.clear();
     }
@@ -3240,11 +3366,13 @@ class FrameManager extends EventEmitter {
       * @param {!Frame} frame
       */
     _removeFramesRecursively(frame) {
-        for (const child of frame.childFrames())
-            this._removeFramesRecursively(child);
+        let that = this;
+        frame.childFrames().forEach(function (child) {
+            that._removeFramesRecursively(child);
+        });
         frame._detach();
-        this._frames.delete(frame._id);
-        this.emit(Events.FrameManager.FrameDetached, frame);
+        that._frames.delete(frame._id);
+        that.emit(Events.FrameManager.FrameDetached, frame);
     }
 }
 /**
@@ -3273,8 +3401,9 @@ class Frame {
         this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
         /** @type {!Set<!Frame>} */
         this._childFrames = new Set();
-        if (this._parentFrame)
+        if (this._parentFrame) {
             this._parentFrame._childFrames.add(this);
+        }
     }
     /**
       * @param {string} url
@@ -3460,14 +3589,17 @@ class Frame {
         const xPathPattern = "//";
         if (helper.isString(selectorOrFunctionOrTimeout)) {
             const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
-            if (string.startsWith(xPathPattern))
+            if (string.startsWith(xPathPattern)) {
                 return this.waitForXPath(string, options);
+            }
             return this.waitForSelector(string, options);
         }
-        if (helper.isNumber(selectorOrFunctionOrTimeout))
-            return new Promise(fulfill => setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)));
-        if (typeof selectorOrFunctionOrTimeout === "function")
+        if (helper.isNumber(selectorOrFunctionOrTimeout)) {
+            return new Promise(function (fulfill) { return setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)); });
+        }
+        if (typeof selectorOrFunctionOrTimeout === "function") {
             return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
+        }
         return Promise.reject(new Error("Unsupported target type: " + (typeof selectorOrFunctionOrTimeout)));
     }
     /**
@@ -3477,8 +3609,9 @@ class Frame {
       */
     async waitForSelector(selector, options) {
         const handle = await this._secondaryWorld.waitForSelector(selector, options);
-        if (!handle)
+        if (!handle) {
             return null;
+        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3491,8 +3624,9 @@ class Frame {
       */
     async waitForXPath(xpath, options) {
         const handle = await this._secondaryWorld.waitForXPath(xpath, options);
-        if (!handle)
+        if (!handle) {
             return null;
+        }
         const mainExecutionContext = await this._mainWorld.executionContext();
         const result = await mainExecutionContext._adoptElementHandle(handle);
         await handle.dispose();
@@ -3546,8 +3680,9 @@ class Frame {
         this._detached = true;
         this._mainWorld._detach();
         this._secondaryWorld._detach();
-        if (this._parentFrame)
+        if (this._parentFrame) {
             this._parentFrame._childFrames.delete(this);
+        }
         this._parentFrame = null;
     }
 }
@@ -3608,7 +3743,7 @@ class JSHandle {
       * @return {!Promise<?JSHandle>}
       */
     async getProperty(propertyName) {
-        const objectHandle = await this._context.evaluateHandle((object, propertyName) => {
+        const objectHandle = await this._context.evaluateHandle(function (object, propertyName) {
             const result = {__proto__: null};
             result[propertyName] = object[propertyName];
             return result;
@@ -3622,14 +3757,15 @@ class JSHandle {
       * @return {!Promise<!Map<string, !JSHandle>>}
       */
     async getProperties() {
-        const response = await this._client.send("Runtime.getProperties", {
+        const response = await this._client.cdpSend3("Runtime.getProperties", {
             objectId: this._remoteObject.objectId,
             ownProperties: true
         });
         const result = new Map();
         for (const property of response.result) {
-            if (!property.enumerable)
+            if (!property.enumerable) {
                 continue;
+            }
             result.set(property.name, createJSHandle(this._context, property.value));
         }
         return result;
@@ -3639,7 +3775,7 @@ class JSHandle {
       */
     async jsonValue() {
         if (this._remoteObject.objectId) {
-            const response = await this._client.send("Runtime.callFunctionOn", {
+            const response = await this._client.cdpSend3("Runtime.callFunctionOn", {
                 functionDeclaration: "function() { return this; }",
                 objectId: this._remoteObject.objectId,
                 returnByValue: true,
@@ -3656,8 +3792,9 @@ class JSHandle {
         return null;
     }
     async dispose() {
-        if (this._disposed)
+        if (this._disposed) {
             return;
+        }
         this._disposed = true;
         await helper.releaseObject(this._client, this._remoteObject);
     }
@@ -3703,49 +3840,53 @@ class LifecycleWatcher {
       * @param {number} timeout
       */
     constructor(frameManager, frame, waitUntil, timeout) {
-        if (Array.isArray(waitUntil))
+        let that = this;
+        if (Array.isArray(waitUntil)) {
             waitUntil = waitUntil.slice();
-        else if (typeof waitUntil === "string")
+        }
+        else if (typeof waitUntil === "string") {
             waitUntil = [waitUntil];
-        this._expectedLifecycle = waitUntil.map(value => {
+        }
+        that._expectedLifecycle = waitUntil.map(function (value) {
             const protocolEvent = puppeteerToProtocolLifecycle[value];
             assert(protocolEvent, "Unknown value for options.waitUntil: " + value);
             return protocolEvent;
         });
-        this._frameManager = frameManager;
-        this._frame = frame;
-        this._initialLoaderId = frame._loaderId;
-        this._timeout = timeout;
+        that._frameManager = frameManager;
+        that._frame = frame;
+        that._initialLoaderId = frame._loaderId;
+        that._timeout = timeout;
         /** @type {?Puppeteer.Request} */
-        this._navigationRequest = null;
-        this._eventListeners = [
-            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, () => this._terminate(new Error("Navigation failed because browser has disconnected!"))),
-            helper.addEventListener(this._frameManager, Events.FrameManager.LifecycleEvent, this._checkLifecycleComplete.bind(this)),
-            helper.addEventListener(this._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, this._navigatedWithinDocument.bind(this)),
-            helper.addEventListener(this._frameManager, Events.FrameManager.FrameDetached, this._onFrameDetached.bind(this)),
-            helper.addEventListener(this._frameManager.networkManager(), Events.NetworkManager.Request, this._onRequest.bind(this)),
+        that._navigationRequest = null;
+        that._eventListeners = [
+            helper.addEventListener(frameManager._client, Events.CDPSession.Disconnected, function () { return that._terminate(new Error("Navigation failed because browser has disconnected!")); }),
+            helper.addEventListener(that._frameManager, Events.FrameManager.LifecycleEvent, that._checkLifecycleComplete.bind(that)),
+            helper.addEventListener(that._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, that._navigatedWithinDocument.bind(that)),
+            helper.addEventListener(that._frameManager, Events.FrameManager.FrameDetached, that._onFrameDetached.bind(that)),
+            helper.addEventListener(that._frameManager.networkManager(), Events.NetworkManager.Request, that._onRequest.bind(that)),
         ];
-        this._sameDocumentNavigationPromise = new Promise(fulfill => {
-            this._sameDocumentNavigationCompleteCallback = fulfill;
+        that._sameDocumentNavigationPromise = new Promise(function (fulfill) {
+            that._sameDocumentNavigationCompleteCallback = fulfill;
         });
-        this._lifecyclePromise = new Promise(fulfill => {
-            this._lifecycleCallback = fulfill;
+        that._lifecyclePromise = new Promise(function (fulfill) {
+            that._lifecycleCallback = fulfill;
         });
-        this._newDocumentNavigationPromise = new Promise(fulfill => {
-            this._newDocumentNavigationCompleteCallback = fulfill;
+        that._newDocumentNavigationPromise = new Promise(function (fulfill) {
+            that._newDocumentNavigationCompleteCallback = fulfill;
         });
-        this._timeoutPromise = this._createTimeoutPromise();
-        this._terminationPromise = new Promise(fulfill => {
-            this._terminationCallback = fulfill;
+        that._timeoutPromise = that._createTimeoutPromise();
+        that._terminationPromise = new Promise(function (fulfill) {
+            that._terminationCallback = fulfill;
         });
-        this._checkLifecycleComplete();
+        that._checkLifecycleComplete();
     }
     /**
       * @param {!Puppeteer.Request} request
       */
     _onRequest(request) {
-        if (request.frame() !== this._frame || !request.isNavigationRequest())
+        if (request.frame() !== this._frame || !request.isNavigationRequest()) {
             return;
+        }
         this._navigationRequest = request;
     }
     /**
@@ -3798,32 +3939,39 @@ class LifecycleWatcher {
       * @return {!Promise<?Error>}
       */
     _createTimeoutPromise() {
-        if (!this._timeout)
-            return new Promise(() => {});
-        const errorMessage = "Navigation Timeout Exceeded: " + this._timeout + "ms exceeded";
-        return new Promise(fulfill => this._maximumTimer = setTimeout(fulfill, this._timeout))
-                .then(() => new TimeoutError(errorMessage));
+        let that = this;
+        if (!that._timeout) {
+            return new Promise(function () {});
+        }
+        const errorMessage = "Navigation Timeout Exceeded: " + that._timeout + "ms exceeded";
+        return new Promise(function (fulfill) { return that._maximumTimer = setTimeout(fulfill, that._timeout); })
+                .then(function () { return new TimeoutError(errorMessage); });
     }
     /**
       * @param {!Puppeteer.Frame} frame
       */
     _navigatedWithinDocument(frame) {
-        if (frame !== this._frame)
+        if (frame !== this._frame) {
             return;
+        }
         this._hasSameDocumentNavigation = true;
         this._checkLifecycleComplete();
     }
     _checkLifecycleComplete() {
         // We expect navigation to commit.
-        if (!checkLifecycle(this._frame, this._expectedLifecycle))
+        if (!checkLifecycle(this._frame, this._expectedLifecycle)) {
             return;
+        }
         this._lifecycleCallback();
-        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation)
+        if (this._frame._loaderId === this._initialLoaderId && !this._hasSameDocumentNavigation) {
             return;
-        if (this._hasSameDocumentNavigation)
+        }
+        if (this._hasSameDocumentNavigation) {
             this._sameDocumentNavigationCompleteCallback();
-        if (this._frame._loaderId !== this._initialLoaderId)
+        }
+        if (this._frame._loaderId !== this._initialLoaderId) {
             this._newDocumentNavigationCompleteCallback();
+        }
         /**
           * @param {!Puppeteer.Frame} frame
           * @param {!Array<string>} expectedLifecycle
@@ -3831,12 +3979,14 @@ class LifecycleWatcher {
           */
         function checkLifecycle(frame, expectedLifecycle) {
             for (const event of expectedLifecycle) {
-                if (!frame._lifecycleEvents.has(event))
+                if (!frame._lifecycleEvents.has(event)) {
                     return false;
+                }
             }
             for (const child of frame.childFrames()) {
-                if (!checkLifecycle(child, expectedLifecycle))
+                if (!checkLifecycle(child, expectedLifecycle)) {
                     return false;
+                }
             }
             return true;
         }
@@ -3908,9 +4058,10 @@ class NetworkManager extends EventEmitter {
         this._client.on("Network.loadingFailed", this._onLoadingFailed.bind(this));
     }
     async initialize() {
-        await this._client.send("Network.enable");
-        if (this._ignoreHTTPSErrors)
-            await this._client.send("Security.setIgnoreCertificateErrors", {ignore: true});
+        await this._client.cdpSend3("Network.enable");
+        if (this._ignoreHTTPSErrors) {
+            await this._client.cdpSend3("Security.setIgnoreCertificateErrors", {ignore: true});
+        }
     }
     /**
       * @param {!Puppeteer.FrameManager} frameManager
@@ -3935,7 +4086,7 @@ class NetworkManager extends EventEmitter {
             assert(helper.isString(value), `Expected value of header "${key}" to be String, but "${typeof value}" is found.`);
             this._extraHTTPHeaders[key.toLowerCase()] = value;
         }
-        await this._client.send("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
+        await this._client.cdpSend3("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
     }
     /**
       * @return {!Object<string, string>}
@@ -3947,10 +4098,11 @@ class NetworkManager extends EventEmitter {
       * @param {boolean} value
       */
     async setOfflineMode(value) {
-        if (this._offline === value)
+        if (this._offline === value) {
             return;
+        }
         this._offline = value;
-        await this._client.send("Network.emulateNetworkConditions", {
+        await this._client.cdpSend3("Network.emulateNetworkConditions", {
             offline: this._offline,
             // values of 0 remove any active throttling. crbug.com/456324#c9
             latency: 0,
@@ -3962,7 +4114,7 @@ class NetworkManager extends EventEmitter {
       * @param {string} userAgent
       */
     async setUserAgent(userAgent) {
-        await this._client.send("Network.setUserAgentOverride", { userAgent });
+        await this._client.cdpSend3("Network.setUserAgentOverride", { userAgent });
     }
     /**
       * @param {boolean} enabled
@@ -3980,13 +4132,14 @@ class NetworkManager extends EventEmitter {
     }
     async _updateProtocolRequestInterception() {
         const enabled = this._userRequestInterceptionEnabled || !!this._credentials;
-        if (enabled === this._protocolRequestInterceptionEnabled)
+        if (enabled === this._protocolRequestInterceptionEnabled) {
             return;
+        }
         this._protocolRequestInterceptionEnabled = enabled;
         if (enabled) {
             await Promise.all([
                 this._updateProtocolCacheDisabled(),
-                this._client.send("Fetch.enable", {
+                this._client.cdpSend3("Fetch.enable", {
                     handleAuthRequests: true,
                     patterns: [{urlPattern: "*"}],
                 }),
@@ -3994,12 +4147,12 @@ class NetworkManager extends EventEmitter {
         } else {
             await Promise.all([
                 this._updateProtocolCacheDisabled(),
-                this._client.send("Fetch.disable")
+                this._client.cdpSend3("Fetch.disable")
             ]);
         }
     }
     async _updateProtocolCacheDisabled() {
-        await this._client.send("Network.setCacheDisabled", {
+        await this._client.cdpSend3("Network.setCacheDisabled", {
             cacheDisabled: this._userCacheDisabled || this._protocolRequestInterceptionEnabled
         });
     }
@@ -4034,7 +4187,7 @@ class NetworkManager extends EventEmitter {
             this._attemptedAuthentications.add(event.requestId);
         }
         const {username, password} = this._credentials || {username: undefined, password: undefined};
-        this._client.send("Fetch.continueWithAuth", {
+        this._client.cdpSend3("Fetch.continueWithAuth", {
             requestId: event.requestId,
             authChallengeResponse: { response, username, password },
         }).catch(debugError);
@@ -4044,7 +4197,7 @@ class NetworkManager extends EventEmitter {
       */
     _onRequestPaused(event) {
         if (!this._userRequestInterceptionEnabled && this._protocolRequestInterceptionEnabled) {
-            this._client.send("Fetch.continueRequest", {
+            this._client.cdpSend3("Fetch.continueRequest", {
                 requestId: event.requestId
             }).catch(debugError);
         }
@@ -4082,8 +4235,9 @@ class NetworkManager extends EventEmitter {
       */
     _onRequestServedFromCache(event) {
         const request = this._requestIdToRequest.get(event.requestId);
-        if (request)
+        if (request) {
             request._fromMemoryCache = true;
+        }
     }
     /**
       * @param {!Request} request
@@ -4105,8 +4259,9 @@ class NetworkManager extends EventEmitter {
     _onResponseReceived(event) {
         const request = this._requestIdToRequest.get(event.requestId);
         // FileUpload sends a response without a matching request.
-        if (!request)
+        if (!request) {
             return;
+        }
         const response = new Response(this._client, request, event.response);
         request._response = response;
         this.emit(Events.NetworkManager.Response, response);
@@ -4118,12 +4273,14 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request)
+        if (!request) {
             return;
+        }
         // Under certain conditions we never get the Network.responseReceived
         // event from protocol. @see https://crbug.com/883475
-        if (request.response())
+        if (request.response()) {
             request.response()._bodyLoadedPromiseFulfill.call(null);
+        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFinished, request);
@@ -4135,12 +4292,14 @@ class NetworkManager extends EventEmitter {
         const request = this._requestIdToRequest.get(event.requestId);
         // For certain requestIds we never receive requestWillBeSent event.
         // @see https://crbug.com/750469
-        if (!request)
+        if (!request) {
             return;
+        }
         request._failureText = event.errorText;
         const response = request.response();
-        if (response)
+        if (response) {
             response._bodyLoadedPromiseFulfill.call(null);
+        }
         this._requestIdToRequest.delete(request._requestId);
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFailed, request);
@@ -4156,24 +4315,26 @@ class Request {
       * @param {!Array<!Request>} redirectChain
       */
     constructor(client, frame, interceptionId, allowInterception, event, redirectChain) {
-        this._client = client;
-        this._requestId = event.requestId;
-        this._isNavigationRequest = event.requestId === event.loaderId && event.type === "Document";
-        this._interceptionId = interceptionId;
-        this._allowInterception = allowInterception;
-        this._interceptionHandled = false;
-        this._response = null;
-        this._failureText = null;
-        this._url = event.request.url;
-        this._resourceType = event.type.toLowerCase();
-        this._method = event.request.method;
-        this._postData = event.request.postData;
-        this._headers = {};
-        this._frame = frame;
-        this._redirectChain = redirectChain;
-        for (const key of Object.keys(event.request.headers))
-            this._headers[key.toLowerCase()] = event.request.headers[key];
-        this._fromMemoryCache = false;
+        let that = this;
+        that._client = client;
+        that._requestId = event.requestId;
+        that._isNavigationRequest = event.requestId === event.loaderId && event.type === "Document";
+        that._interceptionId = interceptionId;
+        that._allowInterception = allowInterception;
+        that._interceptionHandled = false;
+        that._response = null;
+        that._failureText = null;
+        that._url = event.request.url;
+        that._resourceType = event.type.toLowerCase();
+        that._method = event.request.method;
+        that._postData = event.request.postData;
+        that._headers = {};
+        that._frame = frame;
+        that._redirectChain = redirectChain;
+        Object.keys(event.request.headers).forEach(function (key) {
+            that._headers[key.toLowerCase()] = event.request.headers[key];
+        });
+        that._fromMemoryCache = false;
     }
     /**
       * @return {string}
@@ -4233,8 +4394,9 @@ class Request {
       * @return {?{errorText: string}}
       */
     failure() {
-        if (!this._failureText)
+        if (!this._failureText) {
             return null;
+        }
         return {
             errorText: this._failureText
         };
@@ -4244,8 +4406,9 @@ class Request {
       */
     async continue(overrides = {}) {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         const {
@@ -4255,13 +4418,13 @@ class Request {
             headers
         } = overrides;
         this._interceptionHandled = true;
-        await this._client.send("Fetch.continueRequest", {
+        await this._client.cdpSend3("Fetch.continueRequest", {
             requestId: this._interceptionId,
             url,
             method,
             postData,
             headers: headers ? headersArray(headers) : undefined,
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4272,8 +4435,9 @@ class Request {
       */
     async respond(response) {
         // Mocking responses for dataURL requests is not currently supported.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
@@ -4281,20 +4445,23 @@ class Request {
         /** @type {!Object<string, string>} */
         const responseHeaders = {};
         if (response.headers) {
-            for (const header of Object.keys(response.headers))
+            Object.keys(response.headers).forEach(function (header) {
                 responseHeaders[header.toLowerCase()] = response.headers[header];
+            });
         }
-        if (response.contentType)
+        if (response.contentType) {
             responseHeaders["content-type"] = response.contentType;
-        if (responseBody && !("content-length" in responseHeaders))
+        }
+        if (responseBody && ! responseHeaders.hasOwnProperty("content-length")) {
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
-        await this._client.send("Fetch.fulfillRequest", {
+        }
+        await this._client.cdpSend3("Fetch.fulfillRequest", {
             requestId: this._interceptionId,
             responseCode: response.status || 200,
             responsePhrase: STATUS_TEXTS[response.status || 200],
             responseHeaders: headersArray(responseHeaders),
             body: responseBody ? responseBody.toString("base64") : undefined,
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4305,17 +4472,18 @@ class Request {
       */
     async abort(errorCode = "failed") {
         // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:"))
+        if (this._url.startsWith("data:")) {
             return;
+        }
         const errorReason = errorReasons[errorCode];
         assert(errorReason, "Unknown error code: " + errorCode);
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
-        await this._client.send("Fetch.failRequest", {
+        await this._client.cdpSend3("Fetch.failRequest", {
             requestId: this._interceptionId,
             errorReason
-        }).catch(error => {
+        }).catch(function (error) {
             // In certain cases, protocol will return error if the request was already canceled
             // or the page was closed. We should tolerate these errors.
             debugError(error);
@@ -4345,25 +4513,27 @@ class Response {
       * @param {!Protocol.Network.Response} responsePayload
       */
     constructor(client, request, responsePayload) {
-        this._client = client;
-        this._request = request;
-        this._contentPromise = null;
-        this._bodyLoadedPromise = new Promise(fulfill => {
-            this._bodyLoadedPromiseFulfill = fulfill;
+        let that = this;
+        that._client = client;
+        that._request = request;
+        that._contentPromise = null;
+        that._bodyLoadedPromise = new Promise(function (fulfill) {
+            that._bodyLoadedPromiseFulfill = fulfill;
         });
-        this._remoteAddress = {
+        that._remoteAddress = {
             ip: responsePayload.remoteIPAddress,
             port: responsePayload.remotePort,
         };
-        this._status = responsePayload.status;
-        this._statusText = responsePayload.statusText;
-        this._url = request.url();
-        this._fromDiskCache = !!responsePayload.fromDiskCache;
-        this._fromServiceWorker = !!responsePayload.fromServiceWorker;
-        this._headers = {};
-        for (const key of Object.keys(responsePayload.headers))
-            this._headers[key.toLowerCase()] = responsePayload.headers[key];
-        this._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
+        that._status = responsePayload.status;
+        that._statusText = responsePayload.statusText;
+        that._url = request.url();
+        that._fromDiskCache = !!responsePayload.fromDiskCache;
+        that._fromServiceWorker = !!responsePayload.fromServiceWorker;
+        that._headers = {};
+        Object.keys(responsePayload.headers).forEach(function (key) {
+            that._headers[key.toLowerCase()] = responsePayload.headers[key];
+        });
+        that._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
     }
     /**
       * @return {{ip: string, port: number}}
@@ -4411,17 +4581,19 @@ class Response {
       * @return {!Promise<!Buffer>}
       */
     buffer() {
-        if (!this._contentPromise) {
-            this._contentPromise = this._bodyLoadedPromise.then(async error => {
-                if (error)
+        let that = this;
+        if (!that._contentPromise) {
+            that._contentPromise = that._bodyLoadedPromise.then(async function (error) {
+                if (error) {
                     throw error;
-                const response = await this._client.send("Network.getResponseBody", {
-                    requestId: this._request._requestId
+                }
+                const response = await that._client.cdpSend3("Network.getResponseBody", {
+                    requestId: that._request._requestId
                 });
                 return Buffer.from(response.body, response.base64Encoded ? "base64" : "utf8");
             });
         }
-        return this._contentPromise;
+        return that._contentPromise;
     }
     /**
       * @return {!Promise<string>}
@@ -4510,8 +4682,13 @@ class SecurityDetails {
   */
 function headersArray(headers) {
     const result = [];
-    for (const name in headers)
-        result.push({name, value: headers[name] + ""});
+    Object.entries(headers).forEach(function ([
+        name, value
+    ]) {
+        result.push({
+            name, value: value + ""
+        });
+    });
     return result;
 }
 // List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
@@ -4625,8 +4802,9 @@ class Page extends EventEmitter {
     static async create(client, target, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
         const page = new Page(client, target, ignoreHTTPSErrors, screenshotTaskQueue);
         await page._initialize();
-        if (defaultViewport)
+        if (defaultViewport) {
             await page.setViewport(defaultViewport);
+        }
         return page;
     }
     /**
@@ -4637,75 +4815,78 @@ class Page extends EventEmitter {
       */
     constructor(client, target, ignoreHTTPSErrors, screenshotTaskQueue) {
         super();
-        this._closed = false;
-        this._client = client;
-        this._target = target;
-        this._timeoutSettings = new TimeoutSettings();
+        let that = this;
+        that._closed = false;
+        that._client = client;
+        that._target = target;
+        that._timeoutSettings = new TimeoutSettings();
         /** @type {!FrameManager} */
-        this._frameManager = new FrameManager(client, this, ignoreHTTPSErrors, this._timeoutSettings);
-        this._emulationManager = new EmulationManager(client);
+        that._frameManager = new FrameManager(client, that, ignoreHTTPSErrors, that._timeoutSettings);
+        that._emulationManager = new EmulationManager(client);
         /** @type {!Map<string, Function>} */
-        this._pageBindings = new Map();
-        this._coverage = new Coverage(client);
-        this._javascriptEnabled = true;
+        that._pageBindings = new Map();
+        that._coverage = new Coverage(client);
+        that._javascriptEnabled = true;
         /** @type {?Puppeteer.Viewport} */
-        this._viewport = null;
-        this._screenshotTaskQueue = screenshotTaskQueue;
+        that._viewport = null;
+        that._screenshotTaskQueue = screenshotTaskQueue;
         /** @type {!Map<string, Worker>} */
-        this._workers = new Map();
-        client.on("Target.attachedToTarget", event => {
+        that._workers = new Map();
+        client.on("Target.attachedToTarget", function (event) {
             if (event.targetInfo.type !== "worker") {
                 // If we don't detach from service workers, they will never die.
-                client.send("Target.detachFromTarget", {
+                client.cdpSend3("Target.detachFromTarget", {
                     sessionId: event.sessionId
                 }).catch(debugError);
                 return;
             }
             const session = Connection.fromSession(client).session(event.sessionId);
-            const worker = new Worker(session, event.targetInfo.url, this._addConsoleMessage.bind(this), this._handleException.bind(this));
-            this._workers.set(event.sessionId, worker);
-            this.emit(Events.Page.WorkerCreated, worker);
+            const worker = new Worker(session, event.targetInfo.url, that._addConsoleMessage.bind(that), that._handleException.bind(that));
+            that._workers.set(event.sessionId, worker);
+            that.emit(Events.Page.WorkerCreated, worker);
         });
-        client.on("Target.detachedFromTarget", event => {
-            const worker = this._workers.get(event.sessionId);
-            if (!worker)
+        client.on("Target.detachedFromTarget", function (event) {
+            const worker = that._workers.get(event.sessionId);
+            if (!worker) {
                 return;
-            this.emit(Events.Page.WorkerDestroyed, worker);
-            this._workers.delete(event.sessionId);
+            }
+            that.emit(Events.Page.WorkerDestroyed, worker);
+            that._workers.delete(event.sessionId);
         });
-        this._frameManager.on(Events.FrameManager.FrameAttached, event => this.emit(Events.Page.FrameAttached, event));
-        this._frameManager.on(Events.FrameManager.FrameDetached, event => this.emit(Events.Page.FrameDetached, event));
-        this._frameManager.on(Events.FrameManager.FrameNavigated, event => this.emit(Events.Page.FrameNavigated, event));
-        const networkManager = this._frameManager.networkManager();
-        networkManager.on(Events.NetworkManager.Request, event => this.emit(Events.Page.Request, event));
-        networkManager.on(Events.NetworkManager.Response, event => this.emit(Events.Page.Response, event));
-        networkManager.on(Events.NetworkManager.RequestFailed, event => this.emit(Events.Page.RequestFailed, event));
-        networkManager.on(Events.NetworkManager.RequestFinished, event => this.emit(Events.Page.RequestFinished, event));
-        this._fileChooserInterceptionIsDisabled = false;
-        this._fileChooserInterceptors = new Set();
-        client.on("Page.domContentEventFired", event => this.emit(Events.Page.DOMContentLoaded));
-        client.on("Page.loadEventFired", event => this.emit(Events.Page.Load));
-        client.on("Runtime.consoleAPICalled", event => this._onConsoleAPI(event));
-        client.on("Runtime.bindingCalled", event => this._onBindingCalled(event));
-        client.on("Page.javascriptDialogOpening", event => this._onDialog(event));
-        client.on("Runtime.exceptionThrown", exception => this._handleException(exception.exceptionDetails));
-        client.on("Inspector.targetCrashed", event => this._onTargetCrashed());
-        client.on("Performance.metrics", event => this._emitMetrics(event));
-        client.on("Log.entryAdded", event => this._onLogEntryAdded(event));
-        client.on("Page.fileChooserOpened", event => this._onFileChooser(event));
-        this._target._isClosedPromise.then(() => {
-            this.emit(Events.Page.Close);
-            this._closed = true;
+        that._frameManager.on(Events.FrameManager.FrameAttached, function (event) { return that.emit(Events.Page.FrameAttached, event); });
+        that._frameManager.on(Events.FrameManager.FrameDetached, function (event) { return that.emit(Events.Page.FrameDetached, event); });
+        that._frameManager.on(Events.FrameManager.FrameNavigated, function (event) { return that.emit(Events.Page.FrameNavigated, event); });
+        const networkManager = that._frameManager.networkManager();
+        networkManager.on(Events.NetworkManager.Request, function (event) { return that.emit(Events.Page.Request, event); });
+        networkManager.on(Events.NetworkManager.Response, function (event) { return that.emit(Events.Page.Response, event); });
+        networkManager.on(Events.NetworkManager.RequestFailed, function (event) { return that.emit(Events.Page.RequestFailed, event); });
+        networkManager.on(Events.NetworkManager.RequestFinished, function (event) { return that.emit(Events.Page.RequestFinished, event); });
+        that._fileChooserInterceptionIsDisabled = false;
+        that._fileChooserInterceptors = new Set();
+        client.on("Page.domContentEventFired", function (event) { return that.emit(Events.Page.DOMContentLoaded); });
+        client.on("Page.loadEventFired", function (event) { return that.emit(Events.Page.Load); });
+        client.on("Runtime.consoleAPICalled", function (event) { return that._onConsoleAPI(event); });
+        client.on("Runtime.bindingCalled", function (event) { return that._onBindingCalled(event); });
+        client.on("Page.javascriptDialogOpening", function (event) { return that._onDialog(event); });
+        client.on("Runtime.exceptionThrown", function (exception) { return that._handleException(exception.exceptionDetails); });
+        client.on("Inspector.targetCrashed", function (event) { return that._onTargetCrashed(); });
+        client.on("Performance.metrics", function (event) { return that._emitMetrics(event); });
+        client.on("Log.entryAdded", function (event) { return that._onLogEntryAdded(event); });
+        client.on("Page.fileChooserOpened", function (event) { return that._onFileChooser(event); });
+        that._target._isClosedPromise.then(function () {
+            that.emit(Events.Page.Close);
+            that._closed = true;
         });
     }
     async _initialize() {
+        let that = this;
         await Promise.all([
-            this._frameManager.initialize(),
-            this._client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-            this._client.send("Performance.enable", {}),
-            this._client.send("Log.enable", {}),
-            this._client.send("Page.setInterceptFileChooserDialog", {enabled: true}).catch(e => {
-                this._fileChooserInterceptionIsDisabled = true;
+            that._frameManager.initialize(),
+            that._client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+            that._client.cdpSend3("Performance.enable", {}),
+            that._client.cdpSend3("Log.enable", {}),
+            that._client.cdpSend3("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
+                that._fileChooserInterceptionIsDisabled = true;
             }),
         ]);
     }
@@ -4714,30 +4895,33 @@ class Page extends EventEmitter {
       */
     _onFileChooser(event) {
         if (!this._fileChooserInterceptors.size) {
-            this._client.send("Page.handleFileChooser", { action: "fallback" }).catch(debugError);
+            this._client.cdpSend3("Page.handleFileChooser", { action: "fallback" }).catch(debugError);
             return;
         }
         const interceptors = Array.from(this._fileChooserInterceptors);
         this._fileChooserInterceptors.clear();
         const fileChooser = new FileChooser(this._client, event);
-        for (const interceptor of interceptors)
+        interceptors.forEach(function (interceptor) {
             interceptor.call(null, fileChooser);
+        });
     }
     /**
       * @param {!{timeout?: number}=} options
       * @return !Promise<!FileChooser>}
       */
     async waitForFileChooser(options = {}) {
-        if (this._fileChooserInterceptionIsDisabled)
+        let that = this;
+        if (that._fileChooserInterceptionIsDisabled) {
             throw new Error("File chooser handling does not work with multiple connections to the same page");
+        }
         const {
-            timeout = this._timeoutSettings.timeout(),
+            timeout = that._timeoutSettings.timeout(),
         } = options;
         let callback;
-        const promise = new Promise(x => callback = x);
-        this._fileChooserInterceptors.add(callback);
-        return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(e => {
-            this._fileChooserInterceptors.delete(callback);
+        const promise = new Promise(function (x) { return callback = x; });
+        that._fileChooserInterceptors.add(callback);
+        return helper.waitWithTimeout(promise, "waiting for file chooser", timeout).catch(function (e) {
+            that._fileChooserInterceptors.delete(callback);
             throw e;
         });
     }
@@ -4746,13 +4930,16 @@ class Page extends EventEmitter {
       */
     async setGeolocation(options) {
         const { longitude, latitude, accuracy = 0} = options;
-        if (longitude < -180 || longitude > 180)
+        if (longitude < -180 || longitude > 180) {
             throw new Error(`Invalid longitude "${longitude}": precondition -180 <= LONGITUDE <= 180 failed.`);
-        if (latitude < -90 || latitude > 90)
+        }
+        if (latitude < -90 || latitude > 90) {
             throw new Error(`Invalid latitude "${latitude}": precondition -90 <= LATITUDE <= 90 failed.`);
-        if (accuracy < 0)
+        }
+        if (accuracy < 0) {
             throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
-        await this._client.send("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
+        }
+        await this._client.cdpSend3("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
     }
     /**
       * @return {!Puppeteer.Target}
@@ -4779,11 +4966,14 @@ class Page extends EventEmitter {
       * @param {!Protocol.Log.entryAddedPayload} event
       */
     _onLogEntryAdded(event) {
+        let that = this;
         const {level, text, args, source, url, lineNumber} = event.entry;
-        if (args)
-            args.map(arg => helper.releaseObject(this._client, arg));
-        if (source !== "worker")
-            this.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
+        if (args) {
+            args.map(function (arg) { return helper.releaseObject(that._client, arg); });
+        }
+        if (source !== "worker") {
+            that.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
+        }
     }
     /**
       * @return {!Puppeteer.Frame}
@@ -4826,18 +5016,6 @@ class Page extends EventEmitter {
       */
     setOfflineMode(enabled) {
         return this._frameManager.networkManager().setOfflineMode(enabled);
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultNavigationTimeout(timeout) {
-        this._timeoutSettings.setDefaultNavigationTimeout(timeout);
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultTimeout(timeout) {
-        this._timeoutSettings.setDefaultTimeout(timeout);
     }
     /**
       * @param {string} selector
@@ -4900,7 +5078,7 @@ class Page extends EventEmitter {
       * @return {!Promise<!Array<Network.Cookie>>}
       */
     async cookies(...urls) {
-        return (await this._client.send("Network.getCookies", {
+        return (await this._client.cdpSend3("Network.getCookies", {
             urls: urls.length ? urls : [this.url()]
         })).cookies;
     }
@@ -4911,9 +5089,10 @@ class Page extends EventEmitter {
         const pageURL = this.url();
         for (const cookie of cookies) {
             const item = Object.assign({}, cookie);
-            if (!cookie.url && pageURL.startsWith("http"))
+            if (!cookie.url && pageURL.startsWith("http")) {
                 item.url = pageURL;
-            await this._client.send("Network.deleteCookies", item);
+            }
+            await this._client.cdpSend3("Network.deleteCookies", item);
         }
     }
     /**
@@ -4922,17 +5101,19 @@ class Page extends EventEmitter {
     async setCookie(...cookies) {
         const pageURL = this.url();
         const startsWithHTTP = pageURL.startsWith("http");
-        const items = cookies.map(cookie => {
+        const items = cookies.map(function (cookie) {
             const item = Object.assign({}, cookie);
-            if (!item.url && startsWithHTTP)
+            if (!item.url && startsWithHTTP) {
                 item.url = pageURL;
+            }
             assert(item.url !== "about:blank", `Blank page can not have cookie "${item.name}"`);
             assert(!String.prototype.startsWith.call(item.url || "", "data:"), `Data URL page can not have cookie "${item.name}"`);
             return item;
         });
         await this.deleteCookie(...items);
-        if (items.length)
-            await this._client.send("Network.setCookies", { cookies: items });
+        if (items.length) {
+            await this._client.cdpSend3("Network.setCookies", { cookies: items });
+        }
     }
     /**
       * @param {!{url?: string, path?: string, content?: string, type?: string}} options
@@ -4953,16 +5134,18 @@ class Page extends EventEmitter {
       * @param {Function} puppeteerFunction
       */
     async exposeFunction(name, puppeteerFunction) {
-        if (this._pageBindings.has(name))
+        let that = this;
+        if (that._pageBindings.has(name)) {
             throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
-        this._pageBindings.set(name, puppeteerFunction);
+        }
+        that._pageBindings.set(name, puppeteerFunction);
         const expression = helper.evaluationString(addPageBinding, name);
-        await this._client.send("Runtime.addBinding", {name: name});
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", {source: expression});
-        await Promise.all(this.frames().map(frame => frame.evaluate(expression).catch(debugError)));
+        await that._client.cdpSend3("Runtime.addBinding", {name: name});
+        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {source: expression});
+        await Promise.all(that.frames().map(function (frame) { return frame.evaluate(expression).catch(debugError); }));
         function addPageBinding(bindingName) {
             const binding = window[bindingName];
-            window[bindingName] = (...args) => {
+            window[bindingName] = function (...args) {
                 const me = window[bindingName];
                 let callbacks = me["callbacks"];
                 if (!callbacks) {
@@ -4971,7 +5154,7 @@ class Page extends EventEmitter {
                 }
                 const seq = (me["lastSeq"] || 0) + 1;
                 me["lastSeq"] = seq;
-                const promise = new Promise((resolve, reject) => callbacks.set(seq, {resolve, reject}));
+                const promise = new Promise(function (resolve, reject) { return callbacks.set(seq, {resolve, reject}); });
                 binding(JSON.stringify({name: bindingName, seq, args}));
                 return promise;
             };
@@ -4999,7 +5182,7 @@ class Page extends EventEmitter {
       * @return {!Promise<!Metrics>}
       */
     async metrics() {
-        const response = await this._client.send("Performance.getMetrics");
+        const response = await this._client.cdpSend3("Performance.getMetrics");
         return this._buildMetricsObject(response.metrics);
     }
     /**
@@ -5018,8 +5201,9 @@ class Page extends EventEmitter {
     _buildMetricsObject(metrics) {
         const result = {};
         for (const metric of metrics || []) {
-            if (supportedMetrics.has(metric.name))
+            if (supportedMetrics.has(metric.name)) {
                 result[metric.name] = metric.value;
+            }
         }
         return result;
     }
@@ -5053,7 +5237,7 @@ class Page extends EventEmitter {
             return;
         }
         const context = this._frameManager.executionContextById(event.executionContextId);
-        const values = event.args.map(arg => createJSHandle(context, arg));
+        const values = event.args.map(function (arg) { return createJSHandle(context, arg); });
         this._addConsoleMessage(event.type, values, event.stackTrace);
     }
     /**
@@ -5066,12 +5250,14 @@ class Page extends EventEmitter {
             const result = await this._pageBindings.get(name)(...args);
             expression = helper.evaluationString(deliverResult, name, seq, result);
         } catch (error) {
-            if (error instanceof Error)
+            if (error instanceof Error) {
                 expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
-            else
+            }
+            else {
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
+            }
         }
-        this._client.send("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
+        this._client.cdpSend3("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
         /**
           * @param {string} name
           * @param {number} seq
@@ -5110,16 +5296,18 @@ class Page extends EventEmitter {
       */
     _addConsoleMessage(type, args, stackTrace) {
         if (!this.listenerCount(Events.Page.Console)) {
-            args.forEach(arg => arg.dispose());
+            args.forEach(function (arg) { return arg.dispose(); });
             return;
         }
         const textTokens = [];
         for (const arg of args) {
             const remoteObject = arg._remoteObject;
-            if (remoteObject.objectId)
+            if (remoteObject.objectId) {
                 textTokens.push(arg.toString());
-            else
+            }
+            else {
                 textTokens.push(helper.valueFromRemoteObject(remoteObject));
+            }
         }
         const location = stackTrace && stackTrace.callFrames.length ? {
             url: stackTrace.callFrames[0].url,
@@ -5131,14 +5319,18 @@ class Page extends EventEmitter {
     }
     _onDialog(event) {
         let dialogType = null;
-        if (event.type === "alert")
+        if (event.type === "alert") {
             dialogType = Dialog.Type.Alert;
-        else if (event.type === "confirm")
+        }
+        else if (event.type === "confirm") {
             dialogType = Dialog.Type.Confirm;
-        else if (event.type === "prompt")
+        }
+        else if (event.type === "prompt") {
             dialogType = Dialog.Type.Prompt;
-        else if (event.type === "beforeunload")
+        }
+        else if (event.type === "beforeunload") {
             dialogType = Dialog.Type.BeforeUnload;
+        }
         assert(dialogType, "Unknown javascript dialog type: " + event.type);
         const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
         this.emit(Events.Page.Dialog, dialog);
@@ -5177,7 +5369,7 @@ class Page extends EventEmitter {
     async reload(options) {
         const [response] = await Promise.all([
             this.waitForNavigation(options),
-            this._client.send("Page.reload")
+            this._client.cdpSend3("Page.reload")
         ]);
         return response;
     }
@@ -5197,11 +5389,13 @@ class Page extends EventEmitter {
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, request => {
-            if (helper.isString(urlOrPredicate))
+        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, function (request) {
+            if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === request.url());
-            if (typeof urlOrPredicate === "function")
+            }
+            if (typeof urlOrPredicate === "function") {
                 return !!(urlOrPredicate(request));
+            }
             return false;
         }, timeout);
     }
@@ -5214,11 +5408,13 @@ class Page extends EventEmitter {
         const {
             timeout = this._timeoutSettings.timeout(),
         } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, response => {
-            if (helper.isString(urlOrPredicate))
+        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, function (response) {
+            if (helper.isString(urlOrPredicate)) {
                 return (urlOrPredicate === response.url());
-            if (typeof urlOrPredicate === "function")
+            }
+            if (typeof urlOrPredicate === "function") {
                 return !!(urlOrPredicate(response));
+            }
             return false;
         }, timeout);
     }
@@ -5241,18 +5437,19 @@ class Page extends EventEmitter {
       * @return {!Promise<?Puppeteer.Response>}
       */
     async _go(delta, options) {
-        const history = await this._client.send("Page.getNavigationHistory");
+        const history = await this._client.cdpSend3("Page.getNavigationHistory");
         const entry = history.entries[history.currentIndex + delta];
-        if (!entry)
+        if (!entry) {
             return null;
+        }
         const [response] = await Promise.all([
             this.waitForNavigation(options),
-            this._client.send("Page.navigateToHistoryEntry", {entryId: entry.id}),
+            this._client.cdpSend3("Page.navigateToHistoryEntry", {entryId: entry.id}),
         ]);
         return response;
     }
     async bringToFront() {
-        await this._client.send("Page.bringToFront");
+        await this._client.cdpSend3("Page.bringToFront");
     }
     /**
       * @param {!{viewport: !Puppeteer.Viewport, userAgent: string}} options
@@ -5267,23 +5464,24 @@ class Page extends EventEmitter {
       * @param {boolean} enabled
       */
     async setJavaScriptEnabled(enabled) {
-        if (this._javascriptEnabled === enabled)
+        if (this._javascriptEnabled === enabled) {
             return;
+        }
         this._javascriptEnabled = enabled;
-        await this._client.send("Emulation.setScriptExecutionDisabled", { value: !enabled });
+        await this._client.cdpSend3("Emulation.setScriptExecutionDisabled", { value: !enabled });
     }
     /**
       * @param {boolean} enabled
       */
     async setBypassCSP(enabled) {
-        await this._client.send("Page.setBypassCSP", { enabled });
+        await this._client.cdpSend3("Page.setBypassCSP", { enabled });
     }
     /**
       * @param {?string} mediaType
       */
     async emulateMedia(mediaType) {
         assert(mediaType === "screen" || mediaType === "print" || mediaType === null, "Unsupported media type: " + mediaType);
-        await this._client.send("Emulation.setEmulatedMedia", {media: mediaType || ""});
+        await this._client.cdpSend3("Emulation.setEmulatedMedia", {media: mediaType || ""});
     }
     /**
       * @param {!Puppeteer.Viewport} viewport
@@ -5291,8 +5489,9 @@ class Page extends EventEmitter {
     async setViewport(viewport) {
         const needsReload = await this._emulationManager.emulateViewport(viewport);
         this._viewport = viewport;
-        if (needsReload)
+        if (needsReload) {
             await this.reload();
+        }
     }
     /**
       * @return {?Puppeteer.Viewport}
@@ -5314,7 +5513,7 @@ class Page extends EventEmitter {
       */
     async evaluateOnNewDocument(pageFunction, ...args) {
         const source = helper.evaluationString(pageFunction, ...args);
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", { source });
+        await this._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", { source });
     }
     /**
       * @param {boolean} enabled
@@ -5335,14 +5534,17 @@ class Page extends EventEmitter {
             screenshotType = options.type;
         } else if (options.path) {
             const mimeType = mime.getType(options.path);
-            if (mimeType === "image/png")
+            if (mimeType === "image/png") {
                 screenshotType = "png";
-            else if (mimeType === "image/jpeg")
+            }
+            else if (mimeType === "image/jpeg") {
                 screenshotType = "jpeg";
+            }
             assert(screenshotType, "Unsupported screenshot mime type: " + mimeType);
         }
-        if (!screenshotType)
+        if (!screenshotType) {
             screenshotType = "png";
+        }
         if (options.quality) {
             assert(screenshotType === "jpeg", "options.quality is unsupported for the " + screenshotType + " screenshots");
             assert(typeof options.quality === "number", "Expected options.quality to be a number but found " + (typeof options.quality));
@@ -5366,10 +5568,10 @@ class Page extends EventEmitter {
       * @return {!Promise<!Buffer|!String>}
       */
     async _screenshotTask(format, options) {
-        await this._client.send("Target.activateTarget", {targetId: this._target._targetId});
+        await this._client.cdpSend3("Target.activateTarget", {targetId: this._target._targetId});
         let clip = options.clip ? processClip(options.clip) : undefined;
         if (options.fullPage) {
-            const metrics = await this._client.send("Page.getLayoutMetrics");
+            const metrics = await this._client.cdpSend3("Page.getLayoutMetrics");
             const width = Math.ceil(metrics.contentSize.width);
             const height = Math.ceil(metrics.contentSize.height);
             // Overwrite clip for full page at all times.
@@ -5381,19 +5583,23 @@ class Page extends EventEmitter {
             } = this._viewport || {};
             /** @type {!Protocol.Emulation.ScreenOrientation} */
             const screenOrientation = isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
-            await this._client.send("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
+            await this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
         }
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
-        if (shouldSetDefaultBackground)
-            await this._client.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
-        const result = await this._client.send("Page.captureScreenshot", { format, quality: options.quality, clip });
-        if (shouldSetDefaultBackground)
-            await this._client.send("Emulation.setDefaultBackgroundColorOverride");
-        if (options.fullPage && this._viewport)
+        if (shouldSetDefaultBackground) {
+            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
+        }
+        const result = await this._client.cdpSend3("Page.captureScreenshot", { format, quality: options.quality, clip });
+        if (shouldSetDefaultBackground) {
+            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride");
+        }
+        if (options.fullPage && this._viewport) {
             await this.setViewport(this._viewport);
+        }
         const buffer = options.encoding === "base64" ? result.data : Buffer.from(result.data, "base64");
-        if (options.path)
+        if (options.path) {
             await writeFileAsync(options.path, buffer);
+        }
         return buffer;
         function processClip(clip) {
             const x = Math.round(clip.x);
@@ -5435,7 +5641,7 @@ class Page extends EventEmitter {
         const marginLeft = convertPrintParameterToInches(margin.left) || 0;
         const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
         const marginRight = convertPrintParameterToInches(margin.right) || 0;
-        const result = await this._client.send("Page.printToPDF", {
+        const result = await this._client.cdpSend3("Page.printToPDF", {
             transferMode: "ReturnAsStream",
             landscape,
             displayHeaderFooter,
@@ -5467,9 +5673,9 @@ class Page extends EventEmitter {
         assert(!!this._client._connection, "Protocol error: Connection closed. Most likely the page has been closed.");
         const runBeforeUnload = !!options.runBeforeUnload;
         if (runBeforeUnload) {
-            await this._client.send("Page.close");
+            await this._client.cdpSend3("Page.close");
         } else {
-            await this._client._connection.send("Target.closeTarget", { targetId: this._target._targetId });
+            await this._client._connection.cdpSend2("Target.closeTarget", { targetId: this._target._targetId });
             await this._target._isClosedPromise;
         }
     }
@@ -5696,34 +5902,39 @@ class Target {
       * @param {!Puppeteer.TaskQueue} screenshotTaskQueue
       */
     constructor(targetInfo, browserContext, sessionFactory, ignoreHTTPSErrors, defaultViewport, screenshotTaskQueue) {
-        this._targetInfo = targetInfo;
-        this._browserContext = browserContext;
-        this._targetId = targetInfo.targetId;
-        this._sessionFactory = sessionFactory;
-        this._ignoreHTTPSErrors = ignoreHTTPSErrors;
-        this._defaultViewport = defaultViewport;
-        this._screenshotTaskQueue = screenshotTaskQueue;
+        let that = this;
+        that._targetInfo = targetInfo;
+        that._browserContext = browserContext;
+        that._targetId = targetInfo.targetId;
+        that._sessionFactory = sessionFactory;
+        that._ignoreHTTPSErrors = ignoreHTTPSErrors;
+        that._defaultViewport = defaultViewport;
+        that._screenshotTaskQueue = screenshotTaskQueue;
         /** @type {?Promise<!Puppeteer.Page>} */
-        this._pagePromise = null;
+        that._pagePromise = null;
         /** @type {?Promise<!Worker>} */
-        this._workerPromise = null;
-        this._initializedPromise = new Promise(fulfill => this._initializedCallback = fulfill).then(async success => {
-            if (!success)
+        that._workerPromise = null;
+        that._initializedPromise = new Promise(function (fulfill) { return that._initializedCallback = fulfill; }).then(async function (success) {
+            if (!success) {
                 return false;
-            const opener = this.opener();
-            if (!opener || !opener._pagePromise || this.type() !== "page")
+            }
+            const opener = that.opener();
+            if (!opener || !opener._pagePromise || that.type() !== "page") {
                 return true;
+            }
             const openerPage = await opener._pagePromise;
-            if (!openerPage.listenerCount(Events.Page.Popup))
+            if (!openerPage.listenerCount(Events.Page.Popup)) {
                 return true;
-            const popupPage = await this.page();
+            }
+            const popupPage = await that.page();
             openerPage.emit(Events.Page.Popup, popupPage);
             return true;
         });
-        this._isClosedPromise = new Promise(fulfill => this._closedCallback = fulfill);
-        this._isInitialized = this._targetInfo.type !== "page" || this._targetInfo.url !== "";
-        if (this._isInitialized)
-            this._initializedCallback(true);
+        that._isClosedPromise = new Promise(function (fulfill) { return that._closedCallback = fulfill; });
+        that._isInitialized = that._targetInfo.type !== "page" || that._targetInfo.url !== "";
+        if (that._isInitialized) {
+            that._initializedCallback(true);
+        }
     }
     /**
       * @return {!Promise<!Puppeteer.CDPSession>}
@@ -5735,28 +5946,30 @@ class Target {
       * @return {!Promise<?Page>}
       */
     async page() {
-        if ((this._targetInfo.type === "page" || this._targetInfo.type === "background_page") && !this._pagePromise) {
-            this._pagePromise = this._sessionFactory()
-                    .then(client => Page.create(client, this, this._ignoreHTTPSErrors, this._defaultViewport, this._screenshotTaskQueue));
+        let that = this;
+        if ((that._targetInfo.type === "page" || that._targetInfo.type === "background_page") && !that._pagePromise) {
+            that._pagePromise = that._sessionFactory()
+                    .then(function (client) { return Page.create(client, that, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue); });
         }
-        return this._pagePromise;
+        return that._pagePromise;
     }
     /**
       * @return {!Promise<?Worker>}
       */
     async worker() {
-        if (this._targetInfo.type !== "service_worker" && this._targetInfo.type !== "shared_worker")
+        if (this._targetInfo.type !== "service_worker" && this._targetInfo.type !== "shared_worker") {
             return null;
+        }
         if (!this._workerPromise) {
-            this._workerPromise = this._sessionFactory().then(async client => {
+            this._workerPromise = this._sessionFactory().then(async function (client) {
                 // Top level workers have a fake page wrapping the actual worker.
                 const [targetAttached] = await Promise.all([
-                    new Promise(x => client.once("Target.attachedToTarget", x)),
-                    client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+                    new Promise(function (x) { return client.once("Target.attachedToTarget", x); }),
+                    client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
                 ]);
                 const session = Connection.fromSession(client).session(targetAttached.sessionId);
                 // TODO(einbinder): Make workers send their console logs.
-                return new Worker(session, this._targetInfo.url, () => {} /* consoleAPICalled */, () => {} /* exceptionThrown */);
+                return new Worker(session, this._targetInfo.url, function () {} /* consoleAPICalled */, function () {} /* exceptionThrown */);
             });
         }
         return this._workerPromise;
@@ -5772,8 +5985,9 @@ class Target {
       */
     type() {
         const type = this._targetInfo.type;
-        if (type === "page" || type === "background_page" || type === "service_worker" || type === "shared_worker" || type === "browser")
+        if (type === "page" || type === "background_page" || type === "service_worker" || type === "shared_worker" || type === "browser") {
             return type;
+        }
         return "other";
     }
     /**
@@ -5793,8 +6007,9 @@ class Target {
       */
     opener() {
         const { openerId } = this._targetInfo;
-        if (!openerId)
+        if (!openerId) {
             return null;
+        }
         return this.browser()._targets.get(openerId);
     }
     /**
@@ -5823,7 +6038,7 @@ class TaskQueue {
       */
     postTask(task) {
         const result = this._chain.then(task);
-        this._chain = result.catch(() => {});
+        this._chain = result.catch(function () {});
         return result;
     }
 }
@@ -5853,30 +6068,21 @@ class TimeoutSettings {
         this._defaultNavigationTimeout = null;
     }
     /**
-      * @param {number} timeout
-      */
-    setDefaultTimeout(timeout) {
-        this._defaultTimeout = timeout;
-    }
-    /**
-      * @param {number} timeout
-      */
-    setDefaultNavigationTimeout(timeout) {
-        this._defaultNavigationTimeout = timeout;
-    }
-    /**
       * @return {number}
       */
     navigationTimeout() {
-        if (this._defaultNavigationTimeout !== null)
+        if (this._defaultNavigationTimeout !== null) {
             return this._defaultNavigationTimeout;
-        if (this._defaultTimeout !== null)
+        }
+        if (this._defaultTimeout !== null) {
             return this._defaultTimeout;
+        }
         return DEFAULT_TIMEOUT;
     }
     timeout() {
-        if (this._defaultTimeout !== null)
+        if (this._defaultTimeout !== null) {
             return this._defaultTimeout;
+        }
         return DEFAULT_TIMEOUT;
     }
 }
@@ -5939,11 +6145,14 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/index.js
   * limitations under the License.
   */
 const api = exports_puppeteer_puppeteer_lib_api;
-for (const className in api) {
+Object.entries(api).forEach(function ([
+    className, val
+]) {
     // Puppeteer-web excludes certain classes from bundle, e.g. BrowserFetcher.
-    if (typeof api[className] === "function")
-        helper.installAsyncStackHooks(api[className]);
-}
+    if (typeof val === "function") {
+        helper.installAsyncStackHooks(val);
+    }
+});
 // If node does not support async await, use the compiled version.
 const Puppeteer = exports_puppeteer_puppeteer_lib_Puppeteer
 const packageJson = exports_puppeteer_puppeteer_package_json;

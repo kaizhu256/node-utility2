@@ -52,6 +52,8 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
+- update file lib.puppeteer.js with simplified websockets part 3 - jslint file and replace caller ws2.send() with sck2.cdpSend()
+- rename function nop to noop
 - update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and websocket-non-chrome code and errors
 - update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors
 - remove dependency on env-var \$CHROME_BIN
@@ -242,7 +244,7 @@ instruction
      */
         return val;
     }
-    function nop() {
+    function noop() {
     /*
      * this function will do nothing
      */
@@ -296,19 +298,20 @@ instruction
         });
     }
     // init local
-    local = {};
-    local.local = local;
+    local = {
+        assertJsonEqual,
+        assertOrThrow,
+        coalesce,
+        identity,
+        isBrowser,
+        isWebWorker,
+        local,
+        noop,
+        objectAssignDefault,
+        objectDeepCopyWithKeysSorted,
+        onErrorThrow
+    };
     globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.nop = nop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.objectDeepCopyWithKeysSorted = objectDeepCopyWithKeysSorted;
-    local.onErrorThrow = onErrorThrow;
 }());
 // assets.utility2.header.js - end
 
@@ -775,7 +778,7 @@ pre {\n\
         evt.targetOnEvent = evt.target.closest("[data-onevent]");\n\
         if (\n\
             !evt.targetOnEvent\n\
-            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"\n\
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNoop"\n\
             || evt.target.closest(".disabled,.readonly")\n\
         ) {\n\
             return;\n\
@@ -909,7 +912,7 @@ utility2-comment -->\n\
      * this function will run a failed error demo\n\
      */\n\
         // hack-jslint\n\
-        window.utility2.nop(opt);\n\
+        window.utility2.noop(opt);\n\
         onError(new Error("this is a failed error demo"));\n\
     };\n\
 \n\

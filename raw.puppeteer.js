@@ -279,7 +279,7 @@ shRawLibFetch
 +local._puppeteer = exports_puppeteer_puppeteer_index;
 +local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
 +local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
-+local.nop(local.puppeteerLaunch);
++local.noop(local.puppeteerLaunch);
 
 -exports_puppeteer_puppeteer_lib_helper = {
 -  helper: Helper,
@@ -12668,7 +12668,7 @@ let isValidUTF8     = exports_websockets_ws_lib_validation.isValidUTF8;
 local._puppeteer = exports_puppeteer_puppeteer_index;
 local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
 local.puppeteerLaunch = local._puppeteer.launch.bind(local._puppeteer);
-local.nop(local.puppeteerLaunch);
+local.noop(local.puppeteerLaunch);
 
 
 /*
