@@ -749,7 +749,6 @@ function Socket2(socket) {
   * HyBi Sender implementation.
   */
     let ERR_PAYLOAD_LENGTH;
-    let ERR_PAYLOAD_TYPE;
     let READ_HEADER;
     let READ_LENGTH16;
     let READ_LENGTH63;
@@ -765,11 +764,6 @@ function Socket2(socket) {
         let header;
         let maskKey;
         let result;
-        // validate payload
-        local.assertOrThrow(
-            Object.prototype.toString.call(payload) === "[object Uint8Array]",
-            ERR_PAYLOAD_TYPE
-        );
         // console.error("SEND ► " + payload.toString());
         // init header
         header = Buffer.alloc(2 + 8 + 4);
@@ -977,7 +971,6 @@ function Socket2(socket) {
     ERR_PAYLOAD_LENGTH = new RangeError(
         "payload-length must be between 0 and 256 MiB"
     );
-    ERR_PAYLOAD_TYPE = new Error("payload must be Buffer or Uint8Array");
     READ_HEADER = 0;
     READ_LENGTH16 = 1;
     READ_LENGTH63 = 2;
@@ -1346,7 +1339,7 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client._connection.sck2.cdpSend("Runtime.releaseObject", {
+        await client.send("Runtime.releaseObject", {
             objectId: remoteObject.objectId
         }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
