@@ -831,6 +831,21 @@ function Socket2(socket) {
         }
         return result;
     }
+    function cdpSend({
+        method,
+        params = {},
+        sessionId = undefined
+    }) {
+        let id;
+        id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
+        that.write(Buffer.from(JSON.stringify({
+            id,
+            method,
+            params,
+            sessionId
+        })));
+        return id;
+    }
     function frameRead() {
     /*
      * this function will read from websocket-data-frame
@@ -940,6 +955,7 @@ function Socket2(socket) {
     require("stream").Duplex.call(that);
     that._read2 = _read;
     that._write2 = _write;
+    that.cdpSend = cdpSend;
     // init Reader
     function Reader() {
         require("stream").Transform.call(this);
@@ -1058,11 +1074,6 @@ function WebSocket(address) {
         ws2.readyState = WebSocket.CLOSED;
         ws2.emit("close");
     }
-    ws2.send = function (data) {
-        sck2.write(data);
-    };
-    //!! ws2 = this;
-    //!! require("stream").Transform.call(ws2);
     ws2.close = close;
     ws2.emitClose = emitClose;
     ws2.readyState = WebSocket.CONNECTING;
