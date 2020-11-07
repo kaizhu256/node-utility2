@@ -831,11 +831,7 @@ function Socket2(socket) {
         }
         return result;
     }
-    function cdpSend({
-        method,
-        params = {},
-        sessionId = undefined
-    }) {
+    function cdpSend(method, params = {}, sessionId = undefined) {
         let id;
         id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
         that.write(Buffer.from(JSON.stringify({
@@ -1350,9 +1346,8 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client._connection.sck2.cdpSend({
-            method: "Runtime.releaseObject",
-            params: {objectId: remoteObject.objectId}
+        await client._connection.sck2.cdpSend("Runtime.releaseObject", {
+            objectId: remoteObject.objectId
         }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
             // Swallow these since they are harmless and we don't leak anything in this case.
@@ -2032,11 +2027,11 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   */
 CDPSession.prototype.send = function (method, params) {
     let that = this;
-    let id = that._connection.sck2.cdpSend({
+    let id = that._connection.sck2.cdpSend(
         method,
         params,
-        sessionId: that._sessionId
-    });
+        that._sessionId
+    );
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
@@ -2150,10 +2145,7 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    let id = that.sck2.cdpSend({
-        method,
-        params
-    });
+    let id = that.sck2.cdpSend(method, params);
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
