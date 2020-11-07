@@ -1350,7 +1350,10 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client.send("Runtime.releaseObject", {objectId: remoteObject.objectId}).catch(function (error) {
+        await client._connection.sck2.cdpSend({
+            method: "Runtime.releaseObject",
+            params: {objectId: remoteObject.objectId}
+        }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
             // Swallow these since they are harmless and we don't leak anything in this case.
             debugError(error);
