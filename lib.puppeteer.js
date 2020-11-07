@@ -1095,9 +1095,6 @@ function WebSocket(address) {
         }
         sck2 = new Socket2(socket); // jslint ignore:line
         ws2.sck2 = sck2;
-        sck2.on("data", function (payload) {
-            ws2.emit("message", payload.toString());
-        });
         ws2.emit("upgrade", res);
         // The user may have closed the connection from a listener
         // of the `upgrade` event.
@@ -2091,7 +2088,6 @@ function Connection(url, ws2, delay = 0) {
      */
     this._callbacks = new Map();
     this._delay = delay;
-    this.ws2 = ws2;
     sck2 = ws2.sck2;
     this.sck2 = sck2;
     sck2.on("data", async function (message) {
@@ -2143,14 +2139,13 @@ function Connection(url, ws2, delay = 0) {
             that.emit(object.method, object.params);
         }
     });
-    ws2.addEventListener("close", function () {
-        if (that.onclose) {
-            that.onclose.call(null);
-        }
-    });
-    // Silently ignore all errors - we don't know what to do with them.
-    ws2.addEventListener("error", local.noop);
-    this.onmessage = this._onMessage.bind(this);
+    //!! sck2.on("close", function () {
+        //!! if (that.onclose) {
+            //!! that.onclose.call(null);
+        //!! }
+    //!! });
+    //!! // Silently ignore all errors - we don't know what to do with them.
+    //!! sck2.on("error", local.noop);
     this.onclose = this._onClose.bind(this);
     /** @type {!Map<string, !CDPSession>}*/
     this._sessions = new Map();
@@ -2193,56 +2188,6 @@ Connection.prototype.cdpSend2 = function (method, params = {}) {
             method
         });
     });
-};
-/**
-  * @param {string} message
-  */
-Connection.prototype._onMessage = async function (message) {
-    let that = this;
-    let session;
-    if (that._delay) {
-        await new Promise(function (f) {
-            setTimeout(f, that._delay);
-        });
-    }
-    // console.error("◀ RECV " + message);
-    const object = JSON.parse(message);
-    if (object.method === "Target.attachedToTarget") {
-        const sessionId = object.params.sessionId;
-        session = new CDPSession(
-            that,
-            object.params.targetInfo.type,
-            sessionId
-        );
-        that._sessions.set(sessionId, session);
-    } else if (object.method === "Target.detachedFromTarget") {
-        session = that._sessions.get(object.params.sessionId);
-        if (session) {
-            session._onClosed();
-            that._sessions.delete(object.params.sessionId);
-        }
-    }
-    if (object.sessionId) {
-        session = that._sessions.get(object.sessionId);
-        if (session) {
-            session._onMessage(object);
-        }
-    } else if (object.id) {
-        const callback = that._callbacks.get(object.id);
-        // Callbacks could be all rejected if someone has called `.dispose()`.
-        if (callback) {
-            that._callbacks.delete(object.id);
-            if (object.error) {
-                callback.reject(
-                    createProtocolError(callback.error, callback.method, object)
-                );
-            } else {
-                callback.resolve(object.result);
-            }
-        }
-    } else {
-        that.emit(object.method, object.params);
-    }
 };
 Connection.prototype._onClose = function () {
     if (this._closed) {
