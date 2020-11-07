@@ -2093,9 +2093,12 @@ function Connection(url, ws2, delay = 0) {
     this.sck2 = ws2.sck2;
     let that = this;
     ws2.addEventListener("message", function (event) {
-        if (that.onmessage) {
-            that.onmessage.call(null, event.data);
+        if (!that.onmessage) {
+            return;
         }
+        let message;
+        message = event.data;
+        that.onmessage.call(null, message);
     });
     ws2.addEventListener("close", function () {
         if (that.onclose) {
@@ -2164,28 +2167,28 @@ Connection.prototype._onMessage = async function (message) {
     if (object.method === "Target.attachedToTarget") {
         const sessionId = object.params.sessionId;
         session = new CDPSession(
-            this,
+            that,
             object.params.targetInfo.type,
             sessionId
         );
-        this._sessions.set(sessionId, session);
+        that._sessions.set(sessionId, session);
     } else if (object.method === "Target.detachedFromTarget") {
-        session = this._sessions.get(object.params.sessionId);
+        session = that._sessions.get(object.params.sessionId);
         if (session) {
             session._onClosed();
-            this._sessions.delete(object.params.sessionId);
+            that._sessions.delete(object.params.sessionId);
         }
     }
     if (object.sessionId) {
-        session = this._sessions.get(object.sessionId);
+        session = that._sessions.get(object.sessionId);
         if (session) {
             session._onMessage(object);
         }
     } else if (object.id) {
-        const callback = this._callbacks.get(object.id);
+        const callback = that._callbacks.get(object.id);
         // Callbacks could be all rejected if someone has called `.dispose()`.
         if (callback) {
-            this._callbacks.delete(object.id);
+            that._callbacks.delete(object.id);
             if (object.error) {
                 callback.reject(
                     createProtocolError(callback.error, callback.method, object)
@@ -2195,7 +2198,7 @@ Connection.prototype._onMessage = async function (message) {
             }
         }
     } else {
-        this.emit(object.method, object.params);
+        that.emit(object.method, object.params);
     }
 };
 Connection.prototype._onClose = function () {
