@@ -1339,7 +1339,7 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client.send("Runtime.releaseObject", {
+        await client.cdpSend3("Runtime.releaseObject", {
             objectId: remoteObject.objectId
         }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
@@ -1488,7 +1488,7 @@ class Helper {
         }
         const bufs = [];
         while (!eof) {
-            const response = await client.send("IO.read", {handle});
+            const response = await client.cdpSend3("IO.read", {handle});
             eof = response.eof;
             const buf = Buffer.from(response.data, response.base64Encoded ? "base64" : undefined);
             bufs.push(buf);
@@ -1499,7 +1499,7 @@ class Helper {
         if (path) {
             await closeAsync(file);
         }
-        await client.send("IO.close", {handle});
+        await client.cdpSend3("IO.close", {handle});
         let resultBuffer = null;
         try {
             resultBuffer = Buffer.concat(bufs);
@@ -1561,7 +1561,7 @@ class Browser extends EventEmitter {
       */
     static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback) {
         const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, closeCallback);
-        await connection.send("Target.setDiscoverTargets", {discover: true});
+        await connection.cdpSend2("Target.setDiscoverTargets", {discover: true});
         return browser;
     }
     /**
@@ -1604,7 +1604,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!BrowserContext>}
       */
     async createIncognitoBrowserContext() {
-        const {browserContextId} = await this._connection.send("Target.createBrowserContext");
+        const {browserContextId} = await this._connection.cdpSend2("Target.createBrowserContext");
         const context = new BrowserContext(this._connection, this, browserContextId);
         this._contexts.set(browserContextId, context);
         return context;
@@ -1625,7 +1625,7 @@ class Browser extends EventEmitter {
       * @param {?string} contextId
       */
     async _disposeContext(contextId) {
-        await this._connection.send("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
+        await this._connection.cdpSend2("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
         this._contexts.delete(contextId);
     }
     /**
@@ -1688,7 +1688,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Puppeteer.Page>}
       */
     async _createPageInContext(contextId) {
-        const {targetId} = await this._connection.send("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+        const {targetId} = await this._connection.cdpSend2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
         const target = await this._targets.get(targetId);
         assert(await target._initializedPromise, "Failed to create target for page");
         const page = await target.page();
@@ -1780,7 +1780,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Object>}
       */
     _getVersion() {
-        return this._connection.send("Browser.getVersion");
+        return this._connection.cdpSend2("Browser.getVersion");
     }
 }
 class BrowserContext extends EventEmitter {
@@ -1859,10 +1859,10 @@ class BrowserContext extends EventEmitter {
             }
             return protocolPermission;
         });
-        await this._connection.send("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
+        await this._connection.cdpSend2("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
     }
     async clearPermissionOverrides() {
-        await this._connection.send("Browser.resetPermissions", {browserContextId: this._id || undefined});
+        await this._connection.cdpSend2("Browser.resetPermissions", {browserContextId: this._id || undefined});
     }
     /**
       * @return {!Promise<!Puppeteer.Page>}
@@ -2018,7 +2018,7 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   * @param {!Object=} params
   * @return {!Promise<?Object>}
   */
-CDPSession.prototype.send = function (method, params) {
+CDPSession.prototype.cdpSend3 = function (method, params) {
     let that = this;
     let id = that._connection.sck2.cdpSend(
         method,
@@ -2060,7 +2060,7 @@ CDPSession.prototype.detach = async function () {
             + "has been closed."
         );
     }
-    await this._connection.send("Target.detachFromTarget", {
+    await this._connection.cdpSend2("Target.detachFromTarget", {
         sessionId: this._sessionId
     });
 };
@@ -2136,7 +2136,7 @@ Connection.prototype.url = function () {
   * @param {!Object=} params
   * @return {!Promise<?Object>}
   */
-Connection.prototype.send = function (method, params = {}) {
+Connection.prototype.cdpSend2 = function (method, params = {}) {
     let that = this;
     let id = that.sck2.cdpSend(method, params);
     return new Promise(function (resolve, reject) {
@@ -2230,7 +2230,7 @@ Connection.prototype.dispose = function () {
 Connection.prototype.createSession = async function (targetInfo) {
     const {
         sessionId
-    } = await this.send("Target.attachToTarget", {
+    } = await this.cdpSend2("Target.attachToTarget", {
         targetId: targetInfo.targetId,
         flatten: true
     });
@@ -2332,10 +2332,10 @@ class JSCoverage {
             helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
         ];
         await Promise.all([
-            this._client.send("Profiler.enable"),
-            this._client.send("Profiler.startPreciseCoverage", {callCount: false, detailed: true}),
-            this._client.send("Debugger.enable"),
-            this._client.send("Debugger.setSkipAllPauses", {skip: true})
+            this._client.cdpSend3("Profiler.enable"),
+            this._client.cdpSend3("Profiler.startPreciseCoverage", {callCount: false, detailed: true}),
+            this._client.cdpSend3("Debugger.enable"),
+            this._client.cdpSend3("Debugger.setSkipAllPauses", {skip: true})
         ]);
     }
     _onExecutionContextsCleared() {
@@ -2358,7 +2358,7 @@ class JSCoverage {
             return;
         }
         try {
-            const response = await this._client.send("Debugger.getScriptSource", {scriptId: event.scriptId});
+            const response = await this._client.cdpSend3("Debugger.getScriptSource", {scriptId: event.scriptId});
             this._scriptURLs.set(event.scriptId, event.url);
             this._scriptSources.set(event.scriptId, response.scriptSource);
         } catch (e) {
@@ -2373,10 +2373,10 @@ class JSCoverage {
         assert(this._enabled, "JSCoverage is not enabled");
         this._enabled = false;
         const [profileResponse] = await Promise.all([
-            this._client.send("Profiler.takePreciseCoverage"),
-            this._client.send("Profiler.stopPreciseCoverage"),
-            this._client.send("Profiler.disable"),
-            this._client.send("Debugger.disable"),
+            this._client.cdpSend3("Profiler.takePreciseCoverage"),
+            this._client.cdpSend3("Profiler.stopPreciseCoverage"),
+            this._client.cdpSend3("Profiler.disable"),
+            this._client.cdpSend3("Debugger.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
         const coverage = [];
@@ -2426,9 +2426,9 @@ class CSSCoverage {
             helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
         ];
         await Promise.all([
-            this._client.send("DOM.enable"),
-            this._client.send("CSS.enable"),
-            this._client.send("CSS.startRuleUsageTracking"),
+            this._client.cdpSend3("DOM.enable"),
+            this._client.cdpSend3("CSS.enable"),
+            this._client.cdpSend3("CSS.startRuleUsageTracking"),
         ]);
     }
     _onExecutionContextsCleared() {
@@ -2448,7 +2448,7 @@ class CSSCoverage {
             return;
         }
         try {
-            const response = await this._client.send("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
+            const response = await this._client.cdpSend3("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
             this._stylesheetURLs.set(header.styleSheetId, header.sourceURL);
             this._stylesheetSources.set(header.styleSheetId, response.text);
         } catch (e) {
@@ -2462,10 +2462,10 @@ class CSSCoverage {
     async stop() {
         assert(this._enabled, "CSSCoverage is not enabled");
         this._enabled = false;
-        const ruleTrackingResponse = await this._client.send("CSS.stopRuleUsageTracking");
+        const ruleTrackingResponse = await this._client.cdpSend3("CSS.stopRuleUsageTracking");
         await Promise.all([
-            this._client.send("CSS.disable"),
-            this._client.send("DOM.disable"),
+            this._client.cdpSend3("CSS.disable"),
+            this._client.cdpSend3("DOM.disable"),
         ]);
         helper.removeEventListeners(this._eventListeners);
         // aggregate by styleSheetId
@@ -2713,7 +2713,7 @@ class Dialog {
     async accept(promptText) {
         assert(!this._handled, "Cannot accept dialog which is already handled!");
         this._handled = true;
-        await this._client.send("Page.handleJavaScriptDialog", {
+        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
             accept: true,
             promptText: promptText
         });
@@ -2721,7 +2721,7 @@ class Dialog {
     async dismiss() {
         assert(!this._handled, "Cannot dismiss dialog which is already handled!");
         this._handled = true;
-        await this._client.send("Page.handleJavaScriptDialog", {
+        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
             accept: false
         });
     }
@@ -2773,8 +2773,8 @@ class EmulationManager {
         const screenOrientation = viewport.isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
         const hasTouch = viewport.hasTouch || false;
         await Promise.all([
-            this._client.send("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
-            this._client.send("Emulation.setTouchEmulationEnabled", {
+            this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
+            this._client.cdpSend3("Emulation.setTouchEmulationEnabled", {
                 enabled: hasTouch
             })
         ]);
@@ -2881,7 +2881,7 @@ class ExecutionContext {
             const contextId = this._contextId;
             const expression = /** @type {string} */ (pageFunction);
             const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression) ? expression : expression + "\n" + suffix;
-            const {exceptionDetails, result: remoteObject} = await this._client.send("Runtime.evaluate", {
+            const {exceptionDetails, result: remoteObject} = await this._client.cdpSend3("Runtime.evaluate", {
                 expression: expressionWithSourceUrl,
                 contextId,
                 returnByValue,
@@ -2919,7 +2919,7 @@ class ExecutionContext {
         }
         let callFunctionOnPromise;
         try {
-            callFunctionOnPromise = this._client.send("Runtime.callFunctionOn", {
+            callFunctionOnPromise = this._client.cdpSend3("Runtime.callFunctionOn", {
                 functionDeclaration: functionText + "\n" + suffix + "\n",
                 executionContextId: this._contextId,
                 arguments: args.map(convertArgument.bind(this)),
@@ -3002,7 +3002,7 @@ class ExecutionContext {
     async queryObjects(prototypeHandle) {
         assert(!prototypeHandle._disposed, "Prototype JSHandle is disposed!");
         assert(prototypeHandle._remoteObject.objectId, "Prototype JSHandle must not be referencing primitive value");
-        const response = await this._client.send("Runtime.queryObjects", {
+        const response = await this._client.cdpSend3("Runtime.queryObjects", {
             prototypeObjectId: prototypeHandle._remoteObject.objectId
         });
         return createJSHandle(this, response.objects);
@@ -3014,10 +3014,10 @@ class ExecutionContext {
     async _adoptElementHandle(elementHandle) {
         assert(elementHandle.executionContext() !== this, "Cannot adopt handle that already belongs to this execution context");
         assert(this._world, "Cannot adopt handle without DOMWorld");
-        const nodeInfo = await this._client.send("DOM.describeNode", {
+        const nodeInfo = await this._client.cdpSend3("DOM.describeNode", {
             objectId: elementHandle._remoteObject.objectId,
         });
-        const {object} = await this._client.send("DOM.resolveNode", {
+        const {object} = await this._client.cdpSend3("DOM.resolveNode", {
             backendNodeId: nodeInfo.node.backendNodeId,
             executionContextId: this._contextId,
         });
@@ -3085,13 +3085,13 @@ class FrameManager extends EventEmitter {
     async initialize() {
         let that = this;
         const [,{frameTree}] = await Promise.all([
-            that._client.send("Page.enable"),
-            that._client.send("Page.getFrameTree"),
+            that._client.cdpSend3("Page.enable"),
+            that._client.cdpSend3("Page.getFrameTree"),
         ]);
         that._handleFrameTree(frameTree);
         await Promise.all([
-            that._client.send("Page.setLifecycleEventsEnabled", { enabled: true }),
-            that._client.send("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
+            that._client.cdpSend3("Page.setLifecycleEventsEnabled", { enabled: true }),
+            that._client.cdpSend3("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
             that._networkManager.initialize(),
         ]);
     }
@@ -3140,7 +3140,7 @@ class FrameManager extends EventEmitter {
           */
         async function navigate(client, url, referrer, frameId) {
             try {
-                const response = await client.send("Page.navigate", {url, referrer, frameId});
+                const response = await client.cdpSend3("Page.navigate", {url, referrer, frameId});
                 ensureNewDocumentNavigation = !!response.loaderId;
                 return response.errorText ? new Error(`${response.errorText} at ${url}`) : null;
             } catch (error) {
@@ -3288,11 +3288,11 @@ class FrameManager extends EventEmitter {
             return;
         }
         that._isolatedWorlds.add(name);
-        await that._client.send("Page.addScriptToEvaluateOnNewDocument", {
+        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
             worldName: name,
         }),
-        await Promise.all(that.frames().map(function (frame) { return that._client.send("Page.createIsolatedWorld", {
+        await Promise.all(that.frames().map(function (frame) { return that._client.cdpSend3("Page.createIsolatedWorld", {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
@@ -3769,7 +3769,7 @@ class JSHandle {
       * @return {!Promise<!Map<string, !JSHandle>>}
       */
     async getProperties() {
-        const response = await this._client.send("Runtime.getProperties", {
+        const response = await this._client.cdpSend3("Runtime.getProperties", {
             objectId: this._remoteObject.objectId,
             ownProperties: true
         });
@@ -3787,7 +3787,7 @@ class JSHandle {
       */
     async jsonValue() {
         if (this._remoteObject.objectId) {
-            const response = await this._client.send("Runtime.callFunctionOn", {
+            const response = await this._client.cdpSend3("Runtime.callFunctionOn", {
                 functionDeclaration: "function() { return this; }",
                 objectId: this._remoteObject.objectId,
                 returnByValue: true,
@@ -4070,9 +4070,9 @@ class NetworkManager extends EventEmitter {
         this._client.on("Network.loadingFailed", this._onLoadingFailed.bind(this));
     }
     async initialize() {
-        await this._client.send("Network.enable");
+        await this._client.cdpSend3("Network.enable");
         if (this._ignoreHTTPSErrors) {
-            await this._client.send("Security.setIgnoreCertificateErrors", {ignore: true});
+            await this._client.cdpSend3("Security.setIgnoreCertificateErrors", {ignore: true});
         }
     }
     /**
@@ -4098,7 +4098,7 @@ class NetworkManager extends EventEmitter {
             assert(helper.isString(value), `Expected value of header "${key}" to be String, but "${typeof value}" is found.`);
             this._extraHTTPHeaders[key.toLowerCase()] = value;
         }
-        await this._client.send("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
+        await this._client.cdpSend3("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
     }
     /**
       * @return {!Object<string, string>}
@@ -4114,7 +4114,7 @@ class NetworkManager extends EventEmitter {
             return;
         }
         this._offline = value;
-        await this._client.send("Network.emulateNetworkConditions", {
+        await this._client.cdpSend3("Network.emulateNetworkConditions", {
             offline: this._offline,
             // values of 0 remove any active throttling. crbug.com/456324#c9
             latency: 0,
@@ -4126,7 +4126,7 @@ class NetworkManager extends EventEmitter {
       * @param {string} userAgent
       */
     async setUserAgent(userAgent) {
-        await this._client.send("Network.setUserAgentOverride", { userAgent });
+        await this._client.cdpSend3("Network.setUserAgentOverride", { userAgent });
     }
     /**
       * @param {boolean} enabled
@@ -4151,7 +4151,7 @@ class NetworkManager extends EventEmitter {
         if (enabled) {
             await Promise.all([
                 this._updateProtocolCacheDisabled(),
-                this._client.send("Fetch.enable", {
+                this._client.cdpSend3("Fetch.enable", {
                     handleAuthRequests: true,
                     patterns: [{urlPattern: "*"}],
                 }),
@@ -4159,12 +4159,12 @@ class NetworkManager extends EventEmitter {
         } else {
             await Promise.all([
                 this._updateProtocolCacheDisabled(),
-                this._client.send("Fetch.disable")
+                this._client.cdpSend3("Fetch.disable")
             ]);
         }
     }
     async _updateProtocolCacheDisabled() {
-        await this._client.send("Network.setCacheDisabled", {
+        await this._client.cdpSend3("Network.setCacheDisabled", {
             cacheDisabled: this._userCacheDisabled || this._protocolRequestInterceptionEnabled
         });
     }
@@ -4199,7 +4199,7 @@ class NetworkManager extends EventEmitter {
             this._attemptedAuthentications.add(event.requestId);
         }
         const {username, password} = this._credentials || {username: undefined, password: undefined};
-        this._client.send("Fetch.continueWithAuth", {
+        this._client.cdpSend3("Fetch.continueWithAuth", {
             requestId: event.requestId,
             authChallengeResponse: { response, username, password },
         }).catch(debugError);
@@ -4209,7 +4209,7 @@ class NetworkManager extends EventEmitter {
       */
     _onRequestPaused(event) {
         if (!this._userRequestInterceptionEnabled && this._protocolRequestInterceptionEnabled) {
-            this._client.send("Fetch.continueRequest", {
+            this._client.cdpSend3("Fetch.continueRequest", {
                 requestId: event.requestId
             }).catch(debugError);
         }
@@ -4430,7 +4430,7 @@ class Request {
             headers
         } = overrides;
         this._interceptionHandled = true;
-        await this._client.send("Fetch.continueRequest", {
+        await this._client.cdpSend3("Fetch.continueRequest", {
             requestId: this._interceptionId,
             url,
             method,
@@ -4467,7 +4467,7 @@ class Request {
         if (responseBody && ! responseHeaders.hasOwnProperty("content-length")) {
             responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
         }
-        await this._client.send("Fetch.fulfillRequest", {
+        await this._client.cdpSend3("Fetch.fulfillRequest", {
             requestId: this._interceptionId,
             responseCode: response.status || 200,
             responsePhrase: STATUS_TEXTS[response.status || 200],
@@ -4492,7 +4492,7 @@ class Request {
         assert(this._allowInterception, "Request Interception is not enabled!");
         assert(!this._interceptionHandled, "Request is already handled!");
         this._interceptionHandled = true;
-        await this._client.send("Fetch.failRequest", {
+        await this._client.cdpSend3("Fetch.failRequest", {
             requestId: this._interceptionId,
             errorReason
         }).catch(function (error) {
@@ -4599,7 +4599,7 @@ class Response {
                 if (error) {
                     throw error;
                 }
-                const response = await that._client.send("Network.getResponseBody", {
+                const response = await that._client.cdpSend3("Network.getResponseBody", {
                     requestId: that._request._requestId
                 });
                 return Buffer.from(response.body, response.base64Encoded ? "base64" : "utf8");
@@ -4847,7 +4847,7 @@ class Page extends EventEmitter {
         client.on("Target.attachedToTarget", function (event) {
             if (event.targetInfo.type !== "worker") {
                 // If we don't detach from service workers, they will never die.
-                client.send("Target.detachFromTarget", {
+                client.cdpSend3("Target.detachFromTarget", {
                     sessionId: event.sessionId
                 }).catch(debugError);
                 return;
@@ -4894,10 +4894,10 @@ class Page extends EventEmitter {
         let that = this;
         await Promise.all([
             that._frameManager.initialize(),
-            that._client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-            that._client.send("Performance.enable", {}),
-            that._client.send("Log.enable", {}),
-            that._client.send("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
+            that._client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+            that._client.cdpSend3("Performance.enable", {}),
+            that._client.cdpSend3("Log.enable", {}),
+            that._client.cdpSend3("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
                 that._fileChooserInterceptionIsDisabled = true;
             }),
         ]);
@@ -4907,7 +4907,7 @@ class Page extends EventEmitter {
       */
     _onFileChooser(event) {
         if (!this._fileChooserInterceptors.size) {
-            this._client.send("Page.handleFileChooser", { action: "fallback" }).catch(debugError);
+            this._client.cdpSend3("Page.handleFileChooser", { action: "fallback" }).catch(debugError);
             return;
         }
         const interceptors = Array.from(this._fileChooserInterceptors);
@@ -4951,7 +4951,7 @@ class Page extends EventEmitter {
         if (accuracy < 0) {
             throw new Error(`Invalid accuracy "${accuracy}": precondition 0 <= ACCURACY failed.`);
         }
-        await this._client.send("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
+        await this._client.cdpSend3("Emulation.setGeolocationOverride", {longitude, latitude, accuracy});
     }
     /**
       * @return {!Puppeteer.Target}
@@ -5090,7 +5090,7 @@ class Page extends EventEmitter {
       * @return {!Promise<!Array<Network.Cookie>>}
       */
     async cookies(...urls) {
-        return (await this._client.send("Network.getCookies", {
+        return (await this._client.cdpSend3("Network.getCookies", {
             urls: urls.length ? urls : [this.url()]
         })).cookies;
     }
@@ -5104,7 +5104,7 @@ class Page extends EventEmitter {
             if (!cookie.url && pageURL.startsWith("http")) {
                 item.url = pageURL;
             }
-            await this._client.send("Network.deleteCookies", item);
+            await this._client.cdpSend3("Network.deleteCookies", item);
         }
     }
     /**
@@ -5124,7 +5124,7 @@ class Page extends EventEmitter {
         });
         await this.deleteCookie(...items);
         if (items.length) {
-            await this._client.send("Network.setCookies", { cookies: items });
+            await this._client.cdpSend3("Network.setCookies", { cookies: items });
         }
     }
     /**
@@ -5152,8 +5152,8 @@ class Page extends EventEmitter {
         }
         that._pageBindings.set(name, puppeteerFunction);
         const expression = helper.evaluationString(addPageBinding, name);
-        await that._client.send("Runtime.addBinding", {name: name});
-        await that._client.send("Page.addScriptToEvaluateOnNewDocument", {source: expression});
+        await that._client.cdpSend3("Runtime.addBinding", {name: name});
+        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {source: expression});
         await Promise.all(that.frames().map(function (frame) { return frame.evaluate(expression).catch(debugError); }));
         function addPageBinding(bindingName) {
             const binding = window[bindingName];
@@ -5194,7 +5194,7 @@ class Page extends EventEmitter {
       * @return {!Promise<!Metrics>}
       */
     async metrics() {
-        const response = await this._client.send("Performance.getMetrics");
+        const response = await this._client.cdpSend3("Performance.getMetrics");
         return this._buildMetricsObject(response.metrics);
     }
     /**
@@ -5269,7 +5269,7 @@ class Page extends EventEmitter {
                 expression = helper.evaluationString(deliverErrorValue, name, seq, error);
             }
         }
-        this._client.send("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
+        this._client.cdpSend3("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
         /**
           * @param {string} name
           * @param {number} seq
@@ -5381,7 +5381,7 @@ class Page extends EventEmitter {
     async reload(options) {
         const [response] = await Promise.all([
             this.waitForNavigation(options),
-            this._client.send("Page.reload")
+            this._client.cdpSend3("Page.reload")
         ]);
         return response;
     }
@@ -5449,19 +5449,19 @@ class Page extends EventEmitter {
       * @return {!Promise<?Puppeteer.Response>}
       */
     async _go(delta, options) {
-        const history = await this._client.send("Page.getNavigationHistory");
+        const history = await this._client.cdpSend3("Page.getNavigationHistory");
         const entry = history.entries[history.currentIndex + delta];
         if (!entry) {
             return null;
         }
         const [response] = await Promise.all([
             this.waitForNavigation(options),
-            this._client.send("Page.navigateToHistoryEntry", {entryId: entry.id}),
+            this._client.cdpSend3("Page.navigateToHistoryEntry", {entryId: entry.id}),
         ]);
         return response;
     }
     async bringToFront() {
-        await this._client.send("Page.bringToFront");
+        await this._client.cdpSend3("Page.bringToFront");
     }
     /**
       * @param {!{viewport: !Puppeteer.Viewport, userAgent: string}} options
@@ -5480,20 +5480,20 @@ class Page extends EventEmitter {
             return;
         }
         this._javascriptEnabled = enabled;
-        await this._client.send("Emulation.setScriptExecutionDisabled", { value: !enabled });
+        await this._client.cdpSend3("Emulation.setScriptExecutionDisabled", { value: !enabled });
     }
     /**
       * @param {boolean} enabled
       */
     async setBypassCSP(enabled) {
-        await this._client.send("Page.setBypassCSP", { enabled });
+        await this._client.cdpSend3("Page.setBypassCSP", { enabled });
     }
     /**
       * @param {?string} mediaType
       */
     async emulateMedia(mediaType) {
         assert(mediaType === "screen" || mediaType === "print" || mediaType === null, "Unsupported media type: " + mediaType);
-        await this._client.send("Emulation.setEmulatedMedia", {media: mediaType || ""});
+        await this._client.cdpSend3("Emulation.setEmulatedMedia", {media: mediaType || ""});
     }
     /**
       * @param {!Puppeteer.Viewport} viewport
@@ -5525,7 +5525,7 @@ class Page extends EventEmitter {
       */
     async evaluateOnNewDocument(pageFunction, ...args) {
         const source = helper.evaluationString(pageFunction, ...args);
-        await this._client.send("Page.addScriptToEvaluateOnNewDocument", { source });
+        await this._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", { source });
     }
     /**
       * @param {boolean} enabled
@@ -5580,10 +5580,10 @@ class Page extends EventEmitter {
       * @return {!Promise<!Buffer|!String>}
       */
     async _screenshotTask(format, options) {
-        await this._client.send("Target.activateTarget", {targetId: this._target._targetId});
+        await this._client.cdpSend3("Target.activateTarget", {targetId: this._target._targetId});
         let clip = options.clip ? processClip(options.clip) : undefined;
         if (options.fullPage) {
-            const metrics = await this._client.send("Page.getLayoutMetrics");
+            const metrics = await this._client.cdpSend3("Page.getLayoutMetrics");
             const width = Math.ceil(metrics.contentSize.width);
             const height = Math.ceil(metrics.contentSize.height);
             // Overwrite clip for full page at all times.
@@ -5595,15 +5595,15 @@ class Page extends EventEmitter {
             } = this._viewport || {};
             /** @type {!Protocol.Emulation.ScreenOrientation} */
             const screenOrientation = isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
-            await this._client.send("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
+            await this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
         }
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
         if (shouldSetDefaultBackground) {
-            await this._client.send("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
+            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
         }
-        const result = await this._client.send("Page.captureScreenshot", { format, quality: options.quality, clip });
+        const result = await this._client.cdpSend3("Page.captureScreenshot", { format, quality: options.quality, clip });
         if (shouldSetDefaultBackground) {
-            await this._client.send("Emulation.setDefaultBackgroundColorOverride");
+            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride");
         }
         if (options.fullPage && this._viewport) {
             await this.setViewport(this._viewport);
@@ -5653,7 +5653,7 @@ class Page extends EventEmitter {
         const marginLeft = convertPrintParameterToInches(margin.left) || 0;
         const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
         const marginRight = convertPrintParameterToInches(margin.right) || 0;
-        const result = await this._client.send("Page.printToPDF", {
+        const result = await this._client.cdpSend3("Page.printToPDF", {
             transferMode: "ReturnAsStream",
             landscape,
             displayHeaderFooter,
@@ -5685,9 +5685,9 @@ class Page extends EventEmitter {
         assert(!!this._client._connection, "Protocol error: Connection closed. Most likely the page has been closed.");
         const runBeforeUnload = !!options.runBeforeUnload;
         if (runBeforeUnload) {
-            await this._client.send("Page.close");
+            await this._client.cdpSend3("Page.close");
         } else {
-            await this._client._connection.send("Target.closeTarget", { targetId: this._target._targetId });
+            await this._client._connection.cdpSend2("Target.closeTarget", { targetId: this._target._targetId });
             await this._target._isClosedPromise;
         }
     }
@@ -5977,7 +5977,7 @@ class Target {
                 // Top level workers have a fake page wrapping the actual worker.
                 const [targetAttached] = await Promise.all([
                     new Promise(function (x) { return client.once("Target.attachedToTarget", x); }),
-                    client.send("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+                    client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
                 ]);
                 const session = Connection.fromSession(client).session(targetAttached.sessionId);
                 // TODO(einbinder): Make workers send their console logs.
