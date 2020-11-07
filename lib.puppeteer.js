@@ -2081,6 +2081,8 @@ CDPSession.prototype._onClosed = function () {
   * @param {number=} delay
   */
 function Connection(url, ws2, delay = 0) {
+    let sck2;
+    let that = this;
     require("stream").EventEmitter.call(this);
     this._url = url;
     /** @type {
@@ -2090,15 +2092,56 @@ function Connection(url, ws2, delay = 0) {
     this._callbacks = new Map();
     this._delay = delay;
     this.ws2 = ws2;
-    this.sck2 = ws2.sck2;
-    let that = this;
-    ws2.addEventListener("message", function (event) {
-        if (!that.onmessage) {
-            return;
+    sck2 = ws2.sck2;
+    this.sck2 = sck2;
+    sck2.on("data", async function (message) {
+        let session;
+        if (that._delay) {
+            await new Promise(function (f) {
+                setTimeout(f, that._delay);
+            });
         }
-        let message;
-        message = event.data;
-        that.onmessage.call(null, message);
+        // console.error("◀ RECV " + message);
+        const object = JSON.parse(message);
+        if (object.method === "Target.attachedToTarget") {
+            const sessionId = object.params.sessionId;
+            session = new CDPSession(
+                that,
+                object.params.targetInfo.type,
+                sessionId
+            );
+            that._sessions.set(sessionId, session);
+        } else if (object.method === "Target.detachedFromTarget") {
+            session = that._sessions.get(object.params.sessionId);
+            if (session) {
+                session._onClosed();
+                that._sessions.delete(object.params.sessionId);
+            }
+        }
+        if (object.sessionId) {
+            session = that._sessions.get(object.sessionId);
+            if (session) {
+                session._onMessage(object);
+            }
+        } else if (object.id) {
+            const callback = that._callbacks.get(object.id);
+            // Callbacks could be all rejected if someone has called
+            // `.dispose()`.
+            if (callback) {
+                that._callbacks.delete(object.id);
+                if (object.error) {
+                    callback.reject(createProtocolError(
+                        callback.error,
+                        callback.method,
+                        object
+                    ));
+                } else {
+                    callback.resolve(object.result);
+                }
+            }
+        } else {
+            that.emit(object.method, object.params);
+        }
     });
     ws2.addEventListener("close", function () {
         if (that.onclose) {
