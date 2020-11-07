@@ -773,7 +773,15 @@ function Socket2(socket) {
         // init mask = true
         header[1] |= 0x80;
         // init payloadLength
-        payload = Buffer.from(payload);
+        payload = (
+            Object.prototype.toString.call(payload) === "[object Uint8Array]"
+            ? payload
+            : !payload
+            ? BUFFER0
+            : typeof payload === "string"
+            ? Buffer.from(payload)
+            : Buffer.from(String(payload))
+        );
         if (payload.length < 126) {
             header = header.slice(0, 2 + 0 + 4);
             header[1] |= payload.length;
@@ -1046,37 +1054,8 @@ function WebSocket(address) {
         ws2.readyState = WebSocket.CLOSED;
         ws2.emit("close");
     }
-    ws2.send = function (data, options, cb) {
-/**
-  * Send a data message.
-  *
-  * @param {*} data The message to send
-  * @param {Object} options Options object
-  * @param {Boolean} options.binary Specifies whether `data` is binary or text
-  * @param {Boolean} options.fin Specifies whether the fragment is the last one
-  * @param {Function} cb Callback which is executed when data is written out
-  * @public
-  */
-        if (typeof options === "function") {
-            cb = options;
-            options = {};
-        }
-        if (ws2.readyState !== WebSocket.OPEN) {
-            const err = new Error(
-                "WebSocket is not open: readyState " + ws2.readyState + "("
-                + Array.from([
-                    "CONNECTING", "OPEN", "CLOSING", "CLOSED"
-                ])[ws2.readyState] + ")"
-            );
-            if (cb) {
-                return cb(err);
-            }
-            throw err;
-        }
-        if (typeof data === "number") {
-            data = data.toString();
-        }
-        sck2.write(data || BUFFER0, cb);
+    ws2.send = function (data) {
+        sck2.write(data);
     };
     //!! ws2 = this;
     //!! require("stream").Transform.call(ws2);
