@@ -407,14 +407,8 @@ local.cliRun = function (opt) {
 // /* istanbul ignore next */
 // run node js-env code - function
 (function () {
-if (local.isBrowser) {
-    return;
-}
 /* jslint ignore:start */
 const debugError = console.error;
-function debugProtocol() {
-    return;
-}
 const mime = {
     getType: function (file) {
         file = path.extname(String(file).toLowerCase());
@@ -454,7 +448,6 @@ let exports_puppeteer_puppeteer_lib_Connection = {};
 let exports_puppeteer_puppeteer_lib_Coverage = {};
 let exports_puppeteer_puppeteer_lib_DOMWorld = {};
 let exports_puppeteer_puppeteer_lib_DeviceDescriptors = {};
-let exports_puppeteer_puppeteer_lib_Dialog = {};
 let exports_puppeteer_puppeteer_lib_EmulationManager = {};
 let exports_puppeteer_puppeteer_lib_Errors = {};
 let exports_puppeteer_puppeteer_lib_Events = {};
@@ -571,7 +564,7 @@ function cdpClientCreate({
         websocket.uncork();
         return result;
     };
-    CdpClient.prototype.cdpSend = function ({
+    CdpClient.prototype.rpc = function ({
         method,
         params = {},
         sessionId
@@ -1028,7 +1021,7 @@ class Helper {
         if (!remoteObject.objectId) {
             return;
         }
-        await client.cdpSend3("Runtime.releaseObject", {
+        await client.rpc3("Runtime.releaseObject", {
             objectId: remoteObject.objectId
         }).catch(function (error) {
             // Exceptions might happen in case of a page been navigated or closed.
@@ -1110,37 +1103,6 @@ class Helper {
         return promisified;
     }
     /**
-      * @param {!NodeJS.EventEmitter} emitter
-      * @param {(string|symbol)} eventName
-      * @param {function} predicate
-      * @return {!Promise}
-      */
-    static waitForEvent(emitter, eventName, predicate, timeout) {
-        let eventTimeout, resolveCallback, rejectCallback;
-        const promise = new Promise(function (resolve, reject) {
-            resolveCallback = resolve;
-            rejectCallback = reject;
-        });
-        const listener = Helper.addEventListener(emitter, eventName, function (event) {
-            if (!predicate(event)) {
-                return;
-            }
-            cleanup();
-            resolveCallback(event);
-        });
-        if (timeout) {
-            eventTimeout = setTimeout(function () {
-                cleanup();
-                rejectCallback(new TimeoutError("Timeout exceeded while waiting for event"));
-            }, timeout);
-        }
-        function cleanup() {
-            Helper.removeEventListeners([listener]);
-            clearTimeout(eventTimeout);
-        }
-        return promise;
-    }
-    /**
       * @template T
       * @param {!Promise<T>} promise
       * @param {string} taskName
@@ -1161,39 +1123,6 @@ class Helper {
             if (timeoutTimer) {
                 clearTimeout(timeoutTimer);
             }
-        }
-    }
-    /**
-      * @param {!Puppeteer.CDPSession} client
-      * @param {string} handle
-      * @param {?string} path
-      * @return {!Promise<!Buffer>}
-      */
-    static async readProtocolStream(client, handle, path) {
-        let eof = false;
-        let file;
-        if (path) {
-            file = await openAsync(path, "w");
-        }
-        const bufs = [];
-        while (!eof) {
-            const response = await client.cdpSend3("IO.read", {handle});
-            eof = response.eof;
-            const buf = Buffer.from(response.data, response.base64Encoded ? "base64" : undefined);
-            bufs.push(buf);
-            if (path) {
-                await writeAsync(file, buf);
-            }
-        }
-        if (path) {
-            await closeAsync(file);
-        }
-        await client.cdpSend3("IO.close", {handle});
-        let resultBuffer = null;
-        try {
-            resultBuffer = Buffer.concat(bufs);
-        } finally {
-            return resultBuffer;
         }
     }
 }
@@ -1250,7 +1179,7 @@ class Browser extends EventEmitter {
     static async create(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process, chromeKill) {
         const browser = new Browser(connection, contextIds, ignoreHTTPSErrors, defaultViewport, process);
         browser.chromeKill = chromeKill;
-        await connection.cdpSend2("Target.setDiscoverTargets", {discover: true});
+        await connection.rpc2("Target.setDiscoverTargets", {discover: true});
         return browser;
     }
     /**
@@ -1280,40 +1209,6 @@ class Browser extends EventEmitter {
         that.cnn.on("Target.targetCreated", that._targetCreated.bind(that));
         that.cnn.on("Target.targetDestroyed", that._targetDestroyed.bind(that));
         that.cnn.on("Target.targetInfoChanged", that._targetInfoChanged.bind(that));
-    }
-    /**
-      * @return {?Puppeteer.ChildProcess}
-      */
-    process() {
-        return this._process;
-    }
-    /**
-      * @return {!Promise<!BrowserContext>}
-      */
-    async createIncognitoBrowserContext() {
-        const {browserContextId} = await this.cnn.cdpSend2("Target.createBrowserContext");
-        const context = new BrowserContext(this.cnn, this, browserContextId);
-        this._contexts.set(browserContextId, context);
-        return context;
-    }
-    /**
-      * @return {!Array<!BrowserContext>}
-      */
-    browserContexts() {
-        return [this._defaultContext, ...Array.from(this._contexts.values())];
-    }
-    /**
-      * @return {!BrowserContext}
-      */
-    defaultBrowserContext() {
-        return this._defaultContext;
-    }
-    /**
-      * @param {?string} contextId
-      */
-    async _disposeContext(contextId) {
-        await this.cnn.cdpSend2("Target.disposeBrowserContext", {browserContextId: contextId || undefined});
-        this._contexts.delete(contextId);
     }
     /**
       * @param {!Protocol.Target.targetCreatedPayload} event
@@ -1375,7 +1270,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<!Puppeteer.Page>}
       */
     async _createPageInContext(contextId) {
-        const {targetId} = await this.cnn.cdpSend2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
+        const {targetId} = await this.cnn.rpc2("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
         const target = await this._targets.get(targetId);
         assert(await target._initializedPromise, "Failed to create target for page");
         const page = await target.page();
@@ -1440,7 +1335,7 @@ class Browser extends EventEmitter {
       * @return {!Promise<string>}
       */
     async version() {
-        return this.cnn.cdpSend2("Browser.getVersion");
+        return this.cnn.rpc2("Browser.getVersion");
     }
     async close() {
         await this.chromeKill();
@@ -1458,79 +1353,6 @@ class BrowserContext extends EventEmitter {
         this.cnn = connection;
         this._browser = browser;
         this._id = contextId;
-    }
-    /**
-      * @return {!Array<!Target>} target
-      */
-    targets() {
-        let that = this;
-        return that._browser.targets().filter(function (target) { return target.browserContext() === that; });
-    }
-    /**
-      * @param {function(!Target):boolean} predicate
-      * @param {{timeout?: number}=} options
-      * @return {!Promise<!Target>}
-      */
-    waitForTarget(predicate, options) {
-        let that = this;
-        return that._browser.waitForTarget(function (target) { return target.browserContext() === that && predicate(target); }, options);
-    }
-    /**
-      * @return {!Promise<!Array<!Puppeteer.Page>>}
-      */
-    async pages() {
-        const pages = await Promise.all(
-                this.targets()
-                        .filter(function (target) { return target.type() === "page"; })
-                        .map(function (target) { return target.page(); })
-        );
-        return pages.filter(function (page) { return !!page; });
-    }
-    /**
-      * @return {boolean}
-      */
-    isIncognito() {
-        return !!this._id;
-    }
-    /**
-      * @param {string} origin
-      * @param {!Array<string>} permissions
-      */
-    async overridePermissions(origin, permissions) {
-        const webPermissionToProtocol = new Map([
-            ["geolocation", "geolocation"],
-            ["midi", "midi"],
-            ["notifications", "notifications"],
-            ["push", "push"],
-            ["camera", "videoCapture"],
-            ["microphone", "audioCapture"],
-            ["background-sync", "backgroundSync"],
-            ["ambient-light-sensor", "sensors"],
-            ["accelerometer", "sensors"],
-            ["gyroscope", "sensors"],
-            ["magnetometer", "sensors"],
-            ["accessibility-events", "accessibilityEvents"],
-            ["clipboard-read", "clipboardRead"],
-            ["clipboard-write", "clipboardWrite"],
-            ["payment-handler", "paymentHandler"],
-            // chrome-specific permissions we have.
-            ["midi-sysex", "midiSysex"],
-        ]);
-        permissions = permissions.map(function (permission) {
-            const protocolPermission = webPermissionToProtocol.get(permission);
-            if (!protocolPermission) {
-                throw new Error("Unknown permission: " + permission);
-            }
-            return protocolPermission;
-        });
-        await this.cnn.cdpSend2("Browser.grantPermissions", {origin, browserContextId: this._id || undefined, permissions});
-    }
-    async clearPermissionOverrides() {
-        await this.cnn.cdpSend2("Browser.resetPermissions", {browserContextId: this._id || undefined});
-    }
-    async close() {
-        assert(this._id, "Non-incognito profiles cannot be closed!");
-        await this._browser._disposeContext(this._id);
     }
 }
 exports_puppeteer_puppeteer_lib_Browser = {Browser, BrowserContext};
@@ -1559,7 +1381,6 @@ const Events = {
     Page: {
         Close: "close",
         Console: "console",
-        Dialog: "dialog",
         DOMContentLoaded: "domcontentloaded",
         Error: "error",
         // Can't use just "error" due to node.js special treatment
@@ -1654,9 +1475,9 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   * @param {!Object=} params
   * @return {!Promise<?Object>}
   */
-CDPSession.prototype.cdpSend3 = function (method, params) {
+CDPSession.prototype.rpc3 = function (method, params) {
     let that = this;
-    let id = that.cnn.sck2.cdpSend({
+    let id = that.cnn.sck2.rpc({
         method,
         params,
         sessionId: that._sessionId
@@ -1691,7 +1512,7 @@ function Connection(url, sck2) {
     sck2.cnn = cnn;
     //!! // Silently ignore all errors - we don't know what to do with them.
     //!! cnn.sck2.on("error", local.noop);
-    cnn.onclose = cnn._onClose.bind(cnn);
+    //!! cnn.onclose = cnn._onClose.bind(cnn);
     /** @type {!Map<string, !CDPSession>}*/
     cnn._sessions = new Map();
     cnn._closed = false;
@@ -1722,9 +1543,9 @@ Connection.prototype.url = function () {
   * @param {!Object=} params
   * @return {!Promise<?Object>}
   */
-Connection.prototype.cdpSend2 = function (method, params = {}) {
+Connection.prototype.rpc2 = function (method, params = {}) {
     let cnn = this;
-    let id = cnn.sck2.cdpSend({
+    let id = cnn.sck2.rpc({
         method,
         params
     });
@@ -1737,32 +1558,6 @@ Connection.prototype.cdpSend2 = function (method, params = {}) {
         };
     });
 };
-Connection.prototype._onClose = function () {
-    let cnn = this;
-    if (cnn._closed) {
-        return;
-    }
-    cnn._closed = true;
-    cnn.onmessage = null;
-    cnn.onclose = null;
-    Object.entries(cnn.callbackDict).forEach(function ([
-        id, callback
-    ]) {
-        if (!callback) {
-            return;
-        }
-        delete cnn.callbackDict[id];
-        callback.error.message = (
-            `Protocol error (${callback.method}): Target closed.`
-        );
-        callback.reject(callback.error);
-    });
-    cnn._sessions.forEach(function (session) {
-        session._onClosed();
-    });
-    cnn._sessions.clear();
-    cnn.emit(Events.Connection.Disconnected);
-};
 /**
   * @param {Protocol.Target.TargetInfo} targetInfo
   * @return {!Promise<!CDPSession>}
@@ -1770,7 +1565,7 @@ Connection.prototype._onClose = function () {
 Connection.prototype.createSession = async function (targetInfo) {
     const {
         sessionId
-    } = await this.cdpSend2("Target.attachToTarget", {
+    } = await this.rpc2("Target.attachToTarget", {
         targetId: targetInfo.targetId,
         flatten: true
     });
@@ -1815,30 +1610,6 @@ class Coverage {
         this._jsCoverage = new JSCoverage(client);
         this._cssCoverage = new CSSCoverage(client);
     }
-    /**
-      * @param {!{resetOnNavigation?: boolean, reportAnonymousScripts?: boolean}} options
-      */
-    async startJSCoverage(options) {
-        return await this._jsCoverage.start(options);
-    }
-    /**
-      * @return {!Promise<!Array<!CoverageEntry>>}
-      */
-    async stopJSCoverage() {
-        return await this._jsCoverage.stop();
-    }
-    /**
-      * @param {{resetOnNavigation?: boolean}=} options
-      */
-    async startCSSCoverage(options) {
-        return await this._cssCoverage.start(options);
-    }
-    /**
-      * @return {!Promise<!Array<!CoverageEntry>>}
-      */
-    async stopCSSCoverage() {
-        return await this._cssCoverage.stop();
-    }
 }
 exports_puppeteer_puppeteer_lib_Coverage = {Coverage};
 class JSCoverage {
@@ -1852,91 +1623,6 @@ class JSCoverage {
         this._scriptSources = new Map();
         this._eventListeners = [];
         this._resetOnNavigation = false;
-    }
-    /**
-      * @param {!{resetOnNavigation?: boolean, reportAnonymousScripts?: boolean}} options
-      */
-    async start(options = {}) {
-        assert(!this._enabled, "JSCoverage is already enabled");
-        const {
-            resetOnNavigation = true,
-            reportAnonymousScripts = false
-        } = options;
-        this._resetOnNavigation = resetOnNavigation;
-        this._reportAnonymousScripts = reportAnonymousScripts;
-        this._enabled = true;
-        this._scriptURLs.clear();
-        this._scriptSources.clear();
-        this._eventListeners = [
-            helper.addEventListener(this._client, "Debugger.scriptParsed", this._onScriptParsed.bind(this)),
-            helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
-        ];
-        await Promise.all([
-            this._client.cdpSend3("Profiler.enable"),
-            this._client.cdpSend3("Profiler.startPreciseCoverage", {callCount: false, detailed: true}),
-            this._client.cdpSend3("Debugger.enable"),
-            this._client.cdpSend3("Debugger.setSkipAllPauses", {skip: true})
-        ]);
-    }
-    _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation) {
-            return;
-        }
-        this._scriptURLs.clear();
-        this._scriptSources.clear();
-    }
-    /**
-      * @param {!Protocol.Debugger.scriptParsedPayload} event
-      */
-    async _onScriptParsed(event) {
-        // Ignore puppeteer-injected scripts
-        if (event.url === EVALUATION_SCRIPT_URL) {
-            return;
-        }
-        // Ignore other anonymous scripts unless the reportAnonymousScripts option is true.
-        if (!event.url && !this._reportAnonymousScripts) {
-            return;
-        }
-        try {
-            const response = await this._client.cdpSend3("Debugger.getScriptSource", {scriptId: event.scriptId});
-            this._scriptURLs.set(event.scriptId, event.url);
-            this._scriptSources.set(event.scriptId, response.scriptSource);
-        } catch (e) {
-            // This might happen if the page has already navigated away.
-            debugError(e);
-        }
-    }
-    /**
-      * @return {!Promise<!Array<!CoverageEntry>>}
-      */
-    async stop() {
-        assert(this._enabled, "JSCoverage is not enabled");
-        this._enabled = false;
-        const [profileResponse] = await Promise.all([
-            this._client.cdpSend3("Profiler.takePreciseCoverage"),
-            this._client.cdpSend3("Profiler.stopPreciseCoverage"),
-            this._client.cdpSend3("Profiler.disable"),
-            this._client.cdpSend3("Debugger.disable"),
-        ]);
-        helper.removeEventListeners(this._eventListeners);
-        const coverage = [];
-        for (const entry of profileResponse.result) {
-            let url = this._scriptURLs.get(entry.scriptId);
-            if (!url && this._reportAnonymousScripts) {
-                url = "debugger://VM" + entry.scriptId;
-            }
-            const text = this._scriptSources.get(entry.scriptId);
-            if (text === undefined || url === undefined) {
-                continue;
-            }
-            const flattenRanges = [];
-            entry.functions.forEach(function (func) {
-                flattenRanges.push(...func.ranges);
-            });
-            const ranges = convertToDisjointRanges(flattenRanges);
-            coverage.push({url, ranges, text});
-        }
-        return coverage;
     }
 }
 class CSSCoverage {
@@ -1952,140 +1638,6 @@ class CSSCoverage {
         this._eventListeners = [];
         this._resetOnNavigation = false;
     }
-    /**
-      * @param {{resetOnNavigation?: boolean}=} options
-      */
-    async start(options = {}) {
-        assert(!this._enabled, "CSSCoverage is already enabled");
-        const {resetOnNavigation = true} = options;
-        this._resetOnNavigation = resetOnNavigation;
-        this._enabled = true;
-        this._stylesheetURLs.clear();
-        this._stylesheetSources.clear();
-        this._eventListeners = [
-            helper.addEventListener(this._client, "CSS.styleSheetAdded", this._onStyleSheet.bind(this)),
-            helper.addEventListener(this._client, "Runtime.executionContextsCleared", this._onExecutionContextsCleared.bind(this)),
-        ];
-        await Promise.all([
-            this._client.cdpSend3("DOM.enable"),
-            this._client.cdpSend3("CSS.enable"),
-            this._client.cdpSend3("CSS.startRuleUsageTracking"),
-        ]);
-    }
-    _onExecutionContextsCleared() {
-        if (!this._resetOnNavigation) {
-            return;
-        }
-        this._stylesheetURLs.clear();
-        this._stylesheetSources.clear();
-    }
-    /**
-      * @param {!Protocol.CSS.styleSheetAddedPayload} event
-      */
-    async _onStyleSheet(event) {
-        const header = event.header;
-        // Ignore anonymous scripts
-        if (!header.sourceURL) {
-            return;
-        }
-        try {
-            const response = await this._client.cdpSend3("CSS.getStyleSheetText", {styleSheetId: header.styleSheetId});
-            this._stylesheetURLs.set(header.styleSheetId, header.sourceURL);
-            this._stylesheetSources.set(header.styleSheetId, response.text);
-        } catch (e) {
-            // This might happen if the page has already navigated away.
-            debugError(e);
-        }
-    }
-    /**
-      * @return {!Promise<!Array<!CoverageEntry>>}
-      */
-    async stop() {
-        assert(this._enabled, "CSSCoverage is not enabled");
-        this._enabled = false;
-        const ruleTrackingResponse = await this._client.cdpSend3("CSS.stopRuleUsageTracking");
-        await Promise.all([
-            this._client.cdpSend3("CSS.disable"),
-            this._client.cdpSend3("DOM.disable"),
-        ]);
-        helper.removeEventListeners(this._eventListeners);
-        // aggregate by styleSheetId
-        const styleSheetIdToCoverage = new Map();
-        for (const entry of ruleTrackingResponse.ruleUsage) {
-            let ranges = styleSheetIdToCoverage.get(entry.styleSheetId);
-            if (!ranges) {
-                ranges = [];
-                styleSheetIdToCoverage.set(entry.styleSheetId, ranges);
-            }
-            ranges.push({
-                startOffset: entry.startOffset,
-                endOffset: entry.endOffset,
-                count: entry.used ? 1 : 0,
-            });
-        }
-        const coverage = [];
-        for (const styleSheetId of this._stylesheetURLs.keys()) {
-            const url = this._stylesheetURLs.get(styleSheetId);
-            const text = this._stylesheetSources.get(styleSheetId);
-            const ranges = convertToDisjointRanges(styleSheetIdToCoverage.get(styleSheetId) || []);
-            coverage.push({url, ranges, text});
-        }
-        return coverage;
-    }
-}
-/**
-  * @param {!Array<!{startOffset:number, endOffset:number, count:number}>} nestedRanges
-  * @return {!Array<!{start:number, end:number}>}
-  */
-function convertToDisjointRanges(nestedRanges) {
-    const points = [];
-    for (const range of nestedRanges) {
-        points.push({ offset: range.startOffset, type: 0, range });
-        points.push({ offset: range.endOffset, type: 1, range });
-    }
-    // Sort points to form a valid parenthesis sequence.
-    points.sort(function (a, b) {
-        // Sort with increasing offsets.
-        if (a.offset !== b.offset) {
-            return a.offset - b.offset;
-        }
-        // All "end" points should go before "start" points.
-        if (a.type !== b.type) {
-            return b.type - a.type;
-        }
-        const aLength = a.range.endOffset - a.range.startOffset;
-        const bLength = b.range.endOffset - b.range.startOffset;
-        // For two "start" points, the one with longer range goes first.
-        if (a.type === 0) {
-            return bLength - aLength;
-        }
-        // For two "end" points, the one with shorter range goes first.
-        return aLength - bLength;
-    });
-    const hitCountStack = [];
-    const results = [];
-    let lastOffset = 0;
-    // Run scanning line to intersect all ranges.
-    for (const point of points) {
-        if (hitCountStack.length && lastOffset < point.offset && hitCountStack[hitCountStack.length - 1] > 0) {
-            const lastResult = results.length ? results[results.length - 1] : null;
-            if (lastResult && lastResult.end === lastOffset) {
-                lastResult.end = point.offset;
-            }
-            else {
-                results.push({start: lastOffset, end: point.offset});
-            }
-        }
-        lastOffset = point.offset;
-        if (point.type === 0) {
-            hitCountStack.push(point.range.count);
-        }
-        else {
-            hitCountStack.pop();
-        }
-    }
-    // Filter out empty ranges.
-    return results.filter(function (range) { return range.end - range.start > 1; });
 }
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/DOMWorld.js
@@ -2198,83 +1750,6 @@ class DOMWorld {
 }
 exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
 /*
-file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Dialog.js
-*/
-/**
-  * Copyright 2017 Google Inc. All rights reserved.
-  *
-  * Licensed under the Apache License, Version 2.0 (the "License");
-  * you may not use this file except in compliance with the License.
-  * You may obtain a copy of the License at
-  *
-  *     http://www.apache.org/licenses/LICENSE-2.0
-  *
-  * Unless required by applicable law or agreed to in writing, software
-  * distributed under the License is distributed on an "AS IS" BASIS,
-  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  * See the License for the specific language governing permissions and
-  * limitations under the License.
-  */
-// const {assert} = exports_puppeteer_puppeteer_lib_helper;
-class Dialog {
-    /**
-      * @param {!Puppeteer.CDPSession} client
-      * @param {string} type
-      * @param {string} message
-      * @param {(string|undefined)} defaultValue
-      */
-    constructor(client, type, message, defaultValue = "") {
-        this._client = client;
-        this._type = type;
-        this._message = message;
-        this._handled = false;
-        this._defaultValue = defaultValue;
-    }
-    /**
-      * @return {string}
-      */
-    type() {
-        return this._type;
-    }
-    /**
-      * @return {string}
-      */
-    message() {
-        return this._message;
-    }
-    /**
-      * @return {string}
-      */
-    defaultValue() {
-        return this._defaultValue;
-    }
-    /**
-      * @param {string=} promptText
-      */
-    async accept(promptText) {
-        assert(!this._handled, "Cannot accept dialog which is already handled!");
-        this._handled = true;
-        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
-            accept: true,
-            promptText: promptText
-        });
-    }
-    async dismiss() {
-        assert(!this._handled, "Cannot dismiss dialog which is already handled!");
-        this._handled = true;
-        await this._client.cdpSend3("Page.handleJavaScriptDialog", {
-            accept: false
-        });
-    }
-}
-Dialog.Type = {
-    Alert: "alert",
-    BeforeUnload: "beforeunload",
-    Confirm: "confirm",
-    Prompt: "prompt"
-};
-exports_puppeteer_puppeteer_lib_Dialog = {Dialog};
-/*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/EmulationManager.js
 */
 /**
@@ -2314,8 +1789,8 @@ class EmulationManager {
         const screenOrientation = viewport.isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
         const hasTouch = viewport.hasTouch || false;
         await Promise.all([
-            this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
-            this._client.cdpSend3("Emulation.setTouchEmulationEnabled", {
+            this._client.rpc3("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }),
+            this._client.rpc3("Emulation.setTouchEmulationEnabled", {
                 enabled: hasTouch
             })
         ]);
@@ -2422,147 +1897,29 @@ class ExecutionContext {
             const contextId = this._contextId;
             const expression = /** @type {string} */ (pageFunction);
             const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression) ? expression : expression + "\n" + suffix;
-            const {exceptionDetails, result: remoteObject} = await this._client.cdpSend3("Runtime.evaluate", {
+            const {exceptionDetails, result: remoteObject} = await this._client.rpc3("Runtime.evaluate", {
                 expression: expressionWithSourceUrl,
                 contextId,
                 returnByValue,
                 awaitPromise: true,
                 userGesture: true
-            }).catch(rewriteError);
+            }).catch(function (error) {
+                if (error.message.includes("Object reference chain is too long")) {
+                    return {result: {type: "undefined"}};
+                }
+                if (error.message.includes("Object couldn't be returned by value")) {
+                    return {result: {type: "undefined"}};
+                }
+                if (error.message.endsWith("Cannot find context with specified id")) {
+                    throw new Error("Execution context was destroyed, most likely because of a navigation.");
+                }
+                throw error;
+            });
             if (exceptionDetails) {
                 throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
             }
             return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
         }
-        if (typeof pageFunction !== "function") {
-            throw new Error(`Expected to get |string| or |function| as the first argument, but got "${pageFunction}" instead.`);
-        }
-        let functionText = pageFunction.toString();
-        // hack-coverage - un-instrument
-        functionText = functionText.replace((/\b__cov_.*?\+\+/g), "0");
-        try {
-            new Function("(" + functionText + ")");
-        } catch (e1) {
-            // This means we might have a function shorthand. Try another
-            // time prefixing "function ".
-            if (functionText.startsWith("async ")) {
-                functionText = "async function " + functionText.substring("async ".length);
-            }
-            else {
-                functionText = "function " + functionText;
-            }
-            try {
-                new Function("(" + functionText  + ")");
-            } catch (e2) {
-                // We tried hard to serialize, but there's a weird beast here.
-                throw new Error("Passed function is not well-serializable!");
-            }
-        }
-        let callFunctionOnPromise;
-        try {
-            callFunctionOnPromise = this._client.cdpSend3("Runtime.callFunctionOn", {
-                functionDeclaration: functionText + "\n" + suffix + "\n",
-                executionContextId: this._contextId,
-                arguments: args.map(convertArgument.bind(this)),
-                returnByValue,
-                awaitPromise: true,
-                userGesture: true
-            });
-        } catch (err) {
-            if (err instanceof TypeError && err.message.startsWith("Converting circular structure to JSON")) {
-                err.message += " Are you passing a nested JSHandle?";
-            }
-            throw err;
-        }
-        const { exceptionDetails, result: remoteObject } = await callFunctionOnPromise.catch(rewriteError);
-        if (exceptionDetails) {
-            throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
-        }
-        return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
-        /**
-          * @param {*} arg
-          * @return {*}
-          * @this {ExecutionContext}
-          */
-        function convertArgument(arg) {
-            // eslint-disable-line valid-typeof
-            if (typeof arg === "bigint") {
-                return { unserializableValue: `${arg.toString()}n` };
-            }
-            if (Object.is(arg, -0)) {
-                return { unserializableValue: "-0" };
-            }
-            if (Object.is(arg, Infinity)) {
-                return { unserializableValue: "Infinity" };
-            }
-            if (Object.is(arg, -Infinity)) {
-                return { unserializableValue: "-Infinity" };
-            }
-            if (Object.is(arg, NaN)) {
-                return { unserializableValue: "NaN" };
-            }
-            const objectHandle = arg && (arg instanceof JSHandle) ? arg : null;
-            if (objectHandle) {
-                if (objectHandle._context !== this) {
-                    throw new Error("JSHandles can be evaluated only in the context they were created!");
-                }
-                if (objectHandle._disposed) {
-                    throw new Error("JSHandle is disposed!");
-                }
-                if (objectHandle._remoteObject.unserializableValue) {
-                    return { unserializableValue: objectHandle._remoteObject.unserializableValue };
-                }
-                if (!objectHandle._remoteObject.objectId) {
-                    return { value: objectHandle._remoteObject.value };
-                }
-                return { objectId: objectHandle._remoteObject.objectId };
-            }
-            return { value: arg };
-        }
-        /**
-          * @param {!Error} error
-          * @return {!Protocol.Runtime.evaluateReturnValue}
-          */
-        function rewriteError(error) {
-            if (error.message.includes("Object reference chain is too long")) {
-                return {result: {type: "undefined"}};
-            }
-            if (error.message.includes("Object couldn't be returned by value")) {
-                return {result: {type: "undefined"}};
-            }
-            if (error.message.endsWith("Cannot find context with specified id")) {
-                throw new Error("Execution context was destroyed, most likely because of a navigation.");
-            }
-            throw error;
-        }
-    }
-    /**
-      * @param {!JSHandle} prototypeHandle
-      * @return {!Promise<!JSHandle>}
-      */
-    async queryObjects(prototypeHandle) {
-        assert(!prototypeHandle._disposed, "Prototype JSHandle is disposed!");
-        assert(prototypeHandle._remoteObject.objectId, "Prototype JSHandle must not be referencing primitive value");
-        const response = await this._client.cdpSend3("Runtime.queryObjects", {
-            prototypeObjectId: prototypeHandle._remoteObject.objectId
-        });
-        return createJSHandle(this, response.objects);
-    }
-    /**
-      * @param {Puppeteer.ElementHandle} elementHandle
-      * @return {Promise<Puppeteer.ElementHandle>}
-      */
-    async _adoptElementHandle(elementHandle) {
-        assert(elementHandle.executionContext() !== this, "Cannot adopt handle that already belongs to this execution context");
-        assert(this._world, "Cannot adopt handle without DOMWorld");
-        const nodeInfo = await this._client.cdpSend3("DOM.describeNode", {
-            objectId: elementHandle._remoteObject.objectId,
-        });
-        const {object} = await this._client.cdpSend3("DOM.resolveNode", {
-            backendNodeId: nodeInfo.node.backendNodeId,
-            executionContextId: this._contextId,
-        });
-        return /** @type {Puppeteer.ElementHandle}*/(createJSHandle(this, object));
     }
 }
 exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
@@ -2626,13 +1983,13 @@ class FrameManager extends EventEmitter {
     async initialize() {
         let that = this;
         const [,{frameTree}] = await Promise.all([
-            that._client.cdpSend3("Page.enable"),
-            that._client.cdpSend3("Page.getFrameTree"),
+            that._client.rpc3("Page.enable"),
+            that._client.rpc3("Page.getFrameTree"),
         ]);
         that._handleFrameTree(frameTree);
         await Promise.all([
-            that._client.cdpSend3("Page.setLifecycleEventsEnabled", { enabled: true }),
-            that._client.cdpSend3("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
+            that._client.rpc3("Page.setLifecycleEventsEnabled", { enabled: true }),
+            that._client.rpc3("Runtime.enable", {}).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
             that._networkManager.initialize(),
         ]);
     }
@@ -2681,36 +2038,13 @@ class FrameManager extends EventEmitter {
           */
         async function navigate(client, url, referrer, frameId) {
             try {
-                const response = await client.cdpSend3("Page.navigate", {url, referrer, frameId});
+                const response = await client.rpc3("Page.navigate", {url, referrer, frameId});
                 ensureNewDocumentNavigation = !!response.loaderId;
                 return response.errorText ? new Error(`${response.errorText} at ${url}`) : null;
             } catch (error) {
                 return error;
             }
         }
-    }
-    /**
-      * @param {!Puppeteer.Frame} frame
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async waitForFrameNavigation(frame, options = {}) {
-        assertNoLegacyNavigationOptions(options);
-        const {
-            waitUntil = ["load"],
-            timeout = this._timeoutSettings.navigationTimeout(),
-        } = options;
-        const watcher = new LifecycleWatcher(this, frame, waitUntil, timeout);
-        const error = await Promise.race([
-            watcher.timeoutOrTerminationPromise(),
-            watcher.sameDocumentNavigationPromise(),
-            watcher.newDocumentNavigationPromise()
-        ]);
-        watcher.dispose();
-        if (error) {
-            throw error;
-        }
-        return watcher.navigationResponse();
     }
     /**
       * @param {!Protocol.Page.lifecycleEventPayload} event
@@ -2829,11 +2163,11 @@ class FrameManager extends EventEmitter {
             return;
         }
         that._isolatedWorlds.add(name);
-        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {
+        await that._client.rpc3("Page.addScriptToEvaluateOnNewDocument", {
             source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
             worldName: name,
         }),
-        await Promise.all(that.frames().map(function (frame) { return that._client.cdpSend3("Page.createIsolatedWorld", {
+        await Promise.all(that.frames().map(function (frame) { return that._client.rpc3("Page.createIsolatedWorld", {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
@@ -2967,27 +2301,6 @@ class Frame {
         return await this._frameManager.navigateFrame(this, url, options);
     }
     /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async waitForNavigation(options) {
-        return await this._frameManager.waitForFrameNavigation(this, options);
-    }
-    /**
-      * @return {!Promise<!ExecutionContext>}
-      */
-    executionContext() {
-        return this._mainWorld.executionContext();
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    async evaluateHandle(pageFunction, ...args) {
-        return this._mainWorld.evaluateHandle(pageFunction, ...args);
-    }
-    /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
       * @return {!Promise<*>}
@@ -2996,208 +2309,10 @@ class Frame {
         return this._mainWorld.evaluate(pageFunction, ...args);
     }
     /**
-      * @param {string} selector
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    async $(selector) {
-        return this._mainWorld.$(selector);
-    }
-    /**
-      * @param {string} expression
-      * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-      */
-    async $x(expression) {
-        return this._mainWorld.$x(expression);
-    }
-    /**
-      * @param {string} selector
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<(!Object|undefined)>}
-      */
-    async $eval(selector, pageFunction, ...args) {
-        return this._mainWorld.$eval(selector, pageFunction, ...args);
-    }
-    /**
-      * @param {string} selector
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<(!Object|undefined)>}
-      */
-    async $$eval(selector, pageFunction, ...args) {
-        return this._mainWorld.$$eval(selector, pageFunction, ...args);
-    }
-    /**
-      * @param {string} selector
-      * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-      */
-    async $$(selector) {
-        return this._mainWorld.$$(selector);
-    }
-    /**
-      * @return {!Promise<String>}
-      */
-    async content() {
-        return this._secondaryWorld.content();
-    }
-    /**
-      * @param {string} html
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      */
-    async setContent(html, options = {}) {
-        return this._secondaryWorld.setContent(html, options);
-    }
-    /**
-      * @return {string}
-      */
-    name() {
-        return this._name || "";
-    }
-    /**
-      * @return {string}
-      */
-    url() {
-        return this._url;
-    }
-    /**
-      * @return {?Frame}
-      */
-    parentFrame() {
-        return this._parentFrame;
-    }
-    /**
       * @return {!Array.<!Frame>}
       */
     childFrames() {
         return Array.from(this._childFrames);
-    }
-    /**
-      * @return {boolean}
-      */
-    isDetached() {
-        return this._detached;
-    }
-    /**
-      * @param {!{url?: string, path?: string, content?: string, type?: string}} options
-      * @return {!Promise<!Puppeteer.ElementHandle>}
-      */
-    async addScriptTag(options) {
-        return this._mainWorld.addScriptTag(options);
-    }
-    /**
-      * @param {!{url?: string, path?: string, content?: string}} options
-      * @return {!Promise<!Puppeteer.ElementHandle>}
-      */
-    async addStyleTag(options) {
-        return this._mainWorld.addStyleTag(options);
-    }
-    /**
-      * @param {string} selector
-      * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-      */
-    async click(selector, options) {
-        return this._secondaryWorld.click(selector, options);
-    }
-    /**
-      * @param {string} selector
-      */
-    async focus(selector) {
-        return this._secondaryWorld.focus(selector);
-    }
-    /**
-      * @param {string} selector
-      */
-    async hover(selector) {
-        return this._secondaryWorld.hover(selector);
-    }
-    /**
-    * @param {string} selector
-    * @param {!Array<string>} values
-    * @return {!Promise<!Array<string>>}
-    */
-    select(selector, ...values){
-        return this._secondaryWorld.select(selector, ...values);
-    }
-    /**
-      * @param {string} selector
-      */
-    async tap(selector) {
-        return this._secondaryWorld.tap(selector);
-    }
-    /**
-      * @param {string} selector
-      * @param {string} text
-      * @param {{delay: (number|undefined)}=} options
-      */
-    async type(selector, text, options) {
-        return this._mainWorld.type(selector, text, options);
-    }
-    /**
-      * @param {(string|number|Function)} selectorOrFunctionOrTimeout
-      * @param {!Object=} options
-      * @param {!Array<*>} args
-      * @return {!Promise<?Puppeteer.JSHandle>}
-      */
-    waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
-        const xPathPattern = "//";
-        if (helper.isString(selectorOrFunctionOrTimeout)) {
-            const string = /** @type {string} */ (selectorOrFunctionOrTimeout);
-            if (string.startsWith(xPathPattern)) {
-                return this.waitForXPath(string, options);
-            }
-            return this.waitForSelector(string, options);
-        }
-        if (helper.isNumber(selectorOrFunctionOrTimeout)) {
-            return new Promise(function (fulfill) { return setTimeout(fulfill, /** @type {number} */ (selectorOrFunctionOrTimeout)); });
-        }
-        if (typeof selectorOrFunctionOrTimeout === "function") {
-            return this.waitForFunction(selectorOrFunctionOrTimeout, options, ...args);
-        }
-        return Promise.reject(new Error("Unsupported target type: " + (typeof selectorOrFunctionOrTimeout)));
-    }
-    /**
-      * @param {string} selector
-      * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    async waitForSelector(selector, options) {
-        const handle = await this._secondaryWorld.waitForSelector(selector, options);
-        if (!handle) {
-            return null;
-        }
-        const mainExecutionContext = await this._mainWorld.executionContext();
-        const result = await mainExecutionContext._adoptElementHandle(handle);
-        await handle.dispose();
-        return result;
-    }
-    /**
-      * @param {string} xpath
-      * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    async waitForXPath(xpath, options) {
-        const handle = await this._secondaryWorld.waitForXPath(xpath, options);
-        if (!handle) {
-            return null;
-        }
-        const mainExecutionContext = await this._mainWorld.executionContext();
-        const result = await mainExecutionContext._adoptElementHandle(handle);
-        await handle.dispose();
-        return result;
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!{polling?: string|number, timeout?: number}=} options
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    waitForFunction(pageFunction, options = {}, ...args) {
-        return this._mainWorld.waitForFunction(pageFunction, options, ...args);
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async title() {
-        return this._secondaryWorld.title();
     }
     /**
       * @param {!Protocol.Page.Frame} framePayload
@@ -3207,12 +2322,6 @@ class Frame {
         // TODO(lushnikov): remove this once requestInterception has loaderId exposed.
         this._navigationURL = framePayload.url;
         this._url = framePayload.url;
-    }
-    /**
-      * @param {string} url
-      */
-    _navigatedWithinDocument(url) {
-        this._url = url;
     }
     /**
       * @param {string} loaderId
@@ -3228,15 +2337,6 @@ class Frame {
     _onLoadingStopped() {
         this._lifecycleEvents.add("DOMContentLoaded");
         this._lifecycleEvents.add("load");
-    }
-    _detach() {
-        this._detached = true;
-        this._mainWorld._detach();
-        this._secondaryWorld._detach();
-        if (this._parentFrame) {
-            this._parentFrame._childFrames.delete(this);
-        }
-        this._parentFrame = null;
     }
 }
 function assertNoLegacyNavigationOptions(options) {
@@ -3310,7 +2410,7 @@ class JSHandle {
       * @return {!Promise<!Map<string, !JSHandle>>}
       */
     async getProperties() {
-        const response = await this._client.cdpSend3("Runtime.getProperties", {
+        const response = await this._client.rpc3("Runtime.getProperties", {
             objectId: this._remoteObject.objectId,
             ownProperties: true
         });
@@ -3328,7 +2428,7 @@ class JSHandle {
       */
     async jsonValue() {
         if (this._remoteObject.objectId) {
-            const response = await this._client.cdpSend3("Runtime.callFunctionOn", {
+            const response = await this._client.rpc3("Runtime.callFunctionOn", {
                 functionDeclaration: "function() { return this; }",
                 objectId: this._remoteObject.objectId,
                 returnByValue: true,
@@ -3477,12 +2577,6 @@ class LifecycleWatcher {
         return this._newDocumentNavigationPromise;
     }
     /**
-      * @return {!Promise}
-      */
-    lifecyclePromise() {
-        return this._lifecyclePromise;
-    }
-    /**
       * @return {!Promise<?Error>}
       */
     timeoutOrTerminationPromise() {
@@ -3602,18 +2696,14 @@ class NetworkManager extends EventEmitter {
         this._userCacheDisabled = false;
         /** @type {!Map<string, string>} */
         this._requestIdToInterceptionId = new Map();
-        this._client.on("Fetch.requestPaused", this._onRequestPaused.bind(this));
-        this._client.on("Fetch.authRequired", this._onAuthRequired.bind(this));
         this._client.on("Network.requestWillBeSent", this._onRequestWillBeSent.bind(this));
-        this._client.on("Network.requestServedFromCache", this._onRequestServedFromCache.bind(this));
         this._client.on("Network.responseReceived", this._onResponseReceived.bind(this));
         this._client.on("Network.loadingFinished", this._onLoadingFinished.bind(this));
-        this._client.on("Network.loadingFailed", this._onLoadingFailed.bind(this));
     }
     async initialize() {
-        await this._client.cdpSend3("Network.enable");
+        await this._client.rpc3("Network.enable");
         if (this._ignoreHTTPSErrors) {
-            await this._client.cdpSend3("Security.setIgnoreCertificateErrors", {ignore: true});
+            await this._client.rpc3("Security.setIgnoreCertificateErrors", {ignore: true});
         }
     }
     /**
@@ -3623,91 +2713,10 @@ class NetworkManager extends EventEmitter {
         this._frameManager = frameManager;
     }
     /**
-      * @param {?{username: string, password: string}} credentials
-      */
-    async authenticate(credentials) {
-        this._credentials = credentials;
-        await this._updateProtocolRequestInterception();
-    }
-    /**
-      * @param {!Object<string, string>} extraHTTPHeaders
-      */
-    async setExtraHTTPHeaders(extraHTTPHeaders) {
-        this._extraHTTPHeaders = {};
-        for (const key of Object.keys(extraHTTPHeaders)) {
-            const value = extraHTTPHeaders[key];
-            assert(helper.isString(value), `Expected value of header "${key}" to be String, but "${typeof value}" is found.`);
-            this._extraHTTPHeaders[key.toLowerCase()] = value;
-        }
-        await this._client.cdpSend3("Network.setExtraHTTPHeaders", { headers: this._extraHTTPHeaders });
-    }
-    /**
       * @return {!Object<string, string>}
       */
     extraHTTPHeaders() {
         return Object.assign({}, this._extraHTTPHeaders);
-    }
-    /**
-      * @param {boolean} value
-      */
-    async setOfflineMode(value) {
-        if (this._offline === value) {
-            return;
-        }
-        this._offline = value;
-        await this._client.cdpSend3("Network.emulateNetworkConditions", {
-            offline: this._offline,
-            // values of 0 remove any active throttling. crbug.com/456324#c9
-            latency: 0,
-            downloadThroughput: -1,
-            uploadThroughput: -1
-        });
-    }
-    /**
-      * @param {string} userAgent
-      */
-    async setUserAgent(userAgent) {
-        await this._client.cdpSend3("Network.setUserAgentOverride", { userAgent });
-    }
-    /**
-      * @param {boolean} enabled
-      */
-    async setCacheEnabled(enabled) {
-        this._userCacheDisabled = !enabled;
-        await this._updateProtocolCacheDisabled();
-    }
-    /**
-      * @param {boolean} value
-      */
-    async setRequestInterception(value) {
-        this._userRequestInterceptionEnabled = value;
-        await this._updateProtocolRequestInterception();
-    }
-    async _updateProtocolRequestInterception() {
-        const enabled = this._userRequestInterceptionEnabled || !!this._credentials;
-        if (enabled === this._protocolRequestInterceptionEnabled) {
-            return;
-        }
-        this._protocolRequestInterceptionEnabled = enabled;
-        if (enabled) {
-            await Promise.all([
-                this._updateProtocolCacheDisabled(),
-                this._client.cdpSend3("Fetch.enable", {
-                    handleAuthRequests: true,
-                    patterns: [{urlPattern: "*"}],
-                }),
-            ]);
-        } else {
-            await Promise.all([
-                this._updateProtocolCacheDisabled(),
-                this._client.cdpSend3("Fetch.disable")
-            ]);
-        }
-    }
-    async _updateProtocolCacheDisabled() {
-        await this._client.cdpSend3("Network.setCacheDisabled", {
-            cacheDisabled: this._userCacheDisabled || this._protocolRequestInterceptionEnabled
-        });
     }
     /**
       * @param {!Protocol.Network.requestWillBeSentPayload} event
@@ -3728,83 +2737,14 @@ class NetworkManager extends EventEmitter {
         this._onRequest(event, null);
     }
     /**
-      * @param {!Protocol.Fetch.authRequiredPayload} event
-      */
-    _onAuthRequired(event) {
-        /** @type {"Default"|"CancelAuth"|"ProvideCredentials"} */
-        let response = "Default";
-        if (this._attemptedAuthentications.has(event.requestId)) {
-            response = "CancelAuth";
-        } else if (this._credentials) {
-            response = "ProvideCredentials";
-            this._attemptedAuthentications.add(event.requestId);
-        }
-        const {username, password} = this._credentials || {username: undefined, password: undefined};
-        this._client.cdpSend3("Fetch.continueWithAuth", {
-            requestId: event.requestId,
-            authChallengeResponse: { response, username, password },
-        }).catch(debugError);
-    }
-    /**
-      * @param {!Protocol.Fetch.requestPausedPayload} event
-      */
-    _onRequestPaused(event) {
-        if (!this._userRequestInterceptionEnabled && this._protocolRequestInterceptionEnabled) {
-            this._client.cdpSend3("Fetch.continueRequest", {
-                requestId: event.requestId
-            }).catch(debugError);
-        }
-        const requestId = event.networkId;
-        const interceptionId = event.requestId;
-        if (requestId && this._requestIdToRequestWillBeSentEvent.has(requestId)) {
-            const requestWillBeSentEvent = this._requestIdToRequestWillBeSentEvent.get(requestId);
-            this._onRequest(requestWillBeSentEvent, interceptionId);
-            this._requestIdToRequestWillBeSentEvent.delete(requestId);
-        } else {
-            this._requestIdToInterceptionId.set(requestId, interceptionId);
-        }
-    }
-    /**
       * @param {!Protocol.Network.requestWillBeSentPayload} event
       * @param {?string} interceptionId
       */
     _onRequest(event, interceptionId) {
-        let redirectChain = [];
-        if (event.redirectResponse) {
-            const request = this._requestIdToRequest.get(event.requestId);
-            // If we connect late to the target, we could have missed the requestWillBeSent event.
-            if (request) {
-                this._handleRequestRedirect(request, event.redirectResponse);
-                redirectChain = request._redirectChain;
-            }
-        }
         const frame = event.frameId && this._frameManager ? this._frameManager.frame(event.frameId) : null;
-        const request = new Request(this._client, frame, interceptionId, this._userRequestInterceptionEnabled, event, redirectChain);
+        const request = new Request(this._client, frame, interceptionId, this._userRequestInterceptionEnabled, event);
         this._requestIdToRequest.set(event.requestId, request);
         this.emit(Events.NetworkManager.Request, request);
-    }
-    /**
-      * @param {!Protocol.Network.requestServedFromCachePayload} event
-      */
-    _onRequestServedFromCache(event) {
-        const request = this._requestIdToRequest.get(event.requestId);
-        if (request) {
-            request._fromMemoryCache = true;
-        }
-    }
-    /**
-      * @param {!Request} request
-      * @param {!Protocol.Network.Response} responsePayload
-      */
-    _handleRequestRedirect(request, responsePayload) {
-        const response = new Response(this._client, request, responsePayload);
-        request._response = response;
-        request._redirectChain.push(request);
-        response._bodyLoadedPromiseFulfill.call(null, new Error("Response body is unavailable for redirect responses"));
-        this._requestIdToRequest.delete(request._requestId);
-        this._attemptedAuthentications.delete(request._interceptionId);
-        this.emit(Events.NetworkManager.Response, response);
-        this.emit(Events.NetworkManager.RequestFinished, request);
     }
     /**
       * @param {!Protocol.Network.responseReceivedPayload} event
@@ -3838,25 +2778,6 @@ class NetworkManager extends EventEmitter {
         this._attemptedAuthentications.delete(request._interceptionId);
         this.emit(Events.NetworkManager.RequestFinished, request);
     }
-    /**
-      * @param {!Protocol.Network.loadingFailedPayload} event
-      */
-    _onLoadingFailed(event) {
-        const request = this._requestIdToRequest.get(event.requestId);
-        // For certain requestIds we never receive requestWillBeSent event.
-        // @see https://crbug.com/750469
-        if (!request) {
-            return;
-        }
-        request._failureText = event.errorText;
-        const response = request.response();
-        if (response) {
-            response._bodyLoadedPromiseFulfill.call(null);
-        }
-        this._requestIdToRequest.delete(request._requestId);
-        this._attemptedAuthentications.delete(request._interceptionId);
-        this.emit(Events.NetworkManager.RequestFailed, request);
-    }
 }
 class Request {
     /**
@@ -3865,9 +2786,8 @@ class Request {
       * @param {string} interceptionId
       * @param {boolean} allowInterception
       * @param {!Protocol.Network.requestWillBeSentPayload} event
-      * @param {!Array<!Request>} redirectChain
       */
-    constructor(client, frame, interceptionId, allowInterception, event, redirectChain) {
+    constructor(client, frame, interceptionId, allowInterception, event) {
         let that = this;
         that._client = client;
         that._requestId = event.requestId;
@@ -3883,7 +2803,6 @@ class Request {
         that._postData = event.request.postData;
         that._headers = {};
         that._frame = frame;
-        that._redirectChain = redirectChain;
         Object.keys(event.request.headers).forEach(function (key) {
             that._headers[key.toLowerCase()] = event.request.headers[key];
         });
@@ -3894,30 +2813,6 @@ class Request {
       */
     url() {
         return this._url;
-    }
-    /**
-      * @return {string}
-      */
-    resourceType() {
-        return this._resourceType;
-    }
-    /**
-      * @return {string}
-      */
-    method() {
-        return this._method;
-    }
-    /**
-      * @return {string|undefined}
-      */
-    postData() {
-        return this._postData;
-    }
-    /**
-      * @return {!Object}
-      */
-    headers() {
-        return this._headers;
     }
     /**
       * @return {?Response}
@@ -3938,12 +2833,6 @@ class Request {
         return this._isNavigationRequest;
     }
     /**
-      * @return {!Array<!Request>}
-      */
-    redirectChain() {
-        return this._redirectChain.slice();
-    }
-    /**
       * @return {?{errorText: string}}
       */
     failure() {
@@ -3953,94 +2842,6 @@ class Request {
         return {
             errorText: this._failureText
         };
-    }
-    /**
-      * @param {!{url?: string, method?:string, postData?: string, headers?: !Object}} overrides
-      */
-    async continue(overrides = {}) {
-        // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:")) {
-            return;
-        }
-        assert(this._allowInterception, "Request Interception is not enabled!");
-        assert(!this._interceptionHandled, "Request is already handled!");
-        const {
-            url,
-            method,
-            postData,
-            headers
-        } = overrides;
-        this._interceptionHandled = true;
-        await this._client.cdpSend3("Fetch.continueRequest", {
-            requestId: this._interceptionId,
-            url,
-            method,
-            postData,
-            headers: headers ? headersArray(headers) : undefined,
-        }).catch(function (error) {
-            // In certain cases, protocol will return error if the request was already canceled
-            // or the page was closed. We should tolerate these errors.
-            debugError(error);
-        });
-    }
-    /**
-      * @param {!{status: number, headers: Object, contentType: string, body: (string|Buffer)}} response
-      */
-    async respond(response) {
-        // Mocking responses for dataURL requests is not currently supported.
-        if (this._url.startsWith("data:")) {
-            return;
-        }
-        assert(this._allowInterception, "Request Interception is not enabled!");
-        assert(!this._interceptionHandled, "Request is already handled!");
-        this._interceptionHandled = true;
-        const responseBody = response.body && helper.isString(response.body) ? Buffer.from(/** @type {string} */(response.body)) : /** @type {?Buffer} */(response.body || null);
-        /** @type {!Object<string, string>} */
-        const responseHeaders = {};
-        if (response.headers) {
-            Object.keys(response.headers).forEach(function (header) {
-                responseHeaders[header.toLowerCase()] = response.headers[header];
-            });
-        }
-        if (response.contentType) {
-            responseHeaders["content-type"] = response.contentType;
-        }
-        if (responseBody && ! responseHeaders.hasOwnProperty("content-length")) {
-            responseHeaders["content-length"] = String(Buffer.byteLength(responseBody));
-        }
-        await this._client.cdpSend3("Fetch.fulfillRequest", {
-            requestId: this._interceptionId,
-            responseCode: response.status || 200,
-            responsePhrase: STATUS_TEXTS[response.status || 200],
-            responseHeaders: headersArray(responseHeaders),
-            body: responseBody ? responseBody.toString("base64") : undefined,
-        }).catch(function (error) {
-            // In certain cases, protocol will return error if the request was already canceled
-            // or the page was closed. We should tolerate these errors.
-            debugError(error);
-        });
-    }
-    /**
-      * @param {string=} errorCode
-      */
-    async abort(errorCode = "failed") {
-        // Request interception is not supported for data: urls.
-        if (this._url.startsWith("data:")) {
-            return;
-        }
-        const errorReason = errorReasons[errorCode];
-        assert(errorReason, "Unknown error code: " + errorCode);
-        assert(this._allowInterception, "Request Interception is not enabled!");
-        assert(!this._interceptionHandled, "Request is already handled!");
-        this._interceptionHandled = true;
-        await this._client.cdpSend3("Fetch.failRequest", {
-            requestId: this._interceptionId,
-            errorReason
-        }).catch(function (error) {
-            // In certain cases, protocol will return error if the request was already canceled
-            // or the page was closed. We should tolerate these errors.
-            debugError(error);
-        });
     }
 }
 const errorReasons = {
@@ -4086,163 +2887,7 @@ class Response {
         Object.keys(responsePayload.headers).forEach(function (key) {
             that._headers[key.toLowerCase()] = responsePayload.headers[key];
         });
-        that._securityDetails = responsePayload.securityDetails ? new SecurityDetails(responsePayload.securityDetails) : null;
     }
-    /**
-      * @return {{ip: string, port: number}}
-      */
-    remoteAddress() {
-        return this._remoteAddress;
-    }
-    /**
-      * @return {string}
-      */
-    url() {
-        return this._url;
-    }
-    /**
-      * @return {boolean}
-      */
-    ok() {
-        return this._status === 0 || (this._status >= 200 && this._status <= 299);
-    }
-    /**
-      * @return {number}
-      */
-    status() {
-        return this._status;
-    }
-    /**
-      * @return {string}
-      */
-    statusText() {
-        return this._statusText;
-    }
-    /**
-      * @return {!Object}
-      */
-    headers() {
-        return this._headers;
-    }
-    /**
-      * @return {?SecurityDetails}
-      */
-    securityDetails() {
-        return this._securityDetails;
-    }
-    /**
-      * @return {!Promise<!Buffer>}
-      */
-    buffer() {
-        let that = this;
-        if (!that._contentPromise) {
-            that._contentPromise = that._bodyLoadedPromise.then(async function (error) {
-                if (error) {
-                    throw error;
-                }
-                const response = await that._client.cdpSend3("Network.getResponseBody", {
-                    requestId: that._request._requestId
-                });
-                return Buffer.from(response.body, response.base64Encoded ? "base64" : "utf8");
-            });
-        }
-        return that._contentPromise;
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async text() {
-        const content = await this.buffer();
-        return content.toString("utf8");
-    }
-    /**
-      * @return {!Promise<!Object>}
-      */
-    async json() {
-        const content = await this.text();
-        return JSON.parse(content);
-    }
-    /**
-      * @return {!Request}
-      */
-    request() {
-        return this._request;
-    }
-    /**
-      * @return {boolean}
-      */
-    fromCache() {
-        return this._fromDiskCache || this._request._fromMemoryCache;
-    }
-    /**
-      * @return {boolean}
-      */
-    fromServiceWorker() {
-        return this._fromServiceWorker;
-    }
-    /**
-      * @return {?Puppeteer.Frame}
-      */
-    frame() {
-        return this._request.frame();
-    }
-}
-class SecurityDetails {
-    /**
-      * @param {!Protocol.Network.SecurityDetails} securityPayload
-      */
-    constructor(securityPayload) {
-        this._subjectName = securityPayload["subjectName"];
-        this._issuer = securityPayload["issuer"];
-        this._validFrom = securityPayload["validFrom"];
-        this._validTo = securityPayload["validTo"];
-        this._protocol = securityPayload["protocol"];
-    }
-    /**
-      * @return {string}
-      */
-    subjectName() {
-        return this._subjectName;
-    }
-    /**
-      * @return {string}
-      */
-    issuer() {
-        return this._issuer;
-    }
-    /**
-      * @return {number}
-      */
-    validFrom() {
-        return this._validFrom;
-    }
-    /**
-      * @return {number}
-      */
-    validTo() {
-        return this._validTo;
-    }
-    /**
-      * @return {string}
-      */
-    protocol() {
-        return this._protocol;
-    }
-}
-/**
-  * @param {Object<string, string>} headers
-  * @return {!Array<{name: string, value: string}>}
-  */
-function headersArray(headers) {
-    const result = [];
-    Object.entries(headers).forEach(function ([
-        name, value
-    ]) {
-        result.push({
-            name, value: value + ""
-        });
-    });
-    return result;
 }
 // List taken from https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml with extra 306 and 418 codes.
 const STATUS_TEXTS = {
@@ -4310,7 +2955,7 @@ const STATUS_TEXTS = {
     "510": "Not Extended",
     "511": "Network Authentication Required",
 };
-exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager, SecurityDetails};
+exports_puppeteer_puppeteer_lib_NetworkManager = {Request, Response, NetworkManager};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 */
@@ -4335,7 +2980,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Page.js
 // const mime = require("mime");
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
 // const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
-// const {Dialog} = exports_puppeteer_puppeteer_lib_Dialog;
 // const {EmulationManager} = exports_puppeteer_puppeteer_lib_EmulationManager;
 // const {FrameManager} = exports_puppeteer_puppeteer_lib_FrameManager;
 // const {helper, debugError, assert} = exports_puppeteer_puppeteer_lib_helper;
@@ -4385,27 +3029,6 @@ class Page extends EventEmitter {
         that._screenshotTaskQueue = screenshotTaskQueue;
         /** @type {!Map<string, Worker>} */
         that._workers = new Map();
-        client.on("Target.attachedToTarget", function (event) {
-            if (event.targetInfo.type !== "worker") {
-                // If we don't detach from service workers, they will never die.
-                client.cdpSend3("Target.detachFromTarget", {
-                    sessionId: event.sessionId
-                }).catch(debugError);
-                return;
-            }
-            const session = Connection.fromSession(client).session(event.sessionId);
-            const worker = new Worker(session, event.targetInfo.url, that._addConsoleMessage.bind(that), that._handleException.bind(that));
-            that._workers.set(event.sessionId, worker);
-            that.emit(Events.Page.WorkerCreated, worker);
-        });
-        client.on("Target.detachedFromTarget", function (event) {
-            const worker = that._workers.get(event.sessionId);
-            if (!worker) {
-                return;
-            }
-            that.emit(Events.Page.WorkerDestroyed, worker);
-            that._workers.delete(event.sessionId);
-        });
         that._frameManager.on(Events.FrameManager.FrameAttached, function (event) { return that.emit(Events.Page.FrameAttached, event); });
         that._frameManager.on(Events.FrameManager.FrameDetached, function (event) { return that.emit(Events.Page.FrameDetached, event); });
         that._frameManager.on(Events.FrameManager.FrameNavigated, function (event) { return that.emit(Events.Page.FrameNavigated, event); });
@@ -4435,10 +3058,10 @@ class Page extends EventEmitter {
         let that = this;
         await Promise.all([
             that._frameManager.initialize(),
-            that._client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-            that._client.cdpSend3("Performance.enable", {}),
-            that._client.cdpSend3("Log.enable", {}),
-            that._client.cdpSend3("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
+            that._client.rpc3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
+            that._client.rpc3("Performance.enable", {}),
+            that._client.rpc3("Log.enable", {}),
+            that._client.rpc3("Page.setInterceptFileChooserDialog", {enabled: true}).catch(function (e) {
                 that._fileChooserInterceptionIsDisabled = true;
             }),
         ]);
@@ -4467,198 +3090,6 @@ class Page extends EventEmitter {
       */
     get coverage() {
         return this._coverage;
-    }
-    /**
-      * @return {!Array<Puppeteer.Frame>}
-      */
-    frames() {
-        return this._frameManager.frames();
-    }
-    /**
-      * @return {!Array<!Worker>}
-      */
-    workers() {
-        return Array.from(this._workers.values());
-    }
-    /**
-      * @param {boolean} value
-      */
-    async setRequestInterception(value) {
-        return this._frameManager.networkManager().setRequestInterception(value);
-    }
-    /**
-      * @param {boolean} enabled
-      */
-    setOfflineMode(enabled) {
-        return this._frameManager.networkManager().setOfflineMode(enabled);
-    }
-    /**
-      * @param {string} selector
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    async $(selector) {
-        return this.mainFrame().$(selector);
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    async evaluateHandle(pageFunction, ...args) {
-        const context = await this.mainFrame().executionContext();
-        return context.evaluateHandle(pageFunction, ...args);
-    }
-    /**
-      * @param {!Puppeteer.JSHandle} prototypeHandle
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    async queryObjects(prototypeHandle) {
-        const context = await this.mainFrame().executionContext();
-        return context.queryObjects(prototypeHandle);
-    }
-    /**
-      * @param {string} selector
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<(!Object|undefined)>}
-      */
-    async $eval(selector, pageFunction, ...args) {
-        return this.mainFrame().$eval(selector, pageFunction, ...args);
-    }
-    /**
-      * @param {string} selector
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<(!Object|undefined)>}
-      */
-    async $$eval(selector, pageFunction, ...args) {
-        return this.mainFrame().$$eval(selector, pageFunction, ...args);
-    }
-    /**
-      * @param {string} selector
-      * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-      */
-    async $$(selector) {
-        return this.mainFrame().$$(selector);
-    }
-    /**
-      * @param {string} expression
-      * @return {!Promise<!Array<!Puppeteer.ElementHandle>>}
-      */
-    async $x(expression) {
-        return this.mainFrame().$x(expression);
-    }
-    /**
-      * @param {!Array<string>} urls
-      * @return {!Promise<!Array<Network.Cookie>>}
-      */
-    async cookies(...urls) {
-        return (await this._client.cdpSend3("Network.getCookies", {
-            urls: urls.length ? urls : [this.url()]
-        })).cookies;
-    }
-    /**
-      * @param {Array<Protocol.Network.deleteCookiesParameters>} cookies
-      */
-    async deleteCookie(...cookies) {
-        const pageURL = this.url();
-        for (const cookie of cookies) {
-            const item = Object.assign({}, cookie);
-            if (!cookie.url && pageURL.startsWith("http")) {
-                item.url = pageURL;
-            }
-            await this._client.cdpSend3("Network.deleteCookies", item);
-        }
-    }
-    /**
-      * @param {Array<Network.CookieParam>} cookies
-      */
-    async setCookie(...cookies) {
-        const pageURL = this.url();
-        const startsWithHTTP = pageURL.startsWith("http");
-        const items = cookies.map(function (cookie) {
-            const item = Object.assign({}, cookie);
-            if (!item.url && startsWithHTTP) {
-                item.url = pageURL;
-            }
-            assert(item.url !== "about:blank", `Blank page can not have cookie "${item.name}"`);
-            assert(!String.prototype.startsWith.call(item.url || "", "data:"), `Data URL page can not have cookie "${item.name}"`);
-            return item;
-        });
-        await this.deleteCookie(...items);
-        if (items.length) {
-            await this._client.cdpSend3("Network.setCookies", { cookies: items });
-        }
-    }
-    /**
-      * @param {!{url?: string, path?: string, content?: string, type?: string}} options
-      * @return {!Promise<!Puppeteer.ElementHandle>}
-      */
-    async addScriptTag(options) {
-        return this.mainFrame().addScriptTag(options);
-    }
-    /**
-      * @param {!{url?: string, path?: string, content?: string}} options
-      * @return {!Promise<!Puppeteer.ElementHandle>}
-      */
-    async addStyleTag(options) {
-        return this.mainFrame().addStyleTag(options);
-    }
-    /**
-      * @param {string} name
-      * @param {Function} puppeteerFunction
-      */
-    async exposeFunction(name, puppeteerFunction) {
-        let that = this;
-        if (that._pageBindings.has(name)) {
-            throw new Error(`Failed to add page binding with name ${name}: window["${name}"] already exists!`);
-        }
-        that._pageBindings.set(name, puppeteerFunction);
-        const expression = helper.evaluationString(addPageBinding, name);
-        await that._client.cdpSend3("Runtime.addBinding", {name: name});
-        await that._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", {source: expression});
-        await Promise.all(that.frames().map(function (frame) { return frame.evaluate(expression).catch(debugError); }));
-        function addPageBinding(bindingName) {
-            const binding = window[bindingName];
-            window[bindingName] = function (...args) {
-                const me = window[bindingName];
-                let callbacks = me["callbacks"];
-                if (!callbacks) {
-                    callbacks = new Map();
-                    me["callbacks"] = callbacks;
-                }
-                const seq = (me["lastSeq"] || 0) + 1;
-                me["lastSeq"] = seq;
-                const promise = new Promise(function (resolve, reject) { return callbacks.set(seq, {resolve, reject}); });
-                binding(JSON.stringify({name: bindingName, seq, args}));
-                return promise;
-            };
-        }
-    }
-    /**
-      * @param {?{username: string, password: string}} credentials
-      */
-    async authenticate(credentials) {
-        return this._frameManager.networkManager().authenticate(credentials);
-    }
-    /**
-      * @param {!Object<string, string>} headers
-      */
-    async setExtraHTTPHeaders(headers) {
-        return this._frameManager.networkManager().setExtraHTTPHeaders(headers);
-    }
-    /**
-      * @param {string} userAgent
-      */
-    async setUserAgent(userAgent) {
-        return this._frameManager.networkManager().setUserAgent(userAgent);
-    }
-    /**
-      * @return {!Promise<!Metrics>}
-      */
-    async metrics() {
-        const response = await this._client.cdpSend3("Performance.getMetrics");
-        return this._buildMetricsObject(response.metrics);
     }
     /**
       * @param {!Protocol.Performance.metricsPayload} event
@@ -4716,55 +3147,6 @@ class Page extends EventEmitter {
         this._addConsoleMessage(event.type, values, event.stackTrace);
     }
     /**
-      * @param {!Protocol.Runtime.bindingCalledPayload} event
-      */
-    async _onBindingCalled(event) {
-        const {name, seq, args} = JSON.parse(event.payload);
-        let expression = null;
-        try {
-            const result = await this._pageBindings.get(name)(...args);
-            expression = helper.evaluationString(deliverResult, name, seq, result);
-        } catch (error) {
-            if (error instanceof Error) {
-                expression = helper.evaluationString(deliverError, name, seq, error.message, error.stack);
-            }
-            else {
-                expression = helper.evaluationString(deliverErrorValue, name, seq, error);
-            }
-        }
-        this._client.cdpSend3("Runtime.evaluate", { expression, contextId: event.executionContextId }).catch(debugError);
-        /**
-          * @param {string} name
-          * @param {number} seq
-          * @param {*} result
-          */
-        function deliverResult(name, seq, result) {
-            window[name]["callbacks"].get(seq).resolve(result);
-            window[name]["callbacks"].delete(seq);
-        }
-        /**
-          * @param {string} name
-          * @param {number} seq
-          * @param {string} message
-          * @param {string} stack
-          */
-        function deliverError(name, seq, message, stack) {
-            const error = new Error(message);
-            error.stack = stack;
-            window[name]["callbacks"].get(seq).reject(error);
-            window[name]["callbacks"].delete(seq);
-        }
-        /**
-          * @param {string} name
-          * @param {number} seq
-          * @param {*} value
-          */
-        function deliverErrorValue(name, seq, value) {
-            window[name]["callbacks"].get(seq).reject(value);
-            window[name]["callbacks"].delete(seq);
-        }
-    }
-    /**
       * @param {string} type
       * @param {!Array<!Puppeteer.JSHandle>} args
       * @param {Protocol.Runtime.StackTrace=} stackTrace
@@ -4792,43 +3174,6 @@ class Page extends EventEmitter {
         const message = new ConsoleMessage(type, textTokens.join(" "), args, location);
         this.emit(Events.Page.Console, message);
     }
-    _onDialog(event) {
-        let dialogType = null;
-        if (event.type === "alert") {
-            dialogType = Dialog.Type.Alert;
-        }
-        else if (event.type === "confirm") {
-            dialogType = Dialog.Type.Confirm;
-        }
-        else if (event.type === "prompt") {
-            dialogType = Dialog.Type.Prompt;
-        }
-        else if (event.type === "beforeunload") {
-            dialogType = Dialog.Type.BeforeUnload;
-        }
-        assert(dialogType, "Unknown javascript dialog type: " + event.type);
-        const dialog = new Dialog(this._client, dialogType, event.message, event.defaultPrompt);
-        this.emit(Events.Page.Dialog, dialog);
-    }
-    /**
-      * @return {!string}
-      */
-    url() {
-        return this.mainFrame().url();
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async content() {
-        return await this._frameManager.mainFrame().content();
-    }
-    /**
-      * @param {string} html
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      */
-    async setContent(html, options) {
-        await this._frameManager.mainFrame().setContent(html, options);
-    }
     /**
       * @param {string} url
       * @param {!{referer?: string, timeout?: number, waitUntil?: string|!Array<string>}=} options
@@ -4836,127 +3181,6 @@ class Page extends EventEmitter {
       */
     async goto(url, options) {
         return await this._frameManager.mainFrame().goto(url, options);
-    }
-    /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async reload(options) {
-        const [response] = await Promise.all([
-            this.waitForNavigation(options),
-            this._client.cdpSend3("Page.reload")
-        ]);
-        return response;
-    }
-    /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async waitForNavigation(options = {}) {
-        return await this._frameManager.mainFrame().waitForNavigation(options);
-    }
-    /**
-      * @param {(string|Function)} urlOrPredicate
-      * @param {!{timeout?: number}=} options
-      * @return {!Promise<!Puppeteer.Request>}
-      */
-    async waitForRequest(urlOrPredicate, options = {}) {
-        const {
-            timeout = this._timeoutSettings.timeout(),
-        } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Request, function (request) {
-            if (helper.isString(urlOrPredicate)) {
-                return (urlOrPredicate === request.url());
-            }
-            if (typeof urlOrPredicate === "function") {
-                return !!(urlOrPredicate(request));
-            }
-            return false;
-        }, timeout);
-    }
-    /**
-      * @param {(string|Function)} urlOrPredicate
-      * @param {!{timeout?: number}=} options
-      * @return {!Promise<!Puppeteer.Response>}
-      */
-    async waitForResponse(urlOrPredicate, options = {}) {
-        const {
-            timeout = this._timeoutSettings.timeout(),
-        } = options;
-        return helper.waitForEvent(this._frameManager.networkManager(), Events.NetworkManager.Response, function (response) {
-            if (helper.isString(urlOrPredicate)) {
-                return (urlOrPredicate === response.url());
-            }
-            if (typeof urlOrPredicate === "function") {
-                return !!(urlOrPredicate(response));
-            }
-            return false;
-        }, timeout);
-    }
-    /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async goBack(options) {
-        return this._go(-1, options);
-    }
-    /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async goForward(options) {
-        return this._go(+1, options);
-    }
-    /**
-      * @param {!{timeout?: number, waitUntil?: string|!Array<string>}=} options
-      * @return {!Promise<?Puppeteer.Response>}
-      */
-    async _go(delta, options) {
-        const history = await this._client.cdpSend3("Page.getNavigationHistory");
-        const entry = history.entries[history.currentIndex + delta];
-        if (!entry) {
-            return null;
-        }
-        const [response] = await Promise.all([
-            this.waitForNavigation(options),
-            this._client.cdpSend3("Page.navigateToHistoryEntry", {entryId: entry.id}),
-        ]);
-        return response;
-    }
-    async bringToFront() {
-        await this._client.cdpSend3("Page.bringToFront");
-    }
-    /**
-      * @param {!{viewport: !Puppeteer.Viewport, userAgent: string}} options
-      */
-    async emulate(options) {
-        await Promise.all([
-            this.setViewport(options.viewport),
-            this.setUserAgent(options.userAgent)
-        ]);
-    }
-    /**
-      * @param {boolean} enabled
-      */
-    async setJavaScriptEnabled(enabled) {
-        if (this._javascriptEnabled === enabled) {
-            return;
-        }
-        this._javascriptEnabled = enabled;
-        await this._client.cdpSend3("Emulation.setScriptExecutionDisabled", { value: !enabled });
-    }
-    /**
-      * @param {boolean} enabled
-      */
-    async setBypassCSP(enabled) {
-        await this._client.cdpSend3("Page.setBypassCSP", { enabled });
-    }
-    /**
-      * @param {?string} mediaType
-      */
-    async emulateMedia(mediaType) {
-        assert(mediaType === "screen" || mediaType === "print" || mediaType === null, "Unsupported media type: " + mediaType);
-        await this._client.cdpSend3("Emulation.setEmulatedMedia", {media: mediaType || ""});
     }
     /**
       * @param {!Puppeteer.Viewport} viewport
@@ -4969,32 +3193,12 @@ class Page extends EventEmitter {
         }
     }
     /**
-      * @return {?Puppeteer.Viewport}
-      */
-    viewport() {
-        return this._viewport;
-    }
-    /**
       * @param {Function|string} pageFunction
       * @param {!Array<*>} args
       * @return {!Promise<*>}
       */
     async evaluate(pageFunction, ...args) {
         return this._frameManager.mainFrame().evaluate(pageFunction, ...args);
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      */
-    async evaluateOnNewDocument(pageFunction, ...args) {
-        const source = helper.evaluationString(pageFunction, ...args);
-        await this._client.cdpSend3("Page.addScriptToEvaluateOnNewDocument", { source });
-    }
-    /**
-      * @param {boolean} enabled
-      */
-    async setCacheEnabled(enabled = true) {
-        await this._frameManager.networkManager().setCacheEnabled(enabled);
     }
     /**
       * @param {!ScreenshotOptions=} options
@@ -5043,13 +3247,12 @@ class Page extends EventEmitter {
       * @return {!Promise<!Buffer|!String>}
       */
     async _screenshotTask(format, options) {
-        await this._client.cdpSend3("Target.activateTarget", {targetId: this._target._targetId});
-        let clip = options.clip ? processClip(options.clip) : undefined;
+        await this._client.rpc3("Target.activateTarget", {targetId: this._target._targetId});
+        let clip;
         if (options.fullPage) {
-            const metrics = await this._client.cdpSend3("Page.getLayoutMetrics");
+            const metrics = await this._client.rpc3("Page.getLayoutMetrics");
             const width = Math.ceil(metrics.contentSize.width);
             const height = Math.ceil(metrics.contentSize.height);
-            // Overwrite clip for full page at all times.
             clip = { x: 0, y: 0, width, height, scale: 1 };
             const {
                 isMobile = false,
@@ -5058,15 +3261,15 @@ class Page extends EventEmitter {
             } = this._viewport || {};
             /** @type {!Protocol.Emulation.ScreenOrientation} */
             const screenOrientation = isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
-            await this._client.cdpSend3("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
+            await this._client.rpc3("Emulation.setDeviceMetricsOverride", { mobile: isMobile, width, height, deviceScaleFactor, screenOrientation });
         }
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
         if (shouldSetDefaultBackground) {
-            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
+            await this._client.rpc3("Emulation.setDefaultBackgroundColorOverride", { color: { r: 0, g: 0, b: 0, a: 0 } });
         }
-        const result = await this._client.cdpSend3("Page.captureScreenshot", { format, quality: options.quality, clip });
+        const result = await this._client.rpc3("Page.captureScreenshot", { format, quality: options.quality, clip });
         if (shouldSetDefaultBackground) {
-            await this._client.cdpSend3("Emulation.setDefaultBackgroundColorOverride");
+            await this._client.rpc3("Emulation.setDefaultBackgroundColorOverride");
         }
         if (options.fullPage && this._viewport) {
             await this.setViewport(this._viewport);
@@ -5076,170 +3279,6 @@ class Page extends EventEmitter {
             await writeFileAsync(options.path, buffer);
         }
         return buffer;
-        function processClip(clip) {
-            const x = Math.round(clip.x);
-            const y = Math.round(clip.y);
-            const width = Math.round(clip.width + clip.x - x);
-            const height = Math.round(clip.height + clip.y - y);
-            return {x, y, width, height, scale: 1};
-        }
-    }
-    /**
-      * @param {!PDFOptions=} options
-      * @return {!Promise<!Buffer>}
-      */
-    async pdf(options = {}) {
-        const {
-            scale = 1,
-            displayHeaderFooter = false,
-            headerTemplate = "",
-            footerTemplate = "",
-            printBackground = false,
-            landscape = false,
-            pageRanges = "",
-            preferCSSPageSize = false,
-            margin = {},
-            path = null
-        } = options;
-        let paperWidth = 8.5;
-        let paperHeight = 11;
-        if (options.format) {
-            const format = Page.PaperFormats[options.format.toLowerCase()];
-            assert(format, "Unknown paper format: " + options.format);
-            paperWidth = format.width;
-            paperHeight = format.height;
-        } else {
-            paperWidth = convertPrintParameterToInches(options.width) || paperWidth;
-            paperHeight = convertPrintParameterToInches(options.height) || paperHeight;
-        }
-        const marginTop = convertPrintParameterToInches(margin.top) || 0;
-        const marginLeft = convertPrintParameterToInches(margin.left) || 0;
-        const marginBottom = convertPrintParameterToInches(margin.bottom) || 0;
-        const marginRight = convertPrintParameterToInches(margin.right) || 0;
-        const result = await this._client.cdpSend3("Page.printToPDF", {
-            transferMode: "ReturnAsStream",
-            landscape,
-            displayHeaderFooter,
-            headerTemplate,
-            footerTemplate,
-            printBackground,
-            scale,
-            paperWidth,
-            paperHeight,
-            marginTop,
-            marginBottom,
-            marginLeft,
-            marginRight,
-            pageRanges,
-            preferCSSPageSize
-        });
-        return await helper.readProtocolStream(this._client, result.stream, path);
-    }
-    /**
-      * @return {!Promise<string>}
-      */
-    async title() {
-        return this.mainFrame().title();
-    }
-    /**
-      * @param {!{runBeforeUnload: (boolean|undefined)}=} options
-      */
-    async close(options = {runBeforeUnload: undefined}) {
-        assert(!!this._client.cnn, "Protocol error: Connection closed. Most likely the page has been closed.");
-        const runBeforeUnload = !!options.runBeforeUnload;
-        if (runBeforeUnload) {
-            await this._client.cdpSend3("Page.close");
-        } else {
-            await this._client.cnn.cdpSend2("Target.closeTarget", { targetId: this._target._targetId });
-            await this._target._isClosedPromise;
-        }
-    }
-    /**
-      * @return {boolean}
-      */
-    isClosed() {
-        return this._closed;
-    }
-    /**
-      * @return {!Mouse}
-      */
-    get mouse() {
-        return this._mouse;
-    }
-    /**
-      * @param {string} selector
-      * @param {!{delay?: number, button?: "left"|"right"|"middle", clickCount?: number}=} options
-      */
-    click(selector, options = {}) {
-        return this.mainFrame().click(selector, options);
-    }
-    /**
-      * @param {string} selector
-      */
-    focus(selector) {
-        return this.mainFrame().focus(selector);
-    }
-    /**
-      * @param {string} selector
-      */
-    hover(selector) {
-        return this.mainFrame().hover(selector);
-    }
-    /**
-      * @param {string} selector
-      * @param {!Array<string>} values
-      * @return {!Promise<!Array<string>>}
-      */
-    select(selector, ...values) {
-        return this.mainFrame().select(selector, ...values);
-    }
-    /**
-      * @param {string} selector
-      */
-    tap(selector) {
-        return this.mainFrame().tap(selector);
-    }
-    /**
-      * @param {string} selector
-      * @param {string} text
-      * @param {{delay: (number|undefined)}=} options
-      */
-    type(selector, text, options) {
-        return this.mainFrame().type(selector, text, options);
-    }
-    /**
-      * @param {(string|number|Function)} selectorOrFunctionOrTimeout
-      * @param {!Object=} options
-      * @param {!Array<*>} args
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    waitFor(selectorOrFunctionOrTimeout, options = {}, ...args) {
-        return this.mainFrame().waitFor(selectorOrFunctionOrTimeout, options, ...args);
-    }
-    /**
-      * @param {string} selector
-      * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    waitForSelector(selector, options = {}) {
-        return this.mainFrame().waitForSelector(selector, options);
-    }
-    /**
-      * @param {string} xpath
-      * @param {!{visible?: boolean, hidden?: boolean, timeout?: number}=} options
-      * @return {!Promise<?Puppeteer.ElementHandle>}
-      */
-    waitForXPath(xpath, options = {}) {
-        return this.mainFrame().waitForXPath(xpath, options);
-    }
-    /**
-      * @param {Function} pageFunction
-      * @param {!{polling?: string|number, timeout?: number}=} options
-      * @param {!Array<*>} args
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    waitForFunction(pageFunction, options = {}, ...args) {
-        return this.mainFrame().waitForFunction(pageFunction, options, ...args);
     }
 }
 /**
@@ -5319,30 +3358,6 @@ class ConsoleMessage {
         this._args = args;
         this._location = location;
     }
-    /**
-      * @return {string}
-      */
-    type() {
-        return this._type;
-    }
-    /**
-      * @return {string}
-      */
-    text() {
-        return this._text;
-    }
-    /**
-      * @return {!Array<!Puppeteer.JSHandle>}
-      */
-    args() {
-        return this._args;
-    }
-    /**
-      * @return {Object}
-      */
-    location() {
-        return this._location;
-    }
 }
 exports_puppeteer_puppeteer_lib_Page = {Page, ConsoleMessage};
 /*
@@ -5412,12 +3427,6 @@ class Target {
         }
     }
     /**
-      * @return {!Promise<!Puppeteer.CDPSession>}
-      */
-    createCDPSession() {
-        return this._sessionFactory();
-    }
-    /**
       * @return {!Promise<?Page>}
       */
     async page() {
@@ -5427,27 +3436,6 @@ class Target {
                     .then(function (client) { return Page.create(client, that, that._ignoreHTTPSErrors, that._defaultViewport, that._screenshotTaskQueue); });
         }
         return that._pagePromise;
-    }
-    /**
-      * @return {!Promise<?Worker>}
-      */
-    async worker() {
-        if (this._targetInfo.type !== "service_worker" && this._targetInfo.type !== "shared_worker") {
-            return null;
-        }
-        if (!this._workerPromise) {
-            this._workerPromise = this._sessionFactory().then(async function (client) {
-                // Top level workers have a fake page wrapping the actual worker.
-                const [targetAttached] = await Promise.all([
-                    new Promise(function (x) { return client.once("Target.attachedToTarget", x); }),
-                    client.cdpSend3("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}),
-                ]);
-                const session = Connection.fromSession(client).session(targetAttached.sessionId);
-                // TODO(einbinder): Make workers send their console logs.
-                return new Worker(session, this._targetInfo.url, function () {} /* consoleAPICalled */, function () {} /* exceptionThrown */);
-            });
-        }
-        return this._workerPromise;
     }
     /**
       * @return {string}
@@ -5464,12 +3452,6 @@ class Target {
             return type;
         }
         return "other";
-    }
-    /**
-      * @return {!Puppeteer.Browser}
-      */
-    browser() {
-        return this._browserContext.browser();
     }
     /**
       * @return {!Puppeteer.BrowserContext}
@@ -5554,12 +3536,6 @@ class TimeoutSettings {
         }
         return DEFAULT_TIMEOUT;
     }
-    timeout() {
-        if (this._defaultTimeout !== null) {
-            return this._defaultTimeout;
-        }
-        return DEFAULT_TIMEOUT;
-    }
 }
 exports_puppeteer_puppeteer_lib_TimeoutSettings = {TimeoutSettings};
 /*
@@ -5587,7 +3563,6 @@ exports_puppeteer_puppeteer_lib_api = {
     CDPSession: exports_puppeteer_puppeteer_lib_Connection.CDPSession,
     ConsoleMessage: exports_puppeteer_puppeteer_lib_Page.ConsoleMessage,
     Coverage: exports_puppeteer_puppeteer_lib_Coverage.Coverage,
-    Dialog: exports_puppeteer_puppeteer_lib_Dialog.Dialog,
     ExecutionContext: exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext,
     Frame: exports_puppeteer_puppeteer_lib_FrameManager.Frame,
     JSHandle: exports_puppeteer_puppeteer_lib_JSHandle.JSHandle,
@@ -5596,7 +3571,6 @@ exports_puppeteer_puppeteer_lib_api = {
     Puppeteer: exports_puppeteer_puppeteer_lib_Puppeteer,
     Request: exports_puppeteer_puppeteer_lib_NetworkManager.Request,
     Response: exports_puppeteer_puppeteer_lib_NetworkManager.Response,
-    SecurityDetails: exports_puppeteer_puppeteer_lib_NetworkManager.SecurityDetails,
     Target: exports_puppeteer_puppeteer_lib_Target.Target,
     TimeoutError: exports_puppeteer_puppeteer_lib_Errors.TimeoutError,
     Touchscreen: exports_puppeteer_puppeteer_lib_Input.Touchscreen,
@@ -5636,7 +3610,6 @@ let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let Coverage        = exports_puppeteer_puppeteer_lib_Coverage.Coverage;
 // let DOMWorld        = exports_puppeteer_puppeteer_lib_DOMWorld.DOMWorld;
 // let DeviceDescriptors = exports_puppeteer_puppeteer_lib_DeviceDescriptors;
-// let Dialog          = exports_puppeteer_puppeteer_lib_Dialog.Dialog;
 // let EmulationManager = exports_puppeteer_puppeteer_lib_EmulationManager.EmulationManager;
 // let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
 // let Errors          = exports_puppeteer_puppeteer_lib_Errors;
@@ -5681,8 +3654,6 @@ net.connect Error
 {
     protocolVersion: 13,
     maxPayload: 268435456,
-    followRedirects: false,
-    maxRedirects: 10,
     createConnection: [Function: netConnect],
     socketPath: undefined,
     hostname: undefined,

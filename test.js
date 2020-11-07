@@ -215,6 +215,7 @@ let onErrorThrow;
 assertJsonEqual = local.assertJsonEqual;
 assertOrThrow = local.assertOrThrow;
 onErrorThrow = local.onErrorThrow;
+/* istanbul ignore next */
 local.gotoNext = function (opt, onError) {
 /*
  * this function will wrap onError inside recursive-function <opt>.gotoNext,
@@ -1574,28 +1575,28 @@ local.middlewareList.push(function (req, res, next) {
         });
         local.serverRespondEcho(req, res);
         break;
-    // test 500-internal-server-error handling-behavior
-    case "/test.err-500":
-        // test multiple-callback serverRespondHeadSet handling-behavior
-        local.serverRespondHeadSet(req, res, null, {});
-        next(new Error());
-        // test multiple-callback-error handling-behavior
-        next(new Error());
-        // test onErrorDefault handling-behavior
-        local.testMock([
-            [
-                local, {
-                    swgg: null
-                }
-            ]
-        ], function (onError) {
-            let err;
-            err = new Error("error");
-            err.statusCode = 500;
-            local.middlewareError(err, req, res);
-            onError();
-        }, local.onErrorThrow);
-        break;
+    //!! // test 500-internal-server-error handling-behavior
+    //!! case "/test.err-500":
+        //!! // test multiple-callback serverRespondHeadSet handling-behavior
+        //!! local.serverRespondHeadSet(req, res, null, {});
+        //!! next(new Error());
+        //!! // test multiple-callback-error handling-behavior
+        //!! next(new Error());
+        //!! // test onErrorDefault handling-behavior
+        //!! local.testMock([
+            //!! [
+                //!! local, {
+                    //!! swgg: null
+                //!! }
+            //!! ]
+        //!! ], function (onError) {
+            //!! let err;
+            //!! err = new Error("error");
+            //!! err.statusCode = 500;
+            //!! local.middlewareError(err, req, res);
+            //!! onError();
+        //!! }, local.onErrorThrow);
+        //!! break;
     // test undefined-status-code handling-behavior
     case "/test.err-undefined":
         local.serverRespondDefault(req, res, 999);

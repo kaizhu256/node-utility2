@@ -52,7 +52,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
-- revamp file lib.puppeteer.js part 6 - create single, source-of-truth callbackDict listing all pending callbacks in rpc-calls to chrome-browser
+- revamp file lib.puppeteer.js part 7 - remove unused code
 - remove dependency on env-var \$CHROME_BIN
 - remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext
 - jslint - fix off-by-one column in autofix-expected_a_before_b
