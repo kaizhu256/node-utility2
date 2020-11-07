@@ -2019,7 +2019,7 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
 CDPSession.prototype.send = function (method, params = {}) {
     let that = this;
     let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
-    that._connection.ws2.sck2.write(Buffer.from(JSON.stringify({
+    that._connection.sck2.write(Buffer.from(JSON.stringify({
         id,
         method,
         params,
@@ -2090,6 +2090,7 @@ function Connection(url, ws2, delay = 0) {
     this._callbacks = new Map();
     this._delay = delay;
     this.ws2 = ws2;
+    this.sck2 = ws2.sck;
     let that = this;
     ws2.addEventListener("message", function (event) {
         if (that.onmessage) {
@@ -2138,7 +2139,7 @@ Connection.prototype.url = function () {
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
     let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
-    that.ws2.sck2.write(Buffer.from(JSON.stringify({
+    that.sck2.write(Buffer.from(JSON.stringify({
         id,
         method,
         params
