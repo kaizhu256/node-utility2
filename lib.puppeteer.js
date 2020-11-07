@@ -2027,15 +2027,13 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
   * @param {!Object=} params
   * @return {!Promise<?Object>}
   */
-CDPSession.prototype.send = function (method, params = {}) {
+CDPSession.prototype.send = function (method, params) {
     let that = this;
-    let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
-    that._connection.sck2.write(Buffer.from(JSON.stringify({
-        id,
+    let id = that._connection.sck2.cdpSend({
         method,
         params,
         sessionId: that._sessionId
-    })));
+    });
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
@@ -2149,12 +2147,10 @@ Connection.prototype.url = function () {
   */
 Connection.prototype.send = function (method, params = {}) {
     let that = this;
-    let id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
-    that.sck2.write(Buffer.from(JSON.stringify({
-        id,
+    let id = that.sck2.cdpSend({
         method,
         params
-    })));
+    });
     return new Promise(function (resolve, reject) {
         that._callbacks.set(id, {
             resolve,
