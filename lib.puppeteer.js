@@ -2090,7 +2090,7 @@ function Connection(url, ws2, delay = 0) {
     this._callbacks = new Map();
     this._delay = delay;
     this.ws2 = ws2;
-    this.sck2 = ws2.sck;
+    this.sck2 = ws2.sck2;
     let that = this;
     ws2.addEventListener("message", function (event) {
         if (that.onmessage) {
