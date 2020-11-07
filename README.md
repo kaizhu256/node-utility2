@@ -52,6 +52,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
+- update file lib.puppeteer.js with simplified websockets part 4 - replace class WebSocket with CdpClient
 - update file lib.puppeteer.js with simplified websockets part 3 - jslint file and replace caller ws2.send() with sck2.cdpSend()
 - rename function nop to noop
 - update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and websocket-non-chrome code and errors

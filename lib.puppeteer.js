@@ -410,8 +410,6 @@ local.cliRun = function (opt) {
 if (local.isBrowser) {
     return;
 }
-//!! let BUFFER0;
-//!! BUFFER0 = Buffer.alloc(0);
 /* jslint ignore:start */
 const debugError = console.error;
 function debugProtocol() {
@@ -474,269 +472,15 @@ let exports_puppeteer_puppeteer_lib_TimeoutSettings = {};
 let exports_puppeteer_puppeteer_lib_api = {};
 let exports_puppeteer_puppeteer_lib_helper = {};
 let exports_puppeteer_puppeteer_node6_lib_Puppeteer = {};
-let exports_puppeteer_puppeteer_package_json = {};
 let exports_websockets_ws_index = {};
 let exports_websockets_ws_lib_buffer_util = {};
 let exports_websockets_ws_lib_constants = {};
 let exports_websockets_ws_lib_event_target = {};
-let exports_websockets_ws_lib_extension = {};
 let exports_websockets_ws_lib_validation = {};
-let exports_websockets_ws_package_json = {};
 /*
 repo https://github.com/websockets/ws/tree/6.2.1
 committed 2019-03-27T08:34:10Z
 */
-/*
-file https://github.com/websockets/ws/blob/6.2.1/package.json
-*/
-exports_websockets_ws_package_json = {
-    "name": "ws",
-    "version": "6.2.1",
-    "description": "Simple to use, blazing fast and thoroughly tested websocket client and server for Node.js",
-    "keywords": [
-        "HyBi",
-        "Push",
-        "RFC-6455",
-        "WebSocket",
-        "WebSockets",
-        "real-time"
-    ],
-    "homepage": "https://github.com/websockets/ws",
-    "bugs": "https://github.com/websockets/ws/issues",
-    "repository": "websockets/ws",
-    "author": "Einar Otto Stangvik <einaros@gmail.com> (http://2x.io)",
-    "license": "MIT",
-    "main": "index.js",
-    "browser": "browser.js",
-    "files": [
-        "browser.js",
-        "index.js",
-        "lib/*.js"
-    ],
-    "scripts": {
-        "test": "npm run lint && nyc --reporter=html --reporter=text mocha test/*.test.js",
-        "integration": "npm run lint && mocha test/*.integration.js",
-        "lint": "eslint --ignore-path .gitignore . && prettier --check --ignore-path .gitignore \"**/*.{json,md,yml}\""
-    },
-    "dependencies": {
-        "async-limiter": "~1.0.0"
-    },
-    "devDependencies": {
-        "benchmark": "~2.1.4",
-        "bufferutil": "~4.0.0",
-        "coveralls": "~3.0.3",
-        "eslint": "~5.15.0",
-        "eslint-config-prettier": "~4.1.0",
-        "eslint-plugin-prettier": "~3.0.0",
-        "mocha": "~6.0.0",
-        "nyc": "~13.3.0",
-        "prettier": "~1.16.1",
-        "utf-8-validate": "~5.0.0"
-    }
-}
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/constants.js
-*/
-"use strict";
-exports_websockets_ws_lib_constants = {
-    GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11",
-    kStatusCode: Symbol("status-code"),
-};
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/buffer-util.js
-*/
-"use strict";
-/**
-  * Masks a buffer using the given mask.
-  *
-  * @param {Buffer} source The buffer to mask
-  * @param {Buffer} mask The mask to use
-  * @param {Buffer} output The buffer where to store the result
-  * @param {Number} offset The offset at which to start writing
-  * @param {Number} length The number of bytes to mask.
-  * @public
-  */
-function _mask(source, mask, output, offset, length) {
-    for (var ii = 0; ii < length; ii += 1) {
-        output[offset + ii] = source[ii] ^ mask[ii & 3];
-    }
-}
-try {
-//   const bufferUtil = require("bufferutil");
-    const bu = bufferUtil.BufferUtil || bufferUtil;
-    exports_websockets_ws_lib_buffer_util = {
-        concat,
-        mask(source, mask, output, offset, length) {
-            if (length < 48) {
-                _mask(source, mask, output, offset, length);
-            } else {
-                bu.mask(source, mask, output, offset, length);
-            }
-        },
-    };
-} catch (e) /* istanbul ignore next */ {
-    exports_websockets_ws_lib_buffer_util = {
-        mask: _mask,
-    };
-}
-/*
-file https://github.com/websockets/ws/blob/6.2.1/lib/event-target.js
-*/
-"use strict";
-/**
-  * Class representing an event.
-  *
-  * @private
-  */
-class Event {
-    /**
-      * Create a new `Event`.
-      *
-      * @param {String} type The name of the event
-      * @param {Object} target A reference to the target to which the event was dispatched
-      */
-    constructor(type, target) {
-        this.target = target;
-        this.type = type;
-    }
-}
-/**
-  * Class representing a message event.
-  *
-  * @extends Event
-  * @private
-  */
-class MessageEvent extends Event {
-    /**
-      * Create a new `MessageEvent`.
-      *
-      * @param {(String|Buffer|ArrayBuffer|Buffer[])} data The received data
-      * @param {WebSocket} target A reference to the target to which the event was dispatched
-      */
-    constructor(data, target) {
-        super("message", target);
-        this.data = data;
-    }
-}
-/**
-  * Class representing a close event.
-  *
-  * @extends Event
-  * @private
-  */
-class CloseEvent extends Event {
-    /**
-      * Create a new `CloseEvent`.
-      *
-      * @param {Number} code The status code explaining why the connection is being closed
-      * @param {String} reason A human-readable string explaining why the connection is closing
-      * @param {WebSocket} target A reference to the target to which the event was dispatched
-      */
-    constructor(code, reason, target) {
-        super("close", target);
-        this.wasClean = target._closeFrameReceived && target._closeFrameSent;
-        this.reason = reason;
-        this.code = code;
-    }
-}
-/**
-  * Class representing an open event.
-  *
-  * @extends Event
-  * @private
-  */
-class OpenEvent extends Event {
-    /**
-      * Create a new `OpenEvent`.
-      *
-      * @param {WebSocket} target A reference to the target to which the event was dispatched
-      */
-    constructor(target) {
-        super("open", target);
-    }
-}
-/**
-  * Class representing an error event.
-  *
-  * @extends Event
-  * @private
-  */
-class ErrorEvent extends Event {
-    /**
-      * Create a new `ErrorEvent`.
-      *
-      * @param {Object} error The error that generated this event
-      * @param {WebSocket} target A reference to the target to which the event was dispatched
-      */
-    constructor(error, target) {
-        super("error", target);
-        this.message = error.message;
-        this.error = error;
-    }
-}
-/**
-  * This provides methods for emulating the `EventTarget` interface. It's not
-  * meant to be used directly.
-  *
-  * @mixin
-  */
-const EventTarget = {
-    /**
-      * Register an event listener.
-      *
-      * @param {String} method A string representing the event type to listen for
-      * @param {Function} listener The listener to add
-      * @public
-      */
-    addEventListener(method, listener) {
-        if (typeof listener !== "function") {
-            return;
-        }
-        function onMessage(data) {
-            listener.call(this, new MessageEvent(data, this));
-        }
-        function onClose(code, message) {
-            listener.call(this, new CloseEvent(code, message, this));
-        }
-        function onError(error) {
-            listener.call(this, new ErrorEvent(error, this));
-        }
-        function onOpen() {
-            listener.call(this, new OpenEvent(this));
-        }
-        if (method === "message") {
-            onMessage._listener = listener;
-            this.on(method, onMessage);
-        } else if (method === "close") {
-            onClose._listener = listener;
-            this.on(method, onClose);
-        } else if (method === "error") {
-            onError._listener = listener;
-            this.on(method, onError);
-        } else if (method === "open") {
-            onOpen._listener = listener;
-            this.on(method, onOpen);
-        } else {
-            this.on(method, listener);
-        }
-    },
-    /**
-      * Remove an event listener.
-      *
-      * @param {String} method A string representing the event type to remove
-      * @param {Function} listener The listener to remove
-      * @public
-      */
-    removeEventListener(method, listener) {
-        const listeners = this.listeners(method);
-        for (var ii = 0; ii < listeners.length; ii += 1) {
-            if (listeners[ii] === listener || listeners[ii]._listener === listener) {
-                this.removeListener(method, listeners[ii]);
-            }
-        }
-    }
-};
-exports_websockets_ws_lib_event_target = EventTarget;
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 */
@@ -744,23 +488,45 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/sender.js
 /*
 file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
 */
-function Socket2(socket) {
-/**
-  * HyBi Sender implementation.
-  */
+function cdpClientCreate({
+    websocketUrl
+}, callback) {
+/*
+ * this function with create chrome-devtools-protocol-client from <websocketUrl>
+ */
     let ERR_PAYLOAD_LENGTH;
     let READ_HEADER;
     let READ_LENGTH16;
     let READ_LENGTH63;
     let READ_PAYLOAD;
     let bufList;
+    let cdpClient;
+    let cryptoKey;
+    let onError;
     let payloadLength;
     let readState;
-    let that;
-    function _read() {
-        socket.resume();
+    let websocket;
+    let websocketReader;
+    /*
+     * init cdpClient
+     */
+    function CdpClient() {
+    /*
+     * this function will construct cdpClient
+     */
+        require("stream").Duplex.call(this);
     }
-    function _write(payload, ignore, callback) {
+    require("util").inherits(CdpClient, require("stream").Duplex);
+    CdpClient.prototype._read = function () {
+    /*
+     * this function will implement stream.Duplex.prototype._read
+     */
+        websocket.resume();
+    };
+    CdpClient.prototype._write = function (payload, ignore, callback) {
+    /*
+     * this function will implement stream.Duplex.prototype._write
+     */
         let header;
         let maskKey;
         let result;
@@ -789,91 +555,139 @@ function Socket2(socket) {
         maskKey = require("crypto").randomBytes(4);
         maskKey.copy(header, header.length - 4);
         // send header
-        socket.cork();
-        socket.write(header);
+        websocket.cork();
+        websocket.write(header);
         // send payload ^ maskKey
         payload.forEach(function (ignore, ii) {
             payload[ii] ^= maskKey[ii & 3];
         });
         // return write-result
-        result = socket.write(payload, callback);
-        socket.uncork();
+        result = websocket.write(payload, callback);
+        websocket.uncork();
         return result;
-    }
-    function bufListRead(nn) {
+    };
+    CdpClient.prototype.cdpSend = function (
+        method,
+        params = {},
+        sessionId = undefined
+    ) {
     /*
-     * this function will read <nn> bytes from <bufList>
+     * this function will send payload {method, params, sessionId}
+     * using chrome-devtools-protocol
      */
-        let buf;
-        let result;
-        if (nn === bufList[0].length) {
-            return bufList.shift();
-        }
-        if (nn < bufList[0].length) {
-            buf = bufList[0];
-            bufList[0] = buf.slice(nn);
-            return buf.slice(0, nn);
-        }
-        result = Buffer.allocUnsafe(nn);
-        while (true) {
-            buf = bufList.shift();
-            buf.copy(result, result.length - nn);
-            nn -= buf.length;
-            if (nn <= 0) {
-                break;
-            }
-        }
-        return result;
-    }
-    function cdpSend(method, params = {}, sessionId = undefined) {
         let id;
         id = require("crypto").randomBytes(2).readUInt16BE(0, 2);
-        that.write(Buffer.from(JSON.stringify({
+        cdpClient.write(Buffer.from(JSON.stringify({
             id,
             method,
             params,
             sessionId
         })));
         return id;
+    };
+    cdpClient = new CdpClient();
+    /*
+     * init websocketReader
+     */
+/*
+https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
++---------------------------------------------------------------+
+|0               1               2               3              |
+|0 1 2 3 4 5 6 7 8 9 a b c d e f 0 1 2 3 4 5 6 7 8 9 a b c d e f|
++-+-+-+-+-------+-+-------------+-------------------------------+
+|F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+|I|S|S|S|  (4)  |A|     (7)     |             (16/63)           |
+|N|V|V|V|       |S|             |   (if payload len==126/127)   |
+| |1|2|3|       |K|             |                               |
++-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+|     Extended payload length continued, if payload len == 127  |
++ - - - - - - - - - - - - - - - +-------------------------------+
+|                               |Masking-key, if MASK set to 1  |
++-------------------------------+-------------------------------+
+| Masking-key (continued)       |          Payload Data         |
++-------------------------------- - - - - - - - - - - - - - - - +
+:                     Payload Data continued ...                :
++ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+|                     Payload Data continued ...                |
++---------------------------------------------------------------+
+FIN: 1 bit
+    Indicates that this is the final fragment in a message.  The first
+    fragment MAY also be the final fragment.
+RSV1, RSV2, RSV3: 1 bit each
+    MUST be 0 unless an extension is negotiated which defines meanings
+    for non-zero values.  If a nonzero value is received and none of
+    the negotiated extensions defines the meaning of such a nonzero
+    value, the receiving endpoint MUST _Fail the WebSocket
+    Connection_.
+Opcode: 4 bits
+    Defines the interpretation of the payload data.  If an unknown
+    opcode is received, the receiving endpoint MUST _Fail the
+    WebSocket Connection_.  The following values are defined.
+    *  %x0 denotes a continuation frame
+    *  %x1 denotes a text frame
+    *  %x2 denotes a binary frame
+    *  %x3-7 are reserved for further non-control frames
+    *  %x8 denotes a connection close
+    *  %x9 denotes a ping
+    *  %xA denotes a pong
+    *  %xB-F are reserved for further control frames
+Mask: 1 bit
+    Defines whether the payload data is masked.  If set to 1, a
+    masking key is present in masking-key, and this is used to unmask
+    the payload data as per Section 5.3.  All frames sent from client
+    to server have this bit set to 1.
+Payload length: 7 bits, 7+16 bits, or 7+64 bits
+    The length of the payload data, in bytes: if 0-125, that is the
+    payload length.  If 126, the following 2 bytes interpreted as a 16
+    bit unsigned integer are the payload length.  If 127, the
+    following 8 bytes interpreted as a 64-bit unsigned integer (the
+    most significant bit MUST be 0) are the payload length.  Multibyte
+    length quantities are expressed in network byte order.  The
+    payload length is the length of the extension data + the length of
+    the application data.  The length of the extension data may be
+    zero, in which case the payload length is the length of the
+    application data.
+Masking-key: 0 or 4 bytes
+    All frames sent from the client to the server are masked by a 32-
+    bit value that is contained within the frame.  This field is
+    present if the mask bit is set to 1, and is absent if the mask bit
+    is set to 0.  See Section 5.3 for further information on client-
+    to-server masking.
+Payload data: (x+y) bytes
+    The payload data is defined as extension data concatenated with
+    application data.
+Extension data: x bytes
+    The extension data is 0 bytes unless an extension has been
+    negotiated.  Any extension MUST specify the length of the
+    extension data, or how that length may be calculated, and how the
+    extension use MUST be negotiated during the opening handshake.  If
+    present, the extension data is included in the total payload
+    length.
+Application data: y bytes
+    Arbitrary application data, taking up the remainder of the frame
+    after any extension data.  The length of the application data is
+    equal to the payload length minus the length of the extension
+    data.
+*/
+    function bufListRead(nn) {
+    /*
+     * this function will read <nn> bytes from <bufList>
+     */
+        let buf;
+        bufList = (
+            bufList.length === 1
+            ? bufList[0]
+            : Buffer.concat(bufList)
+        );
+        buf = bufList.slice(0, nn);
+        bufList = [
+            bufList.slice(nn)
+        ];
+        return buf;
     }
     function frameRead() {
     /*
      * this function will read from websocket-data-frame
-     * https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
-     *
-     *  0               1               2               3
-     *  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
-     * +-+-+-+-+-------+-+-------------+-------------------------------+
-     * |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-     * |I|S|S|S|  (4)  |A|     (7)     |             (16/63)           |
-     * |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-     * | |1|2|3|       |K|             |                               |
-     * +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-     * |     Extended payload length continued, if payload len == 127  |
-     * + - - - - - - - - - - - - - - - +-------------------------------+
-     * |                               |Masking-key, if MASK set to 1  |
-     * +-------------------------------+-------------------------------+
-     * | Masking-key (continued)       |          Payload Data         |
-     * +-------------------------------- - - - - - - - - - - - - - - - +
-     * :                     Payload Data continued ...                :
-     * + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-     * |                     Payload Data continued ...                |
-     * +---------------------------------------------------------------+
-     *
-     * |Opcode  | Meaning                             | Reference |
-     * +--------+-------------------------------------+-----------|
-     * | 0      | Continuation Frame                  | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
-     * | 1      | Text Frame                          | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
-     * | 2      | Binary Frame                        | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
-     * | 8      | Connection Close Frame              | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
-     * | 9      | Ping Frame                          | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
-     * | 10     | Pong Frame                          | RFC XXXX  |
-     * +--------+-------------------------------------+-----------|
      */
         let buf;
         let opcode;
@@ -894,13 +708,10 @@ function Socket2(socket) {
             buf = bufListRead(2);
             // validate opcode
             opcode = buf[0] & 0x0f;
-            local.assertOrThrow(
-                opcode === 0x01 || opcode === 0x02,
-                new Error(
-                    "Invalid WebSocket frame: opcode must be 0x01 or 0x02, not "
-                    + opcode
-                )
-            );
+            local.assertOrThrow(opcode === 0x02 || opcode === 0x01, new Error(
+                "Invalid WebSocket frame: opcode must be 0x01 or 0x02, not 0x0"
+                + opcode.toString(16)
+            ));
             payloadLength = buf[1] & 0x7f;
             readState = (
                 payloadLength === 126
@@ -931,7 +742,7 @@ function Socket2(socket) {
                 : Buffer.alloc(0)
             );
             readState = READ_HEADER;
-            that.push(buf);
+            cdpClient.push(buf);
             break;
         }
         local.assertOrThrow(
@@ -940,18 +751,14 @@ function Socket2(socket) {
         );
         return true;
     }
-    // init that
-    that = this;
-    require("stream").Duplex.call(that);
-    that._read2 = _read;
-    that._write2 = _write;
-    that.cdpSend = cdpSend;
-    // init Reader
-    function Reader() {
+    function WebsocketReader() {
+    /*
+     * this function will construct websocketReader
+     */
         require("stream").Transform.call(this);
     }
-    require("util").inherits(Reader, require("stream").Transform);
-    Reader.prototype._transform = function (chunk, ignore, callback) {
+    require("util").inherits(WebsocketReader, require("stream").Transform);
+    WebsocketReader.prototype._transform = function (chunk, ignore, callback) {
     /*
      * this function will implement Transform.prototype._transform
      */
@@ -967,7 +774,6 @@ function Socket2(socket) {
             this.destroy(errCaught);
         }
     };
-    // pipe Reader
     ERR_PAYLOAD_LENGTH = new RangeError(
         "payload-length must be between 0 and 256 MiB"
     );
@@ -978,129 +784,26 @@ function Socket2(socket) {
     bufList = [];
     payloadLength = 0;
     readState = READ_HEADER;
-    socket.pipe(new Reader());
-}
-// init Socket2
-require("util").inherits(Socket2, require("stream").Duplex);
-Socket2.prototype._read = function (...argList) {
-    try {
-        this._read2(...argList);
-    } catch (errCaught) {
-        this.destroy(errCaught);
-    }
-};
-Socket2.prototype._write = function (...argList) {
-    try {
-        this._write2(...argList);
-    } catch (errCaught) {
-        this.destroy(errCaught);
-    }
-};
-
-function WebSocket(address) {
-    /**
-      * Create a new `WebSocket`.
-      *
-      * @param {(String|url.Url|url.URL)} address The URL to which to connect
-      * @param {(String|String[])} protocols The subprotocols
-      * @param {Object} options Connection options
-      */
-    let cryptoKey;
-    let sck2;
-    let ws2;
-    ws2 = this;
-    require("stream").EventEmitter.call(ws2);
-    function close() {
-/*
- * Start a closing handshake.
- *
- *          +----------+   +-----------+   +----------+
- *     - - -|ws.close()|-->|close frame|-->|ws.close()|- - -
- *    |     +----------+   +-----------+   +----------+     |
- *          +----------+   +-----------+         |
- * CLOSING  |ws.close()|<--|close frame|<--+-----+       CLOSING
- *          +----------+   +-----------+   |
- *    |           |                        |   +---+        |
- *                +------------------------+-->|fin| - - - -
- *    |         +---+                      |   +---+
- *     - - - - -|fin|<---------------------+
- *              +---+
- *
- * @param {Number} code Status code explaining why the connection is closing
- * @param {String} data A string explaining why the connection is closing
- * @public
- */
-        if (ws2.readyState === WebSocket.CLOSED) {
-            return;
-        }
-        if (ws2.readyState === WebSocket.CONNECTING) {
-            throw new Error(
-                "WebSocket was closed before the connection was established"
-            );
-        }
-        if (ws2.readyState === WebSocket.CLOSING) {
-            if (ws2._closeFrameSent && ws2._closeFrameReceived) {
-                ws2._socket.end();
-            }
-            return;
-        }
-        ws2.readyState = WebSocket.CLOSING;
-        ws2._socket.end();
-        //
-        // Specify a timeout for the closing handshake to complete.
-        //
-        ws2._closeTimer = setTimeout(
-            ws2._socket.destroy.bind(ws2._socket),
-            30000
-        );
-    }
-    function emitClose() {
-    /**
-      * Emit the `"close"` event.
-      *
-      * @private
-      */
-        ws2.readyState = WebSocket.CLOSED;
-        ws2.emit("close");
-    }
-    ws2.close = close;
-    ws2.emitClose = emitClose;
-    ws2.readyState = WebSocket.CONNECTING;
-    ws2.protocol = "";
-    // initAsClient
+    websocketReader = new WebsocketReader();
+    /*
+     * init websocket
+     */
+    onError = cdpClient._destroy.bind(cdpClient);
     cryptoKey = require("crypto").randomBytes(16).toString("base64");
-    require("http").get(Object.assign(require("url").parse(
-        address
-    ), {
+    require("http").get(Object.assign(require("url").parse(websocketUrl), {
         "createConnection": function (opt) {
-            return require("net").connect(Object.assign(opt, {
-                path: opt.socketPath
-            }));
+            opt.path = opt.socketPath;
+            return require("net").connect(opt);
         },
-        "defaultPort": 80,
-        "followRedirects": false,
         "headers": {
             "Connection": "Upgrade",
             "Sec-WebSocket-Key": cryptoKey,
             "Sec-WebSocket-Version": 13,
             "Upgrade": "websocket"
         },
-        "maxRedirects": 10,
         "protocol": "http:",
         "protocolVersion": 13
-    })).once("upgrade", function (res, socket, head) {
-        function socketOnEnd() {
-            ws2.readyState = WebSocket.CLOSING;
-            socket.end();
-        }
-        sck2 = new Socket2(socket); // jslint ignore:line
-        ws2.sck2 = sck2;
-        ws2.emit("upgrade", res);
-        // The user may have closed the connection from a listener
-        // of the `upgrade` event.
-        if (ws2.readyState !== WebSocket.CONNECTING) {
-            return;
-        }
+    })).once("upgrade", function (res, _websocket, head) {
         local.assertOrThrow(
             (
                 res.headers["sec-websocket-accept"]
@@ -1110,137 +813,31 @@ function WebSocket(address) {
             ),
             new Error("Invalid Sec-WebSocket-Accept header")
         );
-/**
-* Set up the socket and the internal resources.
-*
-* @param {net.Socket} socket The network socket between the server and client
-* @param {Buffer} head The first packet of the upgraded stream
-* @private
-*/
-        //!! ws2.setSocket(socket, head);
-        ws2._socket = socket;
-        socket.setTimeout(0);
-        socket.setNoDelay();
-        if (head.length > 0) {
-            socket.unshift(head);
-        }
-        socket.once("close", function () {
-            socket.removeListener("end", socketOnEnd);
-            ws2.readyState = WebSocket.CLOSING;
-// The close frame might not have been received or the `"end"` event emitted,
-// for example, if the socket was destroyed due to an error. Ensure that the
-// `receiver` stream is closed after writing any remaining buffered data to
-// it. If the readable side of the socket is in flowing mode then there is no
-// buffered data as everything has been already written and `readable.read()`
-// will return `null`. If instead, the socket is paused, any possible buffered
-// data will be read as a single chunk and emitted synchronously in a single
-// `"data"` event.
-            ws2._socket.read();
-            clearTimeout(ws2._closeTimer);
-            ws2.emitClose();
+        websocket = _websocket;
+        websocket.on("error", onError);
+        websocket.unshift(head);
+        // websocket - disable timeout
+        websocket.setTimeout(0);
+        // websocket - disable nagle's algorithm
+        websocket.setNoDelay();
+        /*
+        websocket.on("end", websocket.end);
+        websocket.once("error", function () {
+            websocket.destroy();
         });
-        socket.on("end", socketOnEnd);
-        socket.once("error", function () {
-            socket.on("error", local.noop);
-            ws2.readyState = WebSocket.CLOSING;
-            socket.destroy();
-        });
-        ws2.readyState = WebSocket.OPEN;
-        ws2.emit("open");
-    });
+        */
+        // pipe websocket to websocketReader
+        websocket.pipe(websocketReader);
+        // pass cdpClient to callback
+        callback(cdpClient);
+    }).on("error", onError);
 }
-require("util").inherits(WebSocket, require("stream").EventEmitter);
+local.noop(cdpClientCreate);
 /* jslint ignore:start */
-WebSocket.prototype.addEventListener = EventTarget.addEventListener;
-WebSocket.prototype.removeEventListener = EventTarget.removeEventListener;
-["CONNECTING", "OPEN", "CLOSING", "CLOSED"].forEach(function (readyState, ii) {
-    WebSocket[readyState] = ii;
-});
-/*
-file https://github.com/websockets/ws/blob/6.2.1/index.js
-*/
-"use strict";
-exports_websockets_ws_index = WebSocket;
 /*
 repo https://github.com/puppeteer/puppeteer/tree/v1.19.0
 committed 2019-07-23T05:02:45Z
 */
-/*
-file https://github.com/puppeteer/puppeteer/blob/v1.19.0/package.json
-*/
-exports_puppeteer_puppeteer_package_json = {
-    "name": "puppeteer",
-    "version": "1.19.0",
-    "description": "A high-level API to control headless Chrome over the DevTools Protocol",
-    "main": "index.js",
-    "repository": "github:GoogleChrome/puppeteer",
-    "engines": {
-        "node": ">=6.4.0"
-    },
-    "puppeteer": {
-        "chromium_revision": "674921"
-    },
-    "scripts": {
-        "unit": "node test/test.js",
-        "funit": "BROWSER=firefox node test/test.js",
-        "debug-unit": "node --inspect-brk test/test.js",
-        "test-doclint": "node utils/doclint/check_public_api/test/test.js && node utils/doclint/preprocessor/test.js",
-        "test": "npm run lint --silent && npm run coverage && npm run test-doclint && npm run test-node6-transformer && npm run test-types",
-        "install": "node install.js",
-        "lint": "([ \"$CI\" = true ] && eslint --quiet -f codeframe . || eslint .) && npm run tsc && npm run doc",
-        "doc": "node utils/doclint/cli.js",
-        "coverage": "cross-env COVERAGE=true npm run unit",
-        "test-node6-transformer": "node utils/node6-transform/test/test.js",
-        "build": "node utils/node6-transform/index.js && node utils/doclint/generate_types",
-        "unit-node6": "node node6/test/test.js",
-        "tsc": "tsc -p .",
-        "prepublishOnly": "npm run build",
-        "apply-next-version": "node utils/apply_next_version.js",
-        "bundle": "npx browserify -r ./index.js:puppeteer -o utils/browser/puppeteer-web.js",
-        "test-types": "node utils/doclint/generate_types && npx -p typescript@2.1 tsc -p utils/doclint/generate_types/test/",
-        "unit-bundle": "node utils/browser/test.js"
-    },
-    "author": "The Chromium Authors",
-    "license": "Apache-2.0",
-    "dependencies": {
-        "debug": "^4.1.0",
-        "extract-zip": "^1.6.6",
-        "https-proxy-agent": "^2.2.1",
-        "mime": "^2.0.3",
-        "progress": "^2.0.1",
-        "proxy-from-env": "^1.0.0",
-        "rimraf": "^2.6.1",
-        "ws": "^6.1.0"
-    },
-    "devDependencies": {
-        "@types/debug": "0.0.31",
-        "@types/extract-zip": "^1.6.2",
-        "@types/mime": "^2.0.0",
-        "@types/node": "^8.10.34",
-        "@types/rimraf": "^2.0.2",
-        "@types/ws": "^6.0.1",
-        "commonmark": "^0.28.1",
-        "cross-env": "^5.0.5",
-        "eslint": "^5.15.1",
-        "esprima": "^4.0.0",
-        "jpeg-js": "^0.3.4",
-        "minimist": "^1.2.0",
-        "ncp": "^2.0.0",
-        "pixelmatch": "^4.0.2",
-        "pngjs": "^3.3.3",
-        "text-diff": "^1.0.1",
-        "typescript": "3.2.2"
-    },
-    "browser": {
-        "./lib/BrowserFetcher.js": false,
-        "./node6/lib/Puppeteer": false,
-        "ws": "./utils/browser/WebSocket",
-        "fs": false,
-        "child_process": false,
-        "rimraf": false,
-        "readline": false
-    }
-}
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/helper.js
 */
@@ -2087,7 +1684,7 @@ function Connection(url, sck2, delay = 0) {
      */
     that._callbacks = new Map();
     that._delay = delay;
-    that.sck2 = sck2.sck2;
+    that.sck2 = sck2;
     that.sck2.on("data", async function (message) {
         let session;
         if (that._delay) {
@@ -2137,11 +1734,6 @@ function Connection(url, sck2, delay = 0) {
             that.emit(object.method, object.params);
         }
     });
-    //!! that.sck2.on("close", function () {
-        //!! if (that.onclose) {
-            //!! that.onclose.call(null);
-        //!! }
-    //!! });
     //!! // Silently ignore all errors - we don't know what to do with them.
     //!! that.sck2.on("error", local.noop);
     that.onclose = that._onClose.bind(that);
@@ -2208,7 +1800,8 @@ Connection.prototype._onClose = function () {
     this.emit(Events.Connection.Disconnected);
 };
 Connection.prototype.dispose = function () {
-    this._onClose();
+    return;
+    //!! this._onClose();
     //!! this.sck2.close();
 };
 /**
@@ -2392,6 +1985,7 @@ class CSSCoverage {
       * @param {!Puppeteer.CDPSession} client
       */
     constructor(client) {
+        //!! debugInline(new Error().stack);
         this._client = client;
         this._enabled = false;
         this._stylesheetURLs = new Map();
@@ -6155,8 +5749,6 @@ Object.entries(api).forEach(function ([
 });
 // If node does not support async await, use the compiled version.
 const Puppeteer = exports_puppeteer_puppeteer_lib_Puppeteer
-const packageJson = exports_puppeteer_puppeteer_package_json;
-const preferredRevision = packageJson.puppeteer.chromium_revision;
 // let Browser         = exports_puppeteer_puppeteer_lib_Browser.Browser;
 let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let Connection      = exports_puppeteer_puppeteer_lib_Connection.Connection;
@@ -6184,20 +5776,14 @@ let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let assert          = exports_puppeteer_puppeteer_lib_helper.assert;
 // let debugError      = exports_puppeteer_puppeteer_lib_helper.debugError;
 // let helper          = exports_puppeteer_puppeteer_lib_helper.helper;
-// let packageJson     = exports_puppeteer_puppeteer_package_json;
 // let concat          = exports_websockets_ws_lib_buffer_util.concat;
-// let mask            = exports_websockets_ws_lib_buffer_util.mask;
-let GUID            = exports_websockets_ws_lib_constants.GUID;
-let kStatusCode     = exports_websockets_ws_lib_constants.kStatusCode;
-// let EventTarget     = exports_websockets_ws_lib_event_target;
-let extension       = exports_websockets_ws_lib_extension;
 local._puppeteer = exports_puppeteer_puppeteer_index;
 local.puppeteerApi = exports_puppeteer_puppeteer_lib_api;
 /*
 file none
 */
 local.puppeteerApi.Connection = Connection;
-local.puppeteerApi.WebSocket = WebSocket;
+local.puppeteerApi.cdpClientCreate = cdpClientCreate;
 /*
 debugInline
 net.connect Error
@@ -6234,7 +5820,33 @@ net.connect Error
         Upgrade: "websocket"
     }
 } ws://127.0.0.1:34935/devtools/browser/87392fa0-71e5-4fee-95c4-5c6665034c10
-  */
+
+
+debugInline
+open Error
+    at WebSocket.addEventListener (/root/Documents/utility2/lib.puppeteer.js:676:29)
+    at /root/Documents/utility2/lib.utility2.js:2373:16
+    at new Promise (<anonymous>)
+    at /root/Documents/utility2/lib.utility2.js:2371:16
+    at processTicksAndRejections (internal/process/task_queues.js:97:5)
+
+
+[1107/031930.801155:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed with unconsumed attachments: 0/1
+[1107/031930.801667:ERROR:command_buffer_proxy_impl.cc(122)] ContextResult::kTransientFailure: Failed to send GpuChannelMsg_CreateCommandBuffer.
+
+
+debugInline
+Error
+    at new CSSCoverage (/root/Documents/utility2/lib.puppeteer.js:2353:21)
+    at new Coverage (/root/Documents/utility2/lib.puppeteer.js:2222:29)
+    at new Page (/root/Documents/utility2/lib.puppeteer.js:4787:26)
+    at Function.create (/root/Documents/utility2/lib.puppeteer.js:4762:22)
+    at /root/Documents/utility2/lib.puppeteer.js:5911:59
+    at processTicksAndRejections (internal/process/task_queues.js:97:5)
+    at async Browser._createPageInContext (/root/Documents/utility2/lib.puppeteer.js:1649:22)
+
+
+*/
 /* jslint ignore:end */
 }());
 }());
