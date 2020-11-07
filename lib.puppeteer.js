@@ -2077,20 +2077,18 @@ CDPSession.prototype._onClosed = function () {
   * @param {!Puppeteer.ConnectionTransport} transport
   * @param {number=} delay
   */
-function Connection(url, ws2, delay = 0) {
-    let sck2;
+function Connection(url, sck2, delay = 0) {
     let that = this;
-    require("stream").EventEmitter.call(this);
-    this._url = url;
+    require("stream").EventEmitter.call(that);
+    that._url = url;
     /** @type {
      *    !Map<number,
      *    {resolve: function, reject: function, error: !Error, method: string}>}
      */
-    this._callbacks = new Map();
-    this._delay = delay;
-    sck2 = ws2.sck2;
-    this.sck2 = sck2;
-    sck2.on("data", async function (message) {
+    that._callbacks = new Map();
+    that._delay = delay;
+    that.sck2 = sck2.sck2;
+    that.sck2.on("data", async function (message) {
         let session;
         if (that._delay) {
             await new Promise(function (f) {
@@ -2139,17 +2137,17 @@ function Connection(url, ws2, delay = 0) {
             that.emit(object.method, object.params);
         }
     });
-    //!! sck2.on("close", function () {
+    //!! that.sck2.on("close", function () {
         //!! if (that.onclose) {
             //!! that.onclose.call(null);
         //!! }
     //!! });
     //!! // Silently ignore all errors - we don't know what to do with them.
-    //!! sck2.on("error", local.noop);
-    this.onclose = this._onClose.bind(this);
+    //!! that.sck2.on("error", local.noop);
+    that.onclose = that._onClose.bind(that);
     /** @type {!Map<string, !CDPSession>}*/
-    this._sessions = new Map();
-    this._closed = false;
+    that._sessions = new Map();
+    that._closed = false;
 }
 require("util").inherits(Connection, require("stream").EventEmitter);
 /**
@@ -2211,8 +2209,7 @@ Connection.prototype._onClose = function () {
 };
 Connection.prototype.dispose = function () {
     this._onClose();
-    let ws2 = this.ws2;
-    ws2.close();
+    //!! this.sck2.close();
 };
 /**
   * @param {Protocol.Target.TargetInfo} targetInfo
