@@ -1046,7 +1046,7 @@ function WebSocket(address) {
         ws2.readyState = WebSocket.CLOSED;
         ws2.emit("close");
     }
-    function send(data, options, cb) {
+    ws2.send = function (data, options, cb) {
 /**
   * Send a data message.
   *
@@ -1077,12 +1077,11 @@ function WebSocket(address) {
             data = data.toString();
         }
         sck2.write(data || BUFFER0, cb);
-    }
+    };
     //!! ws2 = this;
     //!! require("stream").Transform.call(ws2);
     ws2.close = close;
     ws2.emitClose = emitClose;
-    ws2.send = send;
     ws2.readyState = WebSocket.CONNECTING;
     ws2.protocol = "";
     // initAsClient
@@ -1112,6 +1111,7 @@ function WebSocket(address) {
             socket.end();
         }
         sck2 = new Socket2(socket); // jslint ignore:line
+        ws2.sck2 = sck2;
         sck2.on("data", function (payload) {
             ws2.emit("message", payload.toString());
         });
