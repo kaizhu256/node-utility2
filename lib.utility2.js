@@ -2368,22 +2368,12 @@ local.browserTest = function ({
         });
     }).then(function (data) {
         chromeSocket = data;
-        return new Promise(function (resolve) {
-            local.puppeteer.puppeteerApi.cdpClientCreate({
-                websocketUrl: chromeSocket
-            }, resolve);
+        return local.puppeteer.puppeteerApi.cdpClientCreate({
+            websocketUrl: chromeSocket
         });
     }).then(function (sck2) {
         return local.puppeteer.puppeteerApi.Browser.create(
-            new local.puppeteer.puppeteerApi.Connection(chromeSocket, sck2),
-            [],
-            // ignoreHTTPSErrors
-            false,
-            // defaultViewport
-            {
-                width: 800,
-                height: 600
-            },
+            sck2,
             chromeProcess,
             chromeKill
         );
