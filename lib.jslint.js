@@ -288,30 +288,27 @@ local.cliRun = function (opt) {
                 commandList[ii].command.push(key);
                 return;
             }
-            try {
-                commandList[ii] = opt.rgxComment.exec(str);
-                commandList[ii] = {
-                    argList: local.coalesce(commandList[ii][1], "").trim(),
-                    command: [
-                        key
-                    ],
-                    description: commandList[ii][2]
-                };
-            } catch (ignore) {
-                local.assertOrThrow(undefined, new Error(
-                    "cliRun - cannot parse comment in COMMAND "
-                    + key
-                    + ":\nnew RegExp("
-                    + JSON.stringify(opt.rgxComment.source)
-                    + ").exec(" + JSON.stringify(str).replace((
-                        /\\\\/g
-                    ), "\u0000").replace((
-                        /\\n/g
-                    ), "\\n\\\n").replace((
-                        /\u0000/g
-                    ), "\\\\") + ");"
-                ));
-            }
+            commandList[ii] = opt.rgxComment.exec(str);
+            local.assertOrThrow(commandList[ii], (
+                "cliRun - cannot parse comment in COMMAND "
+                + key
+                + ":\nnew RegExp("
+                + JSON.stringify(opt.rgxComment.source)
+                + ").exec(" + JSON.stringify(str).replace((
+                    /\\\\/g
+                ), "\u0000").replace((
+                    /\\n/g
+                ), "\\n\\\n").replace((
+                    /\u0000/g
+                ), "\\\\") + ");"
+            ));
+            commandList[ii] = {
+                argList: local.coalesce(commandList[ii][1], "").trim(),
+                command: [
+                    key
+                ],
+                description: commandList[ii][2]
+            };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";

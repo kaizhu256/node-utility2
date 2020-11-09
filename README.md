@@ -52,9 +52,9 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
-- revamp file lib.puppeteer.js part 9 - merge classes Browser, Target into cdpClientCreate and begin migrating listeners from session to cdpClient
+- remove file lib.puppeteer.js and replace with function cdpClientCreate
 - remove dependency on env-var \$CHROME_BIN
-- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext
+- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext, onErrorWithStack
 - jslint - fix off-by-one column in autofix-expected_a_before_b
 - decouple build from npm-env-variables npm_config_xxx and npm_package_xxx
 - update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS
@@ -1175,7 +1175,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 30,
+    "fileCount": 28,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",

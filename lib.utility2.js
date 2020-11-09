@@ -232,8 +232,7 @@ globalThis.utility2 = local;
     "apidoc",
     "istanbul",
     "jslint",
-    "marked",
-    "puppeteer"
+    "marked"
 ].forEach(function (key) {
     try {
         local[key] = (
@@ -2239,7 +2238,6 @@ local.browserTest = function ({
     let chromeUserDataDir;
     let fileScreenshot;
     let isDone;
-    let page;
     let promiseList;
     let testId;
     let testName;
@@ -2354,9 +2352,10 @@ local.browserTest = function ({
             let stderr;
             stderr = "";
             chromeProcess.stderr.on("data", function onData(chunk) {
-                local.assertOrThrow(stderr.length < 65536, new Error(
+                local.assertOrThrow(
+                    stderr.length < 65536,
                     "chrome-devtools-websocket - buffer-overflow"
-                ));
+                );
                 stderr += chunk;
                 stderr.replace((
                     /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
@@ -2369,30 +2368,19 @@ local.browserTest = function ({
         });
     }).then(function (data) {
         chromeSocket = data;
-        return local.puppeteer.puppeteerApi.cdpClientCreate({
-            chromeKill,
+        return local.cdpClientCreate({
+            url,
             websocketUrl: chromeSocket
         });
     }).then(function (data) {
         cdpClient = data;
-        page = cdpClient.page;
-        return page.goto(url);
     }).then(function () {
         promiseList = [];
-        promiseList.push(new Promise(function (resolve) {
-            setTimeout(function () {
-                page.screenshot({
-                    path: fileScreenshot
-                }).then(function () {
-                    console.error(
-                        "\nbrowserTest - created screenshot file "
-                        + fileScreenshot + "\n"
-                    );
-                    resolve();
-                });
-            }, 100);
+        promiseList.push(cdpClient.screenshot({
+            delay: 100,
+            path: fileScreenshot
         }));
-        page.evaluate(
+        cdpClient.evaluate(
             // coverage-hack
             "console.timeStamp();\n"
             + "window.utility2_testId=\"" + testId + "\";\n"
@@ -2406,7 +2394,7 @@ local.browserTest = function ({
                     return;
                 }
                 isDone = true;
-                resolve(page.evaluate(
+                resolve(cdpClient.evaluate(
                     "JSON.stringify(\n"
                     + "window.utility2_testReport\n"
                     + "||{testPlatformList:[{}]}\n"
@@ -2432,7 +2420,7 @@ local.browserTest = function ({
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
-                    local.onErrorThrow(err);
+                    onErrorThrow(err);
                     console.error(
                         "\nbrowserTest - merged test-report "
                         + process.env.npm_config_dir_build + "/test-report.json"
@@ -3158,6 +3146,478 @@ local.buildApp = function ({
     });
 };
 
+local.cdpClientCreate = function ({
+    url,
+    websocketUrl
+}) {
+/*
+ * this function with create chrome-devtools-protocol-client from <websocketUrl>
+ */
+    let WS_READ_HEADER;
+    let WS_READ_LENGTH16;
+    let WS_READ_LENGTH63;
+    let WS_READ_PAYLOAD;
+    let cdpCallbackDict;
+    let cdpCallbackId;
+    let cdpClient;
+    let cdpSessionId;
+    let secWebsocketKey;
+    let websocket;
+    let wsBufList;
+    let wsPayloadLength;
+    let wsReadState;
+    let wsReader;
+    /*
+     * init var
+     */
+    WS_READ_HEADER = 0;
+    WS_READ_LENGTH16 = 1;
+    WS_READ_LENGTH63 = 2;
+    WS_READ_PAYLOAD = 3;
+    cdpCallbackDict = {};
+    cdpCallbackId = 0;
+    secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
+    wsBufList = [];
+    wsPayloadLength = 0;
+    wsReadState = WS_READ_HEADER;
+    /*
+     * init cdpClient
+     */
+    function CdpClient() {
+    /*
+     * this function will construct cdpClient
+     */
+        require("stream").Duplex.call(this);
+    }
+    require("util").inherits(CdpClient, require("stream").Duplex);
+    cdpClient = new CdpClient();
+    cdpClient.__proto__._read = function () {
+    /*
+     * this function will implement stream.Duplex.prototype._read
+     */
+        if (websocket && websocket.readable) {
+            websocket.resume();
+        }
+    };
+    cdpClient.__proto__._write = function (payload, ignore, callback) {
+    /*
+     * this function will implement stream.Duplex.prototype._write
+     */
+        let header;
+        let maskKey;
+        let result;
+        // console.error("SEND ► " + payload.slice(0, 256).toString());
+        // init header
+        header = Buffer.alloc(2 + 8 + 4);
+        // init fin = true
+        header[0] |= 0x80;
+        // init opcode = text-frame
+        header[0] |= 1;
+        // init mask = true
+        header[1] |= 0x80;
+        // init wsPayloadLength
+        if (payload.length < 126) {
+            header = header.slice(0, 2 + 0 + 4);
+            header[1] |= payload.length;
+        } else if (payload.length < 65536) {
+            header = header.slice(0, 2 + 2 + 4);
+            header[1] |= 126;
+            header.writeUInt16BE(payload.length, 2);
+        } else {
+            header[1] |= 127;
+            header.writeUInt32BE(payload.length, 6);
+        }
+        // init maskKey
+        maskKey = require("crypto").randomBytes(4);
+        maskKey.copy(header, header.length - 4);
+        // send header
+        websocket.cork();
+        websocket.write(header);
+        // send payload ^ maskKey
+        payload.forEach(function (ignore, ii) {
+            payload[ii] ^= maskKey[ii & 3];
+        });
+        // return write-result
+        result = websocket.write(payload, callback);
+        websocket.uncork();
+        return result;
+    };
+    cdpClient.evaluate = async function (expression) {
+        const {
+            exceptionDetails,
+            result
+        } = await cdpClient.rpc("Runtime.evaluate", {
+            awaitPromise: true,
+            expression,
+            returnByValue: false,
+            userGesture: true
+        }, cdpSessionId);
+        local.assertOrThrow(!exceptionDetails, exceptionDetails);
+        return result.value;
+    };
+    cdpClient.on("data", function (evt) {
+    /*
+     * this function will handle callback for <evt>
+     * received from chrome-browser using chrome-devtools-protocol
+     */
+        // console.error("◀ RECV " + evt.slice(0, 256).toString());
+        let callback;
+        // init evt
+        evt = JSON.parse(evt);
+        local.assertOrThrow(!evt.method || (
+            /^[A-Z]\w*?\.[a-z]\w*?$/
+        ).test(evt.method), new Error(
+            "cdp-rpc-error - invalid evt.method " + evt.method
+        ));
+        // init callback
+        callback = cdpCallbackDict[evt.id];
+        delete cdpCallbackDict[evt.id];
+        // callback.resolve
+        if (callback) {
+            callback.err.message = JSON.stringify(evt.error);
+            local.assertOrThrow(!evt.error, callback.err);
+            callback.resolve(evt.result);
+            return;
+        }
+        local.assertOrThrow(!evt.error, evt.error);
+        cdpClient.emit(evt.method, evt.params);
+    });
+    cdpClient.rpc = function (method, params) {
+    /*
+     * this function will message-pass
+     * JSON.stringify({id, <method>, <params>, <sessionId>})
+     * to chrome-browser using chrome-devtools-protocol
+     */
+        cdpCallbackId = (cdpCallbackId % 256) + 1;
+        cdpClient.write(Buffer.from(JSON.stringify({
+            id: cdpCallbackId,
+            method,
+            params,
+            sessionId: cdpSessionId
+        })));
+        return new Promise(function (resolve) {
+            cdpCallbackDict[cdpCallbackId] = {
+                err: new Error(),
+                method,
+                resolve
+            };
+        });
+    };
+    cdpClient.screenshot = function ({
+        delay,
+        path
+    }) {
+    /*
+     * this function will screenshot browser to <path> given <delay>
+     */
+        local.assertOrThrow(path, "path required");
+        return new Promise(function (resolve) {
+            setTimeout(function () {
+                cdpClient.rpc("Page.captureScreenshot", {
+                    format: "png"
+                }).then(function ({
+                    data
+                }) {
+                    require("fs").writeFile((
+                        path
+                    ), Buffer.from(data, "base64"), function (err) {
+                        local.onErrorThrow(err);
+                        console.error(
+                            "[cdpClient] - Page.captureScreenshot -"
+                            + path
+                        );
+                        resolve();
+                    });
+                });
+            }, delay);
+        });
+    };
+    /*
+     * init wsReader
+     */
+/*
+https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
++---------------------------------------------------------------+
+|0               1               2               3              |
+|0 1 2 3 4 5 6 7 8 9 a b c d e f 0 1 2 3 4 5 6 7 8 9 a b c d e f|
++-+-+-+-+-------+-+-------------+-------------------------------+
+|F|R|R|R| opcode|M| Payload len |    Extended payload length    |
+|I|S|S|S|  (4)  |A|     (7)     |             (16/63)           |
+|N|V|V|V|       |S|             |   (if payload len==126/127)   |
+| |1|2|3|       |K|             |                               |
++-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
+|     Extended payload length continued, if payload len == 127  |
++ - - - - - - - - - - - - - - - +-------------------------------+
+|                               |Masking-key, if MASK set to 1  |
++-------------------------------+-------------------------------+
+| Masking-key (continued)       |          Payload Data         |
++-------------------------------- - - - - - - - - - - - - - - - +
+:                     Payload Data continued ...                :
++ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
+|                     Payload Data continued ...                |
++---------------------------------------------------------------+
+FIN: 1 bit
+    Indicates that this is the final fragment in a message.  The first
+    fragment MAY also be the final fragment.
+RSV1, RSV2, RSV3: 1 bit each
+    MUST be 0 unless an extension is negotiated which defines meanings
+    for non-zero values.  If a nonzero value is received and none of
+    the negotiated extensions defines the meaning of such a nonzero
+    value, the receiving endpoint MUST _Fail the WebSocket
+    Connection_.
+Opcode: 4 bits
+    Defines the interpretation of the payload data.  If an unknown
+    opcode is received, the receiving endpoint MUST _Fail the
+    WebSocket Connection_.  The following values are defined.
+    *  %x0 denotes a continuation frame
+    *  %x1 denotes a text frame
+    *  %x2 denotes a binary frame
+    *  %x3-7 are reserved for further non-control frames
+    *  %x8 denotes a connection close
+    *  %x9 denotes a ping
+    *  %xA denotes a pong
+    *  %xB-F are reserved for further control frames
+Mask: 1 bit
+    Defines whether the payload data is masked.  If set to 1, a
+    masking key is present in masking-key, and this is used to unmask
+    the payload data as per Section 5.3.  All frames sent from client
+    to server have this bit set to 1.
+Payload length: 7 bits, 7+16 bits, or 7+64 bits
+    The length of the payload data, in bytes: if 0-125, that is the
+    payload length.  If 126, the following 2 bytes interpreted as a 16
+    bit unsigned integer are the payload length.  If 127, the
+    following 8 bytes interpreted as a 64-bit unsigned integer (the
+    most significant bit MUST be 0) are the payload length.  Multibyte
+    length quantities are expressed in network byte order.  The
+    payload length is the length of the extension data + the length of
+    the application data.  The length of the extension data may be
+    zero, in which case the payload length is the length of the
+    application data.
+Masking-key: 0 or 4 bytes
+    All frames sent from the client to the server are masked by a 32-
+    bit value that is contained within the frame.  This field is
+    present if the mask bit is set to 1, and is absent if the mask bit
+    is set to 0.  See Section 5.3 for further information on client-
+    to-server masking.
+Payload data: (x+y) bytes
+    The payload data is defined as extension data concatenated with
+    application data.
+Extension data: x bytes
+    The extension data is 0 bytes unless an extension has been
+    negotiated.  Any extension MUST specify the length of the
+    extension data, or how that length may be calculated, and how the
+    extension use MUST be negotiated during the opening handshake.  If
+    present, the extension data is included in the total payload
+    length.
+Application data: y bytes
+    Arbitrary application data, taking up the remainder of the frame
+    after any extension data.  The length of the application data is
+    equal to the payload length minus the length of the extension
+    data.
+*/
+    function wsBufListRead(nn) {
+    /*
+     * this function will read <nn> bytes from <wsBufList>
+     */
+        let buf;
+        wsBufList = (
+            wsBufList.length === 1
+            ? wsBufList[0]
+            : Buffer.concat(wsBufList)
+        );
+        buf = wsBufList.slice(0, nn);
+        wsBufList = [
+            wsBufList.slice(nn)
+        ];
+        return buf;
+    }
+    function wsFrameRead() {
+    /*
+     * this function will read from websocket-data-frame
+     */
+        let buf;
+        let opcode;
+        if (wsBufList.reduce(function (aa, bb) {
+            return aa + bb.length;
+        }, 0) < (
+            wsReadState === WS_READ_PAYLOAD
+            ? Math.max(wsPayloadLength, 1)
+            : wsReadState === WS_READ_LENGTH63
+            ? 8
+            : 2
+        )) {
+            return;
+        }
+        switch (wsReadState) {
+        // read frame-header
+        case WS_READ_HEADER:
+            buf = wsBufListRead(2);
+            // validate opcode
+            opcode = buf[0] & 0x0f;
+            local.assertOrThrow(opcode === 0x01, (
+                "Invalid WebSocket frame: opcode must be 0x01, not 0x0"
+                + opcode.toString(16)
+            ));
+            wsPayloadLength = buf[1] & 0x7f;
+            wsReadState = (
+                wsPayloadLength === 126
+                ? WS_READ_LENGTH16
+                : wsPayloadLength === 127
+                ? WS_READ_LENGTH63
+                : WS_READ_PAYLOAD
+            );
+            break;
+        // read frame-payload-length-16
+        case WS_READ_LENGTH16:
+            wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-length-63
+        case WS_READ_LENGTH63:
+            buf = wsBufListRead(8);
+            wsPayloadLength = (
+                buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
+            );
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-data
+        case WS_READ_PAYLOAD:
+            local.assertOrThrow(
+                wsPayloadLength > 0,
+                "wsPayloadLength must be greater than 0, not " + wsPayloadLength
+            );
+            buf = wsBufListRead(wsPayloadLength);
+            wsReadState = WS_READ_HEADER;
+            cdpClient.push(buf);
+            break;
+        }
+        local.assertOrThrow(
+            0 <= wsPayloadLength && wsPayloadLength <= 256 * 1024 * 1024,
+            "payload-length must be between 0 and 256 MiB, not "
+            + wsPayloadLength
+        );
+        return true;
+    }
+    function WsReader() {
+    /*
+     * this function will construct wsReader
+     */
+        require("stream").Transform.call(this);
+    }
+    require("util").inherits(WsReader, require("stream").Transform);
+    wsReader = new WsReader();
+    wsReader.__proto__._transform = function (chunk, ignore, callback) {
+    /*
+     * this function will implement Transform.prototype._transform
+     */
+        wsBufList.push(chunk);
+        while (true) {
+            if (!wsFrameRead()) {
+                break;
+            }
+        }
+        callback();
+    };
+    /*
+     * init websocket
+     */
+    return Promise.resolve().then(function () {
+        return new Promise(function (resolve) {
+            require("http").get(Object.assign(require("url").parse(
+                websocketUrl
+            ), {
+                "createConnection": function (opt) {
+                    opt.path = opt.socketPath;
+                    return require("net").connect(opt);
+                },
+                "headers": {
+                    "Connection": "Upgrade",
+                    "Sec-WebSocket-Key": secWebsocketKey,
+                    "Sec-WebSocket-Version": 13,
+                    "Upgrade": "websocket"
+                },
+                "protocol": "http:",
+                "protocolVersion": 13
+            })).once("upgrade", function (res, _websocket, head) {
+                local.assertOrThrow(
+                    (
+                        res.headers["sec-websocket-accept"]
+                        === require("crypto").createHash("sha1").update(
+                            secWebsocketKey
+                            + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                        ).digest("base64")
+                    ),
+                    "Invalid Sec-WebSocket-Accept header"
+                );
+                websocket = _websocket;
+                websocket.unshift(head);
+                // websocket - disable timeout
+                websocket.setTimeout(0);
+                // websocket - disable nagle's algorithm
+                websocket.setNoDelay();
+                websocket.on("end", websocket.end.bind(websocket));
+                // pipe websocket to wsReader
+                websocket.pipe(wsReader);
+                resolve();
+            });
+        });
+    /*
+     * navigate to url
+     */
+    }).then(async function () {
+        let frameId;
+        let targetId;
+        // init cdpSessionId
+        targetId = (await cdpClient.rpc("Target.createTarget", {
+            url: "about:blank"
+        })).targetId;
+        cdpSessionId = (await cdpClient.rpc("Target.attachToTarget", {
+            targetId,
+            flatten: true
+        })).sessionId;
+        // init screensize
+        cdpClient.rpc("Emulation.setDeviceMetricsOverride", {
+            deviceScaleFactor: 1,
+            height: 600,
+            mobile: false,
+            screenOrientation: {
+                angle: 0,
+                type: "portraitPrimary"
+            },
+            width: 800
+        });
+        // init page
+        cdpClient.rpc("Page.enable", undefined);
+        cdpClient.rpc("Page.setLifecycleEventsEnabled", {
+            enabled: true
+        });
+        cdpClient.rpc("Performance.enable", undefined);
+        // navigate page to url
+        cdpClient.rpc("Page.navigate", {
+            url
+        });
+        // wait for page to load
+        cdpClient.rpc("Page.getFrameTree").then(function ({
+            frameTree
+        }) {
+            frameId = frameTree.frame.id;
+        });
+        await new Promise(function (resolve) {
+            cdpClient.on("Page.lifecycleEvent", function onLoad(evt) {
+                if (evt.frameId === frameId && evt.name === "load") {
+                    cdpClient.removeListener("Page.lifecycleEvent", onLoad);
+                    resolve();
+                }
+            });
+        });
+    /*
+     * resolve cdpClient
+     */
+    }).then(function () {
+        return cdpClient;
+    });
+};
+
 local.cliRun = function (opt) {
 /*
  * this function will run cli with given <opt>
@@ -3221,30 +3681,27 @@ local.cliRun = function (opt) {
                 commandList[ii].command.push(key);
                 return;
             }
-            try {
-                commandList[ii] = opt.rgxComment.exec(str);
-                commandList[ii] = {
-                    argList: local.coalesce(commandList[ii][1], "").trim(),
-                    command: [
-                        key
-                    ],
-                    description: commandList[ii][2]
-                };
-            } catch (ignore) {
-                local.assertOrThrow(undefined, new Error(
-                    "cliRun - cannot parse comment in COMMAND "
-                    + key
-                    + ":\nnew RegExp("
-                    + JSON.stringify(opt.rgxComment.source)
-                    + ").exec(" + JSON.stringify(str).replace((
-                        /\\\\/g
-                    ), "\u0000").replace((
-                        /\\n/g
-                    ), "\\n\\\n").replace((
-                        /\u0000/g
-                    ), "\\\\") + ");"
-                ));
-            }
+            commandList[ii] = opt.rgxComment.exec(str);
+            local.assertOrThrow(commandList[ii], (
+                "cliRun - cannot parse comment in COMMAND "
+                + key
+                + ":\nnew RegExp("
+                + JSON.stringify(opt.rgxComment.source)
+                + ").exec(" + JSON.stringify(str).replace((
+                    /\\\\/g
+                ), "\u0000").replace((
+                    /\\n/g
+                ), "\\n\\\n").replace((
+                    /\u0000/g
+                ), "\\\\") + ");"
+            ));
+            commandList[ii] = {
+                argList: local.coalesce(commandList[ii][1], "").trim(),
+                command: [
+                    key
+                ],
+                description: commandList[ii][2]
+            };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";
@@ -3588,7 +4045,6 @@ local.jslintAutofixLocalFunction = function (code, file) {
     case "lib.istanbul.js":
     case "lib.jslint.js":
     case "lib.marked.js":
-    case "lib.puppeteer.js":
     case "npm_scripts.sh":
     case "test.js":
         break;
@@ -4080,27 +4536,6 @@ local.middlewareUtility2StateInit = function (req, res, next) {
     }));
 };
 
-local.onErrorWithStack = function (onError) {
-/*
- * this function will wrap <onError> with wrapper preserving current-stack
- */
-    let onError2;
-    let stack;
-    stack = new Error().stack;
-    onError2 = function (err, data, meta) {
-        // append current-stack to err.stack
-        if (err && typeof err.stack === "string") {
-            err.stack += "\n" + stack;
-        }
-        onError(err, data, meta);
-    };
-    // debug onError
-    onError2.toString = function () {
-        return String(onError);
-    };
-    return onError2;
-};
-
 local.onParallel = function (onError, onEach, onRetry) {
 /*
  * this function will create function that will
@@ -4108,7 +4543,6 @@ local.onParallel = function (onError, onEach, onRetry) {
  * 2. if cnt === 0 or err occurred, then call onError(err)
  */
     let onParallel;
-    onError = local.onErrorWithStack(onError);
     onEach = onEach || local.noop;
     onRetry = onRetry || local.noop;
     onParallel = function (err, data) {
@@ -5890,18 +6324,12 @@ local.testRunServer = function (opt) {
     /*
      * this function will emulate express-like middleware-chaining
      */
-        let errStack;
         let gotoState;
         let isDone;
-        errStack = new Error().stack;
         gotoState = -1;
         (function gotoNext(err) {
             try {
                 gotoState += 1;
-                // preserve stack-trace
-                if (err) {
-                    err.stack += "\n" + errStack;
-                }
                 if (err || gotoState >= local.middlewareList.length) {
                     local.middlewareError(err, req, res);
                     return;
@@ -6403,7 +6831,6 @@ if (globalThis.utility2_rollup) {
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
-    "lib.puppeteer.js",
     "lib.utility2.js",
     "test.js"
 ].forEach(function (key) {
@@ -6503,7 +6930,6 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
     "lib.istanbul.js",
     "lib.jslint.js",
     "lib.marked.js",
-    "lib.puppeteer.js",
     "lib.utility2.js",
     "/assets.utility2.example.js",
     "/assets.utility2.html",

@@ -221,7 +221,7 @@ local.gotoNext = function (opt, onError) {
  * this function will wrap onError inside recursive-function <opt>.gotoNext,
  * and append current-stack to any err
  */
-    opt.gotoNext = local.onErrorWithStack(function (err, data, meta) {
+    opt.gotoNext = function (err, data, meta) {
         try {
             opt.gotoState += (
                 (err && !opt.modeErrorIgnore)
@@ -246,7 +246,7 @@ local.gotoNext = function (opt, onError) {
             opt.errCaught = errCaught;
             opt.gotoNext(errCaught, data, meta);
         }
-    });
+    };
     return opt;
 };
 
@@ -860,17 +860,6 @@ local.testCase_middlewareForwardProxy_default = function (opt, onError) {
         onParallel(undefined, opt);
     });
     onParallel(undefined, opt);
-};
-
-local.testCase_onErrorWithStack_toString = function (opt, onError) {
-/*
- * this function will test onErrorWithStack's toString handling-behavior
- */
-    assertJsonEqual(
-        String(local.onErrorWithStack(local.noop)),
-        String(local.noop)
-    );
-    onError(undefined, opt);
 };
 
 local.testCase_onParallelList_default = function (opt, onError) {
