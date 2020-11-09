@@ -2,7 +2,7 @@
 
 
 // vim
-// ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prorotype.\2 = \1function (/gc
+// ,$s/^    \(async \)*\(\w\w*\)(/    Connection.prototype.\2 = \1function (/gc
 // ,$s/\(([^()]*)\) => {/function \1 {/gc
 /*
         let that = this;
@@ -491,7 +491,7 @@ file https://github.com/websockets/ws/blob/6.2.1/lib/websocket.js
 function CDPSession(sck2, targetType, sessionId) {
     let ssn = this;
     require("stream").EventEmitter.call(ssn);
-    ssn.rpc4 = sck2.rpc4;
+    ssn.rpc = sck2.rpc;
     ssn._targetType = targetType;
     ssn._sessionId = sessionId;
 }
@@ -500,206 +500,184 @@ require("util").inherits(CDPSession, require("stream").EventEmitter);
 
 function cdpClientCreate({
     websocketUrl
-}, cdpClientResolve) {
+}) {
 /*
  * this function with create chrome-devtools-protocol-client from <websocketUrl>
  */
-    let ERR_PAYLOAD_LENGTH;
-    let READ_HEADER;
-    let READ_LENGTH16;
-    let READ_LENGTH63;
-    let READ_PAYLOAD;
-    let bufList;
-    let callbackDict;
-    let callbackId;
+    let WS_READ_HEADER;
+    let WS_READ_LENGTH16;
+    let WS_READ_LENGTH63;
+    let WS_READ_PAYLOAD;
+    let cdpCallbackDict;
+    let cdpCallbackId;
     let cdpClient;
-    let cryptoKey;
-    let onError;
-    let payloadLength;
-    let readState;
-    let sessionDict;
+    let cdpOnError;
+    let cdpSessionDict;
+    let secWebsocketKey;
     let websocket;
-    let websocketReader;
-    if (!cdpClientResolve) {
-        return new Promise(function (resolve) {
-            cdpClientCreate({
-                websocketUrl
-            }, resolve);
-        });
-    }
-    /*
-     * init cdpClient
-     */
-    function CdpClient() {
-    /*
-     * this function will construct cdpClient
-     */
-        require("stream").Duplex.call(this);
-    }
-    require("util").inherits(CdpClient, require("stream").Duplex);
-    CdpClient.prototype._read = function () {
-    /*
-     * this function will implement stream.Duplex.prototype._read
-     */
-        if (websocket && websocket.readable) {
-            websocket.resume();
+    let wsBufList;
+    let wsPayloadLength;
+    let wsReadState;
+    let wsReader;
+    // init var
+    return Promise.resolve().then(function () {
+        WS_READ_HEADER = 0;
+        WS_READ_LENGTH16 = 1;
+        WS_READ_LENGTH63 = 2;
+        WS_READ_PAYLOAD = 3;
+        cdpCallbackDict = {};
+        cdpCallbackId = 0;
+        cdpSessionDict = {};
+        secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
+        wsBufList = [];
+        wsPayloadLength = 0;
+        wsReadState = WS_READ_HEADER;
+    // init cdpClient
+    }).then(function () {
+        function CdpClient() {
+        /*
+         * this function will construct cdpClient
+         */
+            require("stream").Duplex.call(this);
         }
-    };
-    CdpClient.prototype._write = function (payload, ignore, callback) {
-    /*
-     * this function will implement stream.Duplex.prototype._write
-     */
-        let header;
-        let maskKey;
-        let result;
-        // console.error("SEND ► " + payload.slice(0, 256).toString());
-        // init header
-        header = Buffer.alloc(2 + 8 + 4);
-        // init fin = true
-        header[0] |= 0x80;
-        // init opcode = text-frame
-        header[0] |= 1;
-        // init mask = true
-        header[1] |= 0x80;
-        // init payloadLength
-        if (payload.length < 126) {
-            header = header.slice(0, 2 + 0 + 4);
-            header[1] |= payload.length;
-        } else if (payload.length < 65536) {
-            header = header.slice(0, 2 + 2 + 4);
-            header[1] |= 126;
-            header.writeUInt16BE(payload.length, 2);
-        } else {
-            header[1] |= 127;
-            header.writeUInt32BE(payload.length, 6);
-        }
-        // init maskKey
-        maskKey = require("crypto").randomBytes(4);
-        maskKey.copy(header, header.length - 4);
-        // send header
-        websocket.cork();
-        websocket.write(header);
-        // send payload ^ maskKey
-        payload.forEach(function (ignore, ii) {
-            payload[ii] ^= maskKey[ii & 3];
-        });
-        // return write-result
-        result = websocket.write(payload, callback);
-        websocket.uncork();
-        return result;
-    };
-    CdpClient.prototype.rpc4 = function (method, params, sessionId) {
-    /*
-     * this function will message-pass
-     * JSON.stringify({id, <method>, <params>, <sessionId>})
-     * to chrome-browser using chrome-devtools-protocol
-     */
-        callbackId = (callbackId % 1024) + 1;
-        cdpClient.write(Buffer.from(JSON.stringify({
-            id: callbackId,
-            method,
-            params,
-            sessionId
-        })));
-        return new Promise(function (resolve, reject) {
-            callbackDict = callbackDict || {};
-            callbackDict[callbackId] = {
-                resolve,
-                reject,
-                error: new Error(),
-                method
-            };
-        });
-    };
-    callbackId = 0;
-    cdpClient = new CdpClient();
-    function createProtocolError(err, method, object) {
-        err.message = (
-            "Protocol error (" + method + "): " + object.error.message + (
-                object.error.data
-                ? " " + object.error.data
-                : ""
-            )
-        );
-        return err;
-    }
-    cdpClient.on("data", function (message) {
-    /*
-     * this function will handle callback for <message>
-     * received from chrome-browser using chrome-devtools-protocol
-     */
-        // console.error("◀ RECV " + message.slice(0, 256).toString());
-        let callback;
-        let ssn;
-        message = JSON.parse(message);
-        local.assertOrThrow(!message.method || (
-            /^[A-Z]\w*?\.[a-z]\w*?$/
-        ).test(message.method), new Error(
-            "cdpClient-response - invalid message.method " + message.method
-        ));
-        if (message.method === "Target.attachedToTarget") {
-            ssn = new CDPSession(
-                cdpClient,
-                message.params.targetInfo.type,
-                message.params.sessionId
-            );
-            sessionDict = sessionDict || {};
-            cdpClient.sessionDict = sessionDict; // TODO - remove
-            sessionDict[message.params.sessionId] = ssn;
-        } else if (message.method === "Target.detachedFromTarget") {
-            ssn = sessionDict[message.params.sessionId];
-            if (ssn) {
-                ssn._onClosed();
-                delete sessionDict[message.params.sessionId];
+        require("util").inherits(CdpClient, require("stream").Duplex);
+        cdpClient = new CdpClient();
+        cdpClient.__proto__._read = function () {
+        /*
+         * this function will implement stream.Duplex.prototype._read
+         */
+            if (websocket && websocket.readable) {
+                websocket.resume();
             }
-        }
-        if (message.sessionId) {
-            ssn = sessionDict[message.sessionId];
-            if (!ssn) {
+        };
+        cdpClient.__proto__._write = function (payload, ignore, callback) {
+        /*
+         * this function will implement stream.Duplex.prototype._write
+         */
+            let header;
+            let maskKey;
+            let result;
+            // console.error("SEND ► " + payload.slice(0, 256).toString());
+            // init header
+            header = Buffer.alloc(2 + 8 + 4);
+            // init fin = true
+            header[0] |= 0x80;
+            // init opcode = text-frame
+            header[0] |= 1;
+            // init mask = true
+            header[1] |= 0x80;
+            // init wsPayloadLength
+            if (payload.length < 126) {
+                header = header.slice(0, 2 + 0 + 4);
+                header[1] |= payload.length;
+            } else if (payload.length < 65536) {
+                header = header.slice(0, 2 + 2 + 4);
+                header[1] |= 126;
+                header.writeUInt16BE(payload.length, 2);
+            } else {
+                header[1] |= 127;
+                header.writeUInt32BE(payload.length, 6);
+            }
+            // init maskKey
+            maskKey = require("crypto").randomBytes(4);
+            maskKey.copy(header, header.length - 4);
+            // send header
+            websocket.cork();
+            websocket.write(header);
+            // send payload ^ maskKey
+            payload.forEach(function (ignore, ii) {
+                payload[ii] ^= maskKey[ii & 3];
+            });
+            // return write-result
+            result = websocket.write(payload, callback);
+            websocket.uncork();
+            return result;
+        };
+        cdpClient.rpc = function (method, params, sessionId) {
+        /*
+         * this function will message-pass
+         * JSON.stringify({id, <method>, <params>, <sessionId>})
+         * to chrome-browser using chrome-devtools-protocol
+         */
+            cdpCallbackId = (cdpCallbackId % 256) + 1;
+            cdpClient.write(Buffer.from(JSON.stringify({
+                id: cdpCallbackId,
+                method,
+                params,
+                sessionId
+            })));
+            return new Promise(function (resolve, reject) {
+                cdpCallbackDict[cdpCallbackId] = {
+                    err: new Error(),
+                    method,
+                    reject,
+                    resolve
+                };
+            });
+        };
+        cdpOnError = cdpClient._destroy.bind(cdpClient);
+    // init evt-handling
+    }).then(function () {
+        cdpClient.on("data", function (evt) {
+        /*
+         * this function will handle callback for <evt>
+         * received from chrome-browser using chrome-devtools-protocol
+         */
+            // console.error("◀ RECV " + evt.slice(0, 256).toString());
+            let callback;
+            let ssn;
+            // init evt
+            evt = JSON.parse(evt);
+            local.assertOrThrow(!evt.method || (
+                /^[A-Z]\w*?\.[a-z]\w*?$/
+            ).test(evt.method), new Error(
+                "cdp-rpc-error - invalid evt.method " + evt.method
+            ));
+            cdpClient.emit(evt.method, evt.params);
+            // init callback
+            callback = cdpCallbackDict[evt.id];
+            delete cdpCallbackDict[evt.id];
+            // callback.reject
+            if (callback && evt.error) {
+                callback.err.evt = (
+                    // "Protocol error (" + evt.method + "): "
+                    "cdp-rpc-error - " + evt.method
+                    + " - " + JSON.stringify(evt.error)
+                );
+                callback.reject(callback.err);
                 return;
             }
-            callback = callbackDict[message.id];
+            // callback.resolve
             if (callback) {
-                delete callbackDict[message.id];
-                if (message.error) {
-                    callback.reject(createProtocolError(
-                        callback.error,
-                        callback.method,
-                        message
-                    ));
+                callback.resolve(evt.result);
+                return;
+            }
+            if (evt.sessionId) {
+                ssn = cdpSessionDict[evt.sessionId];
+                if (!ssn) {
                     return;
                 }
-                callback.resolve(message.result);
+                ssn.emit(evt.method, evt.params);
                 return;
             }
-            local.assertOrThrow(!message.id, "missing message.id");
-            ssn.emit(message.method, message.params);
-            return;
-        }
-        if (message.id) {
-            callback = callbackDict[message.id];
-            // Callbacks could be all rejected if someone has called
-            // `.dispose()`.
-            if (!callback) {
-                return;
+        });
+        cdpClient.on("Target.attachedToTarget", function (evt) {
+            let ssn = new CDPSession(
+                cdpClient,
+                evt.targetInfo.type,
+                evt.sessionId
+            );
+            cdpSessionDict[evt.sessionId] = ssn;
+        });
+        cdpClient.on("Target.detachedFromTarget", function (evt) {
+            let ssn = cdpSessionDict[evt.sessionId];
+            delete cdpSessionDict[evt.sessionId];
+            if (ssn) {
+                ssn._onClosed();
             }
-            delete callbackDict[message.id];
-            if (message.error) {
-                callback.reject(createProtocolError(
-                    callback.error,
-                    callback.method,
-                    message
-                ));
-                return;
-            }
-            callback.resolve(message.result);
-            return;
-        }
-        cdpClient.emit(message.method, message.params);
-    });
-    /*
-     * init websocketReader
-     */
+        });
+    // init wsReader
+    }).then(function () {
 /*
 https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
 +---------------------------------------------------------------+
@@ -780,168 +758,184 @@ Application data: y bytes
     equal to the payload length minus the length of the extension
     data.
 */
-    function bufListRead(nn) {
-    /*
-     * this function will read <nn> bytes from <bufList>
-     */
-        let buf;
-        bufList = (
-            bufList.length === 1
-            ? bufList[0]
-            : Buffer.concat(bufList)
-        );
-        buf = bufList.slice(0, nn);
-        bufList = [
-            bufList.slice(nn)
-        ];
-        return buf;
-    }
-    function frameRead() {
-    /*
-     * this function will read from websocket-data-frame
-     */
-        let buf;
-        let opcode;
-        if (bufList.reduce(function (aa, bb) {
-            return aa + bb.length;
-        }, 0) < (
-            readState === READ_PAYLOAD
-            ? Math.max(payloadLength, 1)
-            : readState === READ_LENGTH63
-            ? 8
-            : 2
-        )) {
-            return;
-        }
-        switch (readState) {
-        // read frame-header
-        case READ_HEADER:
-            buf = bufListRead(2);
-            // validate opcode
-            opcode = buf[0] & 0x0f;
-            local.assertOrThrow(opcode === 0x01, new Error(
-                "Invalid WebSocket frame: opcode must be 0x01, not 0x0"
-                + opcode.toString(16)
-            ));
-            payloadLength = buf[1] & 0x7f;
-            readState = (
-                payloadLength === 126
-                ? READ_LENGTH16
-                : payloadLength === 127
-                ? READ_LENGTH63
-                : READ_PAYLOAD
-            );
-            break;
-        // read frame-payload-length-16
-        case READ_LENGTH16:
-            payloadLength = bufListRead(2).readUInt16BE(0);
-            readState = READ_PAYLOAD;
-            break;
-        // read frame-payload-length-63
-        case READ_LENGTH63:
-            buf = bufListRead(8);
-            payloadLength = (
-                buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
-            );
-            readState = READ_PAYLOAD;
-            break;
-        // read frame-payload-data
-        case READ_PAYLOAD:
-            buf = (
-                payloadLength
-                ? bufListRead(payloadLength)
-                : Buffer.alloc(0)
-            );
-            readState = READ_HEADER;
-            cdpClient.push(buf);
-            break;
-        }
-        local.assertOrThrow(
-            0 <= payloadLength && payloadLength <= 256 * 1024 * 1024,
-            ERR_PAYLOAD_LENGTH
-        );
-        return true;
-    }
-    function WebsocketReader() {
-    /*
-     * this function will construct websocketReader
-     */
-        require("stream").Transform.call(this);
-    }
-    require("util").inherits(WebsocketReader, require("stream").Transform);
-    WebsocketReader.prototype._transform = function (chunk, ignore, callback) {
-    /*
-     * this function will implement Transform.prototype._transform
-     */
-        try {
-            bufList.push(chunk);
-            while (true) {
-                if (!frameRead()) {
-                    break;
-                }
-            }
-            callback();
-        } catch (errCaught) {
-            this.destroy(errCaught);
-        }
-    };
-    ERR_PAYLOAD_LENGTH = new RangeError(
-        "payload-length must be between 0 and 256 MiB"
-    );
-    READ_HEADER = 0;
-    READ_LENGTH16 = 1;
-    READ_LENGTH63 = 2;
-    READ_PAYLOAD = 3;
-    bufList = [];
-    payloadLength = 0;
-    readState = READ_HEADER;
-    websocketReader = new WebsocketReader();
-    /*
-     * init websocket
-     */
-    cryptoKey = require("crypto").randomBytes(16).toString("base64");
-    onError = cdpClient._destroy.bind(cdpClient);
-    require("http").get(Object.assign(require("url").parse(websocketUrl), {
-        "createConnection": function (opt) {
-            opt.path = opt.socketPath;
-            return require("net").connect(opt);
-        },
-        "headers": {
-            "Connection": "Upgrade",
-            "Sec-WebSocket-Key": cryptoKey,
-            "Sec-WebSocket-Version": 13,
-            "Upgrade": "websocket"
-        },
-        "protocol": "http:",
-        "protocolVersion": 13
-    })).once("upgrade", function (res, _websocket, head) {
-        local.assertOrThrow(
-            (
-                res.headers["sec-websocket-accept"]
-                === require("crypto").createHash("sha1").update(
-                    cryptoKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-                ).digest("base64")
-            ),
-            new Error("Invalid Sec-WebSocket-Accept header")
-        );
-        websocket = _websocket;
-        websocket.on("error", onError);
-        websocket.unshift(head);
-        // websocket - disable timeout
-        websocket.setTimeout(0);
-        // websocket - disable nagle's algorithm
-        websocket.setNoDelay();
+        function wsBufListRead(nn) {
         /*
-        websocket.on("end", websocket.end);
-        websocket.once("error", function () {
-            websocket.destroy();
+         * this function will read <nn> bytes from <wsBufList>
+         */
+            let buf;
+            wsBufList = (
+                wsBufList.length === 1
+                ? wsBufList[0]
+                : Buffer.concat(wsBufList)
+            );
+            buf = wsBufList.slice(0, nn);
+            wsBufList = [
+                wsBufList.slice(nn)
+            ];
+            return buf;
+        }
+        function wsFrameRead() {
+        /*
+         * this function will read from websocket-data-frame
+         */
+            let buf;
+            let opcode;
+            if (wsBufList.reduce(function (aa, bb) {
+                return aa + bb.length;
+            }, 0) < (
+                wsReadState === WS_READ_PAYLOAD
+                ? Math.max(wsPayloadLength, 1)
+                : wsReadState === WS_READ_LENGTH63
+                ? 8
+                : 2
+            )) {
+                return;
+            }
+            switch (wsReadState) {
+            // read frame-header
+            case WS_READ_HEADER:
+                buf = wsBufListRead(2);
+                // validate opcode
+                opcode = buf[0] & 0x0f;
+                local.assertOrThrow(opcode === 0x01, (
+                    "Invalid WebSocket frame: opcode must be 0x01, not 0x0"
+                    + opcode.toString(16)
+                ));
+                wsPayloadLength = buf[1] & 0x7f;
+                wsReadState = (
+                    wsPayloadLength === 126
+                    ? WS_READ_LENGTH16
+                    : wsPayloadLength === 127
+                    ? WS_READ_LENGTH63
+                    : WS_READ_PAYLOAD
+                );
+                break;
+            // read frame-payload-length-16
+            case WS_READ_LENGTH16:
+                wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
+                wsReadState = WS_READ_PAYLOAD;
+                break;
+            // read frame-payload-length-63
+            case WS_READ_LENGTH63:
+                buf = wsBufListRead(8);
+                wsPayloadLength = (
+                    buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
+                );
+                wsReadState = WS_READ_PAYLOAD;
+                break;
+            // read frame-payload-data
+            case WS_READ_PAYLOAD:
+                buf = (
+                    wsPayloadLength
+                    ? wsBufListRead(wsPayloadLength)
+                    : Buffer.alloc(0)
+                );
+                wsReadState = WS_READ_HEADER;
+                cdpClient.push(buf);
+                break;
+            }
+            local.assertOrThrow(
+                0 <= wsPayloadLength && wsPayloadLength <= 256 * 1024 * 1024,
+                "payload-length must be between 0 and 256 MiB, not "
+                + wsPayloadLength
+            );
+            return true;
+        }
+        function WsReader() {
+        /*
+         * this function will construct wsReader
+         */
+            require("stream").Transform.call(this);
+        }
+        require("util").inherits(WsReader, require("stream").Transform);
+        wsReader = new WsReader();
+        wsReader.__proto__._transform = function (chunk, ignore, callback) {
+        /*
+         * this function will implement Transform.prototype._transform
+         */
+            try {
+                wsBufList.push(chunk);
+                while (true) {
+                    if (!wsFrameRead()) {
+                        break;
+                    }
+                }
+                callback();
+            } catch (errCaught) {
+                this.destroy(errCaught);
+            }
+        };
+    // init websocket
+    }).then(function () {
+        return new Promise(function (resolve) {
+            require("http").get(Object.assign(require("url").parse(
+                websocketUrl
+            ), {
+                "createConnection": function (opt) {
+                    opt.path = opt.socketPath;
+                    return require("net").connect(opt);
+                },
+                "headers": {
+                    "Connection": "Upgrade",
+                    "Sec-WebSocket-Key": secWebsocketKey,
+                    "Sec-WebSocket-Version": 13,
+                    "Upgrade": "websocket"
+                },
+                "protocol": "http:",
+                "protocolVersion": 13
+            })).once("upgrade", function (res, _websocket, head) {
+                local.assertOrThrow(
+                    (
+                        res.headers["sec-websocket-accept"]
+                        === require("crypto").createHash("sha1").update(
+                            secWebsocketKey
+                            + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                        ).digest("base64")
+                    ),
+                    "Invalid Sec-WebSocket-Accept header"
+                );
+                websocket = _websocket;
+                websocket.unshift(head);
+                websocket.on("error", cdpOnError);
+                // websocket - disable timeout
+                websocket.setTimeout(0);
+                // websocket - disable nagle's algorithm
+                websocket.setNoDelay();
+                /*
+                websocket.on("end", websocket.end);
+                websocket.once("error", function () {
+                    websocket.destroy();
+                });
+                */
+                // pipe websocket to wsReader
+                websocket.pipe(wsReader);
+                resolve();
+            }).on("error", cdpOnError);
         });
-        */
-        // pipe websocket to websocketReader
-        websocket.pipe(websocketReader);
-        // resolve cdpClient
-        cdpClientResolve(cdpClient);
-    }).on("error", onError);
+    // create blank-page
+    }).then(function () {
+        return Promise.resolve().then(function () {
+            return cdpClient.rpc("Target.createTarget", {
+                url: "about:blank"
+            });
+        }).then(function ({
+            targetId
+        }) {
+            return cdpClient.rpc("Target.attachToTarget", {
+                targetId,
+                flatten: true
+            }).then(function ({
+                sessionId
+            }) {
+                return Page.create(cdpSessionDict[sessionId], targetId); // jslint ignore:line
+            });
+        }).then(function (page) {
+            cdpClient.page = page;
+        });
+    // resolve cdpClient
+    }).then(function () {
+        return cdpClient;
+    });
 }
 local.noop(cdpClientCreate);
 /* jslint ignore:start */
@@ -1174,125 +1168,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Browser.js
 // const {Target} = exports_puppeteer_puppeteer_lib_Target;
 // const EventEmitter = require("events");
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-class Browser extends EventEmitter {
-    static async create(sck2, process, chromeKill) {
-        const browser = new Browser(sck2, process);
-        browser.chromeKill = chromeKill;
-        await sck2.rpc4("Target.setDiscoverTargets", {discover: true});
-        return browser;
-    }
-    /**
-      * @param {!Puppeteer.sck2} sck2
-      * @param {?Puppeteer.ChildProcess} process
-      */
-    constructor(sck2, process) {
-        super();
-        let brw = this;
-        brw._process = process;
-        brw.sck2 = sck2;
-        brw.rpc4 = sck2.rpc4;
-        /** @type {Map<string, Target>} */
-        brw._targets = new Map();
-        brw.sck2.on("Target.targetCreated", async function _targetCreated(event) {
-            const targetInfo = event.targetInfo;
-            const {browserContextId} = targetInfo;
-            const target = new Target(targetInfo, async function () {
-                const {
-                    sessionId
-                } = await brw.rpc4("Target.attachToTarget", {
-                    targetId: targetInfo.targetId,
-                    flatten: true
-                });
-                return brw.sck2.sessionDict[sessionId];
-            });
-            assert(!brw._targets.has(event.targetInfo.targetId), "Target should not exist before targetCreated");
-            brw._targets.set(event.targetInfo.targetId, target);
-            if (await target._initializedPromise) {
-                brw.emit(Events.Browser.TargetCreated, target);
-            }
-        });
-        brw.sck2.on("Target.targetInfoChanged", function _targetInfoChanged(event) {
-            const target = brw._targets.get(event.targetInfo.targetId);
-            assert(target, "target should exist before targetInfoChanged");
-            const previousURL = target.url();
-            const wasInitialized = target._isInitialized;
-            target._targetInfoChanged(event.targetInfo);
-            if (wasInitialized && previousURL !== target.url()) {
-                brw.emit(Events.Browser.TargetChanged, target);
-            }
-        });
-    }
-    /**
-      * @return {!Promise<!Puppeteer.Page>}
-      */
-    async newPage() {
-        return this._createPageInContext();
-    }
-    /**
-      * @param {?string} contextId
-      * @return {!Promise<!Puppeteer.Page>}
-      */
-    async _createPageInContext(contextId) {
-        const {targetId} = await this.rpc4("Target.createTarget", {url: "about:blank", browserContextId: contextId || undefined});
-        const target = await this._targets.get(targetId);
-        assert(await target._initializedPromise, "Failed to create target for page");
-        const page = await target.page();
-        return page;
-    }
-    /**
-      * @return {!Array<!Target>}
-      */
-    targets() {
-        return Array.from(this._targets.values()).filter(function (target) { return target._isInitialized; });
-    }
-    /**
-      * @return {!Target}
-      */
-    target() {
-        return this.targets().find(function (target) { return target.type() === "browser"; });
-    }
-    /**
-      * @param {function(!Target):boolean} predicate
-      * @param {{timeout?: number}=} options
-      * @return {!Promise<!Target>}
-      */
-    async waitForTarget(predicate, options = {}) {
-        let brw = this;
-        const {
-            timeout = 30000
-        } = options;
-        const existingTarget = brw.targets().find(predicate);
-        if (existingTarget) {
-            return existingTarget;
-        }
-        let resolve;
-        const targetPromise = new Promise(function (x) { return resolve = x; });
-        brw.on(Events.Browser.TargetCreated, check);
-        brw.on(Events.Browser.TargetChanged, check);
-        try {
-            if (!timeout) {
-                return await targetPromise;
-            }
-            return await helper.waitWithTimeout(targetPromise, "target", timeout);
-        } finally {
-            brw.removeListener(Events.Browser.TargetCreated, check);
-            brw.removeListener(Events.Browser.TargetChanged, check);
-        }
-        /**
-          * @param {!Target} target
-          */
-        function check(target) {
-            if (predicate(target)) {
-                resolve(target);
-            }
-        }
-    }
-    async close() {
-        await this.chromeKill();
-        this.sck2.end();
-    }
-}
-exports_puppeteer_puppeteer_lib_Browser = {Browser};
 
 
 /* jslint ignore:end */
@@ -1318,6 +1193,7 @@ const Events = {
     Page: {
         Close: "close",
         Console: "console",
+        Dialog: "dialog",
         DOMContentLoaded: "domcontentloaded",
         Error: "error",
         // Can't use just "error" due to node.js special treatment
@@ -1398,7 +1274,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Coverage.js
   * limitations under the License.
   */
 // const {helper, debugError, assert} = exports_puppeteer_puppeteer_lib_helper;
-// const {EVALUATION_SCRIPT_URL} = exports_puppeteer_puppeteer_lib_ExecutionContext;
 /**
   * @typedef {Object} CoverageEntry
   * @property {string} url
@@ -1474,17 +1349,18 @@ class DOMWorld {
       * @param {!Puppeteer.TimeoutSettings} timeoutSettings
       */
     constructor(frameManager, frame, timeoutSettings) {
-        this._frameManager = frameManager;
-        this._frame = frame;
-        this._timeoutSettings = timeoutSettings;
-        this._documentPromise = null;
+        let dom2 = this;
+        dom2._frameManager = frameManager;
+        dom2._frame = frame;
+        dom2._timeoutSettings = timeoutSettings;
+        dom2._documentPromise = null;
         /** @type {!Promise<!Puppeteer.ExecutionContext>} */
-        this._contextPromise;
-        this._contextResolveCallback = null;
-        this._setContext(null);
+        dom2._contextPromise;
+        dom2._contextResolveCallback = null;
+        dom2._setContext(null);
         /** @type {!Set<!WaitTask>} */
-        this._waitTasks = new Set();
-        this._detached = false;
+        dom2._waitTasks = new Set();
+        dom2._detached = false;
     }
     /**
       * @return {!Puppeteer.Frame}
@@ -1496,17 +1372,17 @@ class DOMWorld {
       * @param {?Puppeteer.ExecutionContext} context
       */
     _setContext(context) {
-        let that = this;
+        let dom2 = this;
         if (context) {
-            this._contextResolveCallback.call(null, context);
-            this._contextResolveCallback = null;
-            this._waitTasks.forEach(function (waitTask) {
+            dom2._contextResolveCallback.call(null, context);
+            dom2._contextResolveCallback = null;
+            dom2._waitTasks.forEach(function (waitTask) {
                 waitTask.rerun();
             });
         } else {
-            this._documentPromise = null;
-            this._contextPromise = new Promise(function (fulfill) {
-                that._contextResolveCallback = fulfill;
+            dom2._documentPromise = null;
+            dom2._contextPromise = new Promise(function (resolve) {
+                dom2._contextResolveCallback = resolve;
             });
         }
     }
@@ -1515,39 +1391,6 @@ class DOMWorld {
       */
     _hasContext() {
         return !this._contextResolveCallback;
-    }
-    _detach() {
-        this._detached = true;
-        this._waitTasks.forEach(function (waitTask) {
-            waitTask.terminate(new Error("waitForFunction failed: frame got detached."));
-        });
-    }
-    /**
-      * @return {!Promise<!Puppeteer.ExecutionContext>}
-      */
-    executionContext() {
-        if (this._detached) {
-            throw new Error(`Execution Context is not available in detached frame "${this._frame.url()}" (are you trying to evaluate?)`);
-        }
-        return this._contextPromise;
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<!Puppeteer.JSHandle>}
-      */
-    async evaluateHandle(pageFunction, ...args) {
-        const context = await this.executionContext();
-        return context.evaluateHandle(pageFunction, ...args);
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<*>}
-      */
-    async evaluate(pageFunction, ...args) {
-        const context = await this.executionContext();
-        return context.evaluate(pageFunction, ...args);
     }
 }
 exports_puppeteer_puppeteer_lib_DOMWorld = {DOMWorld};
@@ -1591,8 +1434,8 @@ class EmulationManager {
         const screenOrientation = viewport.isLandscape ? { angle: 90, type: "landscapePrimary" } : { angle: 0, type: "portraitPrimary" };
         const hasTouch = viewport.hasTouch || false;
         await Promise.all([
-            this.ssn.rpc4("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }, this.ssn._sessionId),
-            this.ssn.rpc4("Emulation.setTouchEmulationEnabled", {
+            this.ssn.rpc("Emulation.setDeviceMetricsOverride", { mobile, width, height, deviceScaleFactor, screenOrientation }, this.ssn._sessionId),
+            this.ssn.rpc("Emulation.setTouchEmulationEnabled", {
                 enabled: hasTouch
             }, this.ssn._sessionId)
         ]);
@@ -1652,8 +1495,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/ExecutionContext.js
   */
 // const {helper, assert} = exports_puppeteer_puppeteer_lib_helper;
 // const {createJSHandle, JSHandle} = exports_puppeteer_puppeteer_lib_JSHandle;
-const EVALUATION_SCRIPT_URL = "__puppeteer_evaluation_script__";
-const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
 class ExecutionContext {
     /**
       * @param {!Puppeteer.CDPSession} ssn
@@ -1671,60 +1512,8 @@ class ExecutionContext {
     frame() {
         return this._world ? this._world.frame() : null;
     }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {...*} args
-      * @return {!Promise<*>}
-      */
-    async evaluate(pageFunction, ...args) {
-        return await this._evaluateInternal(true /* returnByValue */, pageFunction, ...args);
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {...*} args
-      * @return {!Promise<!JSHandle>}
-      */
-    async evaluateHandle(pageFunction, ...args) {
-        return this._evaluateInternal(false /* returnByValue */, pageFunction, ...args);
-    }
-    /**
-      * @param {boolean} returnByValue
-      * @param {Function|string} pageFunction
-      * @param {...*} args
-      * @return {!Promise<*>}
-      */
-    async _evaluateInternal(returnByValue, pageFunction, ...args) {
-        const suffix = `//# sourceURL=${EVALUATION_SCRIPT_URL}`;
-        if (helper.isString(pageFunction)) {
-            const contextId = this._contextId;
-            const expression = /** @type {string} */ (pageFunction);
-            const expressionWithSourceUrl = SOURCE_URL_REGEX.test(expression) ? expression : expression + "\n" + suffix;
-            const {exceptionDetails, result: remoteObject} = await this.ssn.rpc4("Runtime.evaluate", {
-                expression: expressionWithSourceUrl,
-                contextId,
-                returnByValue,
-                awaitPromise: true,
-                userGesture: true
-            }, this.ssn._sessionId).catch(function (error) {
-                if (error.message.includes("Object reference chain is too long")) {
-                    return {result: {type: "undefined"}};
-                }
-                if (error.message.includes("Object couldn't be returned by value")) {
-                    return {result: {type: "undefined"}};
-                }
-                if (error.message.endsWith("Cannot find context with specified id")) {
-                    throw new Error("Execution context was destroyed, most likely because of a navigation.");
-                }
-                throw error;
-            });
-            if (exceptionDetails) {
-                throw new Error("Evaluation failed: " + helper.getExceptionMessage(exceptionDetails));
-            }
-            return returnByValue ? helper.valueFromRemoteObject(remoteObject) : createJSHandle(this, remoteObject);
-        }
-    }
 }
-exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext, EVALUATION_SCRIPT_URL};
+exports_puppeteer_puppeteer_lib_ExecutionContext = {ExecutionContext};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
 */
@@ -1746,7 +1535,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/FrameManager.js
 // const EventEmitter = require("events");
 // const {helper, assert, debugError} = exports_puppeteer_puppeteer_lib_helper;
 // const {Events} = exports_puppeteer_puppeteer_lib_Events;
-// const {ExecutionContext, EVALUATION_SCRIPT_URL} = exports_puppeteer_puppeteer_lib_ExecutionContext;
 // const {LifecycleWatcher} = exports_puppeteer_puppeteer_lib_LifecycleWatcher;
 // const {DOMWorld} = exports_puppeteer_puppeteer_lib_DOMWorld;
 // const {NetworkManager} = exports_puppeteer_puppeteer_lib_NetworkManager;
@@ -1759,39 +1547,64 @@ class FrameManager extends EventEmitter {
       */
     constructor(ssn, page, timeoutSettings) {
         super();
-        let that = this;
-        that.ssn = ssn;
-        that._page = page;
-        that._networkManager = new NetworkManager(ssn);
-        that._networkManager.setFrameManager(that);
-        that._timeoutSettings = timeoutSettings;
+        let fmgr = this;
+        fmgr.ssn = ssn;
+        fmgr._page = page;
+        fmgr._networkManager = new NetworkManager(ssn);
+        fmgr._networkManager.setFrameManager(fmgr);
+        fmgr._timeoutSettings = timeoutSettings;
         /** @type {!Map<string, !Frame>} */
-        that._frames = new Map();
+        fmgr._frames = new Map();
         /** @type {!Map<number, !ExecutionContext>} */
-        that._contextIdToContext = new Map();
+        fmgr._contextIdToContext = new Map();
         /** @type {!Set<string>} */
-        that._isolatedWorlds = new Set();
-        that.ssn.on("Page.frameAttached", function (event) { return that._onFrameAttached(event.frameId, event.parentFrameId); });
-        that.ssn.on("Page.frameNavigated", function (event) { return that._onFrameNavigated(event.frame); });
-        that.ssn.on("Page.navigatedWithinDocument", function (event) { return that._onFrameNavigatedWithinDocument(event.frameId, event.url); });
-        that.ssn.on("Page.frameDetached", function (event) { return that._onFrameDetached(event.frameId); });
-        that.ssn.on("Page.frameStoppedLoading", function (event) { return that._onFrameStoppedLoading(event.frameId); });
-        that.ssn.on("Runtime.executionContextCreated", function (event) { return that._onExecutionContextCreated(event.context); });
-        that.ssn.on("Runtime.executionContextDestroyed", function (event) { return that._onExecutionContextDestroyed(event.executionContextId); });
-        that.ssn.on("Runtime.executionContextsCleared", function (event) { return that._onExecutionContextsCleared(); });
-        that.ssn.on("Page.lifecycleEvent", function (event) { return that._onLifecycleEvent(event); });
+        fmgr._isolatedWorlds = new Set();
+        fmgr.ssn.on("Page.frameNavigated", function (event) { return fmgr._onFrameNavigated(event.frame); });
+        fmgr.ssn.on("Page.frameStoppedLoading", function (event) { return fmgr._onFrameStoppedLoading(event.frameId); });
+        fmgr.ssn.on("Runtime.executionContextCreated", function (data) {
+            data = data.context;
+            const frame = fmgr._frames.get(
+                data.auxData && data.auxData.frameId
+            );
+            let dom2 = (
+                frame && data.auxData && !!data.auxData["isDefault"]
+                ? frame._mainWorld
+                : (
+                    frame
+                    && data.name === UTILITY_WORLD_NAME
+                    && !frame._secondaryWorld._hasContext()
+                )
+                // In case of multiple sessions to the same target,
+                // there's a race between connections so we might end up
+                // creating multiple isolated worlds. We can use either.
+                ? frame._secondaryWorld
+                : undefined
+            );
+            if (data.auxData && data.auxData["type"] === "isolated") {
+                fmgr._isolatedWorlds.add(data.name);
+            }
+            /** @type {!ExecutionContext} */
+            const context = new ExecutionContext(fmgr.ssn, data, dom2);
+            if (dom2) {
+                dom2._setContext(context);
+            }
+            fmgr._contextIdToContext.set(data.id, context);
+        });
+        fmgr.ssn.on("Runtime.executionContextDestroyed", function (event) { return fmgr._onExecutionContextDestroyed(event.executionContextId); });
+        fmgr.ssn.on("Runtime.executionContextsCleared", function (event) { return fmgr._onExecutionContextsCleared(); });
+        fmgr.ssn.on("Page.lifecycleEvent", function (event) { return fmgr._onLifecycleEvent(event); });
     }
     async initialize() {
-        let that = this;
+        let fmgr = this;
         const [,{frameTree}] = await Promise.all([
-            that.ssn.rpc4("Page.enable", undefined, that.ssn._sessionId),
-            that.ssn.rpc4("Page.getFrameTree", undefined, that.ssn._sessionId),
+            fmgr.ssn.rpc("Page.enable", undefined, fmgr.ssn._sessionId),
+            fmgr.ssn.rpc("Page.getFrameTree", undefined, fmgr.ssn._sessionId),
         ]);
-        that._handleFrameTree(frameTree);
+        fmgr._handleFrameTree(frameTree);
         await Promise.all([
-            that.ssn.rpc4("Page.setLifecycleEventsEnabled", { enabled: true }, that.ssn._sessionId),
-            that.ssn.rpc4("Runtime.enable", {}, that.ssn._sessionId).then(function () { return that._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
-            that._networkManager.initialize(),
+            fmgr.ssn.rpc("Page.setLifecycleEventsEnabled", { enabled: true }, fmgr.ssn._sessionId),
+            fmgr.ssn.rpc("Runtime.enable", {}, fmgr.ssn._sessionId).then(function () { return fmgr._ensureIsolatedWorld(UTILITY_WORLD_NAME); }),
+            fmgr._networkManager.initialize(),
         ]);
     }
     /**
@@ -1839,7 +1652,7 @@ class FrameManager extends EventEmitter {
           */
         async function navigate(ssn, url, referrer, frameId) {
             try {
-                const response = await ssn.rpc4("Page.navigate", {url, referrer, frameId}, ssn._sessionId);
+                const response = await ssn.rpc("Page.navigate", {url, referrer, frameId}, ssn._sessionId);
                 ensureNewDocumentNavigation = !!response.loaderId;
                 return response.errorText ? new Error(`${response.errorText} at ${url}`) : null;
             } catch (error) {
@@ -1873,23 +1686,17 @@ class FrameManager extends EventEmitter {
       * @param {!Protocol.Page.FrameTree} frameTree
       */
     _handleFrameTree(frameTree) {
-        let that = this;
+        let fmgr = this;
         if (frameTree.frame.parentId) {
-            that._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
+            fmgr._onFrameAttached(frameTree.frame.id, frameTree.frame.parentId);
         }
-        that._onFrameNavigated(frameTree.frame);
+        fmgr._onFrameNavigated(frameTree.frame);
         if (!frameTree.childFrames) {
             return;
         }
         frameTree.childFrames.forEach(function (child) {
-            that._handleFrameTree(child);
+            fmgr._handleFrameTree(child);
         });
-    }
-    /**
-      * @return {!Puppeteer.Page}
-      */
-    page() {
-        return this._page;
     }
     /**
       * @return {!Frame}
@@ -1911,114 +1718,54 @@ class FrameManager extends EventEmitter {
         return this._frames.get(frameId) || null;
     }
     /**
-      * @param {string} frameId
-      * @param {?string} parentFrameId
-      */
-    _onFrameAttached(frameId, parentFrameId) {
-        if (this._frames.has(frameId)) {
-            return;
-        }
-        assert(parentFrameId);
-        const parentFrame = this._frames.get(parentFrameId);
-        const frame = new Frame(this, this.ssn, parentFrame, frameId);
-        this._frames.set(frame._id, frame);
-        this.emit(Events.FrameManager.FrameAttached, frame);
-    }
-    /**
       * @param {!Protocol.Page.Frame} framePayload
       */
     _onFrameNavigated(framePayload) {
-        let that = this;
+        let fmgr = this;
         const isMainFrame = !framePayload.parentId;
-        let frame = isMainFrame ? that._mainFrame : that._frames.get(framePayload.id);
+        let frame = isMainFrame ? fmgr._mainFrame : fmgr._frames.get(framePayload.id);
         assert(isMainFrame || frame, "We either navigate top level or have old version of the navigated frame");
         // Detach all child frames first.
         if (frame) {
             frame.childFrames().forEach(function (child) {
-                that._removeFramesRecursively(child);
+                fmgr._removeFramesRecursively(child);
             });
         }
         // Update or create main frame.
         if (isMainFrame) {
             if (frame) {
                 // Update frame id to retain frame identity on cross-process navigation.
-                that._frames.delete(frame._id);
+                fmgr._frames.delete(frame._id);
                 frame._id = framePayload.id;
             } else {
                 // Initial main frame navigation.
-                frame = new Frame(that, that.ssn, null, framePayload.id);
+                frame = new Frame(fmgr, fmgr.ssn, null, framePayload.id);
             }
-            that._frames.set(framePayload.id, frame);
-            that._mainFrame = frame;
+            fmgr._frames.set(framePayload.id, frame);
+            fmgr._mainFrame = frame;
         }
         // Update frame payload.
         frame._navigated(framePayload);
-        that.emit(Events.FrameManager.FrameNavigated, frame);
+        fmgr.emit(Events.FrameManager.FrameNavigated, frame);
     }
     /**
       * @param {string} name
       */
     async _ensureIsolatedWorld(name) {
-        let that = this;
-        if (that._isolatedWorlds.has(name)) {
+        let fmgr = this;
+        if (fmgr._isolatedWorlds.has(name)) {
             return;
         }
-        that._isolatedWorlds.add(name);
-        await that.ssn.rpc4("Page.addScriptToEvaluateOnNewDocument", {
-            source: `//# sourceURL=${EVALUATION_SCRIPT_URL}`,
+        fmgr._isolatedWorlds.add(name);
+        await fmgr.ssn.rpc("Page.addScriptToEvaluateOnNewDocument", {
+            source: "//# sourceURL=__puppeteer_evaluation_script__",
             worldName: name,
-        }, that.ssn._sessionId),
-        await Promise.all(that.frames().map(function (frame) { return that.ssn.rpc4("Page.createIsolatedWorld", {
+        }, fmgr.ssn._sessionId),
+        await Promise.all(fmgr.frames().map(function (frame) { return fmgr.ssn.rpc("Page.createIsolatedWorld", {
             frameId: frame._id,
             grantUniveralAccess: true,
             worldName: name,
-        }, that.ssn._sessionId).catch(debugError); })); // frames might be removed before we send this
-    }
-    /**
-      * @param {string} frameId
-      * @param {string} url
-      */
-    _onFrameNavigatedWithinDocument(frameId, url) {
-        const frame = this._frames.get(frameId);
-        if (!frame) {
-            return;
-        }
-        frame._navigatedWithinDocument(url);
-        this.emit(Events.FrameManager.FrameNavigatedWithinDocument, frame);
-        this.emit(Events.FrameManager.FrameNavigated, frame);
-    }
-    /**
-      * @param {string} frameId
-      */
-    _onFrameDetached(frameId) {
-        const frame = this._frames.get(frameId);
-        if (frame) {
-            this._removeFramesRecursively(frame);
-        }
-    }
-    _onExecutionContextCreated(contextPayload) {
-        const frameId = contextPayload.auxData ? contextPayload.auxData.frameId : null;
-        const frame = this._frames.get(frameId) || null;
-        let world = null;
-        if (frame) {
-            if (contextPayload.auxData && !!contextPayload.auxData["isDefault"]) {
-                world = frame._mainWorld;
-            } else if (contextPayload.name === UTILITY_WORLD_NAME && !frame._secondaryWorld._hasContext()) {
-                // In case of multiple sessions to the same target, there's a race between
-                // connections so we might end up creating multiple isolated worlds.
-                // We can use either.
-                world = frame._secondaryWorld;
-            }
-        }
-        if (contextPayload.auxData && contextPayload.auxData["type"] === "isolated") {
-            this._isolatedWorlds.add(contextPayload.name);
-        }
-        /** @type {!ExecutionContext} */
-        const context = new ExecutionContext(this.ssn, contextPayload, world);
-        if (world) {
-            world._setContext(context);
-        }
-        this._contextIdToContext.set(contextPayload.id, context);
+        }, fmgr.ssn._sessionId).catch(debugError); })); // frames might be removed before we send this
     }
     /**
       * @param {number} executionContextId
@@ -2050,18 +1797,6 @@ class FrameManager extends EventEmitter {
         assert(context, "INTERNAL ERROR: missing context with id = " + contextId);
         return context;
     }
-    /**
-      * @param {!Frame} frame
-      */
-    _removeFramesRecursively(frame) {
-        let that = this;
-        frame.childFrames().forEach(function (child) {
-            that._removeFramesRecursively(child);
-        });
-        frame._detach();
-        that._frames.delete(frame._id);
-        that.emit(Events.FrameManager.FrameDetached, frame);
-    }
 }
 /**
   * @unrestricted
@@ -2074,23 +1809,24 @@ class Frame {
       * @param {string} frameId
       */
     constructor(frameManager, ssn, parentFrame, frameId) {
-        this._frameManager = frameManager;
-        this.ssn = ssn;
-        this._parentFrame = parentFrame;
-        this._url = "";
-        this._id = frameId;
-        this._detached = false;
-        this._loaderId = "";
+        let frm2 = this;
+        frm2._frameManager = frameManager;
+        frm2.ssn = ssn;
+        frm2._parentFrame = parentFrame;
+        frm2._url = "";
+        frm2._id = frameId;
+        frm2._detached = false;
+        frm2._loaderId = "";
         /** @type {!Set<string>} */
-        this._lifecycleEvents = new Set();
+        frm2._lifecycleEvents = new Set();
         /** @type {!DOMWorld} */
-        this._mainWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
+        frm2._mainWorld = new DOMWorld(frameManager, frm2, frameManager._timeoutSettings);
         /** @type {!DOMWorld} */
-        this._secondaryWorld = new DOMWorld(frameManager, this, frameManager._timeoutSettings);
+        frm2._secondaryWorld = new DOMWorld(frameManager, frm2, frameManager._timeoutSettings);
         /** @type {!Set<!Frame>} */
-        this._childFrames = new Set();
-        if (this._parentFrame) {
-            this._parentFrame._childFrames.add(this);
+        frm2._childFrames = new Set();
+        if (frm2._parentFrame) {
+            frm2._parentFrame._childFrames.add(frm2);
         }
     }
     /**
@@ -2100,14 +1836,6 @@ class Frame {
       */
     async goto(url, options) {
         return await this._frameManager.navigateFrame(this, url, options);
-    }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<*>}
-      */
-    async evaluate(pageFunction, ...args) {
-        return this._mainWorld.evaluate(pageFunction, ...args);
     }
     /**
       * @return {!Array.<!Frame>}
@@ -2186,49 +1914,11 @@ class JSHandle {
         this._remoteObject = remoteObject;
         this._disposed = false;
     }
-    /**
-      * @return {!Puppeteer.ExecutionContext}
-      */
-    executionContext() {
-        return this._context;
-    }
-    /**
-      * @param {string} propertyName
-      * @return {!Promise<?JSHandle>}
-      */
-    async getProperty(propertyName) {
-        const objectHandle = await this._context.evaluateHandle(function (object, propertyName) {
-            const result = {__proto__: null};
-            result[propertyName] = object[propertyName];
-            return result;
-        }, this, propertyName);
-        const properties = await objectHandle.getProperties();
-        const result = properties.get(propertyName) || null;
-        await objectHandle.dispose();
-        return result;
-    }
-    /**
-      * @return {?Puppeteer.ElementHandle}
-      */
-    asElement() {
-        return null;
-    }
     async dispose() {
         if (this._disposed) {
             return;
         }
         this._disposed = true;
-    }
-    /**
-      * @override
-      * @return {string}
-      */
-    toString() {
-        if (this._remoteObject.objectId) {
-            const type =  this._remoteObject.subtype || this._remoteObject.type;
-            return "JSHandle@" + type;
-        }
-        return "JSHandle:" + helper.valueFromRemoteObject(this._remoteObject);
     }
 }
 exports_puppeteer_puppeteer_lib_JSHandle = {createJSHandle, JSHandle};
@@ -2282,22 +1972,20 @@ class LifecycleWatcher {
         that._eventListeners = [
             helper.addEventListener(frameManager.ssn, Events.CDPSession.Disconnected, function () { return that._terminate(new Error("Navigation failed because browser has disconnected!")); }),
             helper.addEventListener(that._frameManager, Events.FrameManager.LifecycleEvent, that._checkLifecycleComplete.bind(that)),
-            helper.addEventListener(that._frameManager, Events.FrameManager.FrameNavigatedWithinDocument, that._navigatedWithinDocument.bind(that)),
-            helper.addEventListener(that._frameManager, Events.FrameManager.FrameDetached, that._onFrameDetached.bind(that)),
             helper.addEventListener(that._frameManager.networkManager(), Events.NetworkManager.Request, that._onRequest.bind(that)),
         ];
-        that._sameDocumentNavigationPromise = new Promise(function (fulfill) {
-            that._sameDocumentNavigationCompleteCallback = fulfill;
+        that._sameDocumentNavigationPromise = new Promise(function (resolve) {
+            that._sameDocumentNavigationCompleteCallback = resolve;
         });
-        that._lifecyclePromise = new Promise(function (fulfill) {
-            that._lifecycleCallback = fulfill;
+        that._lifecyclePromise = new Promise(function (resolve) {
+            that._lifecycleCallback = resolve;
         });
-        that._newDocumentNavigationPromise = new Promise(function (fulfill) {
-            that._newDocumentNavigationCompleteCallback = fulfill;
+        that._newDocumentNavigationPromise = new Promise(function (resolve) {
+            that._newDocumentNavigationCompleteCallback = resolve;
         });
         that._timeoutPromise = that._createTimeoutPromise();
-        that._terminationPromise = new Promise(function (fulfill) {
-            that._terminationCallback = fulfill;
+        that._terminationPromise = new Promise(function (resolve) {
+            that._terminationCallback = resolve;
         });
         that._checkLifecycleComplete();
     }
@@ -2309,16 +1997,6 @@ class LifecycleWatcher {
             return;
         }
         this._navigationRequest = request;
-    }
-    /**
-      * @param {!Puppeteer.Frame} frame
-      */
-    _onFrameDetached(frame) {
-        if (this._frame === frame) {
-            this._terminationCallback.call(null, new Error("Navigating frame was detached"));
-            return;
-        }
-        this._checkLifecycleComplete();
     }
     /**
       * @return {?Puppeteer.Response}
@@ -2359,18 +2037,8 @@ class LifecycleWatcher {
             return new Promise(function () {});
         }
         const errorMessage = "Navigation Timeout Exceeded: " + that._timeout + "ms exceeded";
-        return new Promise(function (fulfill) { return that._maximumTimer = setTimeout(fulfill, that._timeout); })
+        return new Promise(function (resolve) { return that._maximumTimer = setTimeout(resolve, that._timeout); })
                 .then(function () { return new TimeoutError(errorMessage); });
-    }
-    /**
-      * @param {!Puppeteer.Frame} frame
-      */
-    _navigatedWithinDocument(frame) {
-        if (frame !== this._frame) {
-            return;
-        }
-        this._hasSameDocumentNavigation = true;
-        this._checkLifecycleComplete();
     }
     _checkLifecycleComplete() {
         // We expect navigation to commit.
@@ -2468,9 +2136,9 @@ class NetworkManager extends EventEmitter {
         this.ssn.on("Network.loadingFinished", this._onLoadingFinished.bind(this));
     }
     async initialize() {
-        await this.ssn.rpc4("Network.enable", undefined, this.ssn._sessionId);
+        await this.ssn.rpc("Network.enable", undefined, this.ssn._sessionId);
         if (this._ignoreHTTPSErrors) {
-            await this.ssn.rpc4("Security.setIgnoreCertificateErrors", {ignore: true}, this.ssn._sessionId);
+            await this.ssn.rpc("Security.setIgnoreCertificateErrors", {ignore: true}, this.ssn._sessionId);
         }
     }
     /**
@@ -2638,8 +2306,8 @@ class Response {
         that.ssn = ssn;
         that._request = request;
         that._contentPromise = null;
-        that._bodyLoadedPromise = new Promise(function (fulfill) {
-            that._bodyLoadedPromiseFulfill = fulfill;
+        that._bodyLoadedPromise = new Promise(function (resolve) {
+            that._bodyLoadedPromiseFulfill = resolve;
         });
         that._remoteAddress = {
             ip: responsePayload.remoteIPAddress,
@@ -2760,8 +2428,8 @@ class Page extends EventEmitter {
       * @param {!Puppeteer.Target} target
       * @return {!Promise<!Page>}
       */
-    static async create(ssn, target) {
-        const page = new Page(ssn, target);
+    static async create(ssn, targetId) {
+        const page = new Page(ssn, targetId);
         await page._initialize();
         // defaultViewport
         await page._emulationManager.emulateViewport({
@@ -2772,69 +2440,58 @@ class Page extends EventEmitter {
     }
     /**
       * @param {!Puppeteer.CDPSession} ssn
-      * @param {!Puppeteer.Target} target
+      * @param {!Puppeteer.Target} targetId
       */
-    constructor(ssn, target) {
+    constructor(ssn, targetId) {
         super();
-        let that = this;
-        that._closed = false;
-        that.ssn = ssn;
-        that._target = target;
-        that._timeoutSettings = new TimeoutSettings();
+        let pg2 = this;
+        pg2._closed = false;
+        pg2.ssn = ssn;
+        pg2.rpc = ssn.rpc;
+        pg2._targetId = targetId;
+        pg2._timeoutSettings = new TimeoutSettings();
         /** @type {!FrameManager} */
-        that._frameManager = new FrameManager(ssn, that, that._timeoutSettings);
-        that._emulationManager = new EmulationManager(ssn);
+        pg2._frameManager = new FrameManager(ssn, pg2, pg2._timeoutSettings);
+        pg2._emulationManager = new EmulationManager(ssn);
         /** @type {!Map<string, Function>} */
-        that._pageBindings = new Map();
-        that._coverage = new Coverage(ssn);
-        that._javascriptEnabled = true;
+        pg2._pageBindings = new Map();
+        pg2._coverage = new Coverage(ssn);
+        pg2._javascriptEnabled = true;
         /** @type {!Map<string, Worker>} */
-        that._workers = new Map();
-        that._frameManager.on(Events.FrameManager.FrameAttached, function (event) { return that.emit(Events.Page.FrameAttached, event); });
-        that._frameManager.on(Events.FrameManager.FrameDetached, function (event) { return that.emit(Events.Page.FrameDetached, event); });
-        that._frameManager.on(Events.FrameManager.FrameNavigated, function (event) { return that.emit(Events.Page.FrameNavigated, event); });
-        const networkManager = that._frameManager.networkManager();
-        networkManager.on(Events.NetworkManager.Request, function (event) { return that.emit(Events.Page.Request, event); });
-        networkManager.on(Events.NetworkManager.Response, function (event) { return that.emit(Events.Page.Response, event); });
-        networkManager.on(Events.NetworkManager.RequestFailed, function (event) { return that.emit(Events.Page.RequestFailed, event); });
-        networkManager.on(Events.NetworkManager.RequestFinished, function (event) { return that.emit(Events.Page.RequestFinished, event); });
-        that._fileChooserInterceptionIsDisabled = false;
-        that._fileChooserInterceptors = new Set();
-        ssn.on("Page.domContentEventFired", function (event) { return that.emit(Events.Page.DOMContentLoaded); });
-        ssn.on("Page.loadEventFired", function (event) { return that.emit(Events.Page.Load); });
-        ssn.on("Runtime.consoleAPICalled", function (event) { return that._onConsoleAPI(event); });
-        ssn.on("Runtime.bindingCalled", function (event) { return that._onBindingCalled(event); });
-        ssn.on("Page.javascriptDialogOpening", function (event) { return that._onDialog(event); });
-        ssn.on("Runtime.exceptionThrown", function (exception) { return that._handleException(exception.exceptionDetails); });
-        ssn.on("Inspector.targetCrashed", function (event) { return that._onTargetCrashed(); });
-        ssn.on("Performance.metrics", function (event) { return that._emitMetrics(event); });
-        ssn.on("Log.entryAdded", function (event) { return that._onLogEntryAdded(event); });
-        ssn.on("Page.fileChooserOpened", function (event) { return that._onFileChooser(event); });
-        that._target._isClosedPromise.then(function () {
-            that.emit(Events.Page.Close);
-            that._closed = true;
-        });
+        pg2._workers = new Map();
+        pg2._frameManager.on(Events.FrameManager.FrameAttached, function (event) { return pg2.emit(Events.Page.FrameAttached, event); });
+        pg2._frameManager.on(Events.FrameManager.FrameNavigated, function (event) { return pg2.emit(Events.Page.FrameNavigated, event); });
+        const networkManager = pg2._frameManager.networkManager();
+        networkManager.on(Events.NetworkManager.Request, function (event) { return pg2.emit(Events.Page.Request, event); });
+        networkManager.on(Events.NetworkManager.Response, function (event) { return pg2.emit(Events.Page.Response, event); });
+        networkManager.on(Events.NetworkManager.RequestFailed, function (event) { return pg2.emit(Events.Page.RequestFailed, event); });
+        networkManager.on(Events.NetworkManager.RequestFinished, function (event) { return pg2.emit(Events.Page.RequestFinished, event); });
+        ssn.on("Page.domContentEventFired", function (event) { return pg2.emit(Events.Page.DOMContentLoaded); });
+        ssn.on("Page.loadEventFired", function (event) { return pg2.emit(Events.Page.Load); });
+        ssn.on("Runtime.consoleAPICalled", function (event) { return pg2._onConsoleAPI(event); });
+        ssn.on("Runtime.bindingCalled", function (event) { return pg2._onBindingCalled(event); });
+        ssn.on("Page.javascriptDialogOpening", function (event) { return pg2._onDialog(event); });
+        ssn.on("Runtime.exceptionThrown", function (exception) { return pg2._handleException(exception.exceptionDetails); });
+        ssn.on("Inspector.targetCrashed", function (event) { return pg2._onTargetCrashed(); });
+        ssn.on("Log.entryAdded", function (event) { return pg2._onLogEntryAdded(event); });
     }
     async _initialize() {
-        let that = this;
+        let pg2 = this;
         await Promise.all([
-            that._frameManager.initialize(),
-            that.ssn.rpc4("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}, this.ssn._sessionId),
-            that.ssn.rpc4("Performance.enable", {}, this.ssn._sessionId),
-            that.ssn.rpc4("Log.enable", {}, this.ssn._sessionId),
-            that.ssn.rpc4("Page.setInterceptFileChooserDialog", {enabled: true}, this.ssn._sessionId).catch(function (e) {
-                that._fileChooserInterceptionIsDisabled = true;
-            }),
+            pg2._frameManager.initialize(),
+            pg2.ssn.rpc("Target.setAutoAttach", {autoAttach: true, waitForDebuggerOnStart: false, flatten: true}, this.ssn._sessionId),
+            pg2.ssn.rpc("Performance.enable", {}, this.ssn._sessionId),
+            pg2.ssn.rpc("Log.enable", {}, this.ssn._sessionId),
         ]);
     }
     /**
       * @param {!Protocol.Log.entryAddedPayload} event
       */
     _onLogEntryAdded(event) {
-        let that = this;
+        let pg2 = this;
         const {level, text, args, source, url, lineNumber} = event.entry;
         if (source !== "worker") {
-            that.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
+            pg2.emit(Events.Page.Console, new ConsoleMessage(level, text, [], {url, lineNumber}));
         }
     }
     /**
@@ -2848,15 +2505,6 @@ class Page extends EventEmitter {
       */
     get coverage() {
         return this._coverage;
-    }
-    /**
-      * @param {!Protocol.Performance.metricsPayload} event
-      */
-    _emitMetrics(event) {
-        this.emit(Events.Page.Metrics, {
-            title: event.title,
-            metrics: this._buildMetricsObject(event.metrics)
-        });
     }
     /**
       * @param {?Array<!Protocol.Performance.Metric>} metrics
@@ -2940,13 +2588,29 @@ class Page extends EventEmitter {
     async goto(url, options) {
         return await this._frameManager.mainFrame().goto(url, options);
     }
-    /**
-      * @param {Function|string} pageFunction
-      * @param {!Array<*>} args
-      * @return {!Promise<*>}
-      */
-    async evaluate(pageFunction, ...args) {
-        return this._frameManager.mainFrame().evaluate(pageFunction, ...args);
+    async evaluate(expr) {
+        let pg2 = this;
+        let dom2 = pg2._frameManager.mainFrame()._mainWorld;
+        let ctx = await dom2._contextPromise;
+        //!! let ctx = await pg2._frameManager.mainFrame()._mainWorld._contextPromise;
+        const {
+            exceptionDetails,
+            result: remoteObject
+        } = await pg2.rpc("Runtime.evaluate", {
+            awaitPromise: true,
+            contextId: ctx._contextId,
+            expression: (
+                (
+                    /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m
+                ).test(expr)
+                ? expr
+                : expr + "\n" + "//# sourceURL=__puppeteer_evaluation_script__"
+            ),
+            returnByValue: false,
+            userGesture: true
+        }, ctx.ssn._sessionId);
+        local.assertOrThrow(!exceptionDetails, exceptionDetails);
+        return helper.valueFromRemoteObject(remoteObject);
     }
     /**
       * @param {!ScreenshotOptions=} options
@@ -2986,10 +2650,10 @@ class Page extends EventEmitter {
       * @return {!Promise<!Buffer|!String>}
       */
     async _screenshotTask(format, options) {
-        await this.ssn.rpc4("Target.activateTarget", {targetId: this._target._targetId}, this.ssn._sessionId);
+        await this.ssn.rpc("Target.activateTarget", {targetId: this._targetId}, this.ssn._sessionId);
         let clip;
         const shouldSetDefaultBackground = options.omitBackground && format === "png";
-        const result = await this.ssn.rpc4("Page.captureScreenshot", { format, quality: options.quality, clip }, this.ssn._sessionId);
+        const result = await this.ssn.rpc("Page.captureScreenshot", { format, quality: options.quality, clip }, this.ssn._sessionId);
         const buffer = options.encoding === "base64" ? result.data : Buffer.from(result.data, "base64");
         if (options.path) {
             await writeFileAsync(options.path, buffer);
@@ -3093,100 +2757,6 @@ file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/Target.js
   * See the License for the specific language governing permissions and
   * limitations under the License.
   */
-// const {Events} = exports_puppeteer_puppeteer_lib_Events;
-// const {Page} = exports_puppeteer_puppeteer_lib_Page;
-// const {Worker} = exports_puppeteer_puppeteer_lib_Worker;
-// const {Connection} = exports_puppeteer_puppeteer_lib_Connection;
-class Target {
-    /**
-      * @param {!Protocol.Target.TargetInfo} targetInfo
-      * @param {!function():!Promise<!Puppeteer.CDPSession>} sessionFactory
-      */
-    constructor(targetInfo, sessionFactory) {
-        let that = this;
-        that._targetInfo = targetInfo;
-        that._targetId = targetInfo.targetId;
-        that._sessionFactory = sessionFactory;
-        /** @type {?Promise<!Puppeteer.Page>} */
-        that._pagePromise = null;
-        /** @type {?Promise<!Worker>} */
-        that._workerPromise = null;
-        that._initializedPromise = new Promise(function (fulfill) { return that._initializedCallback = fulfill; }).then(async function (success) {
-            if (!success) {
-                return false;
-            }
-            const opener = that.opener();
-            if (!opener || !opener._pagePromise || that.type() !== "page") {
-                return true;
-            }
-            const openerPage = await opener._pagePromise;
-            if (!openerPage.listenerCount(Events.Page.Popup)) {
-                return true;
-            }
-            const popupPage = await that.page();
-            openerPage.emit(Events.Page.Popup, popupPage);
-            return true;
-        });
-        that._isClosedPromise = new Promise(function (fulfill) { return that._closedCallback = fulfill; });
-        that._isInitialized = that._targetInfo.type !== "page" || that._targetInfo.url !== "";
-        if (that._isInitialized) {
-            that._initializedCallback(true);
-        }
-    }
-    /**
-      * @return {!Promise<?Page>}
-      */
-    async page() {
-        let tgt = this;
-        if ((
-            tgt._targetInfo.type === "page"
-            || tgt._targetInfo.type === "background_page"
-        ) && !tgt._pagePromise) {
-            tgt._pagePromise = tgt._sessionFactory().then(function (ssn) {
-                return Page.create(ssn, tgt);
-            });
-        }
-        return tgt._pagePromise;
-    }
-    /**
-      * @return {string}
-      */
-    url() {
-        return this._targetInfo.url;
-    }
-    /**
-      * @return {"page"|"background_page"|"service_worker"|"shared_worker"|"other"|"browser"}
-      */
-    type() {
-        const type = this._targetInfo.type;
-        if (type === "page" || type === "background_page" || type === "service_worker" || type === "shared_worker" || type === "browser") {
-            return type;
-        }
-        return "other";
-    }
-    /**
-      * @return {?Puppeteer.Target}
-      */
-    opener() {
-        const { openerId } = this._targetInfo;
-        if (!openerId) {
-            return null;
-        }
-        return this.browser()._targets.get(openerId);
-    }
-    /**
-      * @param {!Protocol.Target.TargetInfo} targetInfo
-      */
-    _targetInfoChanged(targetInfo) {
-        this._targetInfo = targetInfo;
-        if (!this._isInitialized && (this._targetInfo.type !== "page" || this._targetInfo.url !== "")) {
-            this._isInitialized = true;
-            this._initializedCallback(true);
-            return;
-        }
-    }
-}
-exports_puppeteer_puppeteer_lib_Target = {Target};
 /*
 file https://github.com/puppeteer/puppeteer/blob/v1.19.0/lib/TimeoutSettings.js
 */
@@ -3301,7 +2871,6 @@ let BrowserFetcher  = exports_puppeteer_puppeteer_lib_BrowserFetcher;
 // let TimeoutError    = exports_puppeteer_puppeteer_lib_Errors.TimeoutError;
 // let Errors          = exports_puppeteer_puppeteer_lib_Errors;
 // let Events          = exports_puppeteer_puppeteer_lib_Events.Events;
-// let EVALUATION_SCRIPT_URL = exports_puppeteer_puppeteer_lib_ExecutionContext.EVALUATION_SCRIPT_URL;
 // let ExecutionContext = exports_puppeteer_puppeteer_lib_ExecutionContext.ExecutionContext;
 // let FrameManager    = exports_puppeteer_puppeteer_lib_FrameManager.FrameManager;
 // let Mouse           = exports_puppeteer_puppeteer_lib_Input.Mouse;

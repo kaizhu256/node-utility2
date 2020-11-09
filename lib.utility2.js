@@ -2233,7 +2233,7 @@ local.browserTest = function ({
 /*
  * this function will spawn google-puppeteer-process to test <url>
  */
-    let browser;
+    let cdpClient;
     let chromeProcess;
     let chromeSocket;
     let chromeUserDataDir;
@@ -2265,7 +2265,8 @@ local.browserTest = function ({
         // cleanup timerTimeout
         clearTimeout(timerTimeout);
         // cleanup puppeteer
-        browser.close();
+        chromeKill();
+        cdpClient.end();
         onError(err);
     }
     // init utility2_testReport
@@ -2369,23 +2370,12 @@ local.browserTest = function ({
     }).then(function (data) {
         chromeSocket = data;
         return local.puppeteer.puppeteerApi.cdpClientCreate({
+            chromeKill,
             websocketUrl: chromeSocket
         });
-    }).then(function (sck2) {
-        return local.puppeteer.puppeteerApi.Browser.create(
-            sck2,
-            chromeProcess,
-            chromeKill
-        );
     }).then(function (data) {
-        browser = data;
-        return browser.waitForTarget(function (target) {
-            return target.type() === "page";
-        });
-    }).then(function () {
-        return browser.newPage();
-    }).then(function (data) {
-        page = data;
+        cdpClient = data;
+        page = cdpClient.page;
         return page.goto(url);
     }).then(function () {
         promiseList = [];
@@ -2411,8 +2401,8 @@ local.browserTest = function ({
             + "}\n"
         );
         return new Promise(function (resolve) {
-            page.on("metrics", function (metric) {
-                if (isDone || metric.title !== testId) {
+            cdpClient.on("Performance.metrics", function (evt) {
+                if (isDone || evt.title !== testId) {
                     return;
                 }
                 isDone = true;
