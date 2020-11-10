@@ -52,7 +52,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
-- update jslint to v2020.11.6
+- jslint - update to v2020.11.6
 - update function chromeDevtoolsClient with timeout
 - remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate
 - remove dependency on env-var \$CHROME_BIN
