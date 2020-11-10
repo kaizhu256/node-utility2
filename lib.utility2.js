@@ -3210,21 +3210,20 @@ local.chromeDevtoolsClientCreate = function ({
                 return result.value;
             });
         };
-        chromeClient.on("data", function (evt) {
+        chromeClient.on("data", function (payload) {
         /*
-         * this function will handle callback for <evt>
+         * this function will handle callback for <payload>
          * received from chrome-browser using chrome-devtools-protocol
          */
-            // console.error("\u25c0 RECV " + evt.slice(0, 256).toString());
+            // console.error("\u25c0 RECV " + payload.slice(0, 256).toString());
             let callback;
-            // init evt
             let {
                 method,
                 id,
                 error,
                 params,
                 result
-            } = JSON.parse(evt);
+            } = JSON.parse(payload);
             local.assertOrThrow(!method || (
                 /^[A-Z]\w*?\.[a-z]\w*?$/
             ).test(method), new Error(
