@@ -49,7 +49,7 @@ function! MyCommentRegion(...)
 " this function will comment selected-region
     " un-comment
     if a:1 == 'u'
-        '<,'>s/^\(\s*\)\(""\|#\|%%\|--\|\/\/\)!! /\1/e
+        '<,'>s/^\(\s*\)\(""\|#\|%%\|--\|\/\/\|::\)!! /\1/e
         '<,'>s/^\(\s*\)<!--!! \(.*\) -->/\1\2/e
         '<,'>s/^\(\s*\)\/\*!! \(.*\) \*\//\1\2/e
     " comment \"\"
@@ -70,6 +70,9 @@ function! MyCommentRegion(...)
     " comment //
     elseif a:1 == '/'
         '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
+    " comment ::
+    elseif a:1 == '%'
+        '<,'>s/^\(\s*\)\(\S\)/\1::!! \2/e
     " comment <!--...-->
     elseif a:1 == '<'
         '<,'>s/^\(\s*\)\(\S.*\)/\1<!--!! \2 -->/e
