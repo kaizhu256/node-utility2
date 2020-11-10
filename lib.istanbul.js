@@ -225,9 +225,11 @@ local.istanbul = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (opt) {
+local.cliRun = function ({
+    rgxComment
+}) {
 /*
- * this function will run cli with given <opt>
+ * this function will run cli
  */
     let cliDict;
     cliDict = local.cliDict;
@@ -267,10 +269,9 @@ local.cliRun = function (opt) {
         file = __filename.replace((
             /.*\//
         ), "");
-        opt = Object.assign({}, opt);
         packageJson = require("./package.json");
         // validate comment
-        opt.rgxComment = opt.rgxComment || (
+        rgxComment = rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
@@ -288,12 +289,12 @@ local.cliRun = function (opt) {
                 commandList[ii].command.push(key);
                 return;
             }
-            commandList[ii] = opt.rgxComment.exec(str);
+            commandList[ii] = rgxComment.exec(str);
             local.assertOrThrow(commandList[ii], (
                 "cliRun - cannot parse comment in COMMAND "
                 + key
                 + ":\nnew RegExp("
-                + JSON.stringify(opt.rgxComment.source)
+                + JSON.stringify(rgxComment.source)
                 + ").exec(" + JSON.stringify(str).replace((
                     /\\\\/g
                 ), "\u0000").replace((
@@ -11889,7 +11890,7 @@ local.cliDict.test = function () {
 
 // run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
-    local.cliRun();
+    local.cliRun({});
 }
 }());
 }());

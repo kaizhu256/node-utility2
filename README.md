@@ -52,7 +52,9 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.3
-- remove file lib.puppeteer.js and replace with function cdpClientCreate
+- update jslint to v2020.11.6
+- update function chromeDevtoolsClient with timeout
+- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate
 - remove dependency on env-var \$CHROME_BIN
 - remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext, onErrorWithStack
 - jslint - fix off-by-one column in autofix-expected_a_before_b

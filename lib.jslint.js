@@ -225,9 +225,11 @@ local.jslint = local;
 
 
 /* validateLineSortedReset */
-local.cliRun = function (opt) {
+local.cliRun = function ({
+    rgxComment
+}) {
 /*
- * this function will run cli with given <opt>
+ * this function will run cli
  */
     let cliDict;
     cliDict = local.cliDict;
@@ -267,10 +269,9 @@ local.cliRun = function (opt) {
         file = __filename.replace((
             /.*\//
         ), "");
-        opt = Object.assign({}, opt);
         packageJson = require("./package.json");
         // validate comment
-        opt.rgxComment = opt.rgxComment || (
+        rgxComment = rgxComment || (
             /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
         );
         strDict = {};
@@ -288,12 +289,12 @@ local.cliRun = function (opt) {
                 commandList[ii].command.push(key);
                 return;
             }
-            commandList[ii] = opt.rgxComment.exec(str);
+            commandList[ii] = rgxComment.exec(str);
             local.assertOrThrow(commandList[ii], (
                 "cliRun - cannot parse comment in COMMAND "
                 + key
                 + ":\nnew RegExp("
-                + JSON.stringify(opt.rgxComment.source)
+                + JSON.stringify(rgxComment.source)
                 + ").exec(" + JSON.stringify(str).replace((
                     /\\\\/g
                 ), "\u0000").replace((
@@ -11132,16 +11133,16 @@ return CSSLint;
 
 
 /*
-repo https://github.com/douglascrockford/JSLint/tree/873a757ad7060e778a85b1bcd4a03d9e9f334a3b
-committed 2020-10-24T03:28:10Z
+repo https://github.com/douglascrockford/JSLint/tree/bca8b225a376352899d634442802b241fee8b97b
+committed 2020-11-06T17:58:13Z
 */
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/873a757ad7060e778a85b1bcd4a03d9e9f334a3b/jslint.js
+file https://github.com/douglascrockford/JSLint/blob/bca8b225a376352899d634442802b241fee8b97b/jslint.js
 */
 // jslint.js
-// 2020-10-21
+// 2020-11-06
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -16094,21 +16095,6 @@ function whitage() {
                     ) {
                         one_space_only();
                     } else if (
-                        left.id === "var"
-                        || left.id === "const"
-                        || left.id === "let"
-                    ) {
-                        push();
-                        closer = ";";
-                        free = false;
-                        open = left.open;
-                        if (open) {
-                            margin = margin + 4;
-                            at_margin(0);
-                        } else {
-                            one_space_only();
-                        }
-                    } else if (
 
 // There is a space between left and right.
 
@@ -16333,8 +16319,8 @@ local.jslint0 = Object.freeze(function (
         // expected_a_before_b: "Expected '{a}' before '{b}'.",
         case "expected_a_before_b":
             bb = (
-                aa.slice(0, warning.column - 1) + warning.a
-                + aa.slice(warning.column - 1)
+                aa.slice(0, warning.column) + warning.a
+                + aa.slice(warning.column)
             );
             break;
         // expected_identifier_a:
@@ -16420,7 +16406,7 @@ local.jslint0 = Object.freeze(function (
     });
     return {
         directives,
-        edition: "2020-10-21",
+        edition: "2020-11-06",
         exports,
         froms,
         functions,
@@ -16442,10 +16428,8 @@ local.jslint0 = Object.freeze(function (
         tree,
         // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return (
-                Boolean(a.early_stop) * -1
-                + Boolean(b.early_stop) * 1
-            ) || (a.line - b.line);
+            return Boolean(b.early_stop) - Boolean(a.early_stop)
+            || (a.line - b.line);
         }),
         // hack-jslint - autofix
         source_autofixed: lines_extra.map(function (element, ii) {
@@ -17453,7 +17437,7 @@ local.cliDict.dir = function () {
 
 // run the cli
 if (module === require.main && !globalThis.utility2_rollup) {
-    local.cliRun();
+    local.cliRun({});
 }
 }());
 }());

@@ -659,6 +659,26 @@ local.testCase_buildXxx_default = function (opt, onError) {
     }, onError);
 };
 
+local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
+/*
+ * this function will test chromeDevtoolsClient's processPlatform
+ * handling-behavior
+ */
+    if (local.isBrowser) {
+        onError(undefined, opt);
+        return;
+    }
+    [
+        "darwin", "linux", "win32"
+    ].forEach(function (processPlatform) {
+        local.chromeDevtoolsClientCreate({
+            modeMockProcessPlatform: true,
+            processPlatform
+        }).catch(local.noop);
+    });
+    onError(undefined, opt);
+};
+
 local.testCase_cliRun_default = function (opt, onError) {
 /*
  * this function will test cliRun's default handling-behavior
@@ -706,7 +726,7 @@ local.testCase_cliRun_default = function (opt, onError) {
             "undefined"
         ].forEach(function (key) {
             process.argv[2] = key;
-            local.cliRun();
+            local.cliRun({});
         });
         // test err handling-behavior
         local.cliDict._default = null;

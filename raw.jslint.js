@@ -6,7 +6,7 @@ shRawLibFetch
             "url": "https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js"
         },
         {
-            "url": "https://github.com/douglascrockford/JSLint/blob/873a757ad7060e778a85b1bcd4a03d9e9f334a3b/jslint.js"
+            "url": "https://github.com/douglascrockford/JSLint/blob/bca8b225a376352899d634442802b241fee8b97b/jslint.js"
         }
     ],
     "replaceList": [
@@ -100,10 +100,8 @@ shRawLibFetch
 -        })
 +        // hack-jslint - sort by early_stop
 +        warnings: warnings.sort(function (a, b) {
-+            return (
-+                Boolean(a.early_stop) * -1
-+                + Boolean(b.early_stop) * 1
-+            ) || (a.line - b.line);
++            return Boolean(b.early_stop) - Boolean(a.early_stop)
++            || (a.line - b.line);
 +        }),
 +        // hack-jslint - autofix
 +        source_autofixed: lines_extra.map(function (element, ii) {
@@ -11123,16 +11121,16 @@ return CSSLint;
 
 
 /*
-repo https://github.com/douglascrockford/JSLint/tree/873a757ad7060e778a85b1bcd4a03d9e9f334a3b
-committed 2020-10-24T03:28:10Z
+repo https://github.com/douglascrockford/JSLint/tree/bca8b225a376352899d634442802b241fee8b97b
+committed 2020-11-06T17:58:13Z
 */
 
 
 /*
-file https://github.com/douglascrockford/JSLint/blob/873a757ad7060e778a85b1bcd4a03d9e9f334a3b/jslint.js
+file https://github.com/douglascrockford/JSLint/blob/bca8b225a376352899d634442802b241fee8b97b/jslint.js
 */
 // jslint.js
-// 2020-10-21
+// 2020-11-06
 // Copyright (c) 2015 Douglas Crockford  (www.JSLint.com)
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -16085,21 +16083,6 @@ function whitage() {
                     ) {
                         one_space_only();
                     } else if (
-                        left.id === "var"
-                        || left.id === "const"
-                        || left.id === "let"
-                    ) {
-                        push();
-                        closer = ";";
-                        free = false;
-                        open = left.open;
-                        if (open) {
-                            margin = margin + 4;
-                            at_margin(0);
-                        } else {
-                            one_space_only();
-                        }
-                    } else if (
 
 // There is a space between left and right.
 
@@ -16411,7 +16394,7 @@ local.jslint0 = Object.freeze(function (
     });
     return {
         directives,
-        edition: "2020-10-21",
+        edition: "2020-11-06",
         exports,
         froms,
         functions,
@@ -16433,10 +16416,8 @@ local.jslint0 = Object.freeze(function (
         tree,
         // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return (
-                Boolean(a.early_stop) * -1
-                + Boolean(b.early_stop) * 1
-            ) || (a.line - b.line);
+            return Boolean(b.early_stop) - Boolean(a.early_stop)
+            || (a.line - b.line);
         }),
         // hack-jslint - autofix
         source_autofixed: lines_extra.map(function (element, ii) {
