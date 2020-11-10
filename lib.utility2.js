@@ -3108,7 +3108,9 @@ local.chromeDevtoolsClientCreate = function ({
                 }
             } catch (ignore) {}
             // rm -rf <chromeUserDataDir>
-            local.fsRmrfSync(chromeUserDataDir);
+            require("fs").rmdirSync(chromeUserDataDir, {
+                recursive: true
+            });
             // destroy <chromeClient>, <websocket>, <wsReader>
             chromeClient.destroy();
             try {
