@@ -2297,8 +2297,10 @@ local.browserTest = function ({
             + "}\n"
         );
         return new Promise(function (resolve) {
-            chromeClient.on("Performance.metrics", function (evt) {
-                if (isDone || evt.title !== testId) {
+            chromeClient.on("Performance.metrics", function ({
+                title
+            }) {
+                if (isDone || title !== testId) {
                     return;
                 }
                 isDone = true;
