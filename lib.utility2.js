@@ -2313,8 +2313,6 @@ local.browserTest = function ({
             });
         });
     }).then(function (data) {
-        // cleanup chromeClient
-        chromeClient.destroy();
         data = JSON.parse(data);
         // merge browser-screenshot
         data.testPlatformList[0].screenshot = fileScreenshot.replace((
@@ -2344,6 +2342,8 @@ local.browserTest = function ({
         }));
         return Promise.all(promiseList);
     }).then(function () {
+        // cleanup chromeClient
+        chromeClient.destroy();
         onError2();
     });
 };
