@@ -3523,7 +3523,11 @@ Application data: y bytes
         ), [
             "--headless",
             "--incognito",
-            "--no-sandbox",
+            (
+                chromeProcess === "linux"
+                ? "--no-sandbox"
+                : ""
+            ),
             "--remote-debugging-port=0",
             "--user-data-dir=" + chromeUserDataDir
         ], {
