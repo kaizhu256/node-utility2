@@ -71,7 +71,7 @@ function! MyCommentRegion(...)
     elseif a:1 == '/'
         '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
     " comment ::
-    elseif a:1 == '%'
+    elseif a:1 == ':'
         '<,'>s/^\(\s*\)\(\S\)/\1::!! \2/e
     " comment <!--...-->
     elseif a:1 == '<'
@@ -163,6 +163,7 @@ nnoremap <silent> "\ :call MyStringifyRegion('\')<cr>
 nnoremap <silent> "u :call MyStringifyRegion('u')<cr>
 nnoremap <silent> #" :call MyCommentRegion('"')<cr>
 nnoremap <silent> #% :call MyCommentRegion('%')<cr>
+nnoremap <silent> #: :call MyCommentRegion(':')<cr>
 nnoremap <silent> #- :call MyCommentRegion('-')<cr>
 nnoremap <silent> #* :call MyCommentRegion('*')<cr>
 nnoremap <silent> #/ :call MyCommentRegion('/')<cr>
@@ -174,6 +175,7 @@ vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr>
 vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr>
 vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr>
 vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr>
+vnoremap <silent> #: <esc>:call MyCommentRegion(':')<cr>
 vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
 vnoremap <silent> #* <esc>:call MyCommentRegion('*')<cr>
 vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
