@@ -163,10 +163,10 @@ nnoremap <silent> "\ :call MyStringifyRegion('\')<cr>
 nnoremap <silent> "u :call MyStringifyRegion('u')<cr>
 nnoremap <silent> #" :call MyCommentRegion('"')<cr>
 nnoremap <silent> #% :call MyCommentRegion('%')<cr>
-nnoremap <silent> #: :call MyCommentRegion(':')<cr>
-nnoremap <silent> #- :call MyCommentRegion('-')<cr>
 nnoremap <silent> #* :call MyCommentRegion('*')<cr>
+nnoremap <silent> #- :call MyCommentRegion('-')<cr>
 nnoremap <silent> #/ :call MyCommentRegion('/')<cr>
+nnoremap <silent> #: :call MyCommentRegion(':')<cr>
 nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr>
 nnoremap <silent> #u :call MyCommentRegion('u')<cr>
 " visual-mode remap
@@ -175,10 +175,10 @@ vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr>
 vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr>
 vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr>
 vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr>
-vnoremap <silent> #: <esc>:call MyCommentRegion(':')<cr>
-vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
 vnoremap <silent> #* <esc>:call MyCommentRegion('*')<cr>
+vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
 vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
+vnoremap <silent> #: <esc>:call MyCommentRegion(':')<cr>
 vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
 vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
 vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>
