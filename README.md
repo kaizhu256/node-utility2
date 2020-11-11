@@ -1258,7 +1258,7 @@ RUN (set -e; \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -Lf https://deb.nodesource.com/setup_12.x | /bin/bash -; \
+    curl -Lf https://deb.nodesource.com/setup_14.x | /bin/bash -; \
     apt-get install -y nodejs; \
     (cd /usr/lib && npm install sqlite3@4); \
 )
