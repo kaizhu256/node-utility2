@@ -84,7 +84,7 @@ shBaseInstall () {
 # curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
-        curl -Lf -o "$HOME/$FILE" \
+        curl "$CURL_INSECURE" "$CURL_INSECURE" -Lf -o "$HOME/$FILE" \
 "https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/$FILE" ||
             return "$?"
     done
@@ -651,7 +651,7 @@ shBuildCi () {(set -e
                 "$npm_config_dir_utility2" \
                 --branch=alpha --single-branch --depth=50
             mkdir -p "$npm_config_dir_utility2/.tmp/build/app"
-            curl -Lf -o \
+            curl "$CURL_INSECURE" -Lf -o \
 "$npm_config_dir_utility2/.tmp/build/app/assets.utility2.rollup.js" \
 https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
@@ -1413,7 +1413,7 @@ shCryptoTravisDecrypt () {(set -e
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_ORG"
     shBuildPrint "decrypting $URL ..."
-    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+    curl "$CURL_INSECURE" -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
 shCryptoTravisEncrypt () {(set -e
@@ -1437,7 +1437,7 @@ shCryptoTravisEncrypt () {(set -e
         TMPFILE="$(mktemp)"
         URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
         shBuildPrint "fetch $URL"
-        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
+        curl "$CURL_INSECURE" -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
 -----BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
@@ -1883,7 +1883,7 @@ shGitInitBase () {(set -e
     git checkout -b alpha
     git add .
     git commit -am "initial commit"
-    curl -Lf -o .git/config \
+    curl "$CURL_INSECURE" -Lf -o .git/config \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
