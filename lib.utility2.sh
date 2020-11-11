@@ -3449,32 +3449,32 @@ shTravisRepoCreate () {(set -e
             url
         }).then(function (opt) {
             require("fs").promises.writeFile((
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/"
-                + require("path").basename(url)
+                os.tmpdir() + "/githubRepo/" + process.env.GITHUB_REPO
+                + "/" + require("path").basename(url)
             ), opt.responseText);
         });
     });
-    require("fs").promises.writeFile(
-        "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
-        JSON.stringify({
-            devDependencies: {
-                utility2: "kaizhu256/node-utility2#alpha"
-            },
-            homepage: "https://github.com/" + process.env.GITHUB_REPO,
-            name: process.env.GITHUB_REPO.replace((
-                /.+?\/node-|.+?\//
-            ), ""),
-            repository: {
-                type: "git",
-                url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
-            },
-            scripts: {
-                "build-ci": "utility2 shBuildCi",
-                "test": "./npm_scripts.sh"
-            },
-            version: "0.0.1"
-        }, undefined, 4)
-    );
+    require("fs").promises.writeFile((
+        os.tmpdir() + "/githubRepo/" + process.env.GITHUB_REPO
+        + "/package.json"
+    ), JSON.stringify({
+        devDependencies: {
+            utility2: "kaizhu256/node-utility2#alpha"
+        },
+        homepage: "https://github.com/" + process.env.GITHUB_REPO,
+        name: process.env.GITHUB_REPO.replace((
+            /.+?\/node-|.+?\//
+        ), ""),
+        repository: {
+            type: "git",
+            url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
+        },
+        scripts: {
+            "build-ci": "utility2 shBuildCi",
+            "test": "./npm_scripts.sh"
+        },
+        version: "0.0.1"
+    }, undefined, 4));
     await sleep(5000);
     // request travis-userid
     tmp = await httpRequest({
