@@ -1260,7 +1260,7 @@ RUN (set -e; \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -Lf https://deb.nodesource.com/setup_14.x | /bin/bash -; \
     apt-get install -y nodejs; \
-    (cd /usr/lib && npm install sqlite3@4); \
+    (cd /usr/lib && npm install sqlite3@5); \
 )
 # install google-chrome-stable
 RUN (set -e; \
