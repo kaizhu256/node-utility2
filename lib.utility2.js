@@ -3510,16 +3510,18 @@ Application data: y bytes
             require("os").tmpdir(),
             "puppeteer_dev_profile-"
         ));
+        chromeBin = chromeBin || (
+            processPlatform === "darwin"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/"
+            + "Google Chrome"
+            : processPlatform === "win32"
+            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\"
+            + "chrome.exe"
+            : "/usr/bin/google-chrome-stable"
+        );
+        console.error("\nchrome-devtools - spawning " + chromeBin);
         chromeProcess = require("child_process").spawn((
-            chromeBin || (
-                processPlatform === "darwin"
-                ? "/Applications/Google Chrome.app/Contents/MacOS/"
-                + "Google Chrome"
-                : processPlatform === "win32"
-                ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\"
-                + "chrome.exe"
-                : "/usr/bin/google-chrome-stable"
-            )
+            chromeBin
         ), [
             "--headless",
             "--incognito",
@@ -3662,6 +3664,10 @@ Application data: y bytes
         });
         chromeClient.rpc("Performance.enable", undefined);
         // navigate page to url
+        console.error(
+            "\nchrome-devtools - navigate page to url " + url
+            + " and wait for page to load"
+        );
         chromeClient.rpc("Page.navigate", {
             url
         });
