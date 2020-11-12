@@ -30,7 +30,7 @@ script:
     - npm run build-ci
 services:
     - docker
-    - xvfb
+    # - xvfb
 # http://docs.travis-ci.com/user/workers/container-based-infrastructure
 sudo:
     false

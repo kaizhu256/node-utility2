@@ -51,8 +51,8 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.11.3
-- update jslint to v2020.11.6
+#### changelog 2020.11.12
+- jslint - update to v2020.11.6
 - update function chromeDevtoolsClient with timeout
 - remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate
 - remove dependency on env-var \$CHROME_BIN
@@ -63,6 +63,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
@@ -1177,7 +1178,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 28,
+    "fileCount": 27,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -1209,12 +1210,12 @@ require("http").createServer(function (req, res) {
     "utility2Dependents": [
         "2020.06.08 apidoc-lite",
         "2020.06.12 bootstrap-lite",
-        "2020.08.01 istanbul-lite",
         "2020.08.19 sqlite3-lite",
         "2020.10.27 jslint-lite",
-        "2020.10.27 utility2"
+        "2020.11.12 istanbul-lite",
+        "2020.11.12 utility2"
     ],
-    "version": "2020.11.3"
+    "version": "2020.11.12"
 }
 ```
 
@@ -1258,9 +1259,9 @@ RUN (set -e; \
         gnupg; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
-    curl -Lf https://deb.nodesource.com/setup_12.x | /bin/bash -; \
+    curl -Lf https://deb.nodesource.com/setup_14.x | /bin/bash -; \
     apt-get install -y nodejs; \
-    (cd /usr/lib && npm install sqlite3@4); \
+    (cd /usr/lib && npm install sqlite3@5); \
 )
 # install google-chrome-stable
 RUN (set -e; \
@@ -1299,7 +1300,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint puppeteer \
+    npm install -g eslint \
     rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \

@@ -49,7 +49,7 @@ function! MyCommentRegion(...)
 " this function will comment selected-region
     " un-comment
     if a:1 == 'u'
-        '<,'>s/^\(\s*\)\(""\|#\|%%\|--\|\/\/\)!! /\1/e
+        '<,'>s/^\(\s*\)\(""\|#\|%%\|--\|\/\/\|::\)!! /\1/e
         '<,'>s/^\(\s*\)<!--!! \(.*\) -->/\1\2/e
         '<,'>s/^\(\s*\)\/\*!! \(.*\) \*\//\1\2/e
     " comment \"\"
@@ -70,6 +70,9 @@ function! MyCommentRegion(...)
     " comment //
     elseif a:1 == '/'
         '<,'>s/^\(\s*\)\(\S\)/\1\/\/!! \2/e
+    " comment ::
+    elseif a:1 == ':'
+        '<,'>s/^\(\s*\)\(\S\)/\1::!! \2/e
     " comment <!--...-->
     elseif a:1 == '<'
         '<,'>s/^\(\s*\)\(\S.*\)/\1<!--!! \2 -->/e
@@ -160,9 +163,10 @@ nnoremap <silent> "\ :call MyStringifyRegion('\')<cr>
 nnoremap <silent> "u :call MyStringifyRegion('u')<cr>
 nnoremap <silent> #" :call MyCommentRegion('"')<cr>
 nnoremap <silent> #% :call MyCommentRegion('%')<cr>
-nnoremap <silent> #- :call MyCommentRegion('-')<cr>
 nnoremap <silent> #* :call MyCommentRegion('*')<cr>
+nnoremap <silent> #- :call MyCommentRegion('-')<cr>
 nnoremap <silent> #/ :call MyCommentRegion('/')<cr>
+nnoremap <silent> #: :call MyCommentRegion(':')<cr>
 nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr>
 nnoremap <silent> #u :call MyCommentRegion('u')<cr>
 " visual-mode remap
@@ -171,9 +175,10 @@ vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr>
 vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr>
 vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr>
 vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr>
-vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
 vnoremap <silent> #* <esc>:call MyCommentRegion('*')<cr>
+vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
 vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
+vnoremap <silent> #: <esc>:call MyCommentRegion(':')<cr>
 vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
 vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
 vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>

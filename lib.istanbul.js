@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.istanbul.js (2020.8.1)
+ * lib.istanbul.js (2020.11.12)
  * https://github.com/kaizhu256/node-istanbul-lite
  * this zero-dependency package will provide browser-compatible version of istanbul coverage-tool (v0.4.5), with working web-demo
  *
@@ -11367,17 +11367,19 @@ local.coverageMerge = function (coverage1 = {}, coverage2 = {}) {
     return coverage1;
 };
 
-local.coverageReportCreate = function (opt) {
+local.coverageReportCreate = function ({
+    coverage,
+    coverageInclude
+}) {
 /*
  * this function will
-    // 1. merge previous <dirCoverage>/coverage.json into <opt>.coverage
-    // 2. convert <opt>.coverage to <summaryDict>
+    // 1. merge previous <dirCoverage>/coverage.json into <coverage>
+    // 2. convert <coverage> to <summaryDict>
     // 3. convert <summaryDict> to <nodeRoot>
     // 4. convert <nodeRoot> to text-report <dirCoverage>/coverage.txt
     // 5. convert <nodeRoot> to html-report <dirCoverage>/\*
     // 6. return coverage-report in html-format as single document
  */
-    let coverageInclude;
     let dirCoverage;
     let filePrefix;
     let htmlAll;
@@ -11388,9 +11390,6 @@ local.coverageReportCreate = function (opt) {
     let nodeRoot;
     let summaryDict;
     let tmp;
-    if (!(opt && opt.coverage)) {
-        return "";
-    }
     // init function
     nodeChildAdd = function (node, child) {
     /*
@@ -11516,15 +11515,15 @@ local.coverageReportCreate = function (opt) {
             );
         });
     };
-    // 1. merge previous <dirCoverage>/coverage.json into <opt>.coverage
+    // 1. merge previous <dirCoverage>/coverage.json into <coverage>
     dirCoverage = path.resolve(".tmp/build/coverage");
-    coverageInclude = opt.coverageInclude || globalThis.__coverageInclude__;
+    coverageInclude = coverageInclude || globalThis.__coverageInclude__;
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.error(
             "istanbul - merging file "
             + dirCoverage + "/coverage.json to coverage"
         );
-        local.coverageMerge(opt.coverage, local.fsReadFileOrDefaultSync(
+        local.coverageMerge(coverage, local.fsReadFileOrDefaultSync(
             dirCoverage + "/coverage.json",
             "json",
             {}
@@ -11537,9 +11536,9 @@ local.coverageReportCreate = function (opt) {
             coverageInclude[file] = 1;
         });
     }
-    // 2. convert <opt>.coverage to <summaryDict>
+    // 2. convert <coverage> to <summaryDict>
     summaryDict = {};
-    Object.entries(opt.coverage).forEach(function ([
+    Object.entries(coverage).forEach(function ([
         file,
         fileCoverage
     ]) {
@@ -11549,7 +11548,7 @@ local.coverageReportCreate = function (opt) {
         let summary;
         if (fileCoverage && coverageInclude.hasOwnProperty(file)) {
             // reset line-cnt
-            delete opt.coverage[file].l;
+            delete coverage[file].l;
             // init summary
             summary = {
                 branches: {
@@ -11690,11 +11689,11 @@ local.coverageReportCreate = function (opt) {
     // 4. convert <nodeRoot> to text-report <dirCoverage>/coverage.txt
     reportTextWrite(nodeRoot, dirCoverage);
     // 5. convert <nodeRoot> to html-report <dirCoverage>/\*
-    htmlAll = reportHtmlWrite(nodeRoot, dirCoverage, opt.coverage);
-    // save opt.coverage to dirCoverage/coverage.json
+    htmlAll = reportHtmlWrite(nodeRoot, dirCoverage, coverage);
+    // save coverage to dirCoverage/coverage.json
     fileWrite(
         dirCoverage + "/coverage.json",
-        JSON.stringify(opt.coverage, undefined, 4)
+        JSON.stringify(coverage, undefined, 4)
     );
     // save coverageInclude to dirCoverage/coverage.include.json
     fileWrite(

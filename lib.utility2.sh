@@ -296,7 +296,7 @@ shBrowserScreenshot () {(set -e
 )}
 
 shBrowserTest () {(set -e
-# this function will spawn google-puppeteer-process to test url $1,
+# this function will spawn google-chrome-process to test url $1,
 # and merge test-report into existing test-report
     shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
@@ -1923,10 +1923,6 @@ shGitSquashPop () {(set -e
     # reset git to previous $COMMIT
     git reset "$COMMIT"
     git add .
-    if [ -f lib.utility2.sh ]
-    then
-        git add -f package-lock.json
-    fi
     # commit HEAD immediately after previous $COMMIT
     git commit -am "$MESSAGE" || true
 )}
@@ -3449,32 +3445,32 @@ shTravisRepoCreate () {(set -e
             url
         }).then(function (opt) {
             require("fs").promises.writeFile((
-                "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/"
-                + require("path").basename(url)
+                require("os").tmpdir() + "/githubRepo/"
+                + process.env.GITHUB_REPO + "/" + require("path").basename(url)
             ), opt.responseText);
         });
     });
-    require("fs").promises.writeFile(
-        "/tmp/githubRepo/" + process.env.GITHUB_REPO + "/package.json",
-        JSON.stringify({
-            devDependencies: {
-                utility2: "kaizhu256/node-utility2#alpha"
-            },
-            homepage: "https://github.com/" + process.env.GITHUB_REPO,
-            name: process.env.GITHUB_REPO.replace((
-                /.+?\/node-|.+?\//
-            ), ""),
-            repository: {
-                type: "git",
-                url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
-            },
-            scripts: {
-                "build-ci": "utility2 shBuildCi",
-                "test": "./npm_scripts.sh"
-            },
-            version: "0.0.1"
-        }, undefined, 4)
-    );
+    require("fs").promises.writeFile((
+        require("os").tmpdir() + "/githubRepo/"
+        + process.env.GITHUB_REPO + "/package.json"
+    ), JSON.stringify({
+        devDependencies: {
+            utility2: "kaizhu256/node-utility2#alpha"
+        },
+        homepage: "https://github.com/" + process.env.GITHUB_REPO,
+        name: process.env.GITHUB_REPO.replace((
+            /.+?\/node-|.+?\//
+        ), ""),
+        repository: {
+            type: "git",
+            url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
+        },
+        scripts: {
+            "build-ci": "utility2 shBuildCi",
+            "test": "./npm_scripts.sh"
+        },
+        version: "0.0.1"
+    }, undefined, 4));
     await sleep(5000);
     // request travis-userid
     tmp = await httpRequest({
