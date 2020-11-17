@@ -849,7 +849,6 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
 
 shBuildCiInternal () {(set -e
 # this function will run internal-build
-    shBuildInit
     # run build-ci-before
     if (type shBuildCiBefore > /dev/null 2>&1)
     then
@@ -2342,7 +2341,6 @@ shNpmDeprecateAlias () {(set -e
 
 shNpmPackageCliHelpCreate () {(set -e
 # this function will create svg of cli-help in current npm-package
-    shBuildInit
     export MODE_BUILD=npmPackageCliHelp
     shBuildPrint "creating npmPackageCliHelp ..."
     FILE="$(
@@ -2372,7 +2370,6 @@ shNpmPackageDependencyTreeCreate () {(set -e
     fi
     DIR=/tmp/npmPackageDependencyTreeCreate
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    shBuildInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
     npm install "${2:-$1}" --prefix . || true
@@ -2409,7 +2406,6 @@ tmp
         git add .
         git commit -m 'initial commit' | head -n 4096
     fi
-    shBuildInit
     export MODE_BUILD=npmPackageListing
     shRunWithScreenshotTxtAfter () {(set -e
         awk '{
@@ -3065,7 +3061,6 @@ shRawLibFetch () {(set -e
 
 shReadmeEval () {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
-    shBuildInit
     export MODE_BUILD=readmeTest
     shBuildPrint "running command 'shReadmeEval $*' ..."
     case "$(git log -1 --pretty=%s)" in
