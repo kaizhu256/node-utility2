@@ -1916,6 +1916,33 @@ shGitLsTree () {(set -e
     }' | sed -e "s/ /./"
 )}
 
+shGitLsTree2 () {(set -e
+# this function will "git ls-tree" all files committed in HEAD
+# example use:
+# shGitLsTree | sort -nrk2 -nrk3 # sort by date
+# shGitLsTree | sort -nrk5 # sort by size
+    printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
+    ii += 1
+    file = $0
+    cmd = "git log -1 --format=\"%ai\" -- " file
+    (cmd | getline date)
+    close(cmd)
+    cmd = "ls -ln '\''" file "'\'' | awk \"{print \\$5}\""
+    (cmd | getline size)
+    close(cmd)
+    sizeTotal += size
+    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
+} END {
+    ii = 0
+    file = "."
+    cmd = "git log -1 --format=\"%ai\" -- " file
+    (cmd | getline date)
+    close(cmd)
+    size = sizeTotal
+    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
+    }' | sed -e "s/ /./"
+)}
+
 shGitSquashPop () {(set -e
 # this function will squash HEAD to given $COMMIT
 # http://stackoverflow.com/questions/5189560
@@ -2392,21 +2419,19 @@ shNpmPackageDependencyTreeCreate () {(set -e
 
 shNpmPackageListingCreate () {(set -e
 # this function will create svg-listing of npm-package
-    cd "$1"
-    # init git
+    # init .git
     if [ ! -d .git ]
     then
         printf "
 *~
 .*
 node_modules
-tmp
 " > .gitignore
         git init
         git add .
         git commit -m 'initial commit' | head -n 4096
     fi
-    export MODE_BUILD=npmPackageListing
+    export MODE_BUILD=shNpmPackageListingCreate
     shRunWithScreenshotTxtAfter () {(set -e
         awk '{
 lineList[NR] = $0
@@ -3443,7 +3468,8 @@ shTravisRepoCreate () {(set -e
         }).then(function (opt) {
             require("fs").promises.writeFile((
                 require("os").tmpdir() + "/githubRepo/"
-                + process.env.GITHUB_FULLNAME + "/" + require("path").basename(url)
+                + process.env.GITHUB_FULLNAME + "/"
+                + require("path").basename(url)
             ), opt.responseText);
         });
     });
