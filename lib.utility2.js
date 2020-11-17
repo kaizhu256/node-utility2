@@ -2421,13 +2421,13 @@ local.buildApp = function ({
         ]);
         // customize shNpmTestPublished
         tgt = tgt.replace(
-            "$ npm install " + process.env.GITHUB_REPO + "#alpha",
+            "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha",
             "$ npm install " + packageJson.name
         );
         tgtReplaceConditional(src.indexOf("    shNpmTestPublished\n") < 0, [
             {
                 aa: "$ npm install " + packageJson.name,
-                bb: "$ npm install " + process.env.GITHUB_REPO + "#alpha"
+                bb: "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha"
             }, {
                 aa: (
                     /\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/

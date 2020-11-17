@@ -48,7 +48,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
-- rename env-var \$NODE_BINARY to \$NODE_BIN
+- rename env-var \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
 - remove functions ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, stringMerge
@@ -1204,7 +1204,7 @@ require("http").createServer(function (req, res) {
 ```shell
 # Dockerfile.base
 # docker build -f .tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
-# docker build -f ".tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+# docker build -f ".tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
 # https://hub.docker.com/_/node/
 FROM debian:stable-slim
 MAINTAINER kai zhu <kaizhu256@gmail.com>
@@ -1325,14 +1325,14 @@ shBuildCiAfter () {(set -e
     # docker build
     docker build \
         -f ".tmp/README.Dockerfile.$DOCKER_TAG" \
-        -t "$GITHUB_REPO:$DOCKER_TAG" .
+        -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
     docker.latest)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
-            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/sh -c "set -e
+            docker run "$GITHUB_FULLNAME:$DOCKER_TAG" /bin/sh -c "set -e
                 curl -Lf https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
                 . /tmp/lib.utility2.sh
@@ -1348,7 +1348,7 @@ shBuildCiAfter () {(set -e
     if [ "$DOCKER_PASSWORD" ]
     then
         docker login -p="$DOCKER_PASSWORD" -u="$DOCKER_USERNAME"
-        docker push "$GITHUB_REPO:$DOCKER_TAG"
+        docker push "$GITHUB_FULLNAME:$DOCKER_TAG"
     fi
 )}
 

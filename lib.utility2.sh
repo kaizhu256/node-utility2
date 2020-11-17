@@ -18,7 +18,7 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # gpupdate /force
-# npm_package_private=1 GITHUB_REPO=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
+# npm_package_private=1 GITHUB_FULLNAME=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # openssl rand -base64 32 # random key
 # printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
 # shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
@@ -582,7 +582,7 @@ shBuildCi () {(set -e
     then
         export CI_HOST="${CI_HOST:-travis-ci.com}"
         git remote remove origin 2>/dev/null || true
-        git remote add origin "https://github.com/$GITHUB_REPO"
+        git remote add origin "https://github.com/$GITHUB_FULLNAME"
     fi
     # init default env
     export CI_COMMIT_ID="${CI_COMMIT_ID:-$(git rev-parse --verify HEAD)}"
@@ -634,7 +634,7 @@ shBuildCi () {(set -e
                 ))" \
                 "$(printf "$CI_COMMIT_MESSAGE" | sed -e "s/\[[^]]*\] //")"
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+                "https://github.com/$GITHUB_FULLNAME" -f HEAD:alpha
             return
             ;;
         # example use:
@@ -758,13 +758,13 @@ https://raw.githubusercontent.com\
             git add .
             git commit -am "[ci skip] $CI_COMMIT_MESSAGE"
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+                "https://github.com/$GITHUB_FULLNAME" -f HEAD:alpha
             npm run build-ci
             return
             ;;
         "[npm publish]"*)
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" HEAD:publish
+                "https://github.com/$GITHUB_FULLNAME" HEAD:publish
             ;;
         "[npm publishAfterCommit]"*)
             export CI_BRANCH=publish
@@ -779,7 +779,7 @@ https://raw.githubusercontent.com\
             git add .
             git commit -am "[npm publishAfterCommit]"
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+                "https://github.com/$GITHUB_FULLNAME" -f HEAD:alpha
             export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
             find node_modules -name .git -print0 | xargs -0 rm -rf
             npm run build-ci
@@ -791,7 +791,7 @@ https://raw.githubusercontent.com\
     master)
         git tag "$npm_package_version" || true
         shGitCommandWithGithubToken push \
-            "https://github.com/$GITHUB_REPO" "$npm_package_version" || true
+            "https://github.com/$GITHUB_FULLNAME" "$npm_package_version" || true
         ;;
     publish)
         if (grep -q -E '    shNpmTestPublished' README.md)
@@ -821,11 +821,11 @@ https://raw.githubusercontent.com\
 "[ci skip] [npm published \
 $(node -e 'process.stdout.write(require("./package.json").version)')]"
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" -f HEAD:alpha
+                "https://github.com/$GITHUB_FULLNAME" -f HEAD:alpha
             ;;
         *)
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO" HEAD:beta
+                "https://github.com/$GITHUB_FULLNAME" HEAD:beta
             ;;
         esac
         ;;
@@ -835,14 +835,14 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
-        for GITHUB_REPO_ALIAS in $npm_package_githubRepoAlias
+        for GITHUB_FULLNAME_ALIAS in $npm_package_githubRepoAlias
         do
-            shGithubRepoCreate "$GITHUB_REPO_ALIAS"
+            shGithubRepoCreate "$GITHUB_FULLNAME_ALIAS"
             shGitCommandWithGithubToken push \
-                "https://github.com/$GITHUB_REPO_ALIAS" --tags -f "$CI_BRANCH"
+                "https://github.com/$GITHUB_FULLNAME_ALIAS" --tags -f "$CI_BRANCH"
             if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
             then
-                shGithubRepoDescriptionUpdate "$GITHUB_REPO_ALIAS" \
+                shGithubRepoDescriptionUpdate "$GITHUB_FULLNAME_ALIAS" \
                 "$npm_package_description" || true
             fi
         done
@@ -874,7 +874,7 @@ shBuildCiInternal () {(set -e
     shBuildApidoc
     # create npmPackageListing
     shNpmPackageListingCreate
-    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_REPO#alpha"
+    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_FULLNAME#alpha"
     # create npmPackageCliHelp
     shNpmPackageCliHelpCreate
     # create recent changelog of last 50 commits
@@ -937,8 +937,8 @@ shBuildCiInternal () {(set -e
 shBuildGithubUpload () {(set -e
 # this function will upload build-artifacts to github
     export MODE_BUILD="${MODE_BUILD:-buildGithubUpload}"
-    shBuildPrint "uploading build-artifacts to https://github.com/$GITHUB_REPO"
-    URL="https://github.com/$GITHUB_REPO"
+    shBuildPrint "uploading build-artifacts to https://github.com/$GITHUB_FULLNAME"
+    URL="https://github.com/$GITHUB_FULLNAME"
     # init $DIR
     DIR="$npm_config_dir_tmp/buildGithubUpload"
     rm -rf "$DIR"
@@ -975,7 +975,7 @@ shBuildGithubUpload () {(set -e
     if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
     then
         shGithubRepoDescriptionUpdate \
-            "$GITHUB_REPO" "$npm_package_description" || true
+            "$GITHUB_FULLNAME" "$npm_package_description" || true
     fi
 )}
 
@@ -1046,8 +1046,8 @@ try {
     ).replace((
         /([^\/]+?)\/([^\/]+?)(?:\.git)?$/
     ), function (ignore, user, project) {
-        if (!process.env.GITHUB_REPO) {
-            cmd += export2("GITHUB_REPO", user + "/" + project);
+        if (!process.env.GITHUB_FULLNAME) {
+            cmd += export2("GITHUB_FULLNAME", user + "/" + project);
         }
         if (!process.env.GITHUB_ORG) {
             cmd += export2("GITHUB_ORG", user);
@@ -1447,7 +1447,7 @@ shCryptoTravisEncrypt () {(set -e
     if [ -f .travis.yml ]
     then
         TMPFILE="$(mktemp)"
-        URL="https://api.travis-ci.com/repos/$GITHUB_REPO/key"
+        URL="https://api.travis-ci.com/repos/$GITHUB_FULLNAME/key"
         shBuildPrint "fetch $URL"
         curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
@@ -1489,12 +1489,12 @@ shDeployCustom () {
 }
 
 shDeployGithub () {(set -e
-# this function will deploy app to $GITHUB_REPO
+# this function will deploy app to $GITHUB_FULLNAME
 # and run simple curl-check for $TEST_URL
 # and test $TEST_URL
     export MODE_BUILD=deployGithub
     export TEST_URL="https://$(
-        printf "$GITHUB_REPO" | sed -e "s/\//.github.io\//"
+        printf "$GITHUB_FULLNAME" | sed -e "s/\//.github.io\//"
     )/build..$CI_BRANCH..travis-ci.com/app"
     shBuildPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
@@ -1830,7 +1830,7 @@ shGitCommandWithGithubToken () {(set -e
         URL="$(printf "$URL" | sed -e "s/github.com/$GITHUB_TOKEN@github.com/")"
         ;;
     origin)
-        URL="https://$GITHUB_TOKEN@github.com/$GITHUB_REPO"
+        URL="https://$GITHUB_TOKEN@github.com/$GITHUB_FULLNAME"
         ;;
     esac
     # hide $GITHUB_TOKEN in case of err
@@ -1952,8 +1952,8 @@ shGithubApiRateLimitGet () {(set -e
 )}
 
 shGithubRepoCreate () {(set -e
-# this function will create base github-repo https://github.com/$GITHUB_REPO
-    local GITHUB_REPO="$1"
+# this function will create base github-repo https://github.com/$GITHUB_FULLNAME
+    local GITHUB_FULLNAME="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
     if [ ! -d /tmp/githubRepo/kaizhu256/base ]
@@ -1970,13 +1970,13 @@ shGithubRepoCreate () {(set -e
         git checkout alpha
     )
     fi
-    rm -rf "/tmp/githubRepo/$GITHUB_REPO"
-    mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_REPO" | sed -e "s/\/.*//")"
-    cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_REPO"
-    cd "/tmp/githubRepo/$GITHUB_REPO"
+    rm -rf "/tmp/githubRepo/$GITHUB_FULLNAME"
+    mkdir -p "/tmp/githubRepo/$(printf "$GITHUB_FULLNAME" | sed -e "s/\/.*//")"
+    cp -a /tmp/githubRepo/kaizhu256/base "/tmp/githubRepo/$GITHUB_FULLNAME"
+    cd "/tmp/githubRepo/$GITHUB_FULLNAME"
     curl -Lf \
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
-        sed -e "s|kaizhu256/node-utility2|$GITHUB_REPO|" > .git/config
+        sed -e "s|kaizhu256/node-utility2|$GITHUB_FULLNAME|" > .git/config
     # create github-repo
     node -e '
 /* jslint utility2:true */
@@ -1999,21 +1999,21 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         }).end("{\"name\":\"" + process.argv[1].split("/")[1] + "\"}");
     });
 }());
-' "$GITHUB_REPO" # '
+' "$GITHUB_FULLNAME" # '
     # set default-branch to beta
     shGitCommandWithGithubToken push \
-        "https://github.com/$GITHUB_REPO" beta || true
+        "https://github.com/$GITHUB_FULLNAME" beta || true
     # push all branches
     shGitCommandWithGithubToken push \
-        "https://github.com/$GITHUB_REPO" --all || true
+        "https://github.com/$GITHUB_FULLNAME" --all || true
 )}
 
 shGithubRepoDescriptionUpdate () {(set -e
 # this function will update github-repo description
     shSleep 5
-    GITHUB_REPO="$1"
+    GITHUB_FULLNAME="$1"
     DESCRIPTION="$2"
-    shBuildPrint "update $GITHUB_REPO description"
+    shBuildPrint "update $GITHUB_FULLNAME description"
     curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
@@ -2022,10 +2022,10 @@ shGithubRepoDescriptionUpdate () {(set -e
         -d "{
             \"default_branch\": \"beta\",
             \"description\": \"$(printf "$DESCRIPTION" | sed -e 's/"/\\\\"/')\",
-            \"name\": \"$(printf "$GITHUB_REPO" | sed -e "s/.*\///")\"
+            \"name\": \"$(printf "$GITHUB_FULLNAME" | sed -e "s/.*\///")\"
         }" \
         -o /dev/null \
-    "https://api.github.com/repos/$GITHUB_REPO"
+    "https://api.github.com/repos/$GITHUB_FULLNAME"
 )}
 
 shGithubRepoTouch () {(set -e
@@ -3118,7 +3118,7 @@ shReadmeEval () {(set -e
         then
             sed -in \
 -e "s|/build..beta..travis-ci.com/|/build..alpha..travis-ci.com/|g" \
--e "s|npm install $npm_package_name|npm install $GITHUB_REPO#alpha|g" \
+-e "s|npm install $npm_package_name|npm install $GITHUB_FULLNAME#alpha|g" \
 -e "s| -b beta | -b alpha |g" \
                 "$FILE"
             rm -f "$FILE"n
@@ -3381,11 +3381,11 @@ shSource () {
 }
 
 shTravisRepoCreate () {(set -e
-# this function will create travis-repo https://github.com/$GITHUB_REPO
-    export GITHUB_REPO="$1"
+# this function will create travis-repo https://github.com/$GITHUB_FULLNAME
+    export GITHUB_FULLNAME="$1"
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
-    shBuildPrint "$GITHUB_REPO - creating ..."
-    shGithubRepoCreate "$GITHUB_REPO"
+    shBuildPrint "$GITHUB_FULLNAME - creating ..."
+    shGithubRepoCreate "$GITHUB_FULLNAME"
     node -e '
 /* jslint utility2:true */
 (async function () {
@@ -3450,24 +3450,24 @@ shTravisRepoCreate () {(set -e
         }).then(function (opt) {
             require("fs").promises.writeFile((
                 require("os").tmpdir() + "/githubRepo/"
-                + process.env.GITHUB_REPO + "/" + require("path").basename(url)
+                + process.env.GITHUB_FULLNAME + "/" + require("path").basename(url)
             ), opt.responseText);
         });
     });
     require("fs").promises.writeFile((
         require("os").tmpdir() + "/githubRepo/"
-        + process.env.GITHUB_REPO + "/package.json"
+        + process.env.GITHUB_FULLNAME + "/package.json"
     ), JSON.stringify({
         devDependencies: {
             utility2: "kaizhu256/node-utility2#alpha"
         },
-        homepage: "https://github.com/" + process.env.GITHUB_REPO,
-        name: process.env.GITHUB_REPO.replace((
+        homepage: "https://github.com/" + process.env.GITHUB_FULLNAME,
+        name: process.env.GITHUB_FULLNAME.replace((
             /.+?\/node-|.+?\//
         ), ""),
         repository: {
             type: "git",
-            url: "https://github.com/" + process.env.GITHUB_REPO + ".git"
+            url: "https://github.com/" + process.env.GITHUB_FULLNAME + ".git"
         },
         scripts: {
             "build-ci": "utility2 shBuildCi",
@@ -3511,7 +3511,7 @@ shTravisRepoCreate () {(set -e
             modeIgnoreStatusCode: true,
             url: (
                 "https://api.travis-ci.com/repo/"
-                + process.env.GITHUB_REPO.replace("/", "%2F")
+                + process.env.GITHUB_FULLNAME.replace("/", "%2F")
                 + "/activate"
             )
         });
@@ -3538,21 +3538,21 @@ shTravisRepoCreate () {(set -e
             method: "PATCH",
             url: (
                 "https://api.travis-ci.com/repo/"
-                + process.env.GITHUB_REPO.replace("/", "%2F")
+                + process.env.GITHUB_FULLNAME.replace("/", "%2F")
                 + "/setting/" + setting
             )
         });
     });
 }());
 ' # '
-    cd "/tmp/githubRepo/$GITHUB_REPO"
+    cd "/tmp/githubRepo/$GITHUB_FULLNAME"
     unset GITHUB_ORG
-    unset GITHUB_REPO
+    unset GITHUB_FULLNAME
     shBuildInit
     shCryptoTravisEncrypt > /dev/null
     git add -f . .gitignore .travis.yml
     git commit -am "[npm publishAfterCommitAfterBuild]"
-    shGitCommandWithGithubToken push "https://github.com/$GITHUB_REPO" -f alpha
+    shGitCommandWithGithubToken push "https://github.com/$GITHUB_FULLNAME" -f alpha
 )}
 
 shTravisRepoTrigger () {(set -e
