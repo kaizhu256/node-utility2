@@ -48,6 +48,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- rename env-var \$NODE_BINARY to \$NODE_BIN
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
 - remove functions ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, stringMerge

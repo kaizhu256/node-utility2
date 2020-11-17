@@ -2227,26 +2227,26 @@ shImageToDataUri () {(set -e
 )}
 
 shIstanbulCover () {(set -e
-# this function will run command "$NODE_BINARY" "$@" with istanbul-coverage
-    export NODE_BINARY="${NODE_BINARY:-node}"
+# this function will run command "$NODE_BIN" "$@" with istanbul-coverage
+    export NODE_BIN="${NODE_BIN:-node}"
     if [ "$npm_config_mode_coverage" ]
     then
-        "$NODE_BINARY" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
+        "$NODE_BIN" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
         return "$?"
     fi
     if [ "$npm_config_mode_inspect" ]
     then
-        "$NODE_BINARY" --inspect-brk=0.0.0.0 "$@"
+        "$NODE_BIN" --inspect-brk=0.0.0.0 "$@"
         return "$?"
     fi
     if [ "$npm_config_mode_winpty" ] &&
         [ "$MSYSTEM" ] &&
         (winpty --version > /dev/null 2>&1)
     then
-        winpty "$NODE_BINARY" "$@"
+        winpty "$NODE_BIN" "$@"
         return "$?"
     fi
-    "$NODE_BINARY" "$@"
+    "$NODE_BIN" "$@"
 )}
 
 shJsonNormalize () {(set -e
@@ -2475,7 +2475,7 @@ shNpmTest () {(set -e
     shBuildInit
     EXIT_CODE=0
     export MODE_BUILD="${MODE_BUILD:-npmTest}"
-    export NODE_BINARY="${NODE_BINARY:-node}"
+    export NODE_BIN="${NODE_BIN:-node}"
     shBuildPrint "npm-testing $PWD"
     # init npm-test-mode
     export NODE_ENV="${NODE_ENV:-test}"
@@ -2483,7 +2483,7 @@ shNpmTest () {(set -e
     # npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        ("$NODE_BINARY" "$@") || EXIT_CODE="$?"
+        ("$NODE_BIN" "$@") || EXIT_CODE="$?"
     # npm-test with coverage
     else
         # cleanup old coverage
@@ -2493,7 +2493,7 @@ shNpmTest () {(set -e
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
-            npm_config_mode_coverage="" "$NODE_BINARY" "$@" || true
+            npm_config_mode_coverage="" "$NODE_BIN" "$@" || true
         fi
     fi
     # create test-report artifacts
