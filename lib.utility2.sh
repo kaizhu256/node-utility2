@@ -226,7 +226,6 @@ shBashrcDebianInit () {
 
 shBrowserScreenshot () {(set -e
 # this function will run headless-chromium to screenshot url "$1"
-    shBuildInit
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -298,7 +297,6 @@ shBrowserScreenshot () {(set -e
 shBrowserTest () {(set -e
 # this function will spawn google-chrome-process to test url $1,
 # and merge test-report into existing test-report
-    shBuildInit
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
     shBuildPrint "shBrowserTest $*"
     # run browser-test
@@ -851,7 +849,6 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
 
 shBuildCiInternal () {(set -e
 # this function will run internal-build
-    shBuildInit
     # run build-ci-before
     if (type shBuildCiBefore > /dev/null 2>&1)
     then
@@ -1404,7 +1401,6 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 
 shCryptoTravisDecrypt () {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
-    shBuildInit
     export MODE_BUILD=cryptoTravisDecrypt
     if [ ! "$CRYPTO_AES_KEY" ]
     then
@@ -1431,7 +1427,6 @@ shCryptoTravisDecrypt () {(set -e
 shCryptoTravisEncrypt () {(set -e
 # this function will encrypt $CRYPTO_AES_SH_ENCRYPTED to .travis.yml,
 # and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
-    shBuildInit
     export MODE_BUILD=cryptoTravisEncrypt
     if [ ! "$CRYPTO_AES_KEY" ]
     then
@@ -2304,7 +2299,6 @@ shNpmDeprecateAlias () {(set -e
     shEnvSanitize
     NAME="$1"
     MESSAGE="$2"
-    shBuildInit
     if [ ! "$MESSAGE" ]
     then
         MESSAGE="this package is deprecated and superseded by \
@@ -2344,7 +2338,6 @@ shNpmDeprecateAlias () {(set -e
 
 shNpmPackageCliHelpCreate () {(set -e
 # this function will create svg of cli-help in current npm-package
-    shBuildInit
     export MODE_BUILD=npmPackageCliHelp
     shBuildPrint "creating npmPackageCliHelp ..."
     FILE="$(
@@ -2374,7 +2367,6 @@ shNpmPackageDependencyTreeCreate () {(set -e
     fi
     DIR=/tmp/npmPackageDependencyTreeCreate
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    shBuildInit
     export MODE_BUILD=npmPackageDependencyTree
     shBuildPrint "creating npmDependencyTree ..."
     npm install "${2:-$1}" --prefix . || true
@@ -2411,7 +2403,6 @@ tmp
         git add .
         git commit -m 'initial commit' | head -n 4096
     fi
-    shBuildInit
     export MODE_BUILD=npmPackageListing
     shRunWithScreenshotTxtAfter () {(set -e
         awk '{
@@ -2472,7 +2463,6 @@ shNpmPublishV0 () {(set -e
 
 shNpmTest () {(set -e
 # this function will npm-test with coverage and create test-report
-    shBuildInit
     EXIT_CODE=0
     export MODE_BUILD="${MODE_BUILD:-npmTest}"
     export NODE_BIN="${NODE_BIN:-node}"
@@ -3067,7 +3057,6 @@ shRawLibFetch () {(set -e
 
 shReadmeEval () {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
-    shBuildInit
     export MODE_BUILD=readmeTest
     shBuildPrint "running command 'shReadmeEval $*' ..."
     case "$(git log -1 --pretty=%s)" in
@@ -3548,7 +3537,6 @@ shTravisRepoCreate () {(set -e
     cd "/tmp/githubRepo/$GITHUB_FULLNAME"
     unset GITHUB_ORG
     unset GITHUB_FULLNAME
-    shBuildInit
     shCryptoTravisEncrypt > /dev/null
     git add -f . .gitignore .travis.yml
     git commit -am "[npm publishAfterCommitAfterBuild]"
@@ -3742,7 +3730,6 @@ sqlite3-lite
         printf "$npm_config_dir_utility2\n"
         ;;
     *)
-        shBuildInit
         "$COMMAND" "$@"
         ;;
     esac
