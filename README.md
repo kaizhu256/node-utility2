@@ -9,8 +9,6 @@ this zero-dependency package will provide high-level functions to to build, test
 
 [![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
 
-[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
-
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -22,8 +20,6 @@ this zero-dependency package will provide high-level functions to to build, test
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.com)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
-
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 # table of contents
@@ -51,15 +47,13 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.11.12
-- jslint - update to v2020.11.6
-- update function chromeDevtoolsClient with timeout
-- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate
-- remove dependency on env-var \$CHROME_BIN
-- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt, gotoNext, onErrorWithStack
-- jslint - fix off-by-one column in autofix-expected_a_before_b
-- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx
-- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS
+#### changelog 2020.11.13
+- remove shell-function shXvfbStart
+- merge function testRunServer into testRunDefault
+- remove functions ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, stringMerge
+- remove function and test for function local.ajax
+- remove nodejs.v10 polyfill TextDecoder, TextEncoder
+- rename shell-function shReadmeTest to shReadmeEval
 - none
 
 #### todo
@@ -332,7 +326,7 @@ local = (
 // init exports
 globalThis.local = local;
 // run test-server
-local.testRunServer(local);
+local.testRunDefault(local);
 // init assets
 local.assetsDict["/assets.hello.txt"] = "hello \ud83d\ude01\n";
 local.assetsDict["/assets.index.template.html"] = "";
@@ -341,55 +335,42 @@ local.assetsDict["/assets.index.template.html"] = "";
 
 // run shared js-env code - function
 (function () {
-local.testCase_ajax_200 = function (opt, onError) {
+local.testCase_http_fetch_200 = function (opt, onError) {
 /*
- * this function will test ajax's "200 ok" handling-behavior
+ * this function will test http-fetch's "200 ok" handling-behavior
  */
     if (!local.isBrowser) {
         onError(undefined, opt);
         return;
     }
-    opt = {};
-    // test ajax-path "assets.hello.txt"
-    local.ajax({
-        url: "assets.hello.txt"
-    }, function (err, xhr) {
-        local.tryCatchOnError(function () {
-            // handle err
-            local.assertOrThrow(!err, err);
-            // validate data
-            opt.data = xhr.responseText;
-            local.assertOrThrow(
-                opt.data === "hello \ud83d\ude01\n",
-                opt.data
-            );
-            onError();
-        }, onError);
-    });
+    // test fetch-path "assets.hello.txt"
+    window.fetch("assets.hello.txt").then(function (res) {
+        // validate "200 ok" status
+        local.assertOrThrow(res.status === 200, res.status);
+        return res.text();
+    }).then(function (data) {
+        // validate data
+        local.assertOrThrow(data === "hello \ud83d\ude01\n", data);
+        onError();
+    // handle err
+    }).catch(onError);
 };
 
-local.testCase_ajax_404 = function (opt, onError) {
+local.testCase_http_fetch_404 = function (opt, onError) {
 /*
- * this function will test ajax's "404 not found" handling-behavior
+ * this function will test http-fetch's "404 not found" handling-behavior
  */
     if (!local.isBrowser) {
         onError(undefined, opt);
         return;
     }
-    opt = {};
-    // test ajax-path "/undefined"
-    local.ajax({
-        url: "/undefined"
-    }, function (err) {
-        local.tryCatchOnError(function () {
-            // handle err
-            local.assertOrThrow(err, err);
-            opt.statusCode = err.statusCode;
-            // validate 404 http statusCode
-            local.assertOrThrow(opt.statusCode === 404, opt.statusCode);
-            onError();
-        }, onError);
-    });
+    // test fetch-path "/undefined"
+    window.fetch("/undefined").then(function (res) {
+        // validate 404 http statusCode
+        local.assertOrThrow(res.status === 404, res.status);
+        onError();
+    // handle err
+    }).catch(onError);
 };
 
 local.testCase_webpage_default = function (opt, onError) {
@@ -902,7 +883,7 @@ utility2-comment -->\n\
 /*global window*/\n\
 (function () {\n\
     "use strict";\n\
-    var testCaseDict;\n\
+    let testCaseDict;\n\
     testCaseDict = {};\n\
     testCaseDict.modeTest = 1;\n\
 \n\
@@ -911,32 +892,24 @@ utility2-comment -->\n\
     /*\n\
      * this function will run a failed error demo\n\
      */\n\
-        // hack-jslint\n\
-        window.utility2.noop(opt);\n\
-        onError(new Error("this is a failed error demo"));\n\
+        onError(new Error("this is a failed error demo"), opt);\n\
     };\n\
 \n\
-    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {\n\
+    testCaseDict.testCase_passed_http_fetch_demo = function (opt, onError) {\n\
     /*\n\
-     * this function will demo a passed ajax test\n\
+     * this function will demo a passed http-fetch test\n\
      */\n\
-        var data;\n\
-        opt = {url: "/"};\n\
-        // test ajax-req for main-page "/"\n\
-        window.utility2.ajax(opt, function (err, xhr) {\n\
-            try {\n\
-                // handle err\n\
-                console.assert(!err, err);\n\
-                // validate "200 ok" status\n\
-                console.assert(xhr.statusCode === 200, xhr.statusCode);\n\
-                // validate non-empty data\n\
-                data = xhr.responseText;\n\
-                console.assert(data && data.length > 0, data);\n\
-                onError();\n\
-            } catch (errCaught) {\n\
-                onError(errCaught);\n\
-            }\n\
-        });\n\
+        // fetch main-page "/"\n\
+        window.fetch("/").then(function (res) {\n\
+            // validate "200 ok" status\n\
+            window.utility2.assertOrThrow(res.status === 200, res.status);\n\
+            return res.text();\n\
+        }).then(function (data) {\n\
+            // validate non-empty data\n\
+            window.utility2.assertOrThrow(data && data.length > 0, data);\n\
+            onError(undefined, opt);\n\
+        // handle err\n\
+        }).catch(onError);\n\
     };\n\
 \n\
     window.utility2.testRunDefault(testCaseDict);\n\
@@ -1198,14 +1171,14 @@ require("http").createServer(function (req, res) {
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./npm_scripts.sh",
+        "build-ci": "sh npm_scripts.sh",
         "env": "env",
-        "eval": "./npm_scripts.sh",
-        "heroku-postbuild": "./npm_scripts.sh",
-        "postinstall": "./npm_scripts.sh",
-        "start": "./npm_scripts.sh",
-        "test": "./npm_scripts.sh",
-        "utility2": "./npm_scripts.sh"
+        "eval": "sh npm_scripts.sh",
+        "heroku-postbuild": "sh npm_scripts.sh",
+        "postinstall": "sh npm_scripts.sh",
+        "start": "sh npm_scripts.sh",
+        "test": "sh npm_scripts.sh",
+        "utility2": "sh npm_scripts.sh"
     },
     "utility2Dependents": [
         "2020.06.08 apidoc-lite",
@@ -1215,7 +1188,7 @@ require("http").createServer(function (req, res) {
         "2020.11.12 istanbul-lite",
         "2020.11.12 utility2"
     ],
-    "version": "2020.11.12"
+    "version": "2020.11.13"
 }
 ```
 
@@ -1301,7 +1274,6 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
     npm install -g eslint \
-    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1318,7 +1290,6 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    rm -f /tmp/.X99-lock && export DISPLAY=:99.0 && (Xvfb "$DISPLAY" &); \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1338,7 +1309,7 @@ shBuildCiAfter () {(set -e
     # shDeployCustom
     shDeployGithub
     shDeployHeroku
-    shReadmeTest example.sh
+    shReadmeEval example.sh
     # restore $CI_BRANCH
     export CI_BRANCH="$CI_BRANCH_OLD"
     # docker build
@@ -1380,8 +1351,8 @@ shBuildCiAfter () {(set -e
 )}
 
 shBuildCiBefore () {(set -e
-    shNpmTestPublished
-    shReadmeTest example.js
+    #!! shNpmTestPublished
+    shReadmeEval example.js
     # screenshot
     MODE_BUILD=testExampleJs shBrowserScreenshot \
         file:///tmp/app/.tmp/build/coverage/app/example.js.html

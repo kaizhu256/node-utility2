@@ -31,7 +31,7 @@
 # shDockerSh work 'cd ~/Documents/utility2 && PORT=4065 npm start'
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
 # npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
-# utility2 shReadmeTest example.js
+# utility2 shReadmeEval example.js
 # vim rgx-lowercase \L\1\e
 
 shBaseInit () {
@@ -292,7 +292,7 @@ shBrowserScreenshot () {(set -e
         ]
     });
 }());
-' "$1" "$2"
+' "$1" "$2" # '
 )}
 
 shBrowserTest () {(set -e
@@ -473,7 +473,7 @@ shBuildApp () {(set -e
         });
     });
 }());
-'
+' # '
     # create file if not exists
     # .gitignore, .travis.yml, LICENSE, npm_scripts.sh
     # package.json
@@ -563,7 +563,7 @@ shBuildApp () {(set -e
         });
     });
 }(require(process.env.npm_config_dir_utility2)));
-'
+' # '
     # build app
     npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
     # git diff
@@ -622,7 +622,7 @@ shBuildCi () {(set -e
         );
     }
 }(require("utility2")));
-'
+' # '
             shBuildApp
             ;;
         # example use:
@@ -1003,7 +1003,7 @@ try {
         process.env.HOME + "/node_modules/utility2"
     ));
 }
-')"
+')" # '
         fi
         export PATH="$PATH\
 :$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
@@ -1056,7 +1056,7 @@ try {
     process.stdout.write(cmd);
     process.stderr.write(cmd);
 }());
-')" || return "$?"
+')" || return "$?" # '
     else
         export npm_package_name=my-app-lite || return "$?"
         export npm_package_version=0.0.1 || return "$?"
@@ -1112,7 +1112,7 @@ try {
 );
     });
 }());
-'
+' # '
     fi
 }
 
@@ -1120,8 +1120,6 @@ shBuildInsideDocker () {(set -e
 # this function will run build inside docker
     shEnvSanitize
     export npm_config_unsafe_perm=1
-    # start xvfb
-    shXvfbStart
     # bug-workaround - Cannot read property 'target' of null #10686
     # https://github.com/npm/npm/issues/10686
     sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
@@ -1148,7 +1146,21 @@ shBuildInsideDocker () {(set -e
 
 shBuildPrint () {(set -e
 # this function will print debug-info about current build-state
-    printf "\n\x1b[35m[MODE_BUILD=$MODE_BUILD]\x1b[0m - $(shDateIso) - $*\n\n" 1>&2
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    process.stderr.write("\n" + (
+        (process.stderr.hasColors && process.stderr.hasColors())
+        ? "\u001b[35m"
+        : ""
+    ) + "[MODE_BUILD=" + process.env.MODE_BUILD + "]" + (
+        (process.stderr.hasColors && process.stderr.hasColors())
+        ? "\u001b[0m"
+        : ""
+    ) + " - " + new Date().toISOString() + " - " + process.argv[1] + "\n\n");
+}());
+' "$1" # '
 )}
 
 shChromeSocks5 () {(set -e
@@ -1276,7 +1288,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
         });
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
 shCryptoAesXxxCbcRawEncrypt () {(set -e
@@ -1387,7 +1399,7 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
         });
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
 shCryptoTravisDecrypt () {(set -e
@@ -1469,13 +1481,6 @@ shCryptoWithGithubOrg () {(set -e
     shift
     . "$HOME/.ssh/.CRYPTO_AES_SH_DECRYPTED_$GITHUB_ORG"
     "$@"
-)}
-
-shDateIso () {(set -e
-# this function will print current date in ISO format with given offset $1 in ms
-    node -e 'console.log(
-        new Date(Date.now() + Number(process.argv[1])).toISOString()
-    )' "$1"
 )}
 
 shDeployCustom () {
@@ -1568,7 +1573,7 @@ shDockerCdHostPwd () {
     }
     console.log(chdir);
 }());
-')"
+')" # '
 }
 
 shDockerRestartNginx () {(set -e
@@ -1795,7 +1800,7 @@ shEnvSanitize () {
         );
     }).join("").trim());
 }());
-')"
+')" # '
 }
 
 shGitCommandWithGithubToken () {(set -e
@@ -1994,7 +1999,7 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         }).end("{\"name\":\"" + process.argv[1].split("/")[1] + "\"}");
     });
 }());
-' "$GITHUB_REPO"
+' "$GITHUB_REPO" # '
     # set default-branch to beta
     shGitCommandWithGithubToken push \
         "https://github.com/$GITHUB_REPO" beta || true
@@ -2076,7 +2081,7 @@ shGithubRepoTouch () {(set -e
         }
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
 shGrep () {(set -e
@@ -2141,7 +2146,7 @@ shGrepReplace () {(set -e
         });
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
 shHttpFileServer () {(set -e
@@ -2189,7 +2194,7 @@ shHttpFileServer () {(set -e
         });
     }).listen(process.env.PORT);
 }());
-'
+' # '
 )}
 
 shImageToDataUri () {(set -e
@@ -2218,7 +2223,7 @@ shImageToDataUri () {(set -e
         + require("fs").readFileSync(process.argv[1]).toString("base64")
     );
 }());
-' "$FILE"
+' "$FILE" # '
 )}
 
 shIstanbulCover () {(set -e
@@ -2280,7 +2285,7 @@ shJsonNormalize () {(set -e
         ), undefined, 4) + "\n"
     );
 }());
-' "$1"
+' "$1" # '
 )}
 
 shMacAddressSpoof () {(set -e
@@ -2331,7 +2336,7 @@ shNpmDeprecateAlias () {(set -e
         JSON.stringify(packageJson, undefined, 4) + "\n"
     );
 }());
-' "$MESSAGE"
+' "$MESSAGE" # '
     shPackageJsonVersionIncrement
     npm publish
     npm deprecate "$NAME" "$MESSAGE"
@@ -2344,7 +2349,7 @@ shNpmPackageCliHelpCreate () {(set -e
     shBuildPrint "creating npmPackageCliHelp ..."
     FILE="$(
 node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
-')"
+')" # '
     shRunWithScreenshotTxt printf none
     if [ -f "./$FILE" ]
     then
@@ -2453,7 +2458,7 @@ shNpmPublishAlias () {(set -e
         JSON.stringify(packageJson, undefined, 4) + "\n"
     );
 }());
-' "$NAME" "$VERSION"
+' "$NAME" "$VERSION" # '
     npm publish
 )}
 
@@ -2655,7 +2660,7 @@ shPackageJsonVersionIncrement () {(set -e
         });
     });
 }());
-' "$1"
+' "$1" # '
 )}
 
 shRawLibDiff () {(set -e
@@ -3057,66 +3062,14 @@ shRawLibFetch () {(set -e
         replaceAndWriteFile();
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
-shReadmeLinkValidate () {(set -e
-# this function will validate http-links embedded in README.md
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let set;
-    set = new Set();
-    require("fs").readFileSync("README.md", "utf8").replace((
-        /[(\[](https?):\/\/.*?[)\]]/g
-    ), function (match0, match1) {
-        let req;
-        match0 = match0.slice(1, -1).replace((
-            /[\u0022\u0027]/g
-        ), "").replace((
-            /\bbeta\b|\bmaster\b/g
-        ), "alpha").replace((
-            /\/build\//g
-        ), "/build..alpha..travis-ci.com/");
-        // ignore private-link
-        if (
-            process.env.npm_package_private
-            && match0.indexOf("https://github.com/") === 0
-        ) {
-            return;
-        }
-        // ignore duplicate-link
-        if (set.has(match0)) {
-            return;
-        }
-        set.add(match0);
-        req = require(match1).request(require("url").parse(
-            match0
-        ), function (res) {
-            console.log(
-                "shReadmeLinkValidate " + res.statusCode + " " + match0
-            );
-            if (!(res.statusCode < 400)) {
-                throw new Error(
-                    "shReadmeLinkValidate - invalid link " + match0
-                );
-            }
-            req.abort();
-            res.destroy();
-        });
-        req.setTimeout(30000);
-        req.end();
-    });
-}());
-'
-)}
-
-shReadmeTest () {(set -e
+shReadmeEval () {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
     shBuildInit
     export MODE_BUILD=readmeTest
-    shBuildPrint "running command 'shReadmeTest $*' ..."
+    shBuildPrint "running command 'shReadmeEval $*' ..."
     case "$(git log -1 --pretty=%s)" in
     "[build app"*)
         shBuildCi
@@ -3210,7 +3163,59 @@ shReadmeTest () {(set -e
         shRunWithScreenshotTxt /bin/sh "$FILE"
         ;;
     esac
-    shBuildPrint "... finished running command 'shReadmeTest $*'"
+    shBuildPrint "... finished running command 'shReadmeEval $*'"
+)}
+
+shReadmeLinkValidate () {(set -e
+# this function will validate http-links embedded in README.md
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let set;
+    set = new Set();
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /[(\[](https?):\/\/.*?[)\]]/g
+    ), function (match0, match1) {
+        let req;
+        match0 = match0.slice(1, -1).replace((
+            /[\u0022\u0027]/g
+        ), "").replace((
+            /\bbeta\b|\bmaster\b/g
+        ), "alpha").replace((
+            /\/build\//g
+        ), "/build..alpha..travis-ci.com/");
+        // ignore private-link
+        if (
+            process.env.npm_package_private
+            && match0.indexOf("https://github.com/") === 0
+        ) {
+            return;
+        }
+        // ignore duplicate-link
+        if (set.has(match0)) {
+            return;
+        }
+        set.add(match0);
+        req = require(match1).request(require("url").parse(
+            match0
+        ), function (res) {
+            console.log(
+                "shReadmeLinkValidate " + res.statusCode + " " + match0
+            );
+            if (!(res.statusCode < 400)) {
+                throw new Error(
+                    "shReadmeLinkValidate - invalid link " + match0
+                );
+            }
+            req.abort();
+            res.destroy();
+        });
+        req.setTimeout(30000);
+        req.end();
+    });
+}());
+' # '
 )}
 
 shRmDsStore () {(set -e
@@ -3331,15 +3336,14 @@ shRunWithScreenshotTxt () {(set -e
         result
     );
 }());
-'
+' # '
     shBuildPrint \
 "created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 
 shServerPortRandom () {(set -e
-# this function will print random unused tcp-port in the inclusive range
-# 0x8000 to 0xffff
+# this function will print random, unused tcp-port in range [0x8000, 0xffff]
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -3351,7 +3355,7 @@ shServerPortRandom () {(set -e
             server.close();
         }
         if (!err) {
-            console.log(port);
+            process.stdout.write(String(port));
             return;
         }
         port = Number(
@@ -3362,7 +3366,7 @@ shServerPortRandom () {(set -e
     }
     recurse(true);
 }());
-'
+' # '
 )}
 
 shSleep () {(set -e
@@ -3540,7 +3544,7 @@ shTravisRepoCreate () {(set -e
         });
     });
 }());
-'
+' # '
     cd "/tmp/githubRepo/$GITHUB_REPO"
     unset GITHUB_ORG
     unset GITHUB_REPO
@@ -3574,7 +3578,7 @@ shTravisRepoTrigger () {(set -e
         }
     }).end("{\"request\":{\"branch\":\"" + process.argv[2] + "\"}}");
 }());
-' "$@"
+' "$@" # '
 )}
 
 shUtility2DependentsGitCommit () {(set -e
@@ -3648,7 +3652,7 @@ shUtility2DependentsVersion () {(set -e
         console.error(JSON.stringify(list.sort(), undefined, 4));
     });
 }());
-'
+' # '
 )}
 
 shUtility2FncStat () {(set -e
@@ -3679,18 +3683,8 @@ shUtility2FncStat () {(set -e
         return String(val).padStart(8, " ") + " -- " + key;
     }).sort().join("\n"));
 }());
-'
+' # '
 )}
-
-shXvfbStart () {
-# this function will start xvfb
-    if [ "$(uname)" = Linux ] && [ ! "$DISPLAY" ]
-    then
-        rm -f /tmp/.X99-lock &&
-            export DISPLAY=:99.0 &&
-            (Xvfb "$DISPLAY" &) 2>/dev/null || true
-    fi
-}
 
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183

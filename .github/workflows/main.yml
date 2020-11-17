@@ -1,12 +1,12 @@
 on:
   push:
     branches:
-    - alpha
+    # - alpha
     - beta
     - master
   pull_request:
     branches:
-    - alpha
+    # - alpha
     - beta
     - master
 jobs:

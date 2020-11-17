@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.11.12)
+ * lib.utility2.js (2020.11.13)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -1278,14 +1278,14 @@ PORT=8081 node ./assets.app.js\n\
         "url": "https://github.com/kaizhu256/node-my-app-lite.git"\n\
     },\n\
     "scripts": {\n\
-        "build-ci": "./npm_scripts.sh",\n\
+        "build-ci": "sh npm_scripts.sh",\n\
         "env": "env",\n\
-        "eval": "./npm_scripts.sh",\n\
-        "heroku-postbuild": "./npm_scripts.sh",\n\
-        "postinstall": "./npm_scripts.sh",\n\
-        "start": "./npm_scripts.sh",\n\
-        "test": "./npm_scripts.sh",\n\
-        "utility2": "./npm_scripts.sh"\n\
+        "eval": "sh npm_scripts.sh",\n\
+        "heroku-postbuild": "sh npm_scripts.sh",\n\
+        "postinstall": "sh npm_scripts.sh",\n\
+        "start": "sh npm_scripts.sh",\n\
+        "test": "sh npm_scripts.sh",\n\
+        "utility2": "sh npm_scripts.sh"\n\
     },\n\
     "version": "0.0.1"\n\
 }\n\
@@ -1307,12 +1307,12 @@ shBuildCiAfter () {(set -e\n\
     # shDeployCustom\n\
     shDeployGithub\n\
     # shDeployHeroku\n\
-    shReadmeTest example.sh\n\
+    shReadmeEval example.sh\n\
 )}\n\
 \n\
 shBuildCiBefore () {(set -e\n\
     # shNpmTestPublished\n\
-    shReadmeTest example.js\n\
+    shReadmeEval example.js\n\
 )}\n\
 \n\
 # run shBuildCi\n\
@@ -1580,7 +1580,7 @@ local.cliDict["utility2.start"] = function () {
  */
     globalThis.local = local;
     local.replStart();
-    local.testRunServer({});
+    local.testRunDefault({});
     if (process.env.npm_config_runme) {
         require(require("path").resolve(process.env.npm_config_runme));
     }
@@ -1614,18 +1614,6 @@ let localEventListenerId;
 localEventListenerDict = {};
 localEventListenerId = 0;
 
-
-// polyfill TextDecoder and TextEncoder
-(function () {
-    try {
-        globalThis.TextDecoder = (
-            globalThis.TextDecoder || require("util").TextDecoder
-        );
-        globalThis.TextEncoder = (
-            globalThis.TextEncoder || require("util").TextEncoder
-        );
-    } catch (ignore) {}
-}());
 
 // init lib _http
 local._http = {};
@@ -1883,345 +1871,6 @@ local._testCase_webpage_default = function (opt, onError) {
     }, onError);
 };
 
-local.ajax = function (opt, onError) {
-/*
- * this function will send an ajax-req
- * with given <opt>.url and callback <onError>
- * with err and timeout handling
- * example use:
-    local.ajax({
-        data: "hello world",
-        header: {"x-header-hello": "world"},
-        method: "POST",
-        url: "/index.html"
-    }, function (err, xhr) {
-        console.log(xhr.statusCode);
-        console.log(xhr.responseText);
-    });
- */
-    let ajaxProgressUpdate;
-    let bufferValidateAndCoerce;
-    let isDone;
-    let local2;
-    let onError2;
-    let onEvent;
-    let stack;
-    let streamCleanup;
-    let timeout;
-    let tmp;
-    let xhr;
-    let xhrInit;
-    // init local2
-    local2 = opt.local2 || local.utility2 || {};
-    // init function
-    ajaxProgressUpdate = local2.ajaxProgressUpdate || function () {
-        return;
-    };
-    bufferValidateAndCoerce = local2.bufferValidateAndCoerce || function (
-        buf,
-        mode
-    ) {
-    /*
-     * this function will validate and coerce/convert
-     * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
-     */
-        // coerce ArrayBuffer to Buffer
-        if (Object.prototype.toString.call(buf) === "[object ArrayBuffer]") {
-            buf = new Uint8Array(buf);
-        }
-        // convert Buffer to utf8
-        if (mode === "string" && typeof buf !== "string") {
-            buf = String(buf);
-        }
-        return buf;
-    };
-    onEvent = function (evt) {
-    /*
-     * this function will handle events
-     */
-        if (Object.prototype.toString.call(evt) === "[object Error]") {
-            xhr.err = xhr.err || evt;
-            xhr.onEvent({
-                type: "error"
-            });
-            return;
-        }
-        // init statusCode
-        xhr.statusCode = (xhr.statusCode || xhr.status) | 0;
-        switch (evt.type) {
-        case "abort":
-        case "error":
-        case "load":
-            if (isDone) {
-                return;
-            }
-            isDone = true;
-            // decrement cnt
-            ajaxProgressUpdate.cnt = Math.max(
-                ajaxProgressUpdate.cnt - 1,
-                0
-            );
-            ajaxProgressUpdate();
-            // handle abort or err event
-            switch (!xhr.err && evt.type) {
-            case "abort":
-            case "error":
-                xhr.err = new Error("ajax - event " + evt.type);
-                break;
-            case "load":
-                if (xhr.statusCode >= 400) {
-                    xhr.err = new Error(
-                        "ajax - statusCode " + xhr.statusCode
-                    );
-                }
-                break;
-            }
-            // debug statusCode / method / url
-            if (xhr.err) {
-                xhr.statusCode = xhr.statusCode || 500;
-                xhr.err.statusCode = xhr.statusCode;
-                tmp = (
-                    (
-                        local.isBrowser
-                        ? "browser"
-                        : "node"
-                    )
-                    + " - " + xhr.statusCode + " " + xhr.method + " " + xhr.url
-                    + "\n"
-                );
-                xhr.err.message = tmp + xhr.err.message;
-                xhr.err.stack = tmp + xhr.err.stack;
-            }
-            // update resHeaders
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/getAllResponseHeaders
-            if (xhr.getAllResponseHeaders) {
-                xhr.getAllResponseHeaders().replace((
-                    /(.*?):\u0020*(.*?)\r\n/g
-                ), function (ignore, key, val) {
-                    xhr.resHeaders[key.toLowerCase()] = val;
-                });
-            }
-            // debug ajaxResponse
-            xhr.resContentLength = (
-                xhr.response
-                && (xhr.response.byteLength || xhr.response.length)
-            ) | 0;
-            xhr.timeElapsed = Date.now() - xhr.timeStart;
-            if (xhr.modeDebug) {
-                console.error("serverLog - " + JSON.stringify({
-                    time: new Date(xhr.timeStart).toISOString(),
-                    type: "ajaxResponse",
-                    method: xhr.method,
-                    url: xhr.url,
-                    statusCode: xhr.statusCode,
-                    timeElapsed: xhr.timeElapsed,
-                    // extra
-                    resContentLength: xhr.resContentLength
-                }) + "\n");
-            }
-            // init responseType
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType
-            switch (xhr.response && xhr.responseType) {
-            // init responseText
-            // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseText
-            case "":
-            case "text":
-                if (typeof xhr.responseText === "string") {
-                    break;
-                }
-                xhr.responseText = bufferValidateAndCoerce(
-                    xhr.response,
-                    "string"
-                );
-                break;
-            case "arraybuffer":
-                xhr.responseBuffer = bufferValidateAndCoerce(xhr.response);
-                break;
-            }
-            // cleanup timerTimeout
-            clearTimeout(xhr.timerTimeout);
-            // cleanup reqStream and resStream
-            streamCleanup(xhr.reqStream);
-            streamCleanup(xhr.resStream);
-            onError2(xhr.err, xhr);
-            break;
-        }
-    };
-    // init onError2
-    stack = new Error().stack;
-    onError2 = function (err, xhr) {
-        if (err && typeof err.stack === "string") {
-            err.stack += "\n" + stack;
-        }
-        onError(err, xhr);
-    };
-    streamCleanup = function (stream) {
-    /*
-     * this function will try to end or destroy <stream>
-     */
-        let err;
-        // try to end stream
-        try {
-            stream.end();
-        } catch (errCaught) {
-            err = errCaught;
-        }
-        // if err, then try to destroy stream
-        if (err) {
-            try {
-                stream.destroy();
-            } catch (ignore) {}
-        }
-    };
-    xhrInit = function () {
-    /*
-     * this function will init xhr
-     */
-        // init opt
-        Object.keys(opt).forEach(function (key) {
-            if (key[0] !== "_") {
-                xhr[key] = opt[key];
-            }
-        });
-        // init timeout
-        timeout = xhr.timeout || local2.timeoutDefault || 30000;
-        // init default
-        local.objectAssignDefault(xhr, {
-            corsForwardProxyHost: local2.corsForwardProxyHost,
-            headers: {},
-            location: (local.isBrowser && location) || {},
-            method: "GET",
-            responseType: ""
-        });
-        // init headers
-        Object.keys(xhr.headers).forEach(function (key) {
-            xhr.headers[key.toLowerCase()] = xhr.headers[key];
-        });
-        // coerce Uint8Array to Buffer
-        if (
-            !local.isBrowser
-            && !Buffer.isBuffer(xhr.data)
-            && Object.prototype.toString.call(xhr.data)
-            === "[object Uint8Array]"
-        ) {
-            Object.setPrototypeOf(xhr.data, Buffer.prototype);
-        }
-        // init misc
-        local2._debugXhr = xhr;
-        xhr.onEvent = onEvent;
-        xhr.resHeaders = {};
-        xhr.timeStart = xhr.timeStart || Date.now();
-    };
-    // init xhr - XMLHttpRequest
-    xhr = (
-        local.isBrowser
-        && !opt.httpReq
-        && !(local2.serverLocalUrlTest && local2.serverLocalUrlTest(opt.url))
-        && new XMLHttpRequest()
-    );
-    // init xhr - http.request
-    if (!xhr) {
-        xhr = local.identity(local2.urlParse || require("url").parse)(opt.url);
-        // init xhr
-        xhrInit();
-        // init xhr - http.request
-        xhr = local.identity(
-            opt.httpReq
-            || (local.isBrowser && local2.http.request)
-            || require(xhr.protocol.slice(0, -1)).request
-        )(xhr, function (resStream) {
-        /*
-         * this function will read <resStream>
-         */
-            let bufList;
-            bufList = [];
-            xhr.resHeaders = resStream.headers || xhr.resHeaders;
-            xhr.resStream = resStream;
-            xhr.statusCode = resStream.statusCode;
-            resStream.dataLength = 0;
-            resStream.on("data", function (buf) {
-                bufList.push(buf);
-            });
-            resStream.on("end", function () {
-                xhr.response = (
-                    local.isBrowser
-                    ? bufList[0]
-                    : Buffer.concat(bufList)
-                );
-                resStream.dataLength = (
-                    xhr.response.byteLength || xhr.response.length
-                );
-                xhr.onEvent({
-                    type: "load"
-                });
-            });
-            resStream.on("error", xhr.onEvent);
-        });
-        xhr.abort = function () {
-        /*
-         * this function will abort xhr-req
-         * https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort
-         */
-            xhr.onEvent({
-                type: "abort"
-            });
-        };
-        xhr.addEventListener = local.noop;
-        xhr.open = local.noop;
-        xhr.reqStream = xhr;
-        xhr.send = xhr.end;
-        xhr.setRequestHeader = local.noop;
-        xhr.on("error", onEvent);
-    }
-    // init xhr
-    xhrInit();
-    // init timerTimeout
-    xhr.timerTimeout = setTimeout(function () {
-        xhr.err = xhr.err || new Error(
-            "onTimeout - "
-            + timeout + " ms - " + "ajax " + xhr.method + " " + xhr.url
-        );
-        xhr.abort();
-        // cleanup reqStream and resStream
-        streamCleanup(xhr.reqStream);
-        streamCleanup(xhr.resStream);
-    }, timeout);
-    // increment cnt
-    ajaxProgressUpdate.cnt |= 0;
-    ajaxProgressUpdate.cnt += 1;
-    // handle evt
-    xhr.addEventListener("abort", xhr.onEvent);
-    xhr.addEventListener("error", xhr.onEvent);
-    xhr.addEventListener("load", xhr.onEvent);
-    xhr.addEventListener("loadstart", ajaxProgressUpdate);
-    xhr.addEventListener("progress", ajaxProgressUpdate);
-    // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/upload
-    if (xhr.upload && xhr.upload.addEventListener) {
-        xhr.upload.addEventListener("progress", ajaxProgressUpdate);
-    }
-    // open url - corsForwardProxyHost
-    if (
-        local2.corsForwardProxyHostIfNeeded
-        && local2.corsForwardProxyHostIfNeeded(xhr)
-    ) {
-        xhr.open(xhr.method, local2.corsForwardProxyHostIfNeeded(xhr));
-        xhr.setRequestHeader(
-            "forward-proxy-headers",
-            JSON.stringify(xhr.headers)
-        );
-        xhr.setRequestHeader("forward-proxy-url", xhr.url);
-    // open url - default
-    } else {
-        xhr.open(xhr.method, xhr.url);
-    }
-    // send headers
-    Object.keys(xhr.headers).forEach(function (key) {
-        xhr.setRequestHeader(key, xhr.headers[key]);
-    });
-    xhr.send(xhr.data);
-    return xhr;
-};
-
 local.browserTest = function ({
     modeSilent,
     modeTestReportCreate,
@@ -2349,94 +1998,6 @@ local.browserTest = function ({
         chromeClient.destroy();
         onError2();
     });
-};
-
-local.bufferConcat = function (bufList) {
-/*
- * this function will emulate in browser, node's Buffer.concat
- */
-    let byteLength;
-    let ii;
-    let isString;
-    let jj;
-    let result;
-    isString = true;
-    result = [
-        ""
-    ];
-    byteLength = 0;
-    bufList.forEach(function (buf) {
-        if (buf !== 0 && !(buf && buf.length)) {
-            return;
-        }
-        // optimization - concat string
-        if (isString && typeof buf === "string") {
-            result[0] += buf;
-            return;
-        }
-        isString = null;
-        buf = local.bufferValidateAndCoerce(buf);
-        byteLength += buf.byteLength;
-        result.push(buf);
-    });
-    // optimization - return string
-    if (isString) {
-        return result[0];
-    }
-    result[0] = local.bufferValidateAndCoerce(result[0]);
-    byteLength += result[0].byteLength;
-    bufList = result;
-    result = local.bufferValidateAndCoerce(new Uint8Array(byteLength));
-    ii = 0;
-    bufList.forEach(function (buf) {
-        jj = 0;
-        while (jj < buf.byteLength) {
-            result[ii] = buf[jj];
-            ii += 1;
-            jj += 1;
-        }
-    });
-    return result;
-};
-
-local.bufferToUtf8 = function (buf) {
-/*
- * this function will convert Uint8Array <buf> to utf8
- */
-    return local.bufferValidateAndCoerce(buf, "string");
-};
-
-local.bufferValidateAndCoerce = function (buf, mode) {
-/*
- * this function will validate and coerce/convert
- * <buf> to Buffer/Uint8Array, or String if <mode> = "string"
- */
-    // validate not 0
-    if (buf !== 0) {
-        buf = buf || "";
-    }
-    if (typeof buf === "string" && mode === "string") {
-        return buf;
-    }
-    // convert utf8 to Uint8Array
-    if (typeof buf === "string") {
-        buf = new TextEncoder().encode(buf);
-    // validate instanceof Uint8Array
-    } else if (Object.prototype.toString.call(buf) !== "[object Uint8Array]") {
-        throw new Error(
-            "bufferValidateAndCoerce - value is not instanceof "
-            + "ArrayBuffer, String, or Uint8Array"
-        );
-    }
-    // convert Uint8Array to utf8
-    if (mode === "string") {
-        return new TextDecoder().decode(buf);
-    }
-    // coerce Uint8Array to Buffer
-    if (globalThis.Buffer && Buffer.isBuffer && !Buffer.isBuffer(buf)) {
-        Object.setPrototypeOf(buf, Buffer.prototype);
-    }
-    return buf;
 };
 
 local.buildApp = function ({
@@ -2706,14 +2267,14 @@ local.buildApp = function ({
             delete packageJson.devDependencies[packageJson.name];
             // reset scripts
             packageJson.scripts = {
-                "build-ci": "./npm_scripts.sh",
+                "build-ci": "sh npm_scripts.sh",
                 env: "env",
-                eval: "./npm_scripts.sh",
-                "heroku-postbuild": "./npm_scripts.sh",
-                postinstall: "./npm_scripts.sh",
-                start: "./npm_scripts.sh",
-                test: "./npm_scripts.sh",
-                utility2: "./npm_scripts.sh"
+                eval: "sh npm_scripts.sh",
+                "heroku-postbuild": "sh npm_scripts.sh",
+                postinstall: "sh npm_scripts.sh",
+                start: "sh npm_scripts.sh",
+                test: "sh npm_scripts.sh",
+                utility2: "sh npm_scripts.sh"
             };
             // write package.json
             require("fs").writeFileSync(
@@ -2890,11 +2451,11 @@ local.buildApp = function ({
                     /.*?\/screenshot\.deployHeroku.*?\n/g
                 )
             ], [
-                "shReadmeTest example.js", (
+                "shReadmeEval example.js", (
                     /.*?\/screenshot\.testExampleJs.*?\n/g
                 )
             ], [
-                "shReadmeTest example.sh", (
+                "shReadmeEval example.sh", (
                     /.*?\/screenshot\.testExampleSh.*?\n/g
                 )
             ], [
@@ -4018,39 +3579,6 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     }
 };
 
-local.fsRmrfSync = function (pathname) {
-/*
- * this function will sync "rm -rf" <pathname>
- */
-    let child_process;
-    // do nothing if module not exists
-    try {
-        child_process = require("child_process");
-    } catch (ignore) {
-        return;
-    }
-    pathname = require("path").resolve(pathname);
-    if (process.platform !== "win32") {
-        child_process.spawnSync("rm", [
-            "-rf", pathname
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
-        return;
-    }
-    try {
-        child_process.spawnSync("rd", [
-            "/s", "/q", pathname
-        ], {
-            stdio: [
-                "ignore", 1, 2
-            ]
-        });
-    } catch (ignore) {}
-};
-
 local.fsWriteFileWithMkdirp = function (pathname, data, onError) {
 /*
  * this function will async write <data> to <pathname> with "mkdir -p"
@@ -4120,6 +3648,22 @@ local.jslintAutofixLocalFunction = function (code, file) {
     let code2;
     let dictFnc;
     let dictProp;
+    function stringMerge(str1, str2, rgx) {
+    /*
+     * this function will merge <str2> into <str1>,
+     * for sections where both match <rgx> with no magic
+     */
+        str2.replace(rgx, function (match2) {
+            str1.replace(rgx, function (match1) {
+                str1 = str1.replace(match1, function () {
+                    return match2;
+                });
+                return "";
+            });
+            return "";
+        });
+        return str1;
+    }
     if (local.isBrowser) {
         return code;
     }
@@ -4147,7 +3691,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         /\n\/\/\u0020assets.utility2\.header\.js\u0020-\u0020start\n[\S\s]*?\n\/\/\u0020assets.utility2\.header\.js\u0020-\u0020end\n/
     ), "\n" + local.assetsDict["/assets.utility2.header.js"]);
     // autofix - assets.my_app.template.js
-    code = local.stringMerge(
+    code = stringMerge(
         code,
         local.assetsDict["/assets.my_app.template.js"].replace((
             /my_app/g
@@ -4361,31 +3905,6 @@ local.middlewareAssetsCached = function (req, res, next) {
         );
     }
     res.end(local.assetsDict[req.urlParsed.pathname]);
-};
-
-local.middlewareBodyRead = function (req, ignore, next) {
-/*
- * this function will run middleware to
- * read and save <req> body to <req>.bodyRaw
- */
-    // if req is already read, then goto next
-    if (!req.readable) {
-        next();
-        return;
-    }
-    let bufList;
-    bufList = [];
-    req.on("data", function (buf) {
-        bufList.push(buf);
-    }).on("end", function () {
-        req.bodyRaw = (
-            local.isBrowser
-            ? bufList[0]
-            : Buffer.concat(bufList)
-        );
-        next();
-    // on event-error, pass error to onError
-    }).on("error", next);
 };
 
 local.middlewareError = function (err, req, res) {
@@ -5360,8 +4879,7 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
     res.contentLength = 0;
     res.writeContentLength = res.writeContentLength || res.write;
     res.write = function (buf, encoding, callback) {
-        buf = local.bufferValidateAndCoerce(buf, typeof buf);
-        res.contentLength += buf.length;
+        res.contentLength += Buffer.byteLength(buf);
         res.writeContentLength(buf, encoding, callback);
     };
     res.on("error", onError);
@@ -5436,23 +4954,6 @@ local.stringHtmlSafe = function (str) {
     ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
-};
-
-local.stringMerge = function (str1, str2, rgx) {
-/*
- * this function will merge <str2> into <str1>,
- * for sections where both match <rgx> with no magic
- */
-    str2.replace(rgx, function (match2) {
-        str1.replace(rgx, function (match1) {
-            str1 = str1.replace(match1, function () {
-                return match2;
-            });
-            return "";
-        });
-        return "";
-    });
-    return str1;
 };
 
 local.stringQuotedToAscii = function (str) {
@@ -6136,8 +5637,62 @@ local.testRunDefault = function (opt) {
     let testReport;
     let timerInterval;
     // run-server
+    // 1. create server from local.middlewareList
+    // 2. start server on local.env.PORT
+    // 3. run tests
     if (!local.isBrowser) {
-        local.testRunServer(opt);
+        // 1. create server from local.middlewareList
+        local.middlewareList = local.middlewareList || [
+            local.middlewareInit,
+            local.middlewareForwardProxy,
+            local.middlewareAssetsCached,
+            local.middlewareUtility2StateInit,
+            local.middlewareFileServer
+        ];
+        if (!(globalThis.utility2_serverHttp1 || (
+            typeof process === "object"
+            && process
+            && process.env.npm_config_mode_lib
+        ))) {
+            globalThis.utility2_onReadyBefore.cnt += 1;
+            local.serverLocalReqHandler = function (req, res) {
+            /*
+             * this function will emulate express-like middleware-chaining
+             */
+                let gotoState;
+                let isDone;
+                gotoState = -1;
+                (function gotoNext(err) {
+                    try {
+                        gotoState += 1;
+                        if (err || gotoState >= local.middlewareList.length) {
+                            local.middlewareError(err, req, res);
+                            return;
+                        }
+                        // recurse with next middleware in middlewareList
+                        local.middlewareList[gotoState](req, res, gotoNext);
+                    } catch (errCaught) {
+                        // throw errCaught to break infinite recursion-loop
+                        local.assertOrThrow(!isDone, errCaught);
+                        isDone = true;
+                        gotoNext(errCaught);
+                    }
+                }());
+            };
+            globalThis.utility2_serverHttp1 = local.http.createServer(
+                local.serverLocalReqHandler
+            );
+            // 2. start server on local.env.PORT
+            console.error("http-server listening on port " + local.env.PORT);
+            globalThis.utility2_onReadyBefore.cnt += 1;
+            globalThis.utility2_serverHttp1.listen(
+                local.env.PORT,
+                globalThis.utility2_onReadyBefore
+            );
+            // 3. run tests
+            local.testRunDefault(opt);
+            globalThis.utility2_onReadyBefore();
+        }
     }
     globalThis.utility2_modeTest = Number(
         globalThis.utility2_modeTest
@@ -6168,7 +5723,7 @@ local.testRunDefault = function (opt) {
         globalThis.utility2_modeTest += 1;
     }
     // visual notification - testRun
-    local.ajaxProgressUpdate();
+    //!! local.ajaxProgressUpdate();
     // mock console.error
     consoleError = console.error;
     isCoverage = (
@@ -6354,7 +5909,7 @@ local.testRunDefault = function (opt) {
         // update timeElapsed
         local.timeElapsedPoll(testPlatform);
         globalThis.utility2_modeTest = 1;
-        local.ajaxProgressUpdate();
+        //!! local.ajaxProgressUpdate();
         // init domOnEventWindowOnloadTimeElapsed
         if (globalThis.domOnEventWindowOnloadTimeElapsed < 0x10000000000) {
             testPlatform.domOnEventWindowOnloadTimeElapsed = (
@@ -6386,68 +5941,6 @@ local.testRunDefault = function (opt) {
             process.exit(testReport.testsFailed, testReport);
         }
     });
-};
-
-local.testRunServer = function (opt) {
-/*
- * this function will
- * 1. create server from local.middlewareList
- * 2. start server on local.env.PORT
- * 3. run tests
- */
-    // 1. create server from local.middlewareList
-    local.middlewareList = local.middlewareList || [
-        local.middlewareInit,
-        local.middlewareForwardProxy,
-        local.middlewareAssetsCached,
-        local.middlewareUtility2StateInit,
-        local.middlewareFileServer
-    ];
-    if (globalThis.utility2_serverHttp1 || (
-        typeof process === "object"
-        && process
-        && process.env.npm_config_mode_lib
-    )) {
-        return;
-    }
-    globalThis.utility2_onReadyBefore.cnt += 1;
-    local.serverLocalReqHandler = function (req, res) {
-    /*
-     * this function will emulate express-like middleware-chaining
-     */
-        let gotoState;
-        let isDone;
-        gotoState = -1;
-        (function gotoNext(err) {
-            try {
-                gotoState += 1;
-                if (err || gotoState >= local.middlewareList.length) {
-                    local.middlewareError(err, req, res);
-                    return;
-                }
-                // recurse with next middleware in middlewareList
-                local.middlewareList[gotoState](req, res, gotoNext);
-            } catch (errCaught) {
-                // throw errCaught to break infinite recursion-loop
-                local.assertOrThrow(!isDone, errCaught);
-                isDone = true;
-                gotoNext(errCaught);
-            }
-        }());
-    };
-    globalThis.utility2_serverHttp1 = local.http.createServer(
-        local.serverLocalReqHandler
-    );
-    // 2. start server on local.env.PORT
-    console.error("http-server listening on port " + local.env.PORT);
-    globalThis.utility2_onReadyBefore.cnt += 1;
-    globalThis.utility2_serverHttp1.listen(
-        local.env.PORT,
-        globalThis.utility2_onReadyBefore
-    );
-    // 3. run tests
-    local.testRunDefault(opt);
-    globalThis.utility2_onReadyBefore();
 };
 
 local.throwError = function () {
@@ -6709,11 +6202,6 @@ local.uuid4Create = function () {
 /* istanbul ignore next */
 // run shared js-env code - init-after
 (function () {
-local.ajaxProgressUpdate = (
-    globalThis.domOnEventAjaxProgressUpdate || function () {
-        return;
-    }
-);
 local.apidocCreate = local.apidoc.apidocCreate;
 local.browserTest({
     modeTestReportCreate: true

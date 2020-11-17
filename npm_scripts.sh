@@ -3,7 +3,7 @@
 
 shMain () {(set -e
 # this function will run the main program
-    printf "running command 'npm run $*' ...\n" 1>&2
+    printf "# start run command 'npm run $*'\n" 1>&2
     UTILITY2_BIN=utility2
     local ARG1
     if [ -f lib.utility2.sh ]
@@ -17,7 +17,7 @@ shMain () {(set -e
     # run command - default
     case "$ARG1" in
     build-ci)
-        "$UTILITY2_BIN" shReadmeTest build_ci.sh
+        "$UTILITY2_BIN" shReadmeEval build_ci.sh
         ;;
     eval)
         shift
@@ -57,7 +57,7 @@ shMain () {(set -e
         "$@"
         ;;
     esac
-    printf "... finished running command 'npm run $*'\n" 1>&2
+    printf "# end run command 'npm run $*'\n" 1>&2
 )}
 
 # run command
