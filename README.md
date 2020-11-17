@@ -58,6 +58,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
