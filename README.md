@@ -1297,8 +1297,6 @@ RUN (set -e; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
-    npm install; \
-    npm test; \
 )
 ```
 
@@ -1330,7 +1328,7 @@ shBuildCiAfter () {(set -e
         -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
-    docker.tmp)
+    docker.latest)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
