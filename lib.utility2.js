@@ -6348,8 +6348,7 @@ local.http = require("http");
 local.Module = require("module");
 // init env
 local.objectAssignDefault(process.env, {
-    npm_config_dir_build: require("path").resolve(".tmp/build"),
-    npm_config_dir_tmp: require("path").resolve(".tmp")
+    npm_config_dir_build: require("path").resolve(".tmp/build")
 });
 // merge previous test-report
 if (process.env.npm_config_file_test_report_merge) {

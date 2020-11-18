@@ -1067,8 +1067,6 @@ try {
     export npm_config_dir_build="${npm_config_dir_build:-$PWD/.tmp/build}" ||
         return "$?"
     mkdir -p "$npm_config_dir_build/coverage" || return "$?"
-    export npm_config_dir_tmp="$PWD/.tmp" || return "$?"
-    mkdir -p "$npm_config_dir_tmp" || return "$?"
     export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/.tmp/tmpfile}" ||
         return "$?"
     # extract and save scripts embedded in README.md to .tmp/
