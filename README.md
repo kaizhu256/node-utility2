@@ -48,7 +48,7 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
-- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp
+- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_unsafe_perm
 - rename env-vars \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
