@@ -3238,6 +3238,7 @@ shRmDsStore () {(set -e
 
 shRun () {(set -e
 # this function will run command "$@" with auto-restart
+    local EXIT_CODE
     EXIT_CODE=0
     # eval argv
     if [ ! "$npm_config_mode_auto_restart" ] ||
@@ -3246,7 +3247,7 @@ shRun () {(set -e
         "$@"
         return "$?"
     fi
-    # eval argv and auto-restart on non-zero exitCode, unless exited by SIGINT
+    # eval argv and auto-restart on non-zero $EXIT_CODE, unless exited by SIGINT
     export npm_config_mode_auto_restart_child=1
     while true
     do
@@ -3271,17 +3272,16 @@ shRun () {(set -e
 
 shRunWithScreenshotTxt () {(set -e
 # this function will run command "$@" and screenshot text-output
-# http://www.cnx-software.com/2011/09/22
-# /how-to-convert-a-command-line-result-into-an-image-in-linux/
+# http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
+    local EXIT_CODE
     EXIT_CODE=0
     export MODE_BUILD_SCREENSHOT_IMG="screenshot.${MODE_BUILD:-undefined}.svg"
     touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
-    (
-    printf "0" > "$npm_config_file_tmp"
     shBuildPrint "(shRun "$*" 2>&1)"
-    (shRun "$@" 2>&1) || printf "$?" > "$npm_config_file_tmp"
+    (
+        (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
     ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
-    EXIT_CODE="$(cat "$npm_config_file_tmp")"
+    EXIT_CODE="$(tail -n 1 "$npm_config_dir_tmp/runWithScreenshotTxt")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
@@ -3313,7 +3313,10 @@ shRunWithScreenshotTxt () {(set -e
     result = require("fs").readFileSync(
         process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
         "utf8"
-    );
+    // remove $EXIT_CODE
+    ).replace((
+        /\n.*?\n$/
+    ), "\n");
     // remove ansi escape-code
     result = result.replace((
         /\u001b.*?m/g
@@ -3329,7 +3332,7 @@ shRunWithScreenshotTxt () {(set -e
         ), wordwrap).replace((
             /(<\/tspan>\n<tspan)/g
         ), "\\$1").slice();
-    }).join("\n") + "\n";
+    }).join("");
     result = (
         "<svg height=\"" + (yy + 20)
         + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
