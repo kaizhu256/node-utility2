@@ -2373,8 +2373,9 @@ shNpmDeprecateAlias () {(set -e
 
 shNpmPackageCliHelpCreate () {(set -e
 # this function will create svg of cli-help in current npm-package
+    local FILE
     export MODE_BUILD=npmPackageCliHelp
-    shBuildPrint "creating npmPackageCliHelp ..."
+    shBuildPrint "start"
     FILE="$(
 node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
 ')" # '
@@ -2383,7 +2384,7 @@ node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
     then
         shRunWithScreenshotTxt "./$FILE" --help
     fi
-    shBuildPrint "... created npmPackageCliHelp"
+    shBuildPrint "end"
 )}
 
 shNpmPackageDependencyTreeCreate () {(set -e
