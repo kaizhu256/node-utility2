@@ -1921,26 +1921,64 @@ shGitLsTree2 () {(set -e
 # example use:
 # shGitLsTree | sort -nrk2 -nrk3 # sort by date
 # shGitLsTree | sort -nrk5 # sort by size
-    printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
-    ii += 1
-    file = $0
-    cmd = "git log -1 --format=\"%ai\" -- " file
-    (cmd | getline date)
-    close(cmd)
-    cmd = "ls -ln '\''" file "'\'' | awk \"{print \\$5}\""
-    (cmd | getline size)
-    close(cmd)
-    sizeTotal += size
-    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
-} END {
-    ii = 0
-    file = "."
-    cmd = "git log -1 --format=\"%ai\" -- " file
-    (cmd | getline date)
-    close(cmd)
-    size = sizeTotal
-    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
-    }' | sed -e "s/ /./"
+    git ls-tree --long -r HEAD | head -n 1024 | sort --key=5 | node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let list;
+    list = [];
+    require("readline").createInterface({
+        input: process.stdin
+    }).on("line", function (line) {
+        console.log(JSON.stringify(line));
+        line.replace((
+            /(\S+?)\u0020+?\S+?\u0020+?\S+?\u0020+?(\S+?)\t(\S+?)$/
+        ), function (ignore, mode, size, file) {
+            let ii;
+            ii = list.length;
+            list.push({
+                mode,
+                size,
+                file
+            });
+            require("child_process").spawn("git", [
+                "log", "--max-count=1", "--format=%at", file
+            ], {
+                stdio: [
+                    "ignore",
+                    "pipe",
+                    2
+                ]
+            }).stdout.on("data", function (chunk) {
+                list[ii].date = new Date(Number(chunk) * 1000).toISOString();
+            });
+        });
+    });
+    process.on("exit", function () {
+        console.log(list);
+    });
+}());
+' # '
+    #!! ii += 1
+    #!! file = $0
+    #!! # git log --max-count=1 --format="%at" README.md
+    #!! cmd = "git log -1 --format=\"%ai\" -- " file
+    #!! (cmd | getline date)
+    #!! close(cmd)
+    #!! cmd = "ls -ln '\''" file "'\'' | awk \"{print \\$5}\""
+    #!! (cmd | getline size)
+    #!! close(cmd)
+    #!! sizeTotal += size
+    #!! printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
+#!! } END {
+    #!! ii = 0
+    #!! file = "."
+    #!! cmd = "git log -1 --format=\"%ai\" -- " file
+    #!! (cmd | getline date)
+    #!! close(cmd)
+    #!! size = sizeTotal
+    #!! printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
+    #!! }' | sed -e "s/ /./"
 )}
 
 shGitSquashPop () {(set -e
