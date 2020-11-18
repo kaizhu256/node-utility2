@@ -1067,8 +1067,6 @@ try {
     export UTILITY2_DIR_BUILD="${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}" ||
         return "$?"
     mkdir -p "$UTILITY2_DIR_BUILD/coverage" || return "$?"
-    export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/.tmp/tmpfile}" ||
-        return "$?"
     # extract and save scripts embedded in README.md to .tmp/
     if [ -f README.md ]
     then
@@ -1889,7 +1887,7 @@ shGitLsTree () {(set -e
 # example use:
 # shGitLsTree | sort -rk3 # sort by date
 # shGitLsTree | sort -rk4 # sort by size
-    git ls-tree -lr HEAD | LC_COLLATE=C sort -k 5 | node -e '
+    git ls-tree -lr HEAD | LC_COLLATE=C sort -k5 | node -e '
 /* jslint utility2:true */
 (function () {
     "use strict";
@@ -2390,10 +2388,11 @@ node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
 
 shNpmPackageDependencyTreeCreate () {(set -e
 # this function will create svg-dependency-tree of npm-package
-    if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
-    then
-        return
-    fi
+    local DIR
+    #!! if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
+    #!! then
+        #!! return
+    #!! fi
     shEnvSanitize
     # cleanup /tmp/node_modules
     rm -rf /tmp/node_modules
@@ -2403,12 +2402,31 @@ shNpmPackageDependencyTreeCreate () {(set -e
     shBuildPrint "creating npmDependencyTree ..."
     npm install "${2:-$1}" --prefix . || true
     shRunWithScreenshotTxtAfter () {(set -e
-        du -ms "$DIR" |
-            awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
-            > "$npm_config_file_tmp"
-        grep -E '^ *[│└├]' /tmp/shRunWithScreenshotTxt.txt \
-            >> "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" /tmp/shRunWithScreenshotTxt.txt
+        node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let result;
+    result = "";
+    result += (
+        "npm install - " + process.argv[1].split("\t")[0]
+        + " KB\n\nnode_modules\n"
+    );
+    require("fs").readFileSync(
+        require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
+        "utf8"
+    ).replace((
+        /^\u0020*?[+`\u2502\u2514\u251c].*?$/gm
+    ), function (line) {
+        result += line + "\n";
+        return "";
+    });
+    require("fs").writeFileSync(
+        require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
+        result
+    );
+}());
+' "$(du -ks "$DIR/node_modules")" # '
     )}
     shRunWithScreenshotTxt npm ls || true
     shBuildPrint "... created npmDependencyTree"
@@ -2429,7 +2447,7 @@ node_modules
         git commit -m 'initial commit' | head -n 1024
     fi
     MODE_BUILD=npmPackageListing shRunWithScreenshotTxt \
-        eval "printf 'package files\n\n' && shGitLsTree"
+        eval "printf \"package files\n\n\" && shGitLsTree"
 )}
 
 shNpmPublishAlias () {(set -e
@@ -3283,7 +3301,8 @@ shRunWithScreenshotTxt () {(set -e
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
     then
-        shRunWithScreenshotTxtAfter
+        #!! eval shRunWithScreenshotTxtAfter > /tmp/shRunWithScreenshotTxt.txt
+        eval shRunWithScreenshotTxtAfter
         unset shRunWithScreenshotTxtAfter
     fi
     # format text-output
@@ -3342,6 +3361,11 @@ shRunWithScreenshotTxt () {(set -e
         + "font-size=\"12\" xml:space=\"preserve\">\n"
         + result + "</text>\n</svg>\n"
     );
+    try {
+        require("fs").mkdirSync(require("path").dirname(process.argv[1]), {
+            recursive: true
+        });
+    } catch (ignore) {}
     require("fs").writeFileSync(process.argv[1], result);
 }());
 ' "$SCREENSHOT_SVG" # '
