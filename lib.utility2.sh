@@ -2400,13 +2400,8 @@ shNpmPackageDependencyTreeCreate () {(set -e
         return
     fi
     shEnvSanitize
-    # init /tmp/node_modules
-    if [ -d /tmp/node_modules ]
-    then
-        rm -rf /tmp/node_modules.00
-        mv /tmp/node_modules /tmp/node_modules.00
-        export PATH="$PATH:/tmp/node_modules.00/.bin"
-    fi
+    # cleanup /tmp/node_modules
+    rm -rf /tmp/node_modules
     DIR=/tmp/npmPackageDependencyTreeCreate
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     export MODE_BUILD=npmPackageDependencyTree
@@ -2421,11 +2416,6 @@ shNpmPackageDependencyTreeCreate () {(set -e
         mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runWithScreenshotTxt"
     )}
     shRunWithScreenshotTxt npm ls || true
-    if [ -d /tmp/node_modules.00 ]
-    then
-        rm -rf /tmp/node_modules
-        mv /tmp/node_modules.00 /tmp/node_modules
-    fi
     shBuildPrint "... created npmDependencyTree"
 )}
 
@@ -3086,6 +3076,7 @@ shRawLibFetch () {(set -e
 
 shReadmeEval () {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
+    shBuildInit
     export MODE_BUILD=readmeTest
     shBuildPrint "running command 'shReadmeEval $*' ..."
     case "$(git log -1 --pretty=%s)" in
