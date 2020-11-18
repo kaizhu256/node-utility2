@@ -1892,9 +1892,9 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 shGitLsTree () {(set -e
 # this function will "git ls-tree" all files committed in HEAD
 # example use:
-# shGitLsTree | sort -rk3 -rk4 # sort by date
-# shGitLsTree | sort -nrk5 # sort by size
-    git ls-tree -lr HEAD | head -n 1024 | LC_COLLATE=C sort -k 5 | node -e '
+# shGitLsTree | sort -rk3 # sort by date
+# shGitLsTree | sort -rk4 # sort by size
+    git ls-tree -lr HEAD | LC_COLLATE=C sort -k 5 | node -e '
 /* jslint utility2:true */
 (function () {
     "use strict";
@@ -1909,11 +1909,15 @@ shGitLsTree () {(set -e
             let ii;
             ii = list.length;
             list.push({
+                date: "0000-00-00T00:00:00Z",
                 file,
                 mode,
                 size: Number(size)
             });
             list[0].size += Number(size);
+            if (ii > 1024) {
+                return;
+            }
             require("child_process").spawn("git", [
                 "log", "--max-count=1", "--format=%at", file
             ], {
@@ -1925,19 +1929,23 @@ shGitLsTree () {(set -e
             }).stdout.on("data", function (chunk) {
                 list[ii].date = new Date(
                     Number(chunk) * 1000
-                ).toISOString().slice(0, 19).replace("T", " ") + " Z";
+                ).toISOString().slice(0, 19) + "Z";
             });
         });
     }).emit("line", "100755 . . 0\t.");
     process.on("exit", function () {
+        let iiPad;
+        let sizePad;
+        iiPad = String(list.length).length + 1;
+        sizePad = String(Math.ceil(Number(list[0].size) / 1024)).length;
         process.stdout.write(list.map(function (elem, ii) {
             return (
-                String(ii + ".").padEnd(5, " ")
-                + " " + elem.mode
+                String(ii + ".").padStart(iiPad, " ")
+                + "  " + elem.mode
                 + "  " + elem.date
-                + " " + String(
+                + "  " + String(
                     Math.ceil(Number(elem.size) / 1024)
-                ).padStart(6, " ") + " KB"
+                ).padStart(sizePad, " ") + " KB"
                 + "  " + elem.file
                 + "\n"
             );
@@ -2433,9 +2441,9 @@ node_modules
 " > .gitignore
         git init
         git add .
-        git commit -m 'initial commit' | head -n 4096
+        git commit -m 'initial commit' | head -n 1024
     fi
-    export MODE_BUILD=npmPackageListingCreate
+    export MODE_BUILD=npmPackageListing
     shRunWithScreenshotTxt printf "$(printf "package files\n\n" && shGitLsTree)"
 )}
 
