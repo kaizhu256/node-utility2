@@ -1926,46 +1926,34 @@ shGitLsTree2 () {(set -e
 (function () {
     "use strict";
     let list;
-    function getDate(ii, file) {
-    /*
-     * this function will update <list>[<ii>].date with last author-commit-date
-     * for given <file>
-     */
-        require("child_process").spawn("git", [
-            "log", "--max-count=1", "--format=%at", file
-        ], {
-            stdio: [
-                "ignore",
-                "pipe",
-                2
-            ]
-        }).stdout.on("data", function (chunk) {
-            list[ii].date = new Date(Number(chunk) * 1000).toISOString();
-        });
-    }
-    getDate(list.length, ".");
-    list = [
-        {
-            file: ".",
-            mode: "100755",
-            size: 0
-        }
-    ];
+    list = [];
     require("readline").createInterface({
         input: process.stdin
     }).on("line", function (line) {
         line.replace((
             /(\S+?)\u0020+?\S+?\u0020+?\S+?\u0020+?(\S+?)\t(\S+?)$/
         ), function (ignore, mode, size, file) {
-            getDate(list.length, file);
+            let ii;
+            ii = list.length;
             list.push({
                 file,
                 mode,
-                size
+                size: Number(size)
             });
             list[0].size += Number(size);
+            require("child_process").spawn("git", [
+                "log", "--max-count=1", "--format=%at", file
+            ], {
+                stdio: [
+                    "ignore",
+                    "pipe",
+                    2
+                ]
+            }).stdout.on("data", function (chunk) {
+                list[ii].date = new Date(Number(chunk) * 1000).toISOString();
+            });
         });
-    });
+    }).emit("line", "100755 . . 0\t.");
     process.on("exit", function () {
         process.stdout.write(list.map(function (elem, ii) {
             return (
