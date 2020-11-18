@@ -560,7 +560,7 @@ shBuildApp () {(set -e
             });
         });
     });
-}(require(process.env.npm_config_dir_utility2)));
+}(require(process.env.UTILITY2_DIR_BIN)));
 ' # '
     # build app
     npm test --mode-coverage="" --mode-test-case=testCase_buildApp_default
@@ -644,13 +644,13 @@ shBuildCi () {(set -e
                 return 1
             fi
             shBuildApp
-            rm -rf "$npm_config_dir_utility2"
+            rm -rf "$UTILITY2_DIR_BIN"
             git clone https://github.com/kaizhu256/node-utility2 \
-                "$npm_config_dir_utility2" \
+                "$UTILITY2_DIR_BIN" \
                 --branch=alpha --single-branch --depth=50
-            mkdir -p "$npm_config_dir_utility2/.tmp/build/app"
+            mkdir -p "$UTILITY2_DIR_BIN/.tmp/build/app"
             curl -Lf -o \
-"$npm_config_dir_utility2/.tmp/build/app/assets.utility2.rollup.js" \
+"$UTILITY2_DIR_BIN/.tmp/build/app/assets.utility2.rollup.js" \
 https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
 /assets.utility2.rollup.js
@@ -983,17 +983,17 @@ shBuildInit () {
     # init $CI_BRANCH
     export CI_BRANCH="${CI_BRANCH:-$TRAVIS_BRANCH}"
     export CI_BRANCH="${CI_BRANCH:-alpha}"
-    # init $npm_config_dir_utility2
-    if [ ! "$npm_config_dir_utility2" ]
+    # init $UTILITY2_DIR_BIN
+    if [ ! "$UTILITY2_DIR_BIN" ]
     then
         if [ -f lib.utility2.js ]
         then
-            export npm_config_dir_utility2="$PWD"
+            export UTILITY2_DIR_BIN="$PWD"
         elif [ -f "$HOME/Documents/utility2/lib.utility2.js" ]
         then
-            export npm_config_dir_utility2="$HOME/Documents/utility2"
+            export UTILITY2_DIR_BIN="$HOME/Documents/utility2"
         else
-            export npm_config_dir_utility2="$(node -e '
+            export UTILITY2_DIR_BIN="$(node -e '
 /* jslint utility2:true */
 try {
     process.stdout.write(require("path").dirname(require.resolve("utility2")));
@@ -1005,7 +1005,7 @@ try {
 ')" # '
         fi
         export PATH="$PATH\
-:$npm_config_dir_utility2:$npm_config_dir_utility2/../.bin" || return "$?"
+:$UTILITY2_DIR_BIN:$UTILITY2_DIR_BIN/../.bin" || return "$?"
     fi
     # init $npm_package_*
     if [ -f package.json ]
@@ -2262,7 +2262,7 @@ shIstanbulCover () {(set -e
     export NODE_BIN="${NODE_BIN:-node}"
     if [ "$npm_config_mode_coverage" ]
     then
-        "$NODE_BIN" "$npm_config_dir_utility2/lib.istanbul.js" cover "$@"
+        "$NODE_BIN" "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@"
         return "$?"
     fi
     if [ "$npm_config_mode_inspect" ]
@@ -3725,7 +3725,7 @@ sqlite3-lite
         ;;
     source)
         shBuildInit
-        printf ". $npm_config_dir_utility2/lib.utility2.sh\n"
+        printf ". $UTILITY2_DIR_BIN/lib.utility2.sh\n"
         ;;
     start)
         shBuildInit
@@ -3735,7 +3735,7 @@ sqlite3-lite
             shift
         else
             export npm_config_mode_start=1
-            FILE="$npm_config_dir_utility2/test.js"
+            FILE="$UTILITY2_DIR_BIN/test.js"
         fi
         export npm_config_mode_auto_restart=1
         shRun shIstanbulCover "$FILE"
@@ -3750,7 +3750,7 @@ sqlite3-lite
         ;;
     utility2Dirname)
         shBuildInit
-        printf "$npm_config_dir_utility2\n"
+        printf "$UTILITY2_DIR_BIN\n"
         ;;
     *)
         "$COMMAND" "$@"

@@ -4286,10 +4286,10 @@ local.replStart = function () {
                 // source lib.utility2.sh
                 if (
                     process.platform !== "win32"
-                    && process.env.npm_config_dir_utility2 && (match2 !== ":")
+                    && process.env.UTILITY2_DIR_BIN && (match2 !== ":")
                 ) {
                     match2 = (
-                        ". " + process.env.npm_config_dir_utility2
+                        ". " + process.env.UTILITY2_DIR_BIN
                         + "/lib.utility2.sh;" + match2
                     );
                 }
