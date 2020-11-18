@@ -1114,10 +1114,6 @@ try {
 shBuildInsideDocker () {(set -e
 # this function will run build inside docker
     shEnvSanitize
-    # bug-workaround - Cannot read property 'target' of null #10686
-    # https://github.com/npm/npm/issues/10686
-    sed -in -e 's/  "_requiredBy":/  "_requiredBy_":/' package.json
-    rm -f package.jsonn
     # npm-install
     npm install
     # npm-test
