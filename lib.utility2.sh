@@ -1926,7 +1926,9 @@ shGitLsTree2 () {(set -e
 (function () {
     "use strict";
     let list;
+    let sum;
     list = [];
+    sum = 0;
     require("readline").createInterface({
         input: process.stdin
     }).on("line", function (line) {
@@ -1941,6 +1943,7 @@ shGitLsTree2 () {(set -e
                 size,
                 file
             });
+            sum += Number(size);
             require("child_process").spawn("git", [
                 "log", "--max-count=1", "--format=%at", file
             ], {
