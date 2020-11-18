@@ -2389,17 +2389,17 @@ node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
 shNpmPackageDependencyTreeCreate () {(set -e
 # this function will create svg-dependency-tree of npm-package
     local DIR
-    #!! if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
-    #!! then
-        #!! return
-    #!! fi
+    if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
+    then
+        return
+    fi
+    export MODE_BUILD=npmPackageDependencyTree
+    shBuildPrint "start"
     shEnvSanitize
     # cleanup /tmp/node_modules
     rm -rf /tmp/node_modules
     DIR=/tmp/npmPackageDependencyTreeCreate
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    export MODE_BUILD=npmPackageDependencyTree
-    shBuildPrint "creating npmDependencyTree ..."
     npm install "${2:-$1}" --prefix . || true
     shRunWithScreenshotTxtAfter () {(set -e
         node -e '
@@ -2429,11 +2429,13 @@ shNpmPackageDependencyTreeCreate () {(set -e
 ' "$(du -ks "$DIR/node_modules")" # '
     )}
     shRunWithScreenshotTxt npm ls || true
-    shBuildPrint "... created npmDependencyTree"
+    shBuildPrint "end"
 )}
 
 shNpmPackageListingCreate () {(set -e
 # this function will create svg-listing of npm-package
+    export MODE_BUILD=npmPackageListing
+    shBuildPrint "start"
     # init .git
     if [ ! -d .git ]
     then
@@ -2446,8 +2448,8 @@ node_modules
         git add .
         git commit -m 'initial commit' | head -n 1024
     fi
-    MODE_BUILD=npmPackageListing shRunWithScreenshotTxt \
-        eval "printf \"package files\n\n\" && shGitLsTree"
+    shRunWithScreenshotTxt eval "printf \"package files\n\n\" && shGitLsTree"
+    shBuildPrint "end"
 )}
 
 shNpmPublishAlias () {(set -e
