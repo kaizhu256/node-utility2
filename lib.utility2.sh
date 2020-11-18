@@ -933,11 +933,13 @@ shBuildCiInternal () {(set -e
 
 shBuildGithubUpload () {(set -e
 # this function will upload build-artifacts to github
-    export MODE_BUILD="${MODE_BUILD:-buildGithubUpload}"
-    shBuildPrint "uploading build-artifacts to https://github.com/$GITHUB_FULLNAME"
+    local DIR
+    local URL
+    export MODE_BUILD="${MODE_BUILD:-shBuildGithubUpload}"
+    shBuildPrint "uploading artifacts to https://github.com/$GITHUB_FULLNAME"
     URL="https://github.com/$GITHUB_FULLNAME"
     # init $DIR
-    DIR="$npm_config_dir_tmp/buildGithubUpload"
+    DIR="/tmp/shBuildGithubUpload"
     rm -rf "$DIR"
     shGitCommandWithGithubToken clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
@@ -1147,15 +1149,10 @@ shBuildPrint () {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    process.stderr.write("\n" + (
-        (process.stderr.hasColors && process.stderr.hasColors())
-        ? "\u001b[35m"
-        : ""
-    ) + "[MODE_BUILD=" + process.env.MODE_BUILD + "]" + (
-        (process.stderr.hasColors && process.stderr.hasColors())
-        ? "\u001b[0m"
-        : ""
-    ) + " - " + new Date().toISOString() + " - " + process.argv[1] + "\n\n");
+    process.stderr.write(
+        "\n\u001b[35m[MODE_BUILD=" + process.env.MODE_BUILD + "]\u001b[0m - "
+        + new Date().toISOString() + " - " + process.argv[1] + "\n\n"
+    );
 }());
 ' "$1" # '
 )}
