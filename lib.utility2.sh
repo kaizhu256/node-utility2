@@ -1921,29 +1921,30 @@ shGitLsTree2 () {(set -e
 # example use:
 # shGitLsTree | sort -nrk2 -nrk3 # sort by date
 # shGitLsTree | sort -nrk5 # sort by size
-    git ls-tree --long -r HEAD | head -n 1024 | sort --key=5 | node -e '
+    git ls-tree -lr HEAD | head -n 1024 | LC_COLLATE=C sort -k 5 | node -e '
 /* jslint utility2:true */
 (function () {
     "use strict";
     let list;
-    let sum;
-    list = [];
-    sum = 0;
+    list = [{
+        file: ".",
+        mode: "100755",
+        size: 0
+    }];
     require("readline").createInterface({
         input: process.stdin
     }).on("line", function (line) {
-        console.log(JSON.stringify(line));
         line.replace((
             /(\S+?)\u0020+?\S+?\u0020+?\S+?\u0020+?(\S+?)\t(\S+?)$/
         ), function (ignore, mode, size, file) {
             let ii;
             ii = list.length;
             list.push({
+                file,
                 mode,
-                size,
-                file
+                size
             });
-            sum += Number(size);
+            list[0].size += Number(size);
             require("child_process").spawn("git", [
                 "log", "--max-count=1", "--format=%at", file
             ], {
@@ -1958,7 +1959,16 @@ shGitLsTree2 () {(set -e
         });
     });
     process.on("exit", function () {
-        console.log(list);
+        process.stdout.write(list.map(function (elem, ii) {
+            return (
+                String(ii + ".").padEnd(5, " ")
+                + "  " + elem.date
+                + "  " + String(elem.size).padStart(9, " ") + " bytes"
+                + "  " + elem.mode
+                + "  " + elem.file
+                + "\n"
+            );
+        }).join(""));
     });
 }());
 ' # '
