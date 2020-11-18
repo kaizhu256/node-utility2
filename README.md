@@ -1276,7 +1276,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint \
+    npm install -g eslint; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1293,12 +1293,12 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint \
+    npm install -g eslint; \
     npm install kaizhu256/node-utility2#alpha; \
-    echo $PWD \
-    ls -la \
     cp -a node_modules /; \
     cd node_modules/utility2; \
+    npm install; \
+    npm test; \
 )
 ```
 
