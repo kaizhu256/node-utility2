@@ -2411,9 +2411,9 @@ shNpmPackageDependencyTreeCreate () {(set -e
         du -ms "$DIR" |
             awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
             > "$npm_config_file_tmp"
-        grep -E '^ *[│└├]' "$npm_config_dir_tmp/runWithScreenshotTxt" \
+        grep -E '^ *[│└├]' "/tmp/shRunWithScreenshotTxt.txt" \
             >> "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runWithScreenshotTxt"
+        mv "$npm_config_file_tmp" "/tmp/shRunWithScreenshotTxt.txt"
     )}
     shRunWithScreenshotTxt npm ls || true
     shBuildPrint "... created npmDependencyTree"
@@ -3280,8 +3280,8 @@ shRunWithScreenshotTxt () {(set -e
     shBuildPrint "(shRun "$*" 2>&1)"
     (
         (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
-    ) | tee "$npm_config_dir_tmp/runWithScreenshotTxt"
-    EXIT_CODE="$(tail -n 1 "$npm_config_dir_tmp/runWithScreenshotTxt")"
+    ) | tee "/tmp/shRunWithScreenshotTxt.txt"
+    EXIT_CODE="$(tail -n 1 "/tmp/shRunWithScreenshotTxt.txt")"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
@@ -3298,7 +3298,7 @@ shRunWithScreenshotTxt () {(set -e
     let yy;
     yy = 10;
     result = require("fs").readFileSync(
-        process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
+        require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
         "utf8"
     // remove $EXIT_CODE
     ).replace((
@@ -3313,10 +3313,11 @@ shRunWithScreenshotTxt () {(set -e
         /\\u[0-9a-f]{4}/g
     ), function (match0) {
         return String.fromCharCode("0x" + match0.slice(-4));
-    }).trimEnd().replace((
+    }).trimEnd();
+    // 96 column wordwrap
+    result = result.replace((
         /^.*?$/gm
     ), function (line) {
-        // 96 column wordwrap
         return line.replace((
             /.{0,96}/g
         ), function (line, ii) {
@@ -3337,9 +3338,9 @@ shRunWithScreenshotTxt () {(set -e
     }) + "\n";
     result = (
         "<svg height=\"" + (yy + 20)
-        + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
+        + "px\" width=\"720px\" xmlns=\"http://www.w3.org/2000/svg\">\n"
         + "<rect height=\"" + (yy + 20)
-        + "\" fill=\"#555\" width=\"720\"></rect>\n"
+        + "px\" fill=\"#555\" width=\"720px\"></rect>\n"
         + "<text fill=\"#7f7\" font-family=\"Consolas, Menlo, monospace\" "
         + "font-size=\"12\" xml:space=\"preserve\">\n"
         + result + "</text>\n</svg>\n"
