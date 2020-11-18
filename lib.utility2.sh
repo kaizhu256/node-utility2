@@ -3296,19 +3296,6 @@ shRunWithScreenshotTxt () {(set -e
     "use strict";
     let result;
     let yy;
-    function wordwrap(line, ii) {
-        if (ii && !line) {
-            return "";
-        }
-        yy += 16;
-        return "<tspan x=\"10\" y=\"" + yy + "\">" + line.replace((
-            /&/g
-        ), "&amp;").replace((
-            /</g
-        ), "&lt;").replace((
-            />/g
-        ), "&gt;") + "</tspan>\n";
-    }
     yy = 10;
     result = require("fs").readFileSync(
         process.env.npm_config_dir_tmp + "/runWithScreenshotTxt",
@@ -3326,20 +3313,35 @@ shRunWithScreenshotTxt () {(set -e
         /\\u[0-9a-f]{4}/g
     ), function (match0) {
         return String.fromCharCode("0x" + match0.slice(-4));
-    }).trimEnd().split("\n").map(function (line) {
+    }).trimEnd().replace((
+        /^.*?$/gm
+    ), function (line) {
+        // 96 column wordwrap
         return line.replace((
             /.{0,96}/g
-        ), wordwrap).replace((
-            /(<\/tspan>\n<tspan)/g
+        ), function (line, ii) {
+            if (ii && !line) {
+                return "";
+            }
+            yy += 16;
+            return "<tspan x=\"10\" y=\"" + yy + "\">" + line.replace((
+                /&/g
+            ), "&amp;").replace((
+                /</g
+            ), "&lt;").replace((
+                />/g
+            ), "&gt;") + "</tspan>";
+        }).replace((
+            /(<\/tspan><tspan)/g
         ), "\\$1").slice();
-    }).join("");
+    }) + "\n";
     result = (
         "<svg height=\"" + (yy + 20)
         + "\" width=\"720\" xmlns=\"http://www.w3.org/2000/svg\">\n"
         + "<rect height=\"" + (yy + 20)
         + "\" fill=\"#555\" width=\"720\"></rect>\n"
-        + "<text fill=\"#7f7\" font-family=\"Courier New\" font-size=\"12\" "
-        + "xml:space=\"preserve\">\n"
+        + "<text fill=\"#7f7\" font-family=\"Consolas, Menlo, monospace\" "
+        + "font-size=\"12\" xml:space=\"preserve\">\n"
         + result + "</text>\n</svg>\n"
     );
     require("fs").writeFileSync(
