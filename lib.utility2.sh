@@ -247,7 +247,7 @@ shBrowserScreenshot () {(set -e
         file = file.replace(process.cwd(), "");
     }
     file = require("path").resolve(
-        process.env.npm_config_dir_build
+        process.env.UTILITY2_DIR_BUILD
         + "/screenshot."
         + process.env.MODE_BUILD + ".browser."
         + encodeURIComponent(file.replace(
@@ -855,7 +855,7 @@ shBuildCiInternal () {(set -e
         shBuildCiBefore
     fi
     export npm_config_file_test_report_merge=\
-"$npm_config_dir_build/test-report.json"
+"$UTILITY2_DIR_BUILD/test-report.json"
 
 
     # npm-test
@@ -880,15 +880,15 @@ shBuildCiInternal () {(set -e
 
     # screenshot coverage
     FILE="$(
-        find "$npm_config_dir_build" -name *.js.html 2>/dev/null | tail -n 1
+        find "$UTILITY2_DIR_BUILD" -name *.js.html 2>/dev/null | tail -n 1
     )"
     if [ -f "$FILE" ]
     then
-        cp "$FILE" "$npm_config_dir_build/coverage.lib.html"
+        cp "$FILE" "$UTILITY2_DIR_BUILD/coverage.lib.html"
     fi
     for FILE in apidoc.html coverage.lib.html test-report.html
     do
-        FILE="$npm_config_dir_build/$FILE"
+        FILE="$UTILITY2_DIR_BUILD/$FILE"
         if [ -f "$FILE" ]
         then
             MODE_BUILD=buildCi shBrowserScreenshot "file://$FILE" &
@@ -908,8 +908,8 @@ shBuildCiInternal () {(set -e
     then
         shBuildCiAfter
     fi
-    # list $npm_config_dir_build
-    find "$npm_config_dir_build" | sort
+    # list $UTILITY2_DIR_BUILD
+    find "$UTILITY2_DIR_BUILD" | sort
     # upload build-artifacts to github
     # and if number of commits > $COMMIT_LIMIT
     # then squash older commits
@@ -952,9 +952,9 @@ shBuildGithubUpload () {(set -e
         ;;
     esac
     # copy build-artifacts
-    cp -a "$npm_config_dir_build" .
+    cp -a "$UTILITY2_DIR_BUILD" .
     rm -rf "build..$CI_BRANCH..$CI_HOST"
-    cp -a "$npm_config_dir_build" "build..$CI_BRANCH..$CI_HOST"
+    cp -a "$UTILITY2_DIR_BUILD" "build..$CI_BRANCH..$CI_HOST"
     # disable github-jekyll
     touch .nojekyll
     # git-add .
@@ -1064,9 +1064,9 @@ try {
         printf "$npm_package_name" | sed -e "s/[^0-9A-Z_a-z]/_/g"
     )}" || return "$?"
     # init $npm_config_*
-    export npm_config_dir_build="${npm_config_dir_build:-$PWD/.tmp/build}" ||
+    export UTILITY2_DIR_BUILD="${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}" ||
         return "$?"
-    mkdir -p "$npm_config_dir_build/coverage" || return "$?"
+    mkdir -p "$UTILITY2_DIR_BUILD/coverage" || return "$?"
     export npm_config_file_tmp="${npm_config_file_tmp:-$PWD/.tmp/tmpfile}" ||
         return "$?"
     # extract and save scripts embedded in README.md to .tmp/
@@ -1517,7 +1517,7 @@ shDeployHeroku () {(set -e
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
         shBuildApp
-        cp "$npm_config_dir_build"/app/*.js .
+        cp "$UTILITY2_DIR_BUILD"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js\n" > Procfile
         # cleanup .tmp
         rm -rf .tmp
@@ -2491,7 +2491,7 @@ shNpmTest () {(set -e
     # npm-test with coverage
     else
         # cleanup old coverage
-        rm -f "$npm_config_dir_build/coverage/"coverage.*.json
+        rm -f "$UTILITY2_DIR_BUILD/coverage/"coverage.*.json
         # npm-test with coverage
         (shIstanbulCover "$@") || EXIT_CODE="$?"
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
@@ -3112,11 +3112,11 @@ shReadmeEval () {(set -e
         rm -rf "$DIR" && mkdir -p "$DIR"
         # cp script from README.md
         cp ".tmp/README.$FILE" "$DIR/$FILE"
-        cp ".tmp/README.$FILE" "$npm_config_dir_build/$FILE"
+        cp ".tmp/README.$FILE" "$UTILITY2_DIR_BUILD/$FILE"
         # delete all leading blank lines at top of file
         # http://sed.sourceforge.net/sed1line.txt
-        sed -in -e '/./,$!d' "$npm_config_dir_build/$FILE"
-        rm -f "$npm_config_dir_build/$FILE"n
+        sed -in -e '/./,$!d' "$UTILITY2_DIR_BUILD/$FILE"
+        rm -f "$UTILITY2_DIR_BUILD/$FILE"n
         cd "$DIR"
         if [ "$CI_BRANCH" = alpha ]
         then
@@ -3271,7 +3271,7 @@ shRunWithScreenshotTxt () {(set -e
     local EXIT_CODE
     EXIT_CODE=0
     export MODE_BUILD_SCREENSHOT_IMG="screenshot.${MODE_BUILD:-undefined}.svg"
-    touch "$npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
+    touch "$UTILITY2_DIR_BUILD/$MODE_BUILD_SCREENSHOT_IMG"
     shBuildPrint "(shRun "$*" 2>&1)"
     (
         (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
@@ -3341,14 +3341,14 @@ shRunWithScreenshotTxt () {(set -e
         + result + "</text>\n</svg>\n"
     );
     require("fs").writeFileSync(
-        process.env.npm_config_dir_build
+        process.env.UTILITY2_DIR_BUILD
         + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
         result
     );
 }());
 ' # '
     shBuildPrint \
-"created screenshot file $npm_config_dir_build/$MODE_BUILD_SCREENSHOT_IMG"
+"created screenshot file $UTILITY2_DIR_BUILD/$MODE_BUILD_SCREENSHOT_IMG"
     return "$EXIT_CODE"
 )}
 

@@ -1596,7 +1596,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
             JSON.parse(
                 require("fs").readFileSync(
                     require("path").resolve(
-                        process.env.npm_config_dir_build + "/test-report.json"
+                        process.env.UTILITY2_DIR_BUILD + "/test-report.json"
                     ),
                     "utf8"
                 )
@@ -1858,7 +1858,7 @@ local._testCase_webpage_default = function (opt, onError) {
     }
     local.browserTest({
         fileScreenshot: (
-            process.env.npm_config_dir_build
+            process.env.UTILITY2_DIR_BUILD
             + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
@@ -1921,7 +1921,7 @@ local.browserTest = function ({
             )
         );
         fileScreenshot = (
-            process.env.npm_config_dir_build
+            process.env.UTILITY2_DIR_BUILD
             + "/screenshot." + testName + ".png"
         );
         return local.chromeDevtoolsClientCreate({
@@ -1978,14 +1978,14 @@ local.browserTest = function ({
         promiseList.push(new Promise(function (resolve) {
             require("fs").writeFile(
                 require("path").resolve(
-                    process.env.npm_config_dir_build + "/test-report.json"
+                    process.env.UTILITY2_DIR_BUILD + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
                     local.onErrorThrow(err);
                     console.error(
                         "\nbrowserTest - merged test-report "
-                        + process.env.npm_config_dir_build + "/test-report.json"
+                        + process.env.UTILITY2_DIR_BUILD + "/test-report.json"
                         + "\n"
                     );
                     resolve();
@@ -5921,7 +5921,7 @@ local.testRunDefault = function (opt) {
         // create test-report.json
         delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
-            local.env.npm_config_dir_build + "/test-report.json",
+            local.env.UTILITY2_DIR_BUILD + "/test-report.json",
             JSON.stringify(testReport, undefined, 4)
         );
         // restore console.log
@@ -6348,7 +6348,7 @@ local.http = require("http");
 local.Module = require("module");
 // init env
 local.objectAssignDefault(process.env, {
-    npm_config_dir_build: require("path").resolve(".tmp/build")
+    UTILITY2_DIR_BUILD: require("path").resolve(".tmp/build")
 });
 // merge previous test-report
 if (process.env.npm_config_file_test_report_merge) {
