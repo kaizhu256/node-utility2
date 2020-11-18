@@ -1926,11 +1926,13 @@ shGitLsTree2 () {(set -e
 (function () {
     "use strict";
     let list;
-    list = [{
-        file: ".",
-        mode: "100755",
-        size: 0
-    }];
+    list = [
+        {
+            file: ".",
+            mode: "100755",
+            size: 0
+        }
+    ];
     require("readline").createInterface({
         input: process.stdin
     }).on("line", function (line) {
