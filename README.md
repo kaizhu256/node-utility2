@@ -1330,7 +1330,7 @@ shBuildCiAfter () {(set -e
         -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
-    docker.latest)
+    docker.tmp)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
