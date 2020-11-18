@@ -1890,36 +1890,9 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
 shGitLsTree () {(set -e
-# this function will list all files committed in HEAD
-# example use:
-# shGitLsTree | sort -nrk2 -nrk3 # sort by date
-# shGitLsTree | sort -nrk5 # sort by size
-    printf "$(git ls-tree --name-only -r HEAD | head -n 4096)" | awk '{
-    ii += 1
-    file = $0
-    cmd = "git log -1 --format=\"%ai\" -- " file
-    (cmd | getline date)
-    close(cmd)
-    cmd = "ls -ln '\''" file "'\'' | awk \"{print \\$5}\""
-    (cmd | getline size)
-    close(cmd)
-    sizeTotal += size
-    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
-} END {
-    ii = 0
-    file = "."
-    cmd = "git log -1 --format=\"%ai\" -- " file
-    (cmd | getline date)
-    close(cmd)
-    size = sizeTotal
-    printf("%-4s  %s %9s bytes %s\n", ii, date, size, file)
-    }' | sed -e "s/ /./"
-)}
-
-shGitLsTree2 () {(set -e
 # this function will "git ls-tree" all files committed in HEAD
 # example use:
-# shGitLsTree | sort -nrk2 -nrk3 # sort by date
+# shGitLsTree | sort -rk3 -rk4 # sort by date
 # shGitLsTree | sort -nrk5 # sort by size
     git ls-tree -lr HEAD | head -n 1024 | LC_COLLATE=C sort -k 5 | node -e '
 /* jslint utility2:true */
@@ -1950,7 +1923,9 @@ shGitLsTree2 () {(set -e
                     2
                 ]
             }).stdout.on("data", function (chunk) {
-                list[ii].date = new Date(Number(chunk) * 1000).toISOString();
+                list[ii].date = new Date(
+                    Number(chunk) * 1000
+                ).toISOString().slice(0, 19).replace("T", " ") + " Z";
             });
         });
     }).emit("line", "100755 . . 0\t.");
@@ -1958,9 +1933,11 @@ shGitLsTree2 () {(set -e
         process.stdout.write(list.map(function (elem, ii) {
             return (
                 String(ii + ".").padEnd(5, " ")
+                + " " + elem.mode
                 + "  " + elem.date
-                + "  " + String(elem.size).padStart(9, " ") + " bytes"
-                + "  " + elem.mode
+                + " " + String(
+                    Math.ceil(Number(elem.size) / 1024)
+                ).padStart(6, " ") + " KB"
                 + "  " + elem.file
                 + "\n"
             );
@@ -2458,20 +2435,8 @@ node_modules
         git add .
         git commit -m 'initial commit' | head -n 4096
     fi
-    export MODE_BUILD=shNpmPackageListingCreate
-    shRunWithScreenshotTxtAfter () {(set -e
-        awk '{
-lineList[NR] = $0
-} END {
-    print "package files\n"
-    print lineList[NR]
-    for (ii = 1; ii < NR; ii += 1) {
-        print lineList[ii]
-    }
-        }' "$npm_config_dir_tmp/runWithScreenshotTxt" > "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" "$npm_config_dir_tmp/runWithScreenshotTxt"
-    )}
-    shRunWithScreenshotTxt shGitLsTree
+    export MODE_BUILD=npmPackageListingCreate
+    shRunWithScreenshotTxt printf "$(printf "package files\n\n" && shGitLsTree)"
 )}
 
 shNpmPublishAlias () {(set -e
