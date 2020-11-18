@@ -939,7 +939,7 @@ shBuildGithubUpload () {(set -e
     shBuildPrint "uploading artifacts to https://github.com/$GITHUB_FULLNAME"
     URL="https://github.com/$GITHUB_FULLNAME"
     # init $DIR
-    DIR="/tmp/shBuildGithubUpload"
+    DIR=/tmp/shBuildGithubUpload
     rm -rf "$DIR"
     shGitCommandWithGithubToken clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
@@ -2406,9 +2406,9 @@ shNpmPackageDependencyTreeCreate () {(set -e
         du -ms "$DIR" |
             awk '{print "npm install - " $1 " megabytes\n\nnode_modules"}' \
             > "$npm_config_file_tmp"
-        grep -E '^ *[│└├]' "/tmp/shRunWithScreenshotTxt.txt" \
+        grep -E '^ *[│└├]' /tmp/shRunWithScreenshotTxt.txt \
             >> "$npm_config_file_tmp"
-        mv "$npm_config_file_tmp" "/tmp/shRunWithScreenshotTxt.txt"
+        mv "$npm_config_file_tmp" /tmp/shRunWithScreenshotTxt.txt
     )}
     shRunWithScreenshotTxt npm ls || true
     shBuildPrint "... created npmDependencyTree"
@@ -3275,8 +3275,8 @@ shRunWithScreenshotTxt () {(set -e
     shBuildPrint "(shRun "$*" 2>&1)"
     (
         (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
-    ) | tee "/tmp/shRunWithScreenshotTxt.txt"
-    EXIT_CODE="$(tail -n 1 "/tmp/shRunWithScreenshotTxt.txt")"
+    ) | tee /tmp/shRunWithScreenshotTxt.txt
+    EXIT_CODE="$(tail -n 1 /tmp/shRunWithScreenshotTxt.txt)"
     shBuildPrint "EXIT_CODE - $EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
