@@ -2428,8 +2428,8 @@ node_modules
         git add .
         git commit -m 'initial commit' | head -n 1024
     fi
-    export MODE_BUILD=npmPackageListing
-    shRunWithScreenshotTxt printf "$(printf "package files\n\n" && shGitLsTree)"
+    MODE_BUILD=npmPackageListing shRunWithScreenshotTxt \
+        eval "printf 'package files\n\n' && shGitLsTree"
 )}
 
 shNpmPublishAlias () {(set -e
@@ -3269,15 +3269,17 @@ shRunWithScreenshotTxt () {(set -e
 # this function will run command "$@" and screenshot text-output
 # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
     local EXIT_CODE
+    local SCREENSHOT_SVG
     EXIT_CODE=0
-    export MODE_BUILD_SCREENSHOT_IMG="screenshot.${MODE_BUILD:-undefined}.svg"
-    touch "$UTILITY2_DIR_BUILD/$MODE_BUILD_SCREENSHOT_IMG"
-    shBuildPrint "(shRun "$*" 2>&1)"
+    SCREENSHOT_SVG=\
+"${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}/screenshot.${MODE_BUILD:-undefined}.svg"
+    rm -f "$SCREENSHOT_SVG"
+    shBuildPrint "shRunWithScreenshotTxt - (shRun $* 2>&1)"
     (
         (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
     ) | tee /tmp/shRunWithScreenshotTxt.txt
     EXIT_CODE="$(tail -n 1 /tmp/shRunWithScreenshotTxt.txt)"
-    shBuildPrint "EXIT_CODE - $EXIT_CODE"
+    shBuildPrint "shRunWithScreenshotTxt - EXIT_CODE - $EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
     then
@@ -3340,15 +3342,11 @@ shRunWithScreenshotTxt () {(set -e
         + "font-size=\"12\" xml:space=\"preserve\">\n"
         + result + "</text>\n</svg>\n"
     );
-    require("fs").writeFileSync(
-        process.env.UTILITY2_DIR_BUILD
-        + "/" + process.env.MODE_BUILD_SCREENSHOT_IMG,
-        result
-    );
+    require("fs").writeFileSync(process.argv[1], result);
 }());
-' # '
+' "$SCREENSHOT_SVG" # '
     shBuildPrint \
-"created screenshot file $UTILITY2_DIR_BUILD/$MODE_BUILD_SCREENSHOT_IMG"
+"created screenshot file $SCREENSHOT_SVG"
     return "$EXIT_CODE"
 )}
 
