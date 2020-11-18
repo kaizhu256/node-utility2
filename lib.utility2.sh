@@ -1114,7 +1114,6 @@ try {
 shBuildInsideDocker () {(set -e
 # this function will run build inside docker
     shEnvSanitize
-    export npm_config_unsafe_perm=1
     # npm-install
     npm install
     # npm-test
