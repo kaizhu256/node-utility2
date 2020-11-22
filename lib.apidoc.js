@@ -675,7 +675,7 @@ local.templateRender = function (template, dict, opt = {}, ii = 0) {
                 case "markdownSafe":
                     val = val.replace((
                         /`/g
-                    ), "'");
+                    ), "'"); // `
                     break;
                 case "markdownToHtml":
                     markdownToHtml = true;

@@ -251,200 +251,201 @@ globalThis.utility2 = local;
 local.assetsDict = local.assetsDict || {};
 
 
+local.assetsDict[
+    "/assets.utility2.header.js"
+] = `// assets.utility2.header.js - start
+/* jslint utility2:true */
+/* istanbul ignore next */
+// run shared js\-env code - init-local
+(function () {
+    "use strict";
+    let isBrowser;
+    let isWebWorker;
+    let local;
+    // polyfill globalThis
+    if (!(typeof globalThis === "object" && globalThis)) {
+        if (typeof window === "object" && window && window.window === window) {
+            window.globalThis = window;
+        }
+        if (typeof global === "object" && global && global.global === global) {
+            global.globalThis = global;
+        }
+    }
+    // init debugInline
+    if (!globalThis.debugInline) {
+        let consoleError;
+        consoleError = console.error;
+        globalThis.debugInline = function (...argList) {
+        /*
+         * this function will both print <argList> to stderr
+         * and return <argList>[0]
+         */
+            consoleError("\\n\\ndebugInline");
+            consoleError(...argList);
+            consoleError("\\n");
+            return argList[0];
+        };
+    }
+    // init isBrowser
+    isBrowser = (
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
+    );
+    // init isWebWorker
+    isWebWorker = (
+        isBrowser && typeof globalThis.importScripts === "function"
+    );
+    // init function
+    function objectDeepCopyWithKeysSorted(obj) {
+    /*
+     * this function will recursively deep-copy <obj> with keys sorted
+     */
+        let sorted;
+        if (typeof obj !== "object" || !obj) {
+            return obj;
+        }
+        // recursively deep-copy list with child-keys sorted
+        if (Array.isArray(obj)) {
+            return obj.map(objectDeepCopyWithKeysSorted);
+        }
+        // recursively deep-copy obj with keys sorted
+        sorted = {};
+        Object.keys(obj).sort().forEach(function (key) {
+            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
+        });
+        return sorted;
+    }
+    function assertJsonEqual(aa, bb) {
+    /*
+     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
+     */
+        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
+        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
+        if (aa !== bb) {
+            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
+        }
+    }
+    function assertOrThrow(passed, msg) {
+    /*
+     * this function will throw <msg> if <passed> is falsy
+     */
+        if (passed) {
+            return;
+        }
+        throw (
+            (
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
+            )
+            // if msg is err, then leave as is
+            ? msg
+            : new Error(
+                typeof msg === "string"
+                // if msg is string, then leave as is
+                ? msg
+                // else JSON.stringify(msg)
+                : JSON.stringify(msg, undefined, 4)
+            )
+        );
+    }
+    function coalesce(...argList) {
+    /*
+     * this function will coalesce null, undefined, or "" in <argList>
+     */
+        let arg;
+        let ii;
+        ii = 0;
+        while (ii < argList.length) {
+            arg = argList[ii];
+            if (arg !== undefined && arg !== null && arg !== "") {
+                return arg;
+            }
+            ii += 1;
+        }
+        return arg;
+    }
+    function identity(val) {
+    /*
+     * this function will return <val>
+     */
+        return val;
+    }
+    function noop() {
+    /*
+     * this function will do nothing
+     */
+        return;
+    }
+    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
+    /*
+     * this function will if items from <tgt> are null, undefined, or "",
+     * then overwrite them with items from <src>
+     */
+        let recurse;
+        recurse = function (tgt, src, depth) {
+            Object.entries(src).forEach(function ([
+                key, bb
+            ]) {
+                let aa;
+                aa = tgt[key];
+                if (aa === undefined || aa === null || aa === "") {
+                    tgt[key] = bb;
+                    return;
+                }
+                if (
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                ) {
+                    recurse(aa, bb, depth - 1);
+                }
+            });
+        };
+        recurse(tgt, src, depth | 0);
+        return tgt;
+    }
+    function onErrorThrow(err) {
+    /*
+     * this function will throw <err> if exists
+     */
+        if (err) {
+            throw err;
+        }
+    }
+    // bug-workaround - throw unhandledRejections in node-process
+    if (
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
+    ) {
+        process.unhandledRejections = "strict";
+        process.on("unhandledRejection", function (err) {
+            throw err;
+        });
+    }
+    // init local
+    local = {
+        assertJsonEqual,
+        assertOrThrow,
+        coalesce,
+        identity,
+        isBrowser,
+        isWebWorker,
+        local,
+        noop,
+        objectAssignDefault,
+        objectDeepCopyWithKeysSorted,
+        onErrorThrow
+    };
+    globalThis.globalLocal = local;
+}());
+// assets.utility2.header.js - end
+`;
+
+
 /* jslint ignore:start */
-local.assetsDict["/assets.utility2.header.js"] = '\
-// assets.utility2.header.js - start\n\
-/* jslint utility2:true */\n\
-/* istanbul ignore next */\n\
-// run shared js\-env code - init-local\n\
-(function () {\n\
-    "use strict";\n\
-    let isBrowser;\n\
-    let isWebWorker;\n\
-    let local;\n\
-    // polyfill globalThis\n\
-    if (!(typeof globalThis === "object" && globalThis)) {\n\
-        if (typeof window === "object" && window && window.window === window) {\n\
-            window.globalThis = window;\n\
-        }\n\
-        if (typeof global === "object" && global && global.global === global) {\n\
-            global.globalThis = global;\n\
-        }\n\
-    }\n\
-    // init debugInline\n\
-    if (!globalThis.debugInline) {\n\
-        let consoleError;\n\
-        consoleError = console.error;\n\
-        globalThis.debugInline = function (...argList) {\n\
-        /*\n\
-         * this function will both print <argList> to stderr\n\
-         * and return <argList>[0]\n\
-         */\n\
-            consoleError("\\n\\ndebugInline");\n\
-            consoleError(...argList);\n\
-            consoleError("\\n");\n\
-            return argList[0];\n\
-        };\n\
-    }\n\
-    // init isBrowser\n\
-    isBrowser = (\n\
-        typeof globalThis.XMLHttpRequest === "function"\n\
-        && globalThis.navigator\n\
-        && typeof globalThis.navigator.userAgent === "string"\n\
-    );\n\
-    // init isWebWorker\n\
-    isWebWorker = (\n\
-        isBrowser && typeof globalThis.importScripts === "function"\n\
-    );\n\
-    // init function\n\
-    function objectDeepCopyWithKeysSorted(obj) {\n\
-    /*\n\
-     * this function will recursively deep-copy <obj> with keys sorted\n\
-     */\n\
-        let sorted;\n\
-        if (typeof obj !== "object" || !obj) {\n\
-            return obj;\n\
-        }\n\
-        // recursively deep-copy list with child-keys sorted\n\
-        if (Array.isArray(obj)) {\n\
-            return obj.map(objectDeepCopyWithKeysSorted);\n\
-        }\n\
-        // recursively deep-copy obj with keys sorted\n\
-        sorted = {};\n\
-        Object.keys(obj).sort().forEach(function (key) {\n\
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n\
-        });\n\
-        return sorted;\n\
-    }\n\
-    function assertJsonEqual(aa, bb) {\n\
-    /*\n\
-     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)\n\
-     */\n\
-        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n\
-        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n\
-        if (aa !== bb) {\n\
-            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));\n\
-        }\n\
-    }\n\
-    function assertOrThrow(passed, msg) {\n\
-    /*\n\
-     * this function will throw <msg> if <passed> is falsy\n\
-     */\n\
-        if (passed) {\n\
-            return;\n\
-        }\n\
-        throw (\n\
-            (\n\
-                msg\n\
-                && typeof msg.message === "string"\n\
-                && typeof msg.stack === "string"\n\
-            )\n\
-            // if msg is err, then leave as is\n\
-            ? msg\n\
-            : new Error(\n\
-                typeof msg === "string"\n\
-                // if msg is string, then leave as is\n\
-                ? msg\n\
-                // else JSON.stringify(msg)\n\
-                : JSON.stringify(msg, undefined, 4)\n\
-            )\n\
-        );\n\
-    }\n\
-    function coalesce(...argList) {\n\
-    /*\n\
-     * this function will coalesce null, undefined, or "" in <argList>\n\
-     */\n\
-        let arg;\n\
-        let ii;\n\
-        ii = 0;\n\
-        while (ii < argList.length) {\n\
-            arg = argList[ii];\n\
-            if (arg !== undefined && arg !== null && arg !== "") {\n\
-                return arg;\n\
-            }\n\
-            ii += 1;\n\
-        }\n\
-        return arg;\n\
-    }\n\
-    function identity(val) {\n\
-    /*\n\
-     * this function will return <val>\n\
-     */\n\
-        return val;\n\
-    }\n\
-    function noop() {\n\
-    /*\n\
-     * this function will do nothing\n\
-     */\n\
-        return;\n\
-    }\n\
-    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
-    /*\n\
-     * this function will if items from <tgt> are null, undefined, or "",\n\
-     * then overwrite them with items from <src>\n\
-     */\n\
-        let recurse;\n\
-        recurse = function (tgt, src, depth) {\n\
-            Object.entries(src).forEach(function ([\n\
-                key, bb\n\
-            ]) {\n\
-                let aa;\n\
-                aa = tgt[key];\n\
-                if (aa === undefined || aa === null || aa === "") {\n\
-                    tgt[key] = bb;\n\
-                    return;\n\
-                }\n\
-                if (\n\
-                    depth !== 0\n\
-                    && typeof aa === "object" && aa && !Array.isArray(aa)\n\
-                    && typeof bb === "object" && bb && !Array.isArray(bb)\n\
-                ) {\n\
-                    recurse(aa, bb, depth - 1);\n\
-                }\n\
-            });\n\
-        };\n\
-        recurse(tgt, src, depth | 0);\n\
-        return tgt;\n\
-    }\n\
-    function onErrorThrow(err) {\n\
-    /*\n\
-     * this function will throw <err> if exists\n\
-     */\n\
-        if (err) {\n\
-            throw err;\n\
-        }\n\
-    }\n\
-    // bug-workaround - throw unhandledRejections in node-process\n\
-    if (\n\
-        typeof process === "object" && process\n\
-        && typeof process.on === "function"\n\
-        && process.unhandledRejections !== "strict"\n\
-    ) {\n\
-        process.unhandledRejections = "strict";\n\
-        process.on("unhandledRejection", function (err) {\n\
-            throw err;\n\
-        });\n\
-    }\n\
-    // init local\n\
-    local = {\n\
-        assertJsonEqual,\n\
-        assertOrThrow,\n\
-        coalesce,\n\
-        identity,\n\
-        isBrowser,\n\
-        isWebWorker,\n\
-        local,\n\
-        noop,\n\
-        objectAssignDefault,\n\
-        objectDeepCopyWithKeysSorted,\n\
-        onErrorThrow\n\
-    };\n\
-    globalThis.globalLocal = local;\n\
-}());\n\
-// assets.utility2.header.js - end\n\
-'
-
-
 local.assetsDict["/assets.index.template.html"] =
 local.assetsDict["/assets.utility2.template.html"] = '\
 <!doctype html>\n\
@@ -1356,156 +1357,6 @@ return;\n\
 ';
 
 
-local.assetsDict["/assets.testReport.template.html"] =
-    local.assetsDict["/assets.utility2.template.html"]
-    .replace("assets.utility2.template.html", "")
-    .replace((/<title>.*?<\/title>/), "<title>test-report</title>")
-    .replace("</style>\n", '\
-<style>\n\
-/* jslint utility2:true */\n\
-/*csslint\n\
-*/\n\
-.testReportDiv img {\n\
-    border: 1px solid #999;\n\
-    margin: 5px 0 5px 0;\n\
-    max-height: 256px;\n\
-    max-width: 512px;\n\
-}\n\
-.testReportDiv pre {\n\
-    background: #fdd;\n\
-    border-top: 1px solid #999;\n\
-    margin-bottom: 0;\n\
-    padding: 10px;\n\
-}\n\
-.testReportDiv span {\n\
-    display: inline-block;\n\
-    width: 120px;\n\
-}\n\
-.testReportDiv table {\n\
-    border-top: 1px solid #999;\n\
-    text-align: left;\n\
-    width: 100%;\n\
-}\n\
-.testReportDiv table > tbody > tr:nth-child(odd) {\n\
-    background: #bfb;\n\
-}\n\
-.testReportDiv .displayNone {\n\
-    display: none;\n\
-}\n\
-.testReportDiv .footer {\n\
-    text-align: center;\n\
-}\n\
-.testReportDiv .platform {\n\
-    background: #fff;\n\
-    border: 1px solid #999;\n\
-    margin-bottom: 20px;\n\
-    padding: 0 10px 10px 10px;\n\
-    text-align: left;\n\
-}\n\
-.testReportDiv .summary {\n\
-    background: #bfb;\n\
-}\n\
-.testReportDiv .testFailed {\n\
-    background: #f99;\n\
-}\n\
-.testReportDiv .testPending {\n\
-    background: #99f;\n\
-}\n\
-</style>\n\
-'.replace("<style>\n", "")).replace((/<\/script>[\S\s]*?<\/body>/), '\
-</script>\n\
-<div class="testReportDiv">\n\
-<h1>test-report for\n\
-    <a\n\
-        {{#if env.npm_package_homepage}}\n\
-        href="{{env.npm_package_homepage}}"\n\
-        {{/if env.npm_package_homepage}}\n\
-    >\n\
-        {{env.npm_package_name}} ({{env.npm_package_version}})\n\
-    </a>\n\
-</h1>\n\
-<div class="platform summary">\n\
-<h2>summary</h2>\n\
-<h4>\n\
-    <span>version</span>-\n\
-        {{env.npm_package_version}}<br>\n\
-    <span>test date</span>- {{date}}<br>\n\
-    <span>commit info</span>-\n\
-        {{#if env.CI_COMMIT_INFO}}\n\
-        {{env.CI_COMMIT_INFO}}<br>\n\
-        {{#unless env.CI_COMMIT_INFO}}\n\
-        undefined<br>\n\
-        {{/if env.CI_COMMIT_INFO}}\n\
-</h4>\n\
-<table>\n\
-<thead>\n\
-    <tr>\n\
-        <th>total time-elapsed</th>\n\
-        <th>total tests failed</th>\n\
-        <th>total tests passed</th>\n\
-        <th>total tests pending</th>\n\
-    </tr>\n\
-</thead>\n\
-<tbody><tr>\n\
-    <td>{{timeElapsed}} ms</td>\n\
-    <td class="{{testStatusClass}}">{{testsFailed}}</td>\n\
-    <td>{{testsPassed}}</td>\n\
-    <td>{{testsPending}}</td>\n\
-</tr></tbody>\n\
-</table>\n\
-</div>\n\
-{{#each testPlatformList}}\n\
-<div class="platform">\n\
-<h4>\n\
-    {{testPlatformNumber}}. {{name}}<br>\n\
-    {{#if screenshot}}\n\
-    <a href="{{screenshot encodeURIComponent}}">\n\
-        <img alt="{{screenshot encodeURIComponent}}" src="{{screenshot encodeURIComponent}}">\n\
-    </a>\n\
-    <br>\n\
-    {{/if screenshot}}\n\
-    {{#if domOnEventWindowOnloadTimeElapsed}}\n\
-    <span>onload-time</span>- {{domOnEventWindowOnloadTimeElapsed}} ms<br>\n\
-    {{/if domOnEventWindowOnloadTimeElapsed}}\n\
-    <span>time-elapsed</span>- {{timeElapsed}} ms<br>\n\
-    <span>tests failed</span>- {{testsFailed}}<br>\n\
-    <span>tests passed</span>- {{testsPassed}}<br>\n\
-    <span>tests pending</span>- {{testsPending}}<br>\n\
-</h4>\n\
-<table>\n\
-<thead><tr>\n\
-    <th>#</th>\n\
-    <th>time-elapsed</th>\n\
-    <th>status</th>\n\
-    <th>test-case</th>\n\
-</tr></thead>\n\
-<tbody>\n\
-{{#each testCaseList}}\n\
-<tr>\n\
-    <td>{{testCaseNumber}}</td>\n\
-    <td>{{timeElapsed}} ms</td>\n\
-    <td class="{{testReportTestStatusClass}}">{{status}}</td>\n\
-    <td>{{name}}</td>\n\
-</tr>\n\
-{{/each testCaseList}}\n\
-</tbody>\n\
-</table>\n\
-<pre class="{{preClass}}" tabIndex="0">\n\
-{{#each errStackList}}\n\
-{{errStack}}\n\
-{{/each errStackList}}\n\
-</pre>\n\
-</div>\n\
-{{/each testPlatformList}}\n\
-<div class="footer">\n\
-    [ this document was created with\n\
-    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>\n\
-    ]\n\
-</div>\n\
-</div>\n\
-</body>');
-
-
 // https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
 local.assetsDict["/assets.testReportBadge.template.svg"] =
 '<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
@@ -1612,122 +1463,6 @@ let localEventListenerId;
 localEventListenerDict = {};
 localEventListenerId = 0;
 
-
-// init lib _http
-local._http = {};
-
-local._http.createServer = function () {
-/*
- * this function will emulate in browser, node's http.createServer function
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_createserver_requestlistener
- */
-    return {
-        listen: function (port, onError) {
-            onError(undefined, port);
-        }
-    };
-};
-
-local._http.request = function (xhr, onResponse) {
-/*
- * this function will emulate in browser, node's http.request function
- * https://nodejs.org/dist/v0.12.18/docs/api/all.html#all_http_request_options_callback
- */
-    let bufList;
-    let data;
-    let handler;
-    let isDone;
-    let req;
-    let res;
-    xhr = {
-        end: function (_data) {
-            if (isDone) {
-                return;
-            }
-            isDone = true;
-            data = _data;
-            // async send req from client to server
-            setTimeout(function () {
-                local.serverLocalReqHandler(req, res);
-            });
-        },
-        headers: xhr.headers,
-        method: xhr.method,
-        on: function () {
-            return xhr;
-        },
-        timeout: xhr.timeout,
-        url: xhr.href
-    };
-    bufList = [];
-    handler = new globalThis.EventTarget();
-    req = {
-        emit: function (type, data) {
-            handler.dispatchEvent(new globalThis.CustomEvent("req." + type, {
-                detail: data
-            }));
-        },
-        headers: xhr.headers,
-        httpVersion: "1.1",
-        method: xhr.method,
-        on: function (type, onEvent) {
-            handler.addEventListener("req." + type, function (evt) {
-                onEvent(evt.detail);
-            });
-            if (req.readable && type === "end") {
-                req.readable = null;
-                req.emit("data", data);
-                req.emit("end");
-            }
-            return req;
-        },
-        pipe: function (writable) {
-            req.on("data", function (buf) {
-                writable.write(buf);
-            });
-            req.on("end", function () {
-                writable.end();
-            });
-            return writable;
-        },
-        readable: true,
-        url: xhr.url
-    };
-    res = {
-        emit: function (type, data) {
-            handler.dispatchEvent(new globalThis.CustomEvent("res." + type, {
-                detail: data
-            }));
-        },
-        end: function (data) {
-            if (res._isDone) {
-                return;
-            }
-            res._isDone = true;
-            bufList.push(data);
-            // notify server res is finished
-            res.emit("finish");
-            // pass res to client
-            onResponse(res);
-            res.emit("data", local.bufferConcat(bufList));
-            res.emit("end");
-        },
-        on: function (type, onEvent) {
-            handler.addEventListener("res." + type, function (evt) {
-                onEvent(evt.detail);
-            });
-            return res;
-        },
-        setHeader: function (key, val) {
-            xhr.resHeaders[key.toLowerCase()] = val;
-        },
-        statusCode: 200,
-        write: function (data) {
-            bufList.push(data);
-        }
-    };
-    return xhr;
-};
 
 local._testCase_buildApidoc_default = function (opt, onError) {
 /*
@@ -3443,16 +3178,6 @@ local.corsForwardProxyHostIfNeeded = function (xhr) {
     );
 };
 
-local.domFragmentRender = function (template, dict) {
-/*
- * this function will return dom-elem rendered from <template>
- */
-    let tmp;
-    tmp = document.createElement("template");
-    tmp.innerHTML = local.templateRender(template, dict);
-    return tmp.content;
-};
-
 local.domQuerySelectorAllTagName = function (selector) {
 /*
  * this function will return list of tagName matching <selector>
@@ -3954,103 +3679,6 @@ local.middlewareFileServer = function (req, res, next) {
     });
 };
 
-local.middlewareForwardProxy = function (req, res, next) {
-/*
- * this function will run middleware to forward-proxy <req>
- * to its destination-host
- */
-    let clientHeaders;
-    let clientReq;
-    let clientRes;
-    let clientUrl;
-    let isDone;
-    let onError;
-    let timeStart;
-    let timerTimeout;
-    // handle preflight-cors
-    if (req.method === "OPTIONS" && (
-        /forward-proxy-url/
-    ).test(req.headers["access-control-request-headers"])) {
-        local.serverRespondHeadSet(req, res, undefined, {
-            "access-control-allow-headers": "*",
-            "access-control-allow-methods": "*",
-            "access-control-allow-origin": "*"
-        });
-        res.end();
-        return;
-    }
-    if (!req.headers["forward-proxy-url"]) {
-        next();
-        return;
-    }
-    local.serverRespondHeadSet(req, res, undefined, {
-        "access-control-allow-headers": "*",
-        "access-control-allow-methods": "*",
-        "access-control-allow-origin": "*"
-    });
-    // init onError
-    onError = function (err) {
-        if (isDone) {
-            return;
-        }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(timerTimeout);
-        // debug middlewareForwardProxy
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: "middlewareForwardProxyResponse",
-            method: req.method,
-            clientUrl,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - timeStart,
-            // extra
-            headers: clientHeaders
-        }) + "\n");
-        if (!err) {
-            return;
-        }
-        // cleanup clientReq and clientRes
-        local.streamCleanup(clientReq);
-        local.streamCleanup(clientRes);
-        next(err);
-    };
-    // init timerTimeout
-    timerTimeout = setTimeout(
-        onError,
-        local.timeoutDefault,
-        new Error(
-            "timeout - " + local.timeoutDefault + " ms - "
-            + "forward-proxy " + req.method + " " + clientUrl
-        )
-    );
-    // init client
-    clientUrl = local.urlParse(req.headers["forward-proxy-url"]).href;
-    try {
-        clientHeaders = {};
-        clientHeaders = JSON.parse(req.headers["forward-proxy-headers"]);
-    } catch (ignore) {}
-    clientReq = require(
-        clientUrl.indexOf("http:") === 0
-        ? "http"
-        : "https"
-    ).request(clientUrl, {
-        headers: clientHeaders
-    }, function (arg) {
-        clientRes = arg;
-        clientRes.on("error", onError);
-        res.statusCode = clientRes.statusCode;
-        // pipe clientRes to res
-        clientRes.pipe(res);
-    }).on("error", onError);
-    timeStart = Date.now();
-    // handle evt
-    req.on("error", onError);
-    res.on("finish", onError).on("error", onError);
-    // pipe req to clientReq
-    req.pipe(clientReq);
-};
-
 local.middlewareInit = function (req, res, next) {
 /*
  * this function will run middleware to init <req> and <res>
@@ -4093,55 +3721,6 @@ local.middlewareInit = function (req, res, next) {
     }
     // default to next
     next();
-};
-
-local.middlewareUtility2StateInit = function (req, res, next) {
-/*
- * this function will run middleware to
- * serve browser-state wrapped in given jsonp-callback
- */
-    let state;
-    if (!(req.stateInit || (
-        req.urlParsed
-        && req.urlParsed.pathname === "/utility2.state.init.js"
-    ))) {
-        next();
-        return;
-    }
-    state = {
-        assetsDict: {
-            "/assets.example.html":
-            local.assetsDict["/assets.example.html"],
-            "/assets.example.js": local.assetsDict["/assets.example.js"],
-            "/assets.test.js": local.assetsDict["/assets.test.js"],
-            "/index.rollup.html": local.assetsDict["/index.rollup.html"]
-        },
-        env: {
-            NODE_ENV: local.env.NODE_ENV,
-            npm_config_mode_backend: local.env.npm_config_mode_backend,
-            npm_package_description: local.env.npm_package_description,
-            npm_package_homepage: local.env.npm_package_homepage,
-            npm_package_name: local.env.npm_package_name,
-            npm_package_nameLib: local.env.npm_package_nameLib,
-            npm_package_version: local.env.npm_package_version
-        },
-        init: (
-            "(function (state) {\n"
-            + "let utility2 = globalThis.utility2;\n"
-            + "utility2.assetsDict = utility2.assetsDict || {};\n"
-            + "utility2.env = utility2.env || {};\n"
-            + "Object.assign(utility2.assetsDict, state.assetsDict);\n"
-            + "Object.assign(utility2.env, state.env);\n"
-            + "}({}));\n"
-        )
-    };
-    if (req.stateInit) {
-        return state;
-    }
-    // disable $-escape in replacement-string
-    res.end(state.init.replace("({})", function () {
-        return "(\n" + JSON.stringify(state) + "\n)";
-    }));
 };
 
 local.onParallel = function (onError, onEach, onRetry) {
@@ -4474,9 +4053,7 @@ local.requireReadme = function () {
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
-    code = local.templateRenderMyApp(
-        local.assetsDict["/assets.example.template.js"]
-    );
+    code = local.assetsDict["/assets.example.template.js"];
     local.fsReadFileOrDefaultSync("README.md", "utf8", "").replace((
         /\n```javascript(\n\/\*\nexample\.js\n[\S\s]*?\n)```\n/
     ), function (ignore, match1, ii, input) {
@@ -4553,16 +4130,9 @@ local.requireReadme = function () {
         file, isRollup
     ]) {
         tmp = "assets." + file + ".template.html";
-        local.assetsDict["/" + tmp] = (
-            local.fsReadFileOrDefaultSync(tmp, "utf8", "")
-            || local.assetsDict["/" + tmp]
-        );
+        local.assetsDict["/" + tmp] = local.assetsDict["/" + tmp];
         file = file + isRollup + ".html";
-        local.assetsDict["/" + file] = local.fsReadFileOrDefaultSync(
-            file,
-            "utf8",
-            ""
-        ) || local.templateRender(
+        local.assetsDict["/" + file] = local.templateRender(
             // uncomment utility2-comment
             local.assetsDict["/" + tmp].replace((
                 /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
@@ -4582,7 +4152,6 @@ local.requireReadme = function () {
         "header",
         "/assets.utility2.rollup.js",
         "/assets.utility2.rollup.start.js",
-        "local.stateInit",
         "/assets.my_app.css",
         "/assets.my_app.js",
         "/assets.example.js",
@@ -4651,31 +4220,6 @@ instruction\n\
                     + ");\n"
                     + local.assetsDict[tmp]
                 );
-            });
-            break;
-        case "local.stateInit":
-            tmp = local.middlewareUtility2StateInit({
-                stateInit: true
-            });
-            // add extra physical files to assetsDict
-            require("fs").readdirSync(".").forEach(function (file) {
-                file = "/" + file;
-                if (
-                    local.assetsDict[file]
-                    && local.assetsDict[file].length <= 0x100000
-                    && String(local.assetsDict[file])
-                    === local.fsReadFileOrDefaultSync("." + file, "utf8", "")
-                ) {
-                    tmp.assetsDict[file] = local.assetsDict[file];
-                }
-            });
-            // disable $-escape in replacement-string
-            code = local.assetsDict[
-                "/assets.utility2.rollup.content.js"
-            ].replace("/* utility2.rollup.js content */", function () {
-                return tmp.init.replace("({})", function () {
-                    return "(\n" + JSON.stringify(tmp) + "\n)";
-                });
             });
             break;
         default:
@@ -4897,24 +4441,6 @@ local.setTimeoutOnError = function (onError, timeout, err, data) {
     return data;
 };
 
-local.stateInit = function (opt) {
-/*
- * this function will init state <opt>
- */
-    [
-        opt, local
-    ].forEach(function (dict) {
-        local.objectAssignDefault(dict, {
-            utility2: {
-                assetsDict: {},
-                env: {}
-            }
-        }, -1);
-    });
-    Object.assign(local.utility2.assetsDict, opt.utility2.assetsDict);
-    Object.assign(local.utility2.env, opt.utility2.env);
-};
-
 local.streamCleanup = function (stream) {
 /*
  * this function will try to end or destroy <stream>
@@ -5118,7 +4644,7 @@ local.templateRender = function (template, dict, opt = {}, ii = 0) {
                 case "markdownSafe":
                     val = val.replace((
                         /`/g
-                    ), "'");
+                    ), "'"); // `
                     break;
                 case "markdownToHtml":
                     markdownToHtml = true;
@@ -5381,12 +4907,16 @@ local.testReportMerge = function (testReport1, testReport2 = {}) {
  * 2. return testReport1 in html-format
  */
     let errStackList;
+    let html;
     let testCaseNumber;
     let testReport;
     // 1. merge testReport2 into testReport1
     [
         testReport1, testReport2
     ].forEach(function (testReport, ii) {
+        let {
+            MODE_BUILD
+        } = local.env;
         ii += 1;
         local.objectAssignDefault(testReport, {
             date: new Date().toISOString(),
@@ -5417,10 +4947,10 @@ local.testReportMerge = function (testReport1, testReport2 = {}) {
                 ii + " invalid testPlatform.name " + typeof testPlatform.name
             );
             // insert $MODE_BUILD into testPlatform.name
-            if (local.env.MODE_BUILD) {
+            if (MODE_BUILD) {
                 testPlatform.name = testPlatform.name.replace((
                     /^(browser|node)\b/
-                ), local.env.MODE_BUILD + " - $1");
+                ), MODE_BUILD + " - $1");
             }
             // validate timeElapsed
             local.assertOrThrow(
@@ -5542,61 +5072,248 @@ local.testReportMerge = function (testReport1, testReport2 = {}) {
             testPlatform.timeElapsed
         );
     });
-    // create html test-report
     testCaseNumber = 0;
-    return local.templateRender(
-        local.assetsDict["/assets.testReport.template.html"],
-        Object.assign(testReport, {
-            env: local.env,
-            // map testPlatformList
-            testPlatformList: testReport.testPlatformList.filter(function (
-                testPlatform
-            ) {
-                // if testPlatform has no tests, then filter it out
-                return testPlatform.testCaseList.length;
-            }).map(function (testPlatform, ii) {
-                errStackList = [];
-                return Object.assign(testPlatform, {
-                    errStackList,
-                    name: testPlatform.name,
-                    screenshot: testPlatform.screenshot,
-                    // map testCaseList
-                    testCaseList: testPlatform.testCaseList.map(function (
-                        testCase
-                    ) {
-                        testCaseNumber += 1;
-                        if (testCase.errStack) {
-                            errStackList.push({
-                                errStack: (
-                                    testCaseNumber + ". " + testCase.name
-                                    + "\n" + testCase.errStack
-                                )
-                            });
-                        }
-                        return Object.assign(testCase, {
-                            testCaseNumber,
-                            testReportTestStatusClass: (
-                                "test"
-                                + testCase.status[0].toUpperCase()
-                                + testCase.status.slice(1)
+    Object.assign(testReport, {
+        // map testPlatformList
+        testPlatformList: testReport.testPlatformList.filter(function (
+            testPlatform
+        ) {
+            // if testPlatform has no tests, then filter it out
+            return testPlatform.testCaseList.length;
+        }).map(function (testPlatform, ii) {
+            errStackList = [];
+            return Object.assign(testPlatform, {
+                errStackList,
+                name: testPlatform.name,
+                screenshot: testPlatform.screenshot,
+                // map testCaseList
+                testCaseList: testPlatform.testCaseList.map(function (
+                    testCase
+                ) {
+                    testCaseNumber += 1;
+                    if (testCase.errStack) {
+                        errStackList.push({
+                            errStack: (
+                                testCaseNumber + ". " + testCase.name
+                                + "\n" + testCase.errStack
                             )
                         });
-                    }),
-                    preClass: (
-                        errStackList.length
-                        ? ""
-                        : "displayNone"
-                    ),
-                    testPlatformNumber: ii + 1
-                });
-            }, 8),
-            testStatusClass: (
-                testReport.testsFailed
-                ? "testFailed"
-                : "testPassed"
-            )
-        })
+                    }
+                    return Object.assign(testCase, {
+                        testCaseNumber,
+                        testReportTestStatusClass: (
+                            "test"
+                            + testCase.status[0].toUpperCase()
+                            + testCase.status.slice(1)
+                        )
+                    });
+                }),
+                testPlatformNumber: ii + 1
+            });
+        }, 8),
+        testStatusClass: (
+            testReport.testsFailed
+            ? "testFailed"
+            : "testPassed"
+        )
+    });
+    // create html test-report
+    html = local.assetsDict["/assets.utility2.template.html"];
+    html = html.replace("assets.utility2.template.html", "");
+    html = html.replace((
+        /<title>.*?<\/title>/
+    ), "<title>test-report</title>");
+    // init html - style
+    html = html.replace(
+        "\n</style>\n",
+        "\n"
+        + ".testReportDiv img {\n"
+        + "    border: 1px solid #999;\n"
+        + "    margin: 5px 0 5px 0;\n"
+        + "    max-height: 256px;\n"
+        + "    max-width: 512px;\n"
+        + "}\n"
+        + ".testReportDiv pre {\n"
+        + "    background: #fdd;\n"
+        + "    border-top: 1px solid #999;\n"
+        + "    margin-bottom: 0;\n"
+        + "    padding: 10px;\n"
+        + "}\n"
+        + ".testReportDiv span {\n"
+        + "    display: inline-block;\n"
+        + "    width: 120px;\n"
+        + "}\n"
+        + ".testReportDiv table {\n"
+        + "    border-top: 1px solid #999;\n"
+        + "    text-align: left;\n"
+        + "    width: 100%;\n"
+        + "}\n"
+        + ".testReportDiv table > tbody > tr:nth-child(odd) {\n"
+        + "    background: #bfb;\n"
+        + "}\n"
+        + ".testReportDiv .footer {\n"
+        + "    text-align: center;\n"
+        + "}\n"
+        + ".testReportDiv .platform {\n"
+        + "    background: #fff;\n"
+        + "    border: 1px solid #999;\n"
+        + "    margin-bottom: 20px;\n"
+        + "    padding: 0 10px 10px 10px;\n"
+        + "    text-align: left;\n"
+        + "}\n"
+        + ".testReportDiv .summary {\n"
+        + "    background: #bfb;\n"
+        + "}\n"
+        + ".testReportDiv .testFailed {\n"
+        + "    background: #f99;\n"
+        + "}\n"
+        + "</style>\n"
     );
+    // init html - body
+    html = html.replace((
+        /\n<\/script>[\S\s]*?<\/body>\n/
+    ), function () {
+        let {
+            date,
+            testPlatformList,
+            testStatusClass,
+            testsFailed,
+            testsPassed,
+            testsPending,
+            timeElapsed
+        } = testReport;
+        let {
+            CI_COMMIT_INFO,
+            npm_package_homepage,
+            npm_package_name,
+            npm_package_version
+        } = local.env;
+        return (
+            "</script>\n"
+            + "<div class=\"testReportDiv\">\n"
+            + "<h1>test-report for\n"
+            + "   <a href=\"" + (npm_package_homepage || "#") + "\">\n"
+            + "   " + npm_package_name + " (" + npm_package_version + ")\n"
+            + "   </a>\n"
+            + "</h1>\n"
+            + "\n"
+            + "<div class=\"platform summary\">\n"
+            + "<h2>summary</h2>\n"
+            + "<h4>\n"
+            + "   <span>version</span>- " + npm_package_version + "<br>\n"
+            + "   <span>test date</span>- " + date + "<br>\n"
+            + "   <span>commit info</span>- \n"
+            + (CI_COMMIT_INFO || "undefined") + "<br>\n"
+            + "</h4>\n"
+            + "<table>\n"
+            + "<thead>\n"
+            + "   <tr>\n"
+            + "   <th>total time-elapsed</th>\n"
+            + "   <th>total tests failed</th>\n"
+            + "   <th>total tests passed</th>\n"
+            + "   <th>total tests pending</th>\n"
+            + "   </tr>\n"
+            + "</thead>\n"
+            + "<tbody>\n"
+            + "   <tr>\n"
+            + "   <td>" + timeElapsed + " ms</td>\n"
+            + "   <td class=\"" + testStatusClass + "\">"
+            + testsFailed + "</td>\n"
+            + "   <td>" + testsPassed + "</td>\n"
+            + "   <td>" + testsPending + "</td>\n"
+            + "   </tr>\n"
+            + "</tbody>\n"
+            + "</table>\n"
+            + "</div>\n"
+            + "\n"
+            + testPlatformList.map(function ({
+                domOnEventWindowOnloadTimeElapsed,
+                errStackList,
+                name,
+                screenshot,
+                testCaseList,
+                testPlatformNumber,
+                testsFailed,
+                testsPassed,
+                testsPending,
+                timeElapsed
+            }) {
+                return "<div class=\"platform\">\n"
+                + "<h4>\n"
+                + testPlatformNumber + ". " + name + "<br>\n"
+                + (
+                    screenshot
+                    ? "<a href=\"" + encodeURIComponent(screenshot) + "\">\n"
+                    + "<img\n"
+                    + "alt=\"" + encodeURIComponent(screenshot) + "\"\n"
+                    + "src=\"" + encodeURIComponent(screenshot) + "\"\n"
+                    + ">\n"
+                    + "</a>\n"
+                    + "<br>\n"
+                    : ""
+                )
+                + (
+                    domOnEventWindowOnloadTimeElapsed
+                    ? "<span>onload-time</span>- "
+                    + domOnEventWindowOnloadTimeElapsed
+                    + " ms<br>\n"
+                    : ""
+                )
+                + "<span>time-elapsed</span>- " + timeElapsed + " ms<br>\n"
+                + "<span>tests failed</span>- " + testsFailed + "<br>\n"
+                + "<span>tests passed</span>- " + testsPassed + "<br>\n"
+                + "<span>tests pending</span>- " + testsPending + "<br>\n"
+                + "</h4>\n"
+                + "\n"
+                + "<table>\n"
+                + "<thead><tr>\n"
+                + "<th>#</th>\n"
+                + "<th>time-elapsed</th>\n"
+                + "<th>status</th>\n"
+                + "<th>test-case</th>\n"
+                + "</tr></thead>\n"
+                + "<tbody>\n"
+                + testCaseList.map(function ({
+                    name,
+                    status,
+                    testCaseNumber,
+                    testReportTestStatusClass,
+                    timeElapsed
+                }) {
+                    return "<tr>\n"
+                    + "<td>" + testCaseNumber + "</td>\n"
+                    + "<td>" + timeElapsed + " ms</td>\n"
+                    + "<td class=\"" + testReportTestStatusClass + "\">"
+                    + status + "</td>\n"
+                    + "<td>" + name + "</td>\n"
+                    + "</tr>\n";
+                }).join("")
+                + "</tbody>\n"
+                + "</table>\n"
+                + "\n"
+                + (
+                    errStackList.length
+                    ? "<pre tabIndex=\"0\">\n"
+                    + errStackList.join("\n") + "\n"
+                    + "</pre>\n"
+                    : ""
+                )
+                + "</div>\n";
+            }).join("")
+            + "\n"
+            + "<div class=\"footer\">\n"
+            + "[ this document was created with <a\n"
+            + "    href=\"https://github.com/kaizhu256/node-utility2\"\n"
+            + "    target=\"_blank\"\n"
+            + ">utility2</a> ]\n"
+            + "</div>\n"
+            + "\n"
+            + "</div>\n"
+            + "</body>\n"
+        );
+    });
+    html = local.templateRender(html, testReport);
+    return html;
 };
 
 local.testRunBrowser = function () {
@@ -5642,9 +5359,7 @@ local.testRunDefault = function (opt) {
         // 1. create server from local.middlewareList
         local.middlewareList = local.middlewareList || [
             local.middlewareInit,
-            local.middlewareForwardProxy,
             local.middlewareAssetsCached,
-            local.middlewareUtility2StateInit,
             local.middlewareFileServer
         ];
         if (!(globalThis.utility2_serverHttp1 || (

@@ -48,11 +48,12 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- replace function templateRender with template-literals - part1 - testReportMerge
+- remove functions _http.createServer, _http.request, ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit, stateInit, stringMerge
 - remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
 - rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
-- remove functions ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, stringMerge
 - remove function and test for function local.ajax
 - remove nodejs.v10 polyfill TextDecoder, TextEncoder
 - rename shell-function shReadmeTest to shReadmeEval

@@ -1078,11 +1078,52 @@ shBuildInit () {
         || process.env.GITHUB_REF
         || "alpha"
     ));
-    //!! export2("CI_HOST", "github.com");
     process.stderr.write(cmd);
     process.stdout.write(cmd);
 }());
 ')" || return "$?" # '
+    # extract and save scripts embedded in README.md to .tmp/
+    if [ -f README.md ]
+    then
+        node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    require("fs").readFileSync("README.md", "utf8").replace((
+        /```\w*?(\n[\s#*\/]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?)\n```/g
+    ), function (match0, match1, match2, ii, text) {
+        let filename;
+        // preserve lineno
+        match0 = text.slice(0, ii).replace((
+            /.+/g
+        ), "") + match1.replace((
+            // parse "\" line-continuation
+            /(?:.*\\\n)+.*/g
+        ), function (match0) {
+            return match0.replace((
+                /\\\n/g
+            ), "") + match0.replace((
+                /.+/g
+            ), "");
+        });
+        // trim json-file
+        if (match2.slice(-5) === ".json") {
+            match0 = match0.trim();
+        }
+        filename = require("path").resolve(".tmp/README." + match2);
+        require("fs").writeFile(filename, match0.trimEnd() + "\n", function (
+            err
+        ) {
+            if (err) {
+                throw err;
+            }
+            console.error("shBuildInit - wrote " + filename);
+        }
+);
+    });
+}());
+' # '
+    fi
 }
 
 shBuildInsideDocker () {(set -e
