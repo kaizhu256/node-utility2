@@ -48,6 +48,8 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
+- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
 - remove functions ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, stringMerge
@@ -57,6 +59,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
@@ -1202,7 +1205,7 @@ require("http").createServer(function (req, res) {
 ```shell
 # Dockerfile.base
 # docker build -f .tmp/README.Dockerfile.base -t kaizhu256/node-utility2:base .
-# docker build -f ".tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_REPO:$DOCKER_TAG" .
+# docker build -f ".tmp/README.Dockerfile.$DOCKER_TAG" -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
 # https://hub.docker.com/_/node/
 FROM debian:stable-slim
 MAINTAINER kai zhu <kaizhu256@gmail.com>
@@ -1273,7 +1276,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint \
+    npm install -g eslint; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1290,6 +1293,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
+    npm install -g eslint; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1323,14 +1327,14 @@ shBuildCiAfter () {(set -e
     # docker build
     docker build \
         -f ".tmp/README.Dockerfile.$DOCKER_TAG" \
-        -t "$GITHUB_REPO:$DOCKER_TAG" .
+        -t "$GITHUB_FULLNAME:$DOCKER_TAG" .
     # docker test
     case "$CI_BRANCH" in
     docker.latest)
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
-            docker run "$GITHUB_REPO:$DOCKER_TAG" /bin/sh -c "set -e
+            docker run "$GITHUB_FULLNAME:$DOCKER_TAG" /bin/sh -c "set -e
                 curl -Lf https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
                 . /tmp/lib.utility2.sh
@@ -1346,7 +1350,7 @@ shBuildCiAfter () {(set -e
     if [ "$DOCKER_PASSWORD" ]
     then
         docker login -p="$DOCKER_PASSWORD" -u="$DOCKER_USERNAME"
-        docker push "$GITHUB_REPO:$DOCKER_TAG"
+        docker push "$GITHUB_FULLNAME:$DOCKER_TAG"
     fi
 )}
 

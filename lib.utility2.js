@@ -1595,9 +1595,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
         local.testReportCreate(
             JSON.parse(
                 require("fs").readFileSync(
-                    require("path").resolve(
-                        process.env.npm_config_dir_build + "/test-report.json"
-                    ),
+                    process.env.UTILITY2_DIR_BUILD + "/test-report.json",
                     "utf8"
                 )
             )
@@ -1858,7 +1856,7 @@ local._testCase_webpage_default = function (opt, onError) {
     }
     local.browserTest({
         fileScreenshot: (
-            process.env.npm_config_dir_build
+            process.env.UTILITY2_DIR_BUILD
             + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
@@ -1921,7 +1919,7 @@ local.browserTest = function ({
             )
         );
         fileScreenshot = (
-            process.env.npm_config_dir_build
+            process.env.UTILITY2_DIR_BUILD
             + "/screenshot." + testName + ".png"
         );
         return local.chromeDevtoolsClientCreate({
@@ -1978,14 +1976,14 @@ local.browserTest = function ({
         promiseList.push(new Promise(function (resolve) {
             require("fs").writeFile(
                 require("path").resolve(
-                    process.env.npm_config_dir_build + "/test-report.json"
+                    process.env.UTILITY2_DIR_BUILD + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
                     local.onErrorThrow(err);
                     console.error(
                         "\nbrowserTest - merged test-report "
-                        + process.env.npm_config_dir_build + "/test-report.json"
+                        + process.env.UTILITY2_DIR_BUILD + "/test-report.json"
                         + "\n"
                     );
                     resolve();
@@ -2421,13 +2419,13 @@ local.buildApp = function ({
         ]);
         // customize shNpmTestPublished
         tgt = tgt.replace(
-            "$ npm install " + process.env.GITHUB_REPO + "#alpha",
+            "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha",
             "$ npm install " + packageJson.name
         );
         tgtReplaceConditional(src.indexOf("    shNpmTestPublished\n") < 0, [
             {
                 aa: "$ npm install " + packageJson.name,
-                bb: "$ npm install " + process.env.GITHUB_REPO + "#alpha"
+                bb: "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha"
             }, {
                 aa: (
                     /\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/
@@ -4286,10 +4284,10 @@ local.replStart = function () {
                 // source lib.utility2.sh
                 if (
                     process.platform !== "win32"
-                    && process.env.npm_config_dir_utility2 && (match2 !== ":")
+                    && process.env.UTILITY2_DIR_BIN && (match2 !== ":")
                 ) {
                     match2 = (
-                        ". " + process.env.npm_config_dir_utility2
+                        ". " + process.env.UTILITY2_DIR_BIN
                         + "/lib.utility2.sh;" + match2
                     );
                 }
@@ -5921,7 +5919,7 @@ local.testRunDefault = function (opt) {
         // create test-report.json
         delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
-            local.env.npm_config_dir_build + "/test-report.json",
+            local.env.UTILITY2_DIR_BUILD + "/test-report.json",
             JSON.stringify(testReport, undefined, 4)
         );
         // restore console.log
@@ -6348,15 +6346,14 @@ local.http = require("http");
 local.Module = require("module");
 // init env
 local.objectAssignDefault(process.env, {
-    npm_config_dir_build: require("path").resolve(".tmp/build"),
-    npm_config_dir_tmp: require("path").resolve(".tmp")
+    UTILITY2_DIR_BUILD: require("path").resolve(".tmp/build")
 });
 // merge previous test-report
-if (process.env.npm_config_file_test_report_merge) {
+if (process.env.npm_config_mode_test_report_merge) {
     local.testReportMerge(
         globalThis.utility2_testReport,
         local.fsReadFileOrDefaultSync(
-            process.env.npm_config_file_test_report_merge,
+            process.env.UTILITY2_DIR_BUILD + "/test-report.json",
             "json",
             {}
         )
@@ -6364,7 +6361,7 @@ if (process.env.npm_config_file_test_report_merge) {
     if (process.argv[2] !== "--help") {
         console.error(
             "\n" + process.env.MODE_BUILD + " - merged test-report from file "
-            + process.env.npm_config_file_test_report_merge
+            + process.env.UTILITY2_DIR_BUILD + "/test-report.json"
         );
     }
 }
