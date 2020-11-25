@@ -476,26 +476,6 @@ local.testCase_cliRun_default = function (opt, onError) {
     }, onError);
 };
 
-local.testCase_corsForwardProxyHostIfNeeded_default = function (
-    opt,
-    onError
-) {
-/*
- * this function will corsForwardProxyHostIfNeeded's default handling-behavior
- */
-    if (!local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    assertOrThrow(local.corsForwardProxyHostIfNeeded({
-        location: {
-            host: "undefined.github.io"
-        },
-        url: "https://example.com"
-    }).indexOf(".herokuapp.com") >= 0);
-    onError(undefined, opt);
-};
-
 local.testCase_eventListenerXxx_default = function (opt, onError) {
 /*
  * this function will test eventListenerXxx's default handling-behavior
@@ -887,35 +867,6 @@ local.testCase_testMock_err = function (opt, onError) {
     }
 };
 
-local.testCase_testReportCreate_default = function (opt, onError) {
-/*
- * this function will test testReport's default handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    local.testMock([], function (onError) {
-        // test null-case handling-behavior
-        local.testReportCreate();
-        // test testsFailed handling-behavior
-        local.testReportCreate({
-            testPlatformList: [
-                {
-                    testCaseList: [
-                        {
-                            status: "failed"
-                        }, {
-                            status: "passed"
-                        }
-                    ]
-                }
-            ]
-        });
-        onError(undefined, opt);
-    }, onError);
-};
-
 local.testCase_throwError_default = function (opt, onError) {
 /*
  * this function will test throwError's default handling-behavior
@@ -981,62 +932,6 @@ local.testCase_urlJoin_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_urlParse_default = function (opt, onError) {
-/*
- * this function will test urlParse's default handling-behavior
- */
-    local.testMock([
-        [
-            local, {
-                // test default PORT handling-behavior
-                env: {},
-                // test init-serverLocalHost handling-behavior
-                serverLocalHost: ""
-            }
-        ]
-    ], function (onError) {
-        // test default handling-behavior
-        assertJsonEqual(local.urlParse(
-            "https://127.0.0.1:80/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1"
-        ), {
-            basename: "bar",
-            hash: "#zz=1",
-            host: "127.0.0.1:80",
-            hostname: "127.0.0.1",
-            href: (
-                "https://127.0.0.1:80/foo/bar"
-                + "?aa=1&bb%20cc=dd%20=ee&aa=2&aa#zz=1"
-            ),
-            path: "/foo/bar?aa=1&bb%20cc=dd%20=ee&aa=2&aa",
-            pathname: "/foo/bar",
-            port: "80",
-            protocol: "https:",
-            query: {
-                aa: [
-                    "1", "2", ""
-                ],
-                "bb cc": "dd =ee"
-            },
-            search: "?aa=1&bb%20cc=dd%20=ee&aa=2&aa"
-        });
-        // test err handling-behavior
-        assertJsonEqual(local.urlParse(undefined), {
-            basename: "",
-            hash: "",
-            host: "",
-            hostname: "",
-            href: "",
-            path: "",
-            pathname: "",
-            port: "",
-            protocol: "",
-            query: {},
-            search: ""
-        });
-        onError(undefined, opt);
-    }, onError);
-};
-
 local.testCase_uuid4Create_default = function (opt, onError) {
 /*
  * this function will test uuid4Create's default handling-behavior
@@ -1056,8 +951,8 @@ local.testCase_webpage_err = function (opt, onError) {
         local.browserTest({
             modeSilent: true,
             url: (
-                local.serverLocalHost
-                + "?modeTest=1"
+                "http://127.0.0.1:" + process.env.PORT
+                + "/?modeTest=1"
                 + "&modeTestCase=testCase_webpage_err"
             )
         }, function (err) {
@@ -1080,16 +975,6 @@ local.testCase_webpage_err = function (opt, onError) {
     }, 2000);
     // test uncaught-err handling-behavior
     setTimeout(local.throwError);
-};
-
-local.utility2.serverLocalUrlTest = function (url) {
-/*
- * this function will test if <url> is local
- */
-    url = local.urlParse(url).pathname;
-    return local.isBrowser && !local.env.npm_config_mode_backend && (
-        /^\/test\./
-    ).test(url);
 };
 }());
 

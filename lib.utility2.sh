@@ -5,7 +5,11 @@
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 # curl with custom CA certificates
-# https://gist.github.com/olih/a50ce2181a657eefb041
+# openssl x509 -in a00.pem -text
+# openssl verify --verbose -CAfile ca.pem a00.pem
+# openssl x509 -outform der -in a00.pem -out a00.crt
+# cp a00.crt /usr/local/share/ca-certificates/
+# update-ca-certificates
 
 # useful sh one-liners
 # http://sed.sourceforge.net/sed1line.txt
@@ -18,19 +22,19 @@
 # git ls-remote --heads origin
 # git update-index --chmod=+x aa.js
 # gpupdate /force
+# npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # npm_package_private=1 GITHUB_FULLNAME=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # openssl rand -base64 32 # random key
 # printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
 # shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
 # shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
-# shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
-# shCryptoWithGithubOrg aa shTravisRepoTrigger aa/node-aa-bb alpha
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
+# shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
+# shCryptoWithGithubOrg aa shTravisRepoTrigger aa/node-aa-bb alpha
 # shDockerRestartUtility2 work kaizhu256/node-utility2
 # shDockerSh work 'cd ~/Documents/utility2 && PORT=4065 npm start'
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
-# npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
 # utility2 shReadmeEval example.js
 # vim rgx-lowercase \L\1\e
 
@@ -1046,7 +1050,7 @@ shBuildInit () {
         path.resolve(process.env.HOME + "/Documents/utility2"),
         (function () {
             try {
-                return require.resolve("utility2");
+                return path.dirname(require.resolve("utility2"));
             } catch (ignore) {}
         }()),
         path.resolve(process.env.HOME + "/node_modules/utility2")
@@ -1065,11 +1069,9 @@ shBuildInit () {
         // mkdir $UTILITY2_DIR_BUILD
         dir = path.resolve(".tmp/build");
         console.error("shBuildInit - mkdir -p " + dir);
-        try {
-            fs.mkdirSync(dir, {
-                recursive: true
-            });
-        } catch (ignore) {}
+        fs.mkdirSync(dir, {
+            recursive: true
+        });
         return true;
     });
     // init $CI_*
@@ -1524,6 +1526,7 @@ shDeployHeroku () {(set -e
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
+        shBuildInit
         shBuildApp
         cp "$UTILITY2_DIR_BUILD"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js\n" > Procfile
@@ -1551,30 +1554,6 @@ shDeployHeroku () {(set -e
     MODE_BUILD="${MODE_BUILD}Test" \
         shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
 )}
-
-shDockerCdHostPwd () {
-# this function will cd $HOST_PWD inside docker
-    cd "$(node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let chdir;
-    let home;
-    let pwd;
-    chdir = process.env.PWD;
-    home = process.env.HOST_HOME + "/";
-    pwd = process.env.HOST_PWD + "/";
-    if (home.length > 1 && pwd.indexOf(home) === 0) {
-        chdir = require("path").resolve(
-            process.env.HOME + "/" + pwd.replace(home, "")
-        );
-    } else if (pwd.indexOf("G:/") === 0) {
-        chdir = pwd.replace("G:/", "/mnt/");
-    }
-    console.log(chdir);
-}());
-')" # '
-}
 
 shDockerRestartNginx () {(set -e
 # this function will restart docker-container nginx
@@ -1708,13 +1687,14 @@ shDockerRestartTransmission () {(set -e
 
 shDockerRestartUtility2 () {(set -e
 # this function will restart docker-container $1 $2 with utility2 env
+    local DOCKER_V_GAME
     docker rm -fv "$1" || true
     case "$(uname)" in
     Darwin)
         LOCALHOST="${LOCALHOST:-192.168.99.100}"
         ;;
     MINGW*)
-        export HOME="$USERPROFILE"
+        HOME="$USERPROFILE"
         ;;
     *)
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
@@ -1724,11 +1704,12 @@ shDockerRestartUtility2 () {(set -e
     then
         DOCKER_V_GAME="-v g:/:/mnt"
     fi
-    docker run --name "$1" -dt -e debian_chroot="$1" \
-        $DOCKER_V_GAME \
-        -v "$HOME:/root" \
+    docker run --name "$1" -dt \
+        -e debian_chroot="$1" \
         -p "$LOCALHOST:4065:4065" \
         -p "$LOCALHOST:9229:9229" \
+        -v "$HOME:/root" \
+        $DOCKER_V_GAME \
         "$2"
 )}
 
@@ -1752,21 +1733,66 @@ shDockerRmiUntagged () {(set -e
     docker rmi $(docker images -aqf dangling=true) 2>/dev/null || true
 )}
 
-shDockerSh () {(set -e
+shDockerSh () {
 # this function will run /bin/bash in docker-container $1
-    local CMD;
-    CMD="[ -f ~/lib.utility2.sh ] && . ~/lib.utility2.sh && shBaseInit"
-    CMD="$CMD && shDockerCdHostPwd;"
-    CMD="$CMD ${2:-bash}"
-    docker start "$1"
-    case "$(uname)" in
-    *)
-        docker exec \
-            -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
-            -it "$1" sh -c "$CMD"
-        ;;
-    esac
-)}
+    # run outside vm
+    if [ "$1" != init ]
+    then
+        (set -e
+        CMD="[ -f ~/lib.utility2.sh ] && . ~/lib.utility2.sh && shBaseInit"
+        CMD="$CMD && shDockerSh init;"
+        CMD="$CMD ${2:-bash}"
+        docker start "$1"
+        case "$(uname)" in
+        *)
+            docker exec \
+                -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
+                -it "$1" sh -c "$CMD"
+            ;;
+        esac
+        return
+        )
+    fi
+    # run inside vm
+    # cd $HOST_PWD inside docker
+    eval "$(node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let cmd;
+    let dirCd;
+    let dirHome;
+    let dirPwd;
+    cmd = "# shDockerSh init\n";
+    // cd $PWD
+    dirCd = process.env.PWD;
+    dirHome = process.env.HOST_HOME + "/";
+    dirPwd = process.env.HOST_PWD + "/";
+    // cd $HOME/...
+    if (dirHome.length > 1 && dirPwd.indexOf(dirHome) === 0) {
+        dirCd = process.env.HOME + "/" + dirPwd.replace(dirHome, "");
+    // cd G:/...
+    } else if (dirPwd.indexOf("G:/") === 0) {
+        dirCd = dirPwd.replace("G:/", "/mnt/");
+    }
+    cmd += "cd " + require("path").resolve(dirCd) + "\n";
+    process.stderr.write(cmd);
+    process.stdout.write(cmd);
+}());
+')" # '
+    # update-ca-certificates
+    if [ -f "$CURL_CA_BUNDLE" ]
+    then
+        export NODE_EXTRA_CA_CERTS="${NODE_EXTRA_CA_CERTS:-$CURL_CA_BUNDLE}"
+    fi
+    if [ -f "$CURL_CA_BUNDLE" ] &&
+        [ -d /usr/local/share/ca-certificates ] &&
+        [ ! -f /usr/local/share/ca-certificates/curl-ca-bundle.crt ]
+    then
+        cp "$CURL_CA_BUNDLE" /usr/local/share/ca-certificates/curl-ca-bundle.crt
+        update-ca-certificates
+    fi
+}
 
 shDuList () {(set -e
 # this function will du $1 and sort its subdir by size
@@ -3093,22 +3119,6 @@ shReadmeEval () {(set -e
     shBuildInit
     export MODE_BUILD=readmeTest
     shBuildPrint "running command 'shReadmeEval $*' ..."
-    case "$(git log -1 --pretty=%s)" in
-    "[build app"*)
-        shBuildCi
-        return;
-        ;;
-    esac
-    case "$TRAVIS_BRANCH" in
-    cron)
-        shBuildCi
-        return;
-        ;;
-    task)
-        shBuildCi
-        return;
-        ;;
-    esac
     FILE="$1"
     if [ ! -f ".tmp/README.$FILE" ]
     then

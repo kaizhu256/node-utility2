@@ -20,7 +20,7 @@ shRawLibFetch
 -                        margin += 4;
 +                        // hack-jslint - conditional-margin
 +                        if (
-+                            !option.utility2
++                            !option.modeUtility2
 +                            || lines[right.line].startsWith(" ")
 +                        ) {
 +                            margin += 4;
@@ -30,7 +30,7 @@ shRawLibFetch
 +            && !regexp_seen
 +            // hack-jslint - ignore too_long url
 +            && !(
-+                option.utility2
++                option.modeUtility2
 +                && (
 +                    /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
 +                ).test(whole_line)
@@ -74,7 +74,7 @@ shRawLibFetch
 +                option.node = true;
 +                option.nomen = true;
 +                option.this = true;
-+                option.utility2 = true;
++                option.modeUtility2 = true;
 +                [].concat(
 +                    allowed_option.browser,
 +                    allowed_option.node,
@@ -207,7 +207,7 @@ shRawLibFetch
 +        }
 +        aa = lines_extra[warning.line].source;
 +        warning.a = warning.a || aa.trim();
-+        switch (option.autofix && warning.code) {
++        switch (option.modeAutofix && warning.code) {
 +        // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
 +        case "expected_a_at_b_c":
 +            // autofix indent - increment
@@ -245,8 +245,8 @@ shRawLibFetch
 +        // expected_a_before_b: "Expected '{a}' before '{b}'.",
 +        case "expected_a_before_b":
 +            bb = (
-+                aa.slice(0, warning.column) + warning.a
-+                + aa.slice(warning.column)
++                aa.slice(0, warning.column - 1) + warning.a
++                + aa.slice(warning.column - 1)
 +            );
 +            break;
 +        // expected_identifier_a:
@@ -319,7 +319,7 @@ shRawLibFetch
 +    });
 +    // hack-jslint - debug warning
 +    warnings.some(function (warning) {
-+        if (!option.utility2) {
++        if (!option.modeUtility2) {
 +            return true;
 +        }
 +        warning.option = Object.assign({}, option);
@@ -11813,7 +11813,7 @@ function tokenize(source) {
             && !regexp_seen
             // hack-jslint - ignore too_long url
             && !(
-                option.utility2
+                option.modeUtility2
                 && (
                     /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
                 ).test(whole_line)
@@ -11859,7 +11859,7 @@ function tokenize(source) {
                 option.node = true;
                 option.nomen = true;
                 option.this = true;
-                option.utility2 = true;
+                option.modeUtility2 = true;
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
@@ -15951,7 +15951,7 @@ function whitage() {
                         open = true;
                         // hack-jslint - conditional-margin
                         if (
-                            !option.utility2
+                            !option.modeUtility2
                             || lines[right.line].startsWith(" ")
                         ) {
                             margin += 4;
@@ -16269,7 +16269,7 @@ local.jslint0 = Object.freeze(function (
         }
         aa = lines_extra[warning.line].source;
         warning.a = warning.a || aa.trim();
-        switch (option.autofix && warning.code) {
+        switch (option.modeAutofix && warning.code) {
         // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
         case "expected_a_at_b_c":
             // autofix indent - increment
@@ -16307,8 +16307,8 @@ local.jslint0 = Object.freeze(function (
         // expected_a_before_b: "Expected '{a}' before '{b}'.",
         case "expected_a_before_b":
             bb = (
-                aa.slice(0, warning.column) + warning.a
-                + aa.slice(warning.column)
+                aa.slice(0, warning.column - 1) + warning.a
+                + aa.slice(warning.column - 1)
             );
             break;
         // expected_identifier_a:
@@ -16381,7 +16381,7 @@ local.jslint0 = Object.freeze(function (
     });
     // hack-jslint - debug warning
     warnings.some(function (warning) {
-        if (!option.utility2) {
+        if (!option.modeUtility2) {
             return true;
         }
         warning.option = Object.assign({}, option);

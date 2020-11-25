@@ -924,11 +924,6 @@ utility2-comment -->\n\
 ';
 
 
-// https://img.shields.io/badge/last_build-0000_00_00_00_00_00_UTC_--_master_--_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-0077ff.svg?style=flat
-local.assetsDict["/assets.buildBadge.template.svg"] =
-'<svg xmlns="http://www.w3.org/2000/svg" width="563" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="563" height="20" fill="#555"/><rect rx="0" x="61" width="502" height="20" fill="#07f"/><path fill="#07f" d="M61 0h4v20h-4z"/><rect rx="0" width="563" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="31.5" y="15" fill="#010101" fill-opacity=".3">last build</text><text x="31.5" y="14">last build</text><text x="311" y="15" fill="#010101" fill-opacity=".3">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text><text x="311" y="14">0000-00-00 00:00:00 UTC - master - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</text></g></svg>';
-
-
 local.assetsDict["/assets.example.html"] = "";
 
 
@@ -995,7 +990,7 @@ if (!local.isBrowser) {\n\
                 : JSON.stringify(arg, undefined, 4)\n\
             );\n\
         }).join(" ").replace((\n\
-            /\\u001b\\[\\d*m/g\n\
+            /\\u001b\\[\\d+?m/g\n\
         ), "") + "\\n";\n\
         // scroll textarea to bottom\n\
         elem.scrollTop = elem.scrollHeight;\n\
@@ -1357,11 +1352,6 @@ return;\n\
 ';
 
 
-// https://img.shields.io/badge/tests_failed-999-dd0000.svg?style=flat
-local.assetsDict["/assets.testReportBadge.template.svg"] =
-'<svg xmlns="http://www.w3.org/2000/svg" width="103" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="103" height="20" fill="#555"/><rect rx="0" x="72" width="31" height="20" fill="#d00"/><path fill="#d00" d="M72 0h4v20h-4z"/><rect rx="0" width="103" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="37" y="15" fill="#010101" fill-opacity=".3">tests failed</text><text x="37" y="14">tests failed</text><text x="86.5" y="15" fill="#010101" fill-opacity=".3">999</text><text x="86.5" y="14">999</text></g></svg>';
-
-
 local.assetsDict["/assets.utility2.rollup.start.js"] = '\
 /* utility2.rollup.js begin */\n\
 /* istanbul ignore all */\n\
@@ -1442,16 +1432,79 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    process.exit(
-        local.testReportCreate(
-            JSON.parse(
-                require("fs").readFileSync(
-                    process.env.UTILITY2_DIR_BUILD + "/test-report.json",
-                    "utf8"
-                )
-            )
-        ).testsFailed !== 0
+    let env;
+    let html;
+    let testPlatformList;
+    let testReport;
+    env = process.env;
+    function fileWrite(file, data) {
+        file = require("path").resolve(env.UTILITY2_DIR_BUILD + "/" + file);
+        require("fs").writeFileSync(file, data);
+        console.error("test-report - wrote " + file);
+    }
+    testReport = local.testReportMerge(JSON.parse(require("fs").readFileSync(
+        env.UTILITY2_DIR_BUILD + "/test-report.json",
+        "utf8"
+    )));
+    html = testReport.html;
+    testPlatformList = testReport.testPlatformList;
+    delete testReport.coverage;
+    delete testReport.html;
+    // print test-report summary
+    console.error(
+        "\n" + new Array(56).join("-") + "\n"
+        + testPlatformList.filter(function (testPlatform) {
+            // if testPlatform has no tests, then filter it out
+            return testPlatform.testCaseList.length;
+        }).map(function (testPlatform) {
+            return (
+                "| test-report - " + testPlatform.name + "\n|"
+                + String(
+                    testPlatform.timeElapsed + " ms     "
+                ).padStart(16, " ")
+                + String(
+                    testPlatform.testsFailed + " failed "
+                ).padStart(16, " ")
+                + String(
+                    testPlatform.testsPassed + " passed "
+                ).padStart(16, " ")
+                + "     |\n" + new Array(56).join("-") + "\n"
+            );
+        }).join("")
     );
+    // print failed testCase
+    testPlatformList.forEach(function (testPlatform) {
+        testPlatform.testCaseList.forEach(function (testCase) {
+            if (testCase.status !== "passed") {
+                console.error(JSON.stringify(testCase, undefined, 4));
+            }
+        });
+    });
+    // jslint html
+    local.jslintAndPrint(html, "test-report.html");
+    // create test-report.html
+    fileWrite("test-report.html", html);
+    // create build.badge.svg
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
+        fill: "#07f",
+        str1: "last build",
+        str2: (
+            new Date().toISOString().slice(0, 19).replace("T", " ")
+            + " - " + env.CI_BRANCH + " - " + env.CI_COMMIT_ID
+        )
+    }));
+    // create test-report.badge.svg
+    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
+        fill: (
+            testPlatformList[0].testsFailed
+            ? "#d00"
+            : "#0d0"
+        ),
+        str1: "tests failed",
+        str2: testPlatformList[0].testsFailed
+    }));
+    // if any test failed, then exit with non-zero exitCode
+    process.exit(testReport.testsFailed !== 0);
 };
 }());
 
@@ -1595,7 +1648,7 @@ local._testCase_webpage_default = function (opt, onError) {
             + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
-            local.serverLocalHost
+            "http://127.0.0.1:" + process.env.PORT
             + "/?modeTest=1&timeoutDefault=" + local.timeoutDefault
             + "&modeTestCase=" + local.modeTestCase.replace((
                 /_?testCase_webpage_default/
@@ -1606,7 +1659,6 @@ local._testCase_webpage_default = function (opt, onError) {
 
 local.browserTest = function ({
     modeSilent,
-    modeTestReportCreate,
     url
 }, onError) {
 /*
@@ -1622,26 +1674,6 @@ local.browserTest = function ({
         // cleanup chromeClient
         chromeClient.destroy();
         onError(err);
-    }
-    // init utility2_testReport
-    globalThis.utility2_testReport = globalThis.utility2_testReport || {
-        coverage: globalThis.__coverage__,
-        testPlatformList: [
-            {
-                name: (
-                    local.isBrowser
-                    ? (
-                        "browser - "
-                        + location.pathname + " - " + navigator.userAgent
-                    )
-                    : "node - " + process.platform + " " + process.version
-                ) + " - " + new Date().toISOString(),
-                testCaseList: []
-            }
-        ]
-    };
-    if (modeTestReportCreate) {
-        return;
     }
     Promise.resolve().then(function () {
         // node - init
@@ -3158,26 +3190,6 @@ local.cliRun = function ({
     cliDict._default();
 };
 
-local.corsForwardProxyHostIfNeeded = function (xhr) {
-/*
- * this function will return xhr.corsForwardProxyHost, if needed
- */
-    return (
-        local.isBrowser
-        && local.env.npm_package_nameLib
-        && (
-            /^https?:\/\//
-        ).test(xhr.url)
-        && xhr.url.indexOf(xhr.location.protocol + "//" + xhr.location.host)
-        !== 0
-        && (
-            /\.github\.io$/
-        ).test(xhr.location.host)
-        && xhr.corsForwardProxyHost !== "disabled"
-        && (xhr.corsForwardProxyHost || "https://h1-proxy1.herokuapp.com")
-    );
-};
-
 local.domQuerySelectorAllTagName = function (selector) {
 /*
  * this function will return list of tagName matching <selector>
@@ -3207,7 +3219,7 @@ local.domStyleValidate = function () {
         return;
     }
     rgx = (
-        /^0\u0020(?:(body\u0020>\u0020)?(?:\.testReportDiv\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     tmp = [];
     Array.from(
@@ -4018,8 +4030,8 @@ local.requireReadme = function () {
         "-e", (
             "require(" + JSON.stringify(__filename)
             + ").jslint.jslintAndPrintDir(" + JSON.stringify(process.cwd())
-            + ", {autofix:" + (!env.npm_config_mode_test)
-            + ",conditional:true});"
+            + ", {modeAutofix:" + (!env.npm_config_mode_test)
+            + ",modeConditional:true});"
         )
     ], {
         env: Object.assign({}, env, {
@@ -4506,6 +4518,46 @@ local.stringRegexpEscape = function (str) {
     ), "\\$&");
 };
 
+local.svgBadgeCreate = function ({
+    fill,
+    str1,
+    str2
+}) {
+/*
+ * this function will create svg-badge
+ */
+    let xx1;
+    let xx2;
+    str1 = String(str1);
+    str2 = String(str2);
+    xx1 = 6 * str1.length + 20;
+    xx2 = 6 * str2.length + 20;
+    return (
+        "<svg height=\"20\" width=\""
+        + (xx1 + xx2)
+        + "\" xmlns=\"http://www.w3.org/2000/svg\">\n"
+        + "<rect fill=\"#555\" height=\"20\" width=\""
+        + (xx1 + xx2)
+        + "\"/>\n"
+        + "<rect fill=\"" + fill + "\" height=\"20\" width=\""
+        + xx2 + "\" x=\"" + xx1 + "\"/>\n"
+        + "<g\n"
+        + "fill=\"#fff\"\n"
+        + "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n"
+        + "font-size=\"11\"\n"
+        + "text-anchor=\"middle\"\n"
+        + ">\n"
+        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
+        + 0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n"
+        + "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n"
+        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
+        + (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n"
+        + "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n"
+        + "</g>\n"
+        + "</svg>\n"
+    );
+};
+
 local.templateRender = function (template, dict, opt = {}, ii = 0) {
 /*
  * this function will render <template> with given <dict>
@@ -4825,183 +4877,83 @@ local.testMock = function (mockList, onTestCase, onError) {
     }
 };
 
-local.testReportCreate = function (testReport) {
-/*
- * this function will create test-report artifacts
- */
-    testReport = local.objectAssignDefault(testReport, {
-        testPlatformList: []
-    });
-    // print test-report summary
-    console.error(
-        "\n" + new Array(56).join("-")
-        + "\n" + testReport.testPlatformList.filter(function (testPlatform) {
-            // if testPlatform has no tests, then filter it out
-            return testPlatform.testCaseList.length;
-        }).map(function (testPlatform) {
-            return (
-                "| test-report - " + testPlatform.name + "\n|"
-                + String(
-                    testPlatform.timeElapsed + " ms     "
-                ).padStart(16, " ")
-                + String(
-                    testPlatform.testsFailed + " failed "
-                ).padStart(16, " ")
-                + String(
-                    testPlatform.testsPassed + " passed "
-                ).padStart(16, " ")
-                + "     |\n" + new Array(56).join("-")
-            );
-        }).join("\n") + "\n"
-    );
-    // create test-report.html
-    local.fsWriteFileWithMkdirpSync(
-        ".tmp/build/test-report.html",
-        local.testReportMerge(testReport)
-    );
-    // create build.badge.svg
-    local.fsWriteFileWithMkdirpSync(
-        ".tmp/build/build.badge.svg",
-        local.assetsDict["/assets.buildBadge.template.svg"].replace((
-            /0000-00-00\u002000:00:00\u0020UTC\u0020-\u0020master\u0020-\u0020aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g
-        ), (
-            new Date().toISOString().slice(0, 19).replace("T", " ")
-            + " - " + process.env.CI_BRANCH + " - " + process.env.CI_COMMIT_ID
-        ))
-    );
-    // create test-report.badge.svg
-    local.fsWriteFileWithMkdirpSync(
-        ".tmp/build/test-report.badge.svg",
-        local.assetsDict["/assets.testReportBadge.template.svg"].replace((
-            // edit number of tests failed
-            /999/g
-        ), testReport.testsFailed).replace((
-            // edit badge color
-            /d00/g
-        ), (
-            testReport.testsFailed
-            ? "d00"
-            : "0d0"
-        ))
-    );
-    // if any test failed, then exit with non-zero exitCode
-    console.error(
-        "\n" + process.env.MODE_BUILD
-        + " - " + testReport.testsFailed + " failed tests\n"
-    );
-    // print failed testCase
-    testReport.testPlatformList.forEach(function (testPlatform) {
-        testPlatform.testCaseList.forEach(function (testCase) {
-            if (testCase.status !== "passed") {
-                console.error(JSON.stringify(testCase, undefined, 4));
-            }
-        });
-    });
-    return testReport;
-};
-
-local.testReportMerge = function (testReport1, testReport2 = {}) {
+local.testReportMerge = function (testReport = {}, testReport2 = {}) {
 /*
  * this function will
- * 1. merge testReport2 into testReport1
- * 2. return testReport1 in html-format
+ * 1. merge <testReport2> into <testReport>
+ * 2. render <testReport>.html
  */
-    let errStackList;
+    let env;
     let html;
     let testCaseNumber;
-    let testReport;
-    // 1. merge testReport2 into testReport1
-    [
-        testReport1, testReport2
-    ].forEach(function (testReport, ii) {
-        let {
-            MODE_BUILD
-        } = local.env;
-        ii += 1;
-        local.objectAssignDefault(testReport, {
+    let testPlatformDict;
+    let testPlatformList;
+    // 1. merge <testReport2> into <testReport>
+    env = (globalThis.process && process.env) || {};
+    local.objectAssignDefault(testReport, {
+        coverage: globalThis.__coverage__,
+        date: new Date().toISOString(),
+        testPlatformList: [
+            {}
+        ]
+    });
+    testPlatformDict = {};
+    // deduplicate testPlatform with same name
+    testPlatformList = [].concat(
+        testReport.testPlatformList,
+        testReport2.testPlatformList || []
+    ).reverse().map(function (testPlatform) {
+        local.objectAssignDefault(testPlatform, {
             date: new Date().toISOString(),
-            errStackList: [],
-            testPlatformList: [],
-            timeElapsed: 0
-        }, -1);
-        // security - handle malformed testReport
-        local.assertOrThrow(
-            typeof testReport === "object" && testReport,
-            ii + " invalid testReport " + typeof testReport
-        );
-        // validate timeElapsed
-        local.assertOrThrow(
-            typeof testReport.timeElapsed === "number",
-            ii + " invalid testReport.timeElapsed "
-            + typeof testReport.timeElapsed
-        );
-        // security - handle malformed testReport.testPlatformList
-        testReport.testPlatformList.forEach(function (testPlatform) {
-            local.objectAssignDefault(testPlatform, {
-                name: "undefined",
-                testCaseList: [],
-                timeElapsed: 0
-            }, -1);
-            local.assertOrThrow(
-                typeof testPlatform.name === "string",
-                ii + " invalid testPlatform.name " + typeof testPlatform.name
-            );
-            // insert $MODE_BUILD into testPlatform.name
-            if (MODE_BUILD) {
-                testPlatform.name = testPlatform.name.replace((
-                    /^(browser|node)\b/
-                ), MODE_BUILD + " - $1");
-            }
-            // validate timeElapsed
-            local.assertOrThrow(
-                typeof testPlatform.timeElapsed === "number",
-                (
-                    ii + " invalid testPlatform.timeElapsed "
-                    + typeof testPlatform.timeElapsed
-                )
-            );
-            // security - handle malformed testPlatform.testCaseList
-            testPlatform.testCaseList.forEach(function (testCase) {
-                local.objectAssignDefault(testCase, {
-                    errStack: "",
-                    name: "undefined",
-                    timeElapsed: 0
-                }, -1);
-                local.assertOrThrow(
-                    typeof testCase.errStack === "string",
-                    ii + " invalid testCase.errStack "
-                    + typeof testCase.errStack
-                );
-                local.assertOrThrow(
-                    typeof testCase.name === "string",
-                    ii + " invalid testCase.name " + typeof testCase.name
-                );
-                // validate timeElapsed
-                local.assertOrThrow(
-                    typeof testCase.timeElapsed === "number",
-                    (
-                        ii + " invalid testCase.timeElapsed "
-                        + typeof testCase.timeElapsed
-                    )
-                );
-            });
+            modeBuild: env.MODE_BUILD,
+            nameBase: (
+                local.isBrowser
+                ? "browser - " + location.pathname + " - " + navigator.userAgent
+                : "node - " + process.platform + " - " + process.version
+            ),
+            status: "pending",
+            testCaseList: [],
+            testsFailed: 0,
+            testsPassed: 0,
+            testsPending: 0,
+            timeElapsed: 0,
+            timeOnload: (
+                globalThis.domOnEventWindowOnloadTimeElapsed < 0x10000000000
+                && globalThis.domOnEventWindowOnloadTimeElapsed | 0
+            ),
+            timeStart: 0
         });
+        testPlatform.name = (
+            testPlatform.modeBuild + " - " + testPlatform.nameBase
+        );
+        testPlatformDict[testPlatform.name] = testPlatform;
+        return testPlatform;
+    }).slice(-1);
+    delete testPlatformDict[testPlatformList[0].name];
+    testPlatformList = [
+        testPlatformList[0]
+    ].concat(Object.values(testPlatformDict).sort(function (aa, bb) {
+        return (
+            aa.date < bb.date
+            ? 1
+            : -1
+        );
+    }));
+    Object.assign(testReport, {
+        testsFailed: 0,
+        testsPassed: 0,
+        testsPending: 0
     });
-    // merge testReport2.testPlatformList into testReport1.testPlatformList
-    testReport2.testPlatformList.forEach(function (testPlatform2) {
-        // add testPlatform2 to testReport1.testPlatformList
-        testReport1.testPlatformList.push(testPlatform2);
-    });
-    testReport = testReport1;
-    testReport.testsFailed = 0;
-    testReport.testsPassed = 0;
-    testReport.testsPending = 0;
-    testReport.testPlatformList.forEach(function (testPlatform) {
-        testPlatform.testsFailed = 0;
-        testPlatform.testsPassed = 0;
-        testPlatform.testsPending = 0;
-        testPlatform.testCaseList.forEach(function (testCase) {
-            switch (testCase.status) {
+    testPlatformList.forEach(function (testPlatform) {
+        Object.assign(testPlatform, {
+            testsFailed: 0,
+            testsPassed: 0,
+            testsPending: 0
+        });
+        testPlatform.testCaseList.forEach(function ({
+            status
+        }) {
+            switch (status) {
             // update failed tests
             case "failed":
                 testPlatform.testsFailed += 1;
@@ -5029,278 +4981,211 @@ local.testReportMerge = function (testReport1, testReport2 = {}) {
         // sort testCaseList by status and name
         testPlatform.testCaseList.sort(function (aa, bb) {
             return (
-                aa.status.replace("passed", "z") + aa.name
-                > bb.status.replace("passed", "z") + bb.name
+                (aa.status.replace("passed", "z") + aa.name)
+                > (bb.status.replace("passed", "z") + bb.name)
                 ? 1
                 : -1
             );
         });
     });
-    // sort testPlatformList by status and name
-    testReport.testPlatformList.sort(function (aa, bb) {
-        return (
-            aa.status.replace("passed", "z") + aa.name
-            > bb.status.replace("passed", "z") + bb.name
-            ? 1
-            : -1
-        );
-    });
-    // stop testReport timer
-    if (!testReport.testsPending) {
-        local.timeElapsedPoll(testReport);
-    }
-    // 2. return testReport1 in html-format
-    // deepcopy testReport that will be modified for html templating
-    testReport = JSON.parse(JSON.stringify(testReport1));
-    // update timeElapsed
-    local.timeElapsedPoll(testReport);
-    testReport.testPlatformList.forEach(function (testPlatform) {
-        // update testPlatform.timeElapsed
-        local.timeElapsedPoll(testPlatform);
-        testPlatform.testCaseList.forEach(function (testCase) {
-            if (!testCase.isDone) {
-                local.timeElapsedPoll(testCase);
-            }
-            testPlatform.timeElapsed = Math.max(
-                testPlatform.timeElapsed,
-                testCase.timeElapsed
-            );
-        });
-        // update testReport.timeElapsed with testPlatform.timeElapsed
-        testReport.timeElapsed = Math.max(
-            testReport.timeElapsed,
-            testPlatform.timeElapsed
-        );
-    });
+    // 2. render <testReport>.html
     testCaseNumber = 0;
-    Object.assign(testReport, {
-        // map testPlatformList
-        testPlatformList: testReport.testPlatformList.filter(function (
-            testPlatform
-        ) {
-            // if testPlatform has no tests, then filter it out
-            return testPlatform.testCaseList.length;
-        }).map(function (testPlatform, ii) {
-            errStackList = [];
-            return Object.assign(testPlatform, {
-                errStackList,
-                name: testPlatform.name,
-                screenshot: testPlatform.screenshot,
-                // map testCaseList
-                testCaseList: testPlatform.testCaseList.map(function (
-                    testCase
-                ) {
-                    testCaseNumber += 1;
-                    if (testCase.errStack) {
-                        errStackList.push({
-                            errStack: (
-                                testCaseNumber + ". " + testCase.name
-                                + "\n" + testCase.errStack
-                            )
-                        });
-                    }
-                    return Object.assign(testCase, {
-                        testCaseNumber,
-                        testReportTestStatusClass: (
-                            "test"
-                            + testCase.status[0].toUpperCase()
-                            + testCase.status.slice(1)
-                        )
-                    });
-                }),
-                testPlatformNumber: ii + 1
-            });
-        }, 8),
-        testStatusClass: (
-            testReport.testsFailed
-            ? "testFailed"
-            : "testPassed"
-        )
-    });
-    // create html test-report
     html = local.assetsDict["/assets.utility2.template.html"];
     html = html.replace("assets.utility2.template.html", "");
     html = html.replace((
         /<title>.*?<\/title>/
     ), "<title>test-report</title>");
     // init html - style
-    html = html.replace(
-        "\n</style>\n",
+    html = html.replace((
+        "\n</style>\n"
+    ), (
         "\n"
-        + ".testReportDiv img {\n"
+        + "</style>\n"
+        + "<style>\n"
+        + "/* jslint utility2:true */\n"
+        + ".test-report-div img {\n"
         + "    border: 1px solid #999;\n"
         + "    margin: 5px 0 5px 0;\n"
         + "    max-height: 256px;\n"
         + "    max-width: 512px;\n"
         + "}\n"
-        + ".testReportDiv pre {\n"
+        + ".test-report-div pre {\n"
         + "    background: #fdd;\n"
         + "    border-top: 1px solid #999;\n"
         + "    margin-bottom: 0;\n"
         + "    padding: 10px;\n"
         + "}\n"
-        + ".testReportDiv span {\n"
+        + ".test-report-div span {\n"
         + "    display: inline-block;\n"
         + "    width: 120px;\n"
         + "}\n"
-        + ".testReportDiv table {\n"
+        + ".test-report-div table {\n"
         + "    border-top: 1px solid #999;\n"
         + "    text-align: left;\n"
         + "    width: 100%;\n"
         + "}\n"
-        + ".testReportDiv table > tbody > tr:nth-child(odd) {\n"
+        + ".test-report-div table > tbody > tr:nth-child(odd) {\n"
         + "    background: #bfb;\n"
         + "}\n"
-        + ".testReportDiv .footer {\n"
+        + ".test-report-div .footer {\n"
         + "    text-align: center;\n"
         + "}\n"
-        + ".testReportDiv .platform {\n"
+        + ".test-report-div .platform {\n"
         + "    background: #fff;\n"
         + "    border: 1px solid #999;\n"
         + "    margin-bottom: 20px;\n"
         + "    padding: 0 10px 10px 10px;\n"
         + "    text-align: left;\n"
         + "}\n"
-        + ".testReportDiv .summary {\n"
+        + ".test-report-div .summary {\n"
         + "    background: #bfb;\n"
         + "}\n"
-        + ".testReportDiv .testFailed {\n"
+        + ".test-report-div .test-failed {\n"
         + "    background: #f99;\n"
         + "}\n"
+        + ".test-report-div .test-pending {\n"
+        + "    background: #99f;\n"
+        + "}\n"
         + "</style>\n"
-    );
+    ));
     // init html - body
     html = html.replace((
         /\n<\/script>[\S\s]*?<\/body>\n/
     ), function () {
-        let {
-            date,
-            testPlatformList,
-            testStatusClass,
-            testsFailed,
-            testsPassed,
-            testsPending,
-            timeElapsed
-        } = testReport;
-        let {
-            CI_COMMIT_INFO,
-            npm_package_homepage,
-            npm_package_name,
-            npm_package_version
-        } = local.env;
         return (
-            "</script>\n"
-            + "<div class=\"testReportDiv\">\n"
+            "\n"
+            + "</script>\n"
+            + "<div class=\"test-report-div\">\n"
+            // init html - header
             + "<h1>test-report for\n"
-            + "   <a href=\"" + (npm_package_homepage || "#") + "\">\n"
-            + "   " + npm_package_name + " (" + npm_package_version + ")\n"
-            + "   </a>\n"
+            + "    <a href=\"" + (env.npm_package_homepage || "#") + "\">\n"
+            + "    " + env.npm_package_name
+            + " (" + env.npm_package_version + ")\n"
+            + "    </a>\n"
             + "</h1>\n"
             + "\n"
+            // init html - summary
             + "<div class=\"platform summary\">\n"
             + "<h2>summary</h2>\n"
             + "<h4>\n"
-            + "   <span>version</span>- " + npm_package_version + "<br>\n"
-            + "   <span>test date</span>- " + date + "<br>\n"
-            + "   <span>commit info</span>- \n"
-            + (CI_COMMIT_INFO || "undefined") + "<br>\n"
+            + "    <span>version</span>- " + env.npm_package_version + "<br>\n"
+            + "    <span>test-date</span>- " + testReport.date + "<br>\n"
+            + "    <span>commit-info</span>- \n"
+            + (env.CI_COMMIT_INFO || "undefined") + "<br>\n"
             + "</h4>\n"
             + "<table>\n"
             + "<thead>\n"
-            + "   <tr>\n"
-            + "   <th>total time-elapsed</th>\n"
-            + "   <th>total tests failed</th>\n"
-            + "   <th>total tests passed</th>\n"
-            + "   <th>total tests pending</th>\n"
-            + "   </tr>\n"
+            + "    <tr>\n"
+            + "    <th>total tests-failed</th>\n"
+            + "    <th>total tests-passed</th>\n"
+            + "    <th>total tests-pending</th>\n"
+            + "    </tr>\n"
             + "</thead>\n"
             + "<tbody>\n"
-            + "   <tr>\n"
-            + "   <td>" + timeElapsed + " ms</td>\n"
-            + "   <td class=\"" + testStatusClass + "\">"
-            + testsFailed + "</td>\n"
-            + "   <td>" + testsPassed + "</td>\n"
-            + "   <td>" + testsPending + "</td>\n"
-            + "   </tr>\n"
+            + "    <tr>\n"
+            + "    <td class=\"" + (
+                testReport.testsFailed
+                ? "testFailed"
+                : "testPassed"
+            ) + "\">" + testReport.testsFailed + "</td>\n"
+            + "    <td>" + testReport.testsPassed + "</td>\n"
+            + "    <td>" + testReport.testsPending + "</td>\n"
+            + "    </tr>\n"
             + "</tbody>\n"
             + "</table>\n"
             + "</div>\n"
             + "\n"
+            // init html - testPlatformList
             + testPlatformList.map(function ({
-                domOnEventWindowOnloadTimeElapsed,
-                errStackList,
+                date,
                 name,
                 screenshot,
                 testCaseList,
-                testPlatformNumber,
                 testsFailed,
                 testsPassed,
                 testsPending,
-                timeElapsed
-            }) {
-                return "<div class=\"platform\">\n"
-                + "<h4>\n"
-                + testPlatformNumber + ". " + name + "<br>\n"
-                + (
-                    screenshot
-                    ? "<a href=\"" + encodeURIComponent(screenshot) + "\">\n"
-                    + "<img\n"
-                    + "alt=\"" + encodeURIComponent(screenshot) + "\"\n"
-                    + "src=\"" + encodeURIComponent(screenshot) + "\"\n"
-                    + ">\n"
-                    + "</a>\n"
-                    + "<br>\n"
-                    : ""
-                )
-                + (
-                    domOnEventWindowOnloadTimeElapsed
-                    ? "<span>onload-time</span>- "
-                    + domOnEventWindowOnloadTimeElapsed
-                    + " ms<br>\n"
-                    : ""
-                )
-                + "<span>time-elapsed</span>- " + timeElapsed + " ms<br>\n"
-                + "<span>tests failed</span>- " + testsFailed + "<br>\n"
-                + "<span>tests passed</span>- " + testsPassed + "<br>\n"
-                + "<span>tests pending</span>- " + testsPending + "<br>\n"
-                + "</h4>\n"
-                + "\n"
-                + "<table>\n"
-                + "<thead><tr>\n"
-                + "<th>#</th>\n"
-                + "<th>time-elapsed</th>\n"
-                + "<th>status</th>\n"
-                + "<th>test-case</th>\n"
-                + "</tr></thead>\n"
-                + "<tbody>\n"
-                + testCaseList.map(function ({
-                    name,
-                    status,
-                    testCaseNumber,
-                    testReportTestStatusClass,
-                    timeElapsed
-                }) {
-                    return "<tr>\n"
-                    + "<td>" + testCaseNumber + "</td>\n"
-                    + "<td>" + timeElapsed + " ms</td>\n"
-                    + "<td class=\"" + testReportTestStatusClass + "\">"
-                    + status + "</td>\n"
-                    + "<td>" + name + "</td>\n"
-                    + "</tr>\n";
-                }).join("")
-                + "</tbody>\n"
-                + "</table>\n"
-                + "\n"
-                + (
-                    errStackList.length
-                    ? "<pre tabIndex=\"0\">\n"
-                    + errStackList.join("\n") + "\n"
-                    + "</pre>\n"
-                    : ""
-                )
-                + "</div>\n";
+                timeElapsed,
+                timeOnload
+            }, ii) {
+                let errStackList;
+                errStackList = [];
+                screenshot = screenshot && encodeURIComponent(screenshot);
+                return (
+                    "<div class=\"platform\">\n"
+                    + "<h4>\n"
+                    + (ii + 1) + ". " + name + "<br>\n"
+                    + (
+                        screenshot
+                        ? "<a href=\"" + screenshot + "\">\n"
+                        + "<img\n"
+                        + "alt=\"" + screenshot + "\"\n"
+                        + "src=\"" + screenshot + "\"\n"
+                        + ">\n"
+                        + "</a>\n"
+                        + "<br>\n"
+                        : ""
+                    )
+                    + (
+                        timeOnload
+                        ? "<span>onload-time</span>- "
+                        + timeOnload
+                        + " ms<br>\n"
+                        : ""
+                    )
+                    + "<span>test-date</span>- " + date + "<br>\n"
+                    + "<span>time-elapsed</span>- " + timeElapsed + " ms<br>\n"
+                    + "<span>tests-failed</span>- " + testsFailed + "<br>\n"
+                    + "<span>tests-passed</span>- " + testsPassed + "<br>\n"
+                    + "<span>tests-pending</span>- " + testsPending + "<br>\n"
+                    + "</h4>\n"
+                    + "\n"
+                    // init html - testCaseList
+                    + "<table>\n"
+                    + "<thead><tr>\n"
+                    + "<th>#</th>\n"
+                    + "<th>time-elapsed</th>\n"
+                    + "<th>status</th>\n"
+                    + "<th>test-case</th>\n"
+                    + "</tr></thead>\n"
+                    + "<tbody>\n"
+                    + testCaseList.map(function ({
+                        errStack,
+                        name,
+                        status,
+                        timeElapsed
+                    }) {
+                        testCaseNumber += 1;
+                        if (errStack) {
+                            errStackList.push({
+                                errStack: testCaseNumber + ". " + name + "\n"
+                                + errStack
+                            });
+                        }
+                        return (
+                            "<tr>\n"
+                            + "<td>" + testCaseNumber + "</td>\n"
+                            + "<td>" + timeElapsed + " ms</td>\n"
+                            + "<td class=\"test-" + status + "\">"
+                            + status + "</td>\n"
+                            + "<td>" + name + "</td>\n"
+                            + "</tr>\n"
+                        );
+                    }).join("")
+                    + "</tbody>\n"
+                    + "</table>\n"
+                    + "\n"
+                    + (
+                        errStackList.length
+                        ? "<pre tabIndex=\"0\">\n"
+                        + errStackList.join("\n") + "\n"
+                        + "</pre>\n"
+                        : ""
+                    )
+                    + "</div>\n"
+                );
             }).join("")
             + "\n"
+            // init html - footer
             + "<div class=\"footer\">\n"
             + "[ this document was created with <a\n"
             + "    href=\"https://github.com/kaizhu256/node-utility2\"\n"
@@ -5312,8 +5197,10 @@ local.testReportMerge = function (testReport1, testReport2 = {}) {
             + "</body>\n"
         );
     });
-    html = local.templateRender(html, testReport);
-    return html;
+    return Object.assign(testReport, {
+        html,
+        testPlatformList
+    });
 };
 
 local.testRunBrowser = function () {
@@ -5346,72 +5233,81 @@ local.testRunDefault = function (opt) {
  * this function will run tests in testPlatform.testCaseList
  */
     let consoleError;
+    let env;
     let isCoverage;
     let processExit;
     let testPlatform;
     let testReport;
     let timerInterval;
-    // run-server
-    // 1. create server from local.middlewareList
-    // 2. start server on local.env.PORT
-    // 3. run tests
-    if (!local.isBrowser) {
+    function timeElapsedPoll(opt) {
+    /*
+     * this function will poll (Date.now() - <opt>.timeStart)
+     */
+        opt.timeStart = opt.timeStart || Date.now();
+        opt.timeElapsed = Date.now() - opt.timeStart;
+    }
+    env = (globalThis.process && process.env) || local.env;
+    (function () {
+        // run-server
+        // 1. create server from local.middlewareList
+        // 2. start server on env.PORT
+        // 3. run tests
+        if (local.isBrowser) {
+            return;
+        }
         // 1. create server from local.middlewareList
         local.middlewareList = local.middlewareList || [
             local.middlewareInit,
             local.middlewareAssetsCached,
             local.middlewareFileServer
         ];
-        if (!(globalThis.utility2_serverHttp1 || (
-            typeof process === "object"
-            && process
-            && process.env.npm_config_mode_lib
-        ))) {
-            globalThis.utility2_onReadyBefore.cnt += 1;
-            local.serverLocalReqHandler = function (req, res) {
-            /*
-             * this function will emulate express-like middleware-chaining
-             */
-                let gotoState;
-                let isDone;
-                gotoState = -1;
-                (function gotoNext(err) {
-                    try {
-                        gotoState += 1;
-                        if (err || gotoState >= local.middlewareList.length) {
-                            local.middlewareError(err, req, res);
-                            return;
-                        }
-                        // recurse with next middleware in middlewareList
-                        local.middlewareList[gotoState](req, res, gotoNext);
-                    } catch (errCaught) {
-                        // throw errCaught to break infinite recursion-loop
-                        local.assertOrThrow(!isDone, errCaught);
-                        isDone = true;
-                        gotoNext(errCaught);
-                    }
-                }());
-            };
-            globalThis.utility2_serverHttp1 = local.http.createServer(
-                local.serverLocalReqHandler
-            );
-            // 2. start server on local.env.PORT
-            console.error("http-server listening on port " + local.env.PORT);
-            globalThis.utility2_onReadyBefore.cnt += 1;
-            globalThis.utility2_serverHttp1.listen(
-                local.env.PORT,
-                globalThis.utility2_onReadyBefore
-            );
-            // 3. run tests
-            local.testRunDefault(opt);
-            globalThis.utility2_onReadyBefore();
+        if (globalThis.utility2_serverHttp1 || env.npm_config_mode_lib) {
+            return;
         }
-    }
+        globalThis.utility2_onReadyBefore.cnt += 1;
+        local.serverLocalReqHandler = function (req, res) {
+        /*
+         * this function will emulate express-like middleware-chaining
+         */
+            let gotoState;
+            let isDone;
+            gotoState = -1;
+            (function gotoNext(err) {
+                try {
+                    gotoState += 1;
+                    if (err || gotoState >= local.middlewareList.length) {
+                        local.middlewareError(err, req, res);
+                        return;
+                    }
+                    // recurse with next middleware in middlewareList
+                    local.middlewareList[gotoState](req, res, gotoNext);
+                } catch (errCaught) {
+                    // throw errCaught to break infinite recursion-loop
+                    local.assertOrThrow(!isDone, errCaught);
+                    isDone = true;
+                    gotoNext(errCaught);
+                }
+            }());
+        };
+        globalThis.utility2_serverHttp1 = local.http.createServer(
+            local.serverLocalReqHandler
+        );
+        // 2. start server on env.PORT
+        console.error("http-server listening on port " + env.PORT);
+        globalThis.utility2_onReadyBefore.cnt += 1;
+        globalThis.utility2_serverHttp1.listen(
+            env.PORT,
+            globalThis.utility2_onReadyBefore
+        );
+        // 3. run tests
+        local.testRunDefault(opt);
+        globalThis.utility2_onReadyBefore();
+    }());
     globalThis.utility2_modeTest = Number(
         globalThis.utility2_modeTest
         || opt.modeTest
         || local.modeTest
-        || local.env.npm_config_mode_test
+        || env.npm_config_mode_test
     );
     switch (globalThis.utility2_modeTest) {
     // init
@@ -5466,16 +5362,14 @@ local.testRunDefault = function (opt) {
     // init modeTestCase
     local.modeTestCase = (
         local.modeTestCase
-        || local.env.npm_config_mode_test_case || ""
+        || env.npm_config_mode_test_case || ""
     );
     // init testReport
     testReport = globalThis.utility2_testReport;
-    // init testReport timer
-    local.timeElapsedPoll(testReport);
     // init testPlatform
     testPlatform = testReport.testPlatformList[0];
     // init testPlatform timer
-    local.timeElapsedPoll(testPlatform);
+    timeElapsedPoll(testPlatform);
     // reset testPlatform.testCaseList
     testPlatform.testCaseList.length = 0;
     // add tests into testPlatform.testCaseList
@@ -5502,18 +5396,18 @@ local.testRunDefault = function (opt) {
     if (local.isBrowser) {
         document.querySelectorAll("#htmlTestReport1").forEach(function (elem) {
             local.uiAnimateSlideDown(elem);
-            elem.innerHTML = local.testReportMerge(testReport);
+            elem.innerHTML = testReport.html;
         });
     }
     local.eventListenerEmit("utility2.testRunStart", testReport);
     // testRunProgressUpdate every 2000 ms until isDone
     timerInterval = setInterval(function () {
         // update testPlatform.timeElapsed
-        local.timeElapsedPoll(testPlatform);
+        timeElapsedPoll(testPlatform);
         if (local.isBrowser) {
             document.querySelector(
                 "#htmlTestReport1"
-            ).innerHTML = local.testReportMerge(testReport);
+            ).innerHTML = local.testReportMerge(testReport).html;
         }
         local.eventListenerEmit("utility2.testRunProgressUpdate", testReport);
         // cleanup timerInterval
@@ -5542,7 +5436,7 @@ local.testRunDefault = function (opt) {
         let timerTimeout;
         onError = function (err) {
             // update testPlatform.timeElapsed
-            local.timeElapsedPoll(testPlatform);
+            timeElapsedPoll(testPlatform);
             // cleanup timerTimeout
             clearTimeout(timerTimeout);
             // if testCase isDone, then fail testCase
@@ -5581,7 +5475,7 @@ local.testRunDefault = function (opt) {
                 testCase.status = "passed";
             }
             // stop testCase timer
-            local.timeElapsedPoll(testCase);
+            timeElapsedPoll(testCase);
             consoleError(
                 "testRunDefault - "
                 + testPlatform.timeElapsed + " ms - [" + (
@@ -5612,7 +5506,7 @@ local.testRunDefault = function (opt) {
         // try to run testCase
         local.tryCatchOnError(function () {
             // init timeElapsed
-            local.timeElapsedPoll(testCase);
+            timeElapsedPoll(testCase);
             testCase.onTestCase({}, onError);
         }, onError);
     }, function () {
@@ -5620,21 +5514,15 @@ local.testRunDefault = function (opt) {
      * this function will create test-report after all tests isDone
      */
         // update timeElapsed
-        local.timeElapsedPoll(testPlatform);
+        timeElapsedPoll(testPlatform);
         globalThis.utility2_modeTest = 1;
         //!! local.ajaxProgressUpdate();
-        // init domOnEventWindowOnloadTimeElapsed
-        if (globalThis.domOnEventWindowOnloadTimeElapsed < 0x10000000000) {
-            testPlatform.domOnEventWindowOnloadTimeElapsed = (
-                globalThis.domOnEventWindowOnloadTimeElapsed
-            );
-        }
         // finalize testReport
         local.testReportMerge(testReport);
         // create test-report.json
         delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
-            local.env.UTILITY2_DIR_BUILD + "/test-report.json",
+            env.UTILITY2_DIR_BUILD + "/test-report.json",
             JSON.stringify(testReport, undefined, 4)
         );
         // restore console.log
@@ -5661,14 +5549,6 @@ local.throwError = function () {
  * this function will throw new err
  */
     throw new Error();
-};
-
-local.timeElapsedPoll = function (opt) {
-/*
- * this function will poll (Date.now() - <opt>.timeStart)
- */
-    opt.timeStart = opt.timeStart || Date.now();
-    opt.timeElapsed = Date.now() - opt.timeStart;
 };
 
 local.tryCatchOnError = function (fnc, onError) {
@@ -5916,9 +5796,10 @@ local.uuid4Create = function () {
 // run shared js-env code - init-after
 (function () {
 local.apidocCreate = local.apidoc.apidocCreate;
-local.browserTest({
-    modeTestReportCreate: true
-});
+// init utility2_testReport
+globalThis.utility2_testReport = local.testReportMerge(
+    globalThis.utility2_testReport
+);
 local.env = (typeof process === "object" && process && process.env) || {};
 local.objectAssignDefault(local.env, {
     npm_package_nameLib: local.coalesce(
@@ -5983,8 +5864,6 @@ local.stringCharsetEncodeUriComponent = (
     + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringHelloEmoji = "hello \ud83d\ude01\n";
-// init serverLocalHost
-local.urlParse("");
 // init timeoutDefault
 local.timeoutDefault = local.env.npm_config_timeout_default;
 String(
@@ -6147,8 +6026,10 @@ if (globalThis.utility2_rollup) {
             /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
         ), function (match0) {
             match0 = match0.replace((
-                /\\n\\$/gm
-            ), "");
+                /\\n\\$|\\(.)/gm
+            ), function (ignore, match1) {
+                return match1 || "";
+            });
             match0 = match0.replace(
                 "<script src=\"assets.app.js\"></script>\n",
                 (

@@ -3,9 +3,9 @@
 
 shMain () {(set -e
 # this function will run the main program
+    local ARG1
     printf "# start run command 'npm run $*'\n" 1>&2
     UTILITY2_BIN=utility2
-    local ARG1
     if [ -f lib.utility2.sh ]
     then
         UTILITY2_BIN="$PWD/lib.utility2.sh"

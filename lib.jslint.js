@@ -11825,7 +11825,7 @@ function tokenize(source) {
             && !regexp_seen
             // hack-jslint - ignore too_long url
             && !(
-                option.utility2
+                option.modeUtility2
                 && (
                     /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
                 ).test(whole_line)
@@ -11871,7 +11871,7 @@ function tokenize(source) {
                 option.node = true;
                 option.nomen = true;
                 option.this = true;
-                option.utility2 = true;
+                option.modeUtility2 = true;
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
@@ -15963,7 +15963,7 @@ function whitage() {
                         open = true;
                         // hack-jslint - conditional-margin
                         if (
-                            !option.utility2
+                            !option.modeUtility2
                             || lines[right.line].startsWith(" ")
                         ) {
                             margin += 4;
@@ -16281,7 +16281,7 @@ local.jslint0 = Object.freeze(function (
         }
         aa = lines_extra[warning.line].source;
         warning.a = warning.a || aa.trim();
-        switch (option.autofix && warning.code) {
+        switch (option.modeAutofix && warning.code) {
         // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
         case "expected_a_at_b_c":
             // autofix indent - increment
@@ -16393,7 +16393,7 @@ local.jslint0 = Object.freeze(function (
     });
     // hack-jslint - debug warning
     warnings.some(function (warning) {
-        if (!option.utility2) {
+        if (!option.modeUtility2) {
             return true;
         }
         warning.option = Object.assign({}, option);
@@ -16507,9 +16507,9 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
         // autofix-html - recurse <script>...</script>, <style>...</style>
         code = code.replace((
             /^(\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n)(<\/(?:script|style)>)$/gm
-        ), function (ignore, match1, match2, ii) {
+        ), function (ignore, match1, footer, ii) {
             return jslintRecurse(code, file + (
-                match2.indexOf("style") >= 0
+                footer === "</style>"
                 ? ".<style>.css"
                 : ".<script>.js"
             ), opt, {
@@ -16517,7 +16517,7 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
                 iiEnd: ii + match1.length,
                 iiLine,
                 iiStart: ii
-            }) + match2;
+            }) + footer;
         });
         break;
     case ".js":
@@ -16789,9 +16789,6 @@ jslintRecurse = function (code, file, opt, {
     let errMsg;
     let fileType;
     let globalList;
-    let modeAutofix;
-    let modeConditional;
-    let modeCoverage;
     let result;
     let tmp;
     // init opt
@@ -16806,9 +16803,6 @@ jslintRecurse = function (code, file, opt, {
         /\.\w+?$|$/m
     ).exec(file)[0];
     globalList = opt.globalList;
-    modeAutofix = opt.autofix;
-    modeConditional = opt.conditional;
-    modeCoverage = opt.coverage;
     result = {};
     // preserve lineno - save iiLine
     iiLine += stringGetLineAndCol(code, iiStart).line;
@@ -16860,13 +16854,13 @@ jslintRecurse = function (code, file, opt, {
     }
     // init mode-utility2
     tmp = tmp[fileType] && tmp[fileType].exec(code.slice(0, 4096));
-    opt.utility2 = Boolean((tmp && tmp[1]) || modeAutofix);
+    opt.modeUtility2 = Boolean((tmp && tmp[1]) || opt.modeAutofix);
     // if not modeConditional, then do not jslint
-    if ((modeConditional && !tmp) || modeCoverage) {
+    if (opt.modeConditional && !tmp) {
         return code;
     }
     // jslint - modeAutofix
-    if (modeAutofix) {
+    if (opt.modeAutofix) {
         code = jslintAutofix(code, file, opt, {
             fileType,
             globalList,
@@ -16891,6 +16885,12 @@ jslintRecurse = function (code, file, opt, {
         });
         break;
     case ".html":
+        jslintAutofix(code, file, opt, {
+            fileType,
+            globalList,
+            iiLine
+        });
+        break;
     case ".md":
     case ".sh":
         break;
@@ -16916,7 +16916,7 @@ jslintRecurse = function (code, file, opt, {
             return err;
         });
     }
-    if (opt.utility2) {
+    if (opt.modeUtility2) {
         jslintUtility2({
             code,
             errList,
@@ -16962,7 +16962,7 @@ jslintRecurse = function (code, file, opt, {
     // autofix-save
     if (
         !local.isBrowser
-        && modeAutofix
+        && opt.modeAutofix
         && !fileType0
         && !result.stop
         && code !== code0
@@ -17415,8 +17415,8 @@ local.cliDict._default = function () {
             require("fs").readFileSync(require("path").resolve(file), "utf8"),
             file,
             {
-                autofix: process.argv.indexOf("--autofix") >= 0,
-                conditional: process.argv.indexOf("--conditional") >= 0
+                modeAutofix: process.argv.indexOf("--autofix") >= 0,
+                modeConditional: process.argv.indexOf("--conditional") >= 0
             }
         );
     });
@@ -17430,8 +17430,8 @@ local.cliDict.dir = function () {
  * will jslint files in shallow <dir>
  */
     local.jslintAndPrintDir(process.argv[3], {
-        autofix: process.argv.indexOf("--autofix") >= 0,
-        conditional: process.argv.indexOf("--conditional") >= 0
+        modeAutofix: process.argv.indexOf("--autofix") >= 0,
+        modeConditional: process.argv.indexOf("--conditional") >= 0
     });
 };
 

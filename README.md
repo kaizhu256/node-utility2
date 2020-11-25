@@ -48,8 +48,19 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- merge shell-function shDockerCdHostPwd into shDockerSh
+- jslint - add prefix "mode" in front of utility2-options
+- add function svgBadgeCreate
+- merge function testReportCreate into testReportMerge
 - replace function templateRender with template-literals - part1 - testReportMerge
-- remove functions _http.createServer, _http.request, ajaxProgressUpdate, bufferConcat, bufferToUtf8, bufferValidateAndCoerce, fsRmrfSync, middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit, stateInit, stringMerge
+- remove functions _http.createServer, _http.request,
+- remove functions ajaxProgressUpdate,
+- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,
+- remove functions corsForwardProxyHostIfNeeded,
+- remove functions fsRmrfSync,
+- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,
+- remove functions serverLocalUrlTest, stateInit, stringMerge,
+- remove functions timeElapsedPoll
 - remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
 - rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
 - remove shell-function shXvfbStart
@@ -385,10 +396,9 @@ local.testCase_webpage_default = function (opt, onError) {
         onError(undefined, opt);
         return;
     }
-    opt = {
-        url: local.serverLocalHost + "?modeTest=1"
-    };
-    local.browserTest(opt, onError);
+    local.browserTest({
+        url: "http://127.0.0.1:" + process.env.PORT + "?modeTest=1"
+    }, onError);
 };
 }());
 
@@ -418,7 +428,7 @@ if (!local.isBrowser) {
                 : JSON.stringify(arg, undefined, 4)
             );
         }).join(" ").replace((
-            /\u001b\[\d*m/g
+            /\u001b\[\d+?m/g
         ), "") + "\n";
         // scroll textarea to bottom
         elem.scrollTop = elem.scrollHeight;
@@ -945,8 +955,8 @@ local.domOnEventInputChange = function (evt) {\n\
         local.jslintAndPrint(document.querySelector(\n\
             "#inputTextarea1"\n\
         ).value, "inputTextarea1.js", {\n\
-            autofix: evt.target.id === "buttonJslintAutofix1",\n\
-            conditional: evt.target.id !== "buttonJslintAutofix1"\n\
+            modeAutofix: evt.target.id === "buttonJslintAutofix1",\n\
+            modeConditional: evt.target.id !== "buttonJslintAutofix1"\n\
         });\n\
         if (local.jslint.jslintResult.autofix) {\n\
             document.querySelector(\n\
@@ -1277,7 +1287,7 @@ MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
     export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint; \
+    npm install -g eslint n; \
     npm install kaizhu256/node-utility2#alpha; \
     cp -a node_modules /; \
     cd node_modules/utility2; \
@@ -1293,13 +1303,6 @@ FROM kaizhu256/node-utility2:base
 MAINTAINER kai zhu <kaizhu256@gmail.com>
 # install utility2
 RUN (set -e; \
-    export DEBIAN_FRONTEND=noninteractive; \
-    npm install -g eslint; \
-    npm install kaizhu256/node-utility2#alpha; \
-    cp -a node_modules /; \
-    cd node_modules/utility2; \
-    npm install; \
-    npm test; \
 )
 ```
 

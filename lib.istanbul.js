@@ -432,6 +432,46 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
     return true;
 };
 
+local.svgBadgeCreate = function ({
+    fill,
+    str1,
+    str2
+}) {
+/*
+ * this function will create svg-badge
+ */
+    let xx1;
+    let xx2;
+    str1 = String(str1);
+    str2 = String(str2);
+    xx1 = 6 * str1.length + 20;
+    xx2 = 6 * str2.length + 20;
+    return (
+        "<svg height=\"20\" width=\""
+        + (xx1 + xx2)
+        + "\" xmlns=\"http://www.w3.org/2000/svg\">\n"
+        + "<rect fill=\"#555\" height=\"20\" width=\""
+        + (xx1 + xx2)
+        + "\"/>\n"
+        + "<rect fill=\"" + fill + "\" height=\"20\" width=\""
+        + xx2 + "\" x=\"" + xx1 + "\"/>\n"
+        + "<g\n"
+        + "fill=\"#fff\"\n"
+        + "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n"
+        + "font-size=\"11\"\n"
+        + "text-anchor=\"middle\"\n"
+        + ">\n"
+        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
+        + 0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n"
+        + "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n"
+        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
+        + (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n"
+        + "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n"
+        + "</g>\n"
+        + "</svg>\n"
+    );
+};
+
 local.templateRender = function (template, dict, opt = {}, ii = 0) {
 /*
  * this function will render <template> with given <dict>
@@ -10831,13 +10871,6 @@ local.templateCoverageReport = '\
 </html>\n\
 {{/if isBrowser}}\n\
 ';
-
-
-/*
-file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-*/
-local.templateCoverageBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /* jslint ignore:end */
 
 
@@ -11704,17 +11737,16 @@ local.coverageReportCreate = function ({
     tmp = nodeRoot.metrics.lines.pct;
     fileWrite(
         dirCoverage + "/coverage.badge.svg",
-        // edit coverage badge percent
-        // edit coverage badge color
-        local.templateCoverageBadgeSvg.replace((
-            /100.0/g
-        ), tmp).replace((
-            /0d0/g
-        ), (
-            Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
-            + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
-            + "00"
-        ))
+        local.svgBadgeCreate({
+            fill: (
+                "#"
+                + Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
+                + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
+                + "00"
+            ),
+            str1: "coverage",
+            str2: tmp + " %"
+        })
     );
     console.error(
         "istanbul - created coverage file " + dirCoverage + "/index.html"
