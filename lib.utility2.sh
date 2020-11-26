@@ -1007,7 +1007,7 @@ shBuildInit () {
         fs.existsSync("package.json")
         ? JSON.parse(fs.readFileSync("package.json"))
         : {
-            name: "my-app-lite",
+            name: "my-app",
             version: "0.0.1"
         }
     );
@@ -1024,7 +1024,9 @@ shBuildInit () {
     ].forEach(function (key) {
         switch (key) {
         case "nameLib":
-            export2("npm_package_nameLib", String(packageJson.nameLib).replace((
+            export2("npm_package_nameLib", String(
+                packageJson.nameLib || packageJson.name
+            ).replace((
                 /\W/g
             ), "_"));
             break;
@@ -1513,8 +1515,7 @@ shDeployGithub () {(set -e
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" \
-        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
 )}
 
 shDeployHeroku () {(set -e
@@ -1551,8 +1552,7 @@ shDeployHeroku () {(set -e
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" \
-        shBrowserTest "$TEST_URL?modeTest=1&timeExit={{timeExit}}"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
 )}
 
 shDockerRestartNginx () {(set -e
@@ -1743,15 +1743,11 @@ shDockerSh () {
         CMD="$CMD && shDockerSh init;"
         CMD="$CMD ${2:-bash}"
         docker start "$1"
-        case "$(uname)" in
-        *)
-            docker exec \
-                -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
-                -it "$1" sh -c "$CMD"
-            ;;
-        esac
-        return
+        docker exec \
+            -e HOST_HOME="$HOME" -e HOST_PWD="$PWD" \
+            -it "$1" sh -c "$CMD"
         )
+        return "$?"
     fi
     # run inside vm
     # cd $HOST_PWD inside docker
@@ -1779,18 +1775,21 @@ shDockerSh () {
     process.stderr.write(cmd);
     process.stdout.write(cmd);
 }());
-')" # '
-    # update-ca-certificates
-    if [ -f "$CURL_CA_BUNDLE" ]
+')" || return "$?" # '
+    # init $CURL_CA_BUNDLE
+    if [ -f "$HOME/.curl-ca-bundle.crt" ]
     then
-        export NODE_EXTRA_CA_CERTS="${NODE_EXTRA_CA_CERTS:-$CURL_CA_BUNDLE}"
+        export CURL_CA_BUNDLE="$HOME/.curl-ca-bundle.crt" || return "$?"
+        export NODE_EXTRA_CA_CERTS="$HOME/.curl-ca-bundle.crt" || return "$?"
     fi
+    # update-ca-certificates
     if [ -f "$CURL_CA_BUNDLE" ] &&
         [ -d /usr/local/share/ca-certificates ] &&
-        [ ! -f /usr/local/share/ca-certificates/curl-ca-bundle.crt ]
+        [ ! -f /usr/local/share/ca-certificates/.curl-ca-bundle.crt ]
     then
-        cp "$CURL_CA_BUNDLE" /usr/local/share/ca-certificates/curl-ca-bundle.crt
-        update-ca-certificates
+        cp "$CURL_CA_BUNDLE" \
+            /usr/local/share/ca-certificates/.curl-ca-bundle.crt || return "$?"
+        update-ca-certificates || return "$?"
     fi
 }
 
@@ -3184,7 +3183,7 @@ shReadmeEval () {(set -e
         printf "# file-begin\n"
         printf "$SCRIPT" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
         printf "\n# file-end\n\n\n"
-        shRunWithScreenshotTxt eval "$SCRIPT"
+        shRunWithScreenshotTxt eval "$SCRIPT" || [ "$?" = 15 ]
         ;;
     example.sh)
         # delete all leading blank lines at top of file
@@ -3193,7 +3192,7 @@ shReadmeEval () {(set -e
         printf "# file-begin\n"
         cat "$FILE" | sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
         printf "\n# file-end\n\n\n"
-        shRunWithScreenshotTxt /bin/sh "$FILE"
+        shRunWithScreenshotTxt /bin/sh "$FILE" || [ "$?" = 15 ]
         ;;
     esac
     shBuildPrint "... finished running command 'shReadmeEval $*'"

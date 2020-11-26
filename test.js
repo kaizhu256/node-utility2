@@ -209,46 +209,11 @@ local.testRunDefault(local);
 
 // run shared js-env code - function
 (function () {
-let assertJsonEqual;
-let assertOrThrow;
-let onErrorThrow;
-assertJsonEqual = local.assertJsonEqual;
-assertOrThrow = local.assertOrThrow;
-onErrorThrow = local.onErrorThrow;
-/* istanbul ignore next */
-local.gotoNext = function (opt, onError) {
-/*
- * this function will wrap onError inside recursive-function <opt>.gotoNext,
- * and append current-stack to any err
- */
-    opt.gotoNext = function (err, data, meta) {
-        try {
-            opt.gotoState += (
-                (err && !opt.modeErrorIgnore)
-                ? 1000
-                : 1
-            );
-            if (opt.modeDebug) {
-                console.error("gotoNext - " + JSON.stringify({
-                    gotoState: opt.gotoState,
-                    errMsg: err && err.message
-                }));
-                if (err && err.stack) {
-                    console.error(err.stack);
-                }
-            }
-            onError(err, data, meta);
-        } catch (errCaught) {
-            // throw errCaught to break infinite recursion-loop
-            if (opt.errCaught) {
-                local.assertOrThrow(undefined, opt.errCaught);
-            }
-            opt.errCaught = errCaught;
-            opt.gotoNext(errCaught, data, meta);
-        }
-    };
-    return opt;
-};
+let {
+    assertJsonEqual,
+    assertOrThrow,
+    onErrorThrow
+} = local;
 
 local.testCase_assertXxx_default = function (opt, onError) {
 /*
@@ -356,7 +321,7 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 // customize quickstart-example-js-script
                 merge: (
-                    /#unless\u0020isRollup[\S\s]*?<script\u0020src="assets\.example\.js">/
+                    /\n<\/script>[\S\s]*?\n<script\u0020src="assets\.example\.js">/
                 )
             }, {
                 // customize quickstart-example-js-screenshot
@@ -368,16 +333,6 @@ local.testCase_buildApp_default = function (opt, onError) {
                 merge: (
                     /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
                 )
-            }, {
-                // coverage-hack
-                aa: " ",
-                bb: " "
-            }, {
-                // coverage-hack
-                aa: "__zjqx1234__" + Math.random()
-            }, {
-                // coverage-hack
-                merge: new RegExp("__zjqx1234__" + Math.random())
             }
         ]
     }, onError, opt);
@@ -538,137 +493,6 @@ local.testCase_listShuffle_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_onParallelList_default = function (opt, onError) {
-/*
- * this function will test onParallelList's default handling-behavior
- */
-    opt = {};
-    local.gotoNext(opt, function (err) {
-        switch (opt.gotoState) {
-        case 1:
-            // test null-case handling-behavior
-            local.onParallelList({}, onErrorThrow, opt.gotoNext);
-            break;
-        case 2:
-            opt.list = [
-                null
-            ];
-            // test retryLimit handling-behavior
-            opt.retryLimit = 1;
-            local.onParallelList(opt, function (opt2, onParallel) {
-                onParallel.cnt += 1;
-                // test err handling-behavior
-                onParallel(new Error(), opt2);
-                // test multiple-callback handling-behavior
-                setTimeout(onParallel, 5000);
-            }, function (err) {
-                // handle err
-                assertOrThrow(err, err);
-                opt.gotoNext();
-            });
-            break;
-        case 3:
-            opt.data = [];
-            // test rateLimit handling-behavior
-            opt.rateLimit = 3;
-            opt.rateMax = 0;
-            // test retryLimit handling-behavior
-            opt.retryLimit = 1;
-            local.onParallelList({
-                list: [
-                    1, 2, 3, 4
-                ],
-                rateLimit: opt.rateLimit
-            }, function (opt2, onParallel) {
-                onParallel.cnt += 1;
-                opt.rateMax = Math.max(
-                    onParallel.cnt - 1,
-                    opt.rateMax
-                );
-                // test async handling-behavior
-                setTimeout(function () {
-                    // test list-growth handling-behavior
-                    if (opt2.ii === 3) {
-                        opt2.list.push(5);
-                    }
-                    opt.data[opt2.ii] = opt2.elem;
-                    // test retry handling-behavior
-                    assertOrThrow(opt2.retry < 1);
-                    onParallel(undefined, opt2);
-                });
-            }, opt.gotoNext, opt.rateLimit);
-            break;
-        case 4:
-            // validate data
-            assertJsonEqual(opt.data, [
-                1, 2, 3, 4, 5
-            ]);
-            assertJsonEqual(opt.rateMax, 3);
-            opt.data = [];
-            opt.rateLimit = "syntax-err";
-            opt.rateMax = 0;
-            local.onParallelList({
-                list: [
-                    1, 2, 3, 4, 5
-                ],
-                rateLimit: opt.rateLimit
-            }, function (opt2, onParallel) {
-                // test sync handling-behavior
-                onParallel.cnt += 1;
-                opt.rateMax = Math.max(onParallel.cnt, opt.rateMax);
-                opt.data[opt2.ii] = opt2.elem;
-                onParallel(undefined, opt);
-            }, opt.gotoNext);
-            break;
-        case 5:
-            // validate data
-            assertJsonEqual(opt.data, [
-                1, 2, 3, 4, 5
-            ]);
-            assertJsonEqual(opt.rateMax, 2);
-            opt.gotoNext();
-            break;
-        default:
-            onError(err, opt);
-        }
-    });
-    opt.gotoState = 0;
-    opt.gotoNext();
-};
-
-local.testCase_onParallel_default = function (opt, onError) {
-/*
- * this function will test onParallel's default handling-behavior
- */
-    let onParallel;
-    let onParallelError;
-    // test onEach handling-behavior
-    onParallel = local.onParallel(onError, function () {
-        // validate cnt
-        assertOrThrow(onParallel.cnt >= 0, onParallel);
-    });
-    onParallel.cnt += 1;
-    // test multiple-task handling-behavior
-    onParallel.cnt += 1;
-    setTimeout(function () {
-        onParallelError = local.onParallel(onParallel);
-        onParallelError.cnt += 1;
-        onParallelError();
-        // test multiple-callback-error handling-behavior
-        onParallelError();
-        // handle err
-        assertOrThrow(onParallelError.err, onParallelError.err);
-        // test err handling-behavior
-        onParallelError(new Error());
-        // handle err
-        assertOrThrow(onParallelError.err, onParallelError.err);
-        // test ignore-after-error handling-behavior
-        onParallelError();
-    });
-    // test default handling-behavior
-    onParallel(undefined, opt);
-};
-
 local.testCase_replStart_default = function (opt, onError) {
 /*
  * this function will test replStart's default handling-behavior
@@ -727,37 +551,6 @@ local.testCase_replStart_default = function (opt, onError) {
         });
         onError(undefined, opt);
     }, onError);
-};
-
-local.testCase_requireReadme_misc = function (opt, onError) {
-/*
- * this function will test requireReadme's misc handling-behavior
- */
-    if (local.isBrowser) {
-        onError(undefined, opt);
-        return;
-    }
-    // test npm_config_mode_lib handling-behavior
-    local.testMock([
-        [
-            local, {
-                testRunDefault: undefined
-            }
-        ],
-        [
-            process.env, {
-                npm_config_mode_lib: "1"
-            }
-        ]
-    ], function (onError) {
-        local.requireReadme();
-        onError(undefined, opt);
-    }, onErrorThrow);
-    // test file-modified handling-behavior
-    require("fs").utimes(__filename, new Date(), new Date(), function (err) {
-        onErrorThrow(err);
-        onError(undefined, opt);
-    });
 };
 
 local.testCase_serverRespondTimeoutDefault_timeout = function (opt, onError) {
@@ -981,68 +774,47 @@ local.testCase_webpage_err = function (opt, onError) {
 
 // run shared js-env code - init-after
 (function () {
-// init test-middleware
-local.middlewareList.push(function (req, res, next) {
-/*
- * this function will run test-middleware
- */
-    switch (req.urlParsed.pathname) {
-    // test http POST handling-behavior
-    case "/test.body":
-        // test req-body-read handling-behavior
-        local.middlewareBodyRead(req, res, function () {
-            // test multiple req-body-read handling-behavior
-            local.middlewareBodyRead(req, res, function () {
-                res.write(req.bodyRaw);
-                res.end();
-            });
-        });
-        break;
-    // test http POST handling-behavior
-    case "/test.echo":
-        // test res-header handling-behavior
-        local.serverRespondHeadSet(req, res, null, {
-            "X-Res-Header-Test": "bb"
-        });
-        local.serverRespondEcho(req, res);
-        break;
-    //!! // test 500-internal-server-error handling-behavior
-    //!! case "/test.err-500":
-        //!! // test multiple-callback serverRespondHeadSet handling-behavior
-        //!! local.serverRespondHeadSet(req, res, null, {});
-        //!! next(new Error());
-        //!! // test multiple-callback-error handling-behavior
-        //!! next(new Error());
-        //!! // test onErrorDefault handling-behavior
-        //!! local.testMock([
-            //!! [
-                //!! local, {
-                    //!! swgg: null
-                //!! }
-            //!! ]
-        //!! ], function (onError) {
-            //!! let err;
-            //!! err = new Error("error");
-            //!! err.statusCode = 500;
-            //!! local.middlewareError(err, req, res);
-            //!! onError();
-        //!! }, local.onErrorThrow);
+    return;
+//!! // init test-middleware
+//!! local.middlewareList.push(function (req, res, next) {
+//!! /*
+ //!! * this function will run test-middleware
+ //!! */
+    //!! switch (req.urlParsed.pathname) {
+    //!! // test http POST handling-behavior
+    //!! case "/test.body":
+        //!! // test req-body-read handling-behavior
+        //!! local.middlewareBodyRead(req, res, function () {
+            //!! // test multiple req-body-read handling-behavior
+            //!! local.middlewareBodyRead(req, res, function () {
+                //!! res.write(req.bodyRaw);
+                //!! res.end();
+            //!! });
+        //!! });
         //!! break;
-    // test undefined-status-code handling-behavior
-    case "/test.err-undefined":
-        local.serverRespondDefault(req, res, 999);
-        break;
-    // test timeout handling-behavior
-    case "/test.timeout":
-        setTimeout(function () {
-            res.end();
-        }, 2000);
-        break;
-    // serve file
-    default:
-        local.middlewareFileServer(req, res, next);
-    }
-});
+    //!! // test http POST handling-behavior
+    //!! case "/test.echo":
+        //!! // test res-header handling-behavior
+        //!! local.serverRespondHeadSet(req, res, null, {
+            //!! "X-Res-Header-Test": "bb"
+        //!! });
+        //!! local.serverRespondEcho(req, res);
+        //!! break;
+    //!! // test undefined-status-code handling-behavior
+    //!! case "/test.err-undefined":
+        //!! local.serverRespondDefault(req, res, 999);
+        //!! break;
+    //!! // test timeout handling-behavior
+    //!! case "/test.timeout":
+        //!! setTimeout(function () {
+            //!! res.end();
+        //!! }, 2000);
+        //!! break;
+    //!! // serve file
+    //!! default:
+        //!! local.middlewareFileServer(req, res, next);
+    //!! }
+//!! });
 }());
 
 
@@ -1076,7 +848,7 @@ if (process.argv[2]) {
     // start
     process.argv.splice(1, 1);
     process.argv[1] = require("path").resolve(process.argv[1]);
-    local.Module.runMain();
+    require("module").runMain();
 }
 // runme
 if (process.env.npm_config_runme) {

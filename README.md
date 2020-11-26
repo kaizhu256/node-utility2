@@ -48,6 +48,8 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- add custom env-object processEnv
+- rename default env-var \$npm_package_name from my-app-lite to my-app
 - merge shell-function shDockerCdHostPwd into shDockerSh
 - jslint - add prefix "mode" in front of utility2-options
 - add function svgBadgeCreate
@@ -61,7 +63,8 @@ this zero-dependency package will provide high-level functions to to build, test
 - remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,
 - remove functions serverLocalUrlTest, stateInit, stringMerge,
 - remove functions timeElapsedPoll
-- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
+- remove functions urlParse
+- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
 - rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
 - remove shell-function shXvfbStart
 - merge function testRunServer into testRunDefault
@@ -457,7 +460,7 @@ local.assetsDict["/assets.index.template.html"] = '\
 <meta charset="utf-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <!-- "assets.utility2.template.html" -->\n\
-<title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
+<title>{{npm_package_name}} ({{npm_package_version}})</title>\n\
 <style>\n\
 /* jslint utility2:true */\n\
 /*csslint\n\
@@ -868,20 +871,11 @@ pre {\n\
 }());\n\
 </script>\n\
 <h1>\n\
-<!-- utility2-comment\n\
-<a\n\
-    {{#if env.npm_package_homepage}}\n\
-    href="{{env.npm_package_homepage}}"\n\
-    {{/if env.npm_package_homepage}}\n\
-    target="_blank"\n\
->\n\
-utility2-comment -->\n\
-    {{env.npm_package_name}} ({{env.npm_package_version}})\n\
-<!-- utility2-comment\n\
+<a href="{{npm_package_homepage}}" target="_blank">\n\
+    {{npm_package_name}} ({{npm_package_version}})\n\
 </a>\n\
-utility2-comment -->\n\
 </h1>\n\
-<h3>{{env.npm_package_description}}</h3>\n\
+<h3>{{npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
 <button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n\
@@ -1000,7 +994,7 @@ local.eventListenerAdd("utility2.testRunEnd", function () {\n\
 local.eventListenerAdd("utility2.testRunProgressUpdate", function (testReport) {\n\
     document.querySelector(\n\
         "#htmlTestReport2"\n\
-    ).innerHTML = local.testReportMerge(testReport, {});\n\
+    ).innerHTML = local.testReportMerge(testReport).html;\n\
 });\n\
 local.domOnEventInputChange({\n\
     target: {\n\
@@ -1014,9 +1008,7 @@ local.domOnEventInputChange({\n\
 \n\
 \n\
 <!-- utility2-comment\n\
-{{#if isRollup}}\n\
-<script src="assets.app.js"></script>\n\
-{{#unless isRollup}}\n\
+<script>window.processEnv = {{processEnv}}</script>\n\
 utility2-comment -->\n\
 <script src="assets.utility2.lib.istanbul.js"></script>\n\
 <script src="assets.utility2.lib.jslint.js"></script>\n\
@@ -1031,9 +1023,6 @@ if (window.utility2_onReadyBefore) {\n\
     window.utility2_onReadyBefore();\n\
 }\n\
 </script>\n\
-<!-- utility2-comment\n\
-{{/if isRollup}}\n\
-utility2-comment -->\n\
 <div style="text-align: center;">\n\
     [\n\
     this app was created with\n\
@@ -1059,7 +1048,7 @@ local.assetsDict["/assets.utility2.js"] = (
 local.assetsDict["/"] = local.assetsDict[
     "/assets.index.template.html"
 ].replace((
-    /\{\{env\.(\w+?)\}\}/g
+    /\{\{(\w+?)\}\}/g
 ), function (match0, match1) {
     switch (match1) {
     case "npm_package_description":
@@ -1087,8 +1076,11 @@ local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";
 local.assetsDict["/index.html"] = local.assetsDict["/"];
 // if $npm_config_timeout_exit exists,
 // then exit this process after $npm_config_timeout_exit ms
-if (Number(process.env.npm_config_timeout_exit)) {
-    setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));
+if (process.env.npm_config_timeout_exit) {
+    setTimeout(
+        process.exit.bind(undefined, 15),
+        process.env.npm_config_timeout_exit | 0
+    ).unref();
 }
 // start server
 if (globalThis.utility2_serverHttp1) {
@@ -1270,8 +1262,8 @@ RUN (set -e; \
         nginx-extras \
         screen \
         sqlite3 \
-        transmission-daemon \
         ssh \
+        transmission-daemon \
         vim \
         wget \
         whois \

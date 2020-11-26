@@ -454,7 +454,7 @@ local.assetsDict["/assets.utility2.template.html"] = '\
 <meta charset="utf-8">\n\
 <meta name="viewport" content="width=device-width, initial-scale=1">\n\
 <!-- "assets.utility2.template.html" -->\n\
-<title>{{env.npm_package_name}} ({{env.npm_package_version}})</title>\n\
+<title>{{npm_package_name}} ({{npm_package_version}})</title>\n\
 <style>\n\
 /* jslint utility2:true */\n\
 /*csslint\n\
@@ -865,20 +865,11 @@ pre {\n\
 }());\n\
 </script>\n\
 <h1>\n\
-<!-- utility2-comment\n\
-<a\n\
-    {{#if env.npm_package_homepage}}\n\
-    href="{{env.npm_package_homepage}}"\n\
-    {{/if env.npm_package_homepage}}\n\
-    target="_blank"\n\
->\n\
-utility2-comment -->\n\
-    {{env.npm_package_name}} ({{env.npm_package_version}})\n\
-<!-- utility2-comment\n\
+<a href="{{npm_package_homepage}}" target="_blank">\n\
+    {{npm_package_name}} ({{npm_package_version}})\n\
 </a>\n\
-utility2-comment -->\n\
 </h1>\n\
-<h3>{{env.npm_package_description}}</h3>\n\
+<h3>{{npm_package_description}}</h3>\n\
 <!-- utility2-comment\n\
 <a class="button" download href="assets.app.js">download standalone app</a><br>\n\
 <button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n\
@@ -893,14 +884,11 @@ utility2-comment -->\n\
 \n\
 \n\
 <!-- utility2-comment\n\
-{{#if isRollup}}\n\
-<script src="assets.app.js"></script>\n\
-{{#unless isRollup}}\n\
+<script>window.processEnv = {{processEnv}}</script>\n\
 <script src="assets.utility2.rollup.js"></script>\n\
 <script>window.utility2_onReadyBefore.cnt += 1;</script>\n\
-<script src="utility2.state.init.js"></script>\n\
 utility2-comment -->\n\
-<script src="assets.{{packageJson.nameLib}}.js"></script>\n\
+<script src="assets.{{npm_package_nameLib}}.js"></script>\n\
 <script src="assets.example.js"></script>\n\
 <script src="assets.test.js"></script>\n\
 <script>\n\
@@ -908,9 +896,6 @@ if (window.utility2_onReadyBefore) {\n\
     window.utility2_onReadyBefore();\n\
 }\n\
 </script>\n\
-<!-- utility2-comment\n\
-{{/if isRollup}}\n\
-utility2-comment -->\n\
 <div style="text-align: center;">\n\
     [\n\
     this app was created with\n\
@@ -931,12 +916,12 @@ local.assetsDict["/assets.example.template.js"] = '\
 /*\n\
 example.js\n\
 \n\
-this script will run web-demo of my-app-lite\n\
+this script will run web-demo of my-app\n\
 \n\
 instruction\n\
     1. save this script as example.js\n\
     2. run shell-command:\n\
-        $ npm install my-app-lite && \\\n\
+        $ npm install my-app && \\\n\
             PORT=8081 node example.js\n\
     3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
     4. edit this script to suit your needs\n\
@@ -958,7 +943,7 @@ instruction\n\
 local = (\n\
     globalThis.utility2_rollup\n\
     || globalThis.utility2_my_app\n\
-    || require("my-app-lite")\n\
+    || require("my-app")\n\
 );\n\
 // init exports\n\
 globalThis.local = local;\n\
@@ -1030,13 +1015,13 @@ local.assetsDict["/assets.my_app.js"] = (\n\
 local.assetsDict["/"] = local.assetsDict[\n\
     "/assets.index.template.html"\n\
 ].replace((\n\
-    /\\{\\{env\\.(\\w+?)\\}\\}/g\n\
+    /\\{\\{(\\w+?)\\}\\}/g\n\
 ), function (match0, match1) {\n\
     switch (match1) {\n\
     case "npm_package_description":\n\
         return "the greatest app in the world!";\n\
     case "npm_package_name":\n\
-        return "my-app-lite";\n\
+        return "my-app";\n\
     case "npm_package_nameLib":\n\
         return "my_app";\n\
     case "npm_package_version":\n\
@@ -1058,8 +1043,11 @@ local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";\n\
 local.assetsDict["/index.html"] = local.assetsDict["/"];\n\
 // if $npm_config_timeout_exit exists,\n\
 // then exit this process after $npm_config_timeout_exit ms\n\
-if (Number(process.env.npm_config_timeout_exit)) {\n\
-    setTimeout(process.exit, Number(process.env.npm_config_timeout_exit));\n\
+if (process.env.npm_config_timeout_exit) {\n\
+    setTimeout(\n\
+        process.exit.bind(undefined, 15),\n\
+        process.env.npm_config_timeout_exit | 0\n\
+    ).unref();\n\
 }\n\
 // start server\n\
 if (globalThis.utility2_serverHttp1) {\n\
@@ -1086,7 +1074,7 @@ local.assetsDict["/assets.my_app.template.js"] = '\
 #!/usr/bin/env node\n\
 /*\n\
  * lib.my_app.js ({{packageJson.version}})\n\
- * https://github.com/kaizhu256/node-my-app-lite\n\
+ * https://github.com/kaizhu256/node-my-app\n\
  * {{packageJson.description}}\n\
  *\n\
  */\n\
@@ -1129,49 +1117,49 @@ return;\n\
 
 
 local.assetsDict["/assets.readme.template.md"] = '\
-# my-app-lite\n\
+# my-app\n\
 the greatest app in the world!\n\
 \n\
 # live web demo\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app)\n\
+- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app)\n\
 \n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app)\n\
 \n\
 \n\
-[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-my-app-lite.svg)](https://travis-ci.com/kaizhu256/node-my-app-lite) [![coverage](https://kaizhu256.github.io/node-my-app-lite/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build/coverage/index.html)\n\
+[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-my-app.svg)](https://travis-ci.com/kaizhu256/node-my-app) [![coverage](https://kaizhu256.github.io/node-my-app/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build/coverage/index.html)\n\
 \n\
-[![NPM](https://nodei.co/npm/my-app-lite.png?downloads=true)](https://www.npmjs.com/package/my-app-lite)\n\
+[![NPM](https://nodei.co/npm/my-app.png?downloads=true)](https://www.npmjs.com/package/my-app)\n\
 \n\
-[![build commit status](https://kaizhu256.github.io/node-my-app-lite/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-my-app-lite)\n\
+[![build commit status](https://kaizhu256.github.io/node-my-app/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-my-app)\n\
 \n\
-| git-branch : | [master](https://github.com/kaizhu256/node-my-app-lite/tree/master) | [beta](https://github.com/kaizhu256/node-my-app-lite/tree/beta) | [alpha](https://github.com/kaizhu256/node-my-app-lite/tree/alpha)|\n\
+| git-branch : | [master](https://github.com/kaizhu256/node-my-app/tree/master) | [beta](https://github.com/kaizhu256/node-my-app/tree/beta) | [alpha](https://github.com/kaizhu256/node-my-app/tree/alpha)|\n\
 |--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app-lite/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/app)|\n\
-| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app-lite/heroku-logo.75x25.png)](https://h1-my-app-alpha.herokuapp.com)|\n\
-| test-report : | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/test-report.html)|\n\
-| coverage : | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..master..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app-lite/build..alpha..travis-ci.com/coverage/index.html)|\n\
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app-lite/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app-lite/tree/gh-pages/build..alpha..travis-ci.com)|\n\
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/app)|\n\
+| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-alpha.herokuapp.com)|\n\
+| test-report : | [![test-report](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/test-report.html)|\n\
+| coverage : | [![coverage](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/coverage/index.html)|\n\
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..alpha..travis-ci.com)|\n\
 \n\
-[![npmPackageListing](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-my-app-lite)\n\
+[![npmPackageListing](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-my-app)\n\
 \n\
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageDependencyTree.svg)\n\
+![npmPackageDependencyTree](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageDependencyTree.svg)\n\
 \n\
 \n\
 # table of contents\n\
 \n\
 \n\
 # cdn download\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.my_app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.my_app.js)\n\
+- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.my_app.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.my_app.js)\n\
 \n\
 \n\
 # documentation\n\
 #### api doc\n\
-- [https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html)\n\
+- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html)\n\
 \n\
-[![apidoc](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/apidoc.html)\n\
+[![apidoc](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html)\n\
 \n\
 #### cli help\n\
-![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmPackageCliHelp.svg)\n\
+![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageCliHelp.svg)\n\
 \n\
 #### changelog 0.0.1\n\
 - update build\n\
@@ -1183,14 +1171,14 @@ the greatest app in the world!\n\
 \n\
 # quickstart standalone app\n\
 #### to run this example, follow instruction in script below\n\
-- [assets.app.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.app.js)\n\
+- [assets.app.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.app.js)\n\
 ```shell\n\
 # example.sh\n\
 \n\
-# this shell script will download and run web-demo of my-app-lite as standalone app\n\
+# this shell script will download and run web-demo of my-app as standalone app\n\
 \n\
 # 1. download standalone app\n\
-curl -O https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/app/assets.app.js\n\
+curl -O https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.app.js\n\
 # 2. run standalone app\n\
 PORT=8081 node ./assets.app.js\n\
 # 3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
@@ -1198,56 +1186,56 @@ PORT=8081 node ./assets.app.js\n\
 ```\n\
 \n\
 #### output from browser\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/app/assets.example.html)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
 \n\
 #### output from shell\n\
-![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.svg)\n\
+![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.svg)\n\
 \n\
 \n\
 # quickstart example.js\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/app/assets.example.html)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
 \n\
 #### to run this example, follow instruction in script below\n\
-- [example.js](https://kaizhu256.github.io/node-my-app-lite/build..beta..travis-ci.com/example.js)\n\
+- [example.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/example.js)\n\
 ```javascript\n' + local.assetsDict["/assets.example.template.js"] + '```\n\
 \n\
 #### output from browser\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/app/assets.example.html)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
 \n\
 #### output from shell\n\
-![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.svg)\n\
+![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.svg)\n\
 \n\
 \n\
 # extra screenshots\n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithub.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithubTest.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithubTest.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithubTest.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployGithubTest.browser.%252Fnode-my-app-lite%252Fbuild%252Fapp.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHeroku.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHeroku.browser.%252F.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHerokuTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHerokuTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmTest.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.npmTest.browser.%252F.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleJs.browser.%252F.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)\n\
 \n\
-1. [https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.testExampleSh.browser.%252F.png)\n\
+1. [https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)\n\
 \n\
 \n\
 # package.json\n\
@@ -1263,15 +1251,15 @@ PORT=8081 node ./assets.app.js\n\
         "node": ">=12.0"\n\
     },\n\
     "fileCount": 0,\n\
-    "homepage": "https://github.com/kaizhu256/node-my-app-lite",\n\
+    "homepage": "https://github.com/kaizhu256/node-my-app",\n\
     "keywords": [],\n\
     "license": "MIT",\n\
     "main": "lib.my_app.js",\n\
-    "name": "my-app-lite",\n\
+    "name": "my-app",\n\
     "nameAliasPublish": "",\n\
     "repository": {\n\
         "type": "git",\n\
-        "url": "https://github.com/kaizhu256/node-my-app-lite.git"\n\
+        "url": "https://github.com/kaizhu256/node-my-app.git"\n\
     },\n\
     "scripts": {\n\
         "build-ci": "sh npm_scripts.sh",\n\
@@ -1289,7 +1277,7 @@ PORT=8081 node ./assets.app.js\n\
 \n\
 \n\
 # changelog of last 50 commits\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app-lite/build/screenshot.gitLog.svg)](https://github.com/kaizhu256/node-my-app-lite/commits)\n\
+[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.gitLog.svg)](https://github.com/kaizhu256/node-my-app/commits)\n\
 \n\
 \n\
 # internal build script\n\
@@ -1432,18 +1420,21 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    let env;
     let html;
     let testPlatformList;
     let testReport;
-    env = process.env;
+    let {
+        CI_BRANCH,
+        CI_COMMIT_ID,
+        UTILITY2_DIR_BUILD
+    } = process.env;
     function fileWrite(file, data) {
-        file = require("path").resolve(env.UTILITY2_DIR_BUILD + "/" + file);
+        file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
         require("fs").writeFileSync(file, data);
         console.error("test-report - wrote " + file);
     }
     testReport = local.testReportMerge(JSON.parse(require("fs").readFileSync(
-        env.UTILITY2_DIR_BUILD + "/test-report.json",
+        UTILITY2_DIR_BUILD + "/test-report.json",
         "utf8"
     )));
     html = testReport.html;
@@ -1490,7 +1481,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
         str1: "last build",
         str2: (
             new Date().toISOString().slice(0, 19).replace("T", " ")
-            + " - " + env.CI_BRANCH + " - " + env.CI_COMMIT_ID
+            + " - " + CI_BRANCH + " - " + CI_COMMIT_ID
         )
     }));
     // create test-report.badge.svg
@@ -1513,6 +1504,78 @@ local.cliDict["utility2.testReportCreate"] = function () {
 (function () {
 let localEventListenerDict;
 let localEventListenerId;
+let processEnv;
+
+
+// init processEnv
+(function () {
+    let packageJson;
+    processEnv = {
+        npm_package_description: "the greatest app in the world!",
+        npm_package_name: "my-app",
+        npm_package_version: "0.0.1"
+    };
+    // update processEnv from globalThis
+    processEnv = Object.assign(processEnv, globalThis.processEnv);
+    // update processEnv from package.json
+    try {
+        packageJson = JSON.parse(require("fs").readFileSync("package.json"));
+        Object.entries(packageJson).forEach(function ([
+            key, val
+        ]) {
+            processEnv["npm_package_" + key] = String(val);
+        });
+    } catch (ignore) {}
+    // update processEnv from process.env
+    processEnv = Object.assign(
+        processEnv,
+        (typeof process === "object" && process && process.env)
+    );
+    // update processEnv from misc
+    processEnv = Object.assign({
+        npm_package_nameLib: String(processEnv.npm_package_name).replace((
+            /\W/g
+        ), "_"),
+        processEnv: JSON.stringify({
+            npm_config_mode_backend: processEnv.npm_config_mode_backend,
+            npm_package_description: processEnv.npm_package_description,
+            npm_package_homepage: processEnv.npm_package_homepage,
+            npm_package_name: processEnv.npm_package_name,
+            npm_package_nameLib: processEnv.npm_package_nameLib,
+            npm_package_version: processEnv.npm_package_version
+        })
+    }, processEnv);
+}());
+let {
+    CI_COMMIT_INFO,
+    MODE_BUILD,
+    PORT,
+    UTILITY2_DIR_BUILD,
+    npm_config_mode_auto_restart,
+    npm_config_mode_lib,
+    npm_config_mode_start,
+    npm_config_mode_test,
+    npm_config_mode_test_case,
+    npm_config_timeout_default,
+    npm_package_description,
+    npm_package_homepage,
+    npm_package_main,
+    npm_package_name,
+    npm_package_nameLib,
+    npm_package_nameOriginal,
+    npm_package_version
+} = processEnv;
+// init timeoutDefault, modeTest, modeTestCase
+local.timeoutDefault = npm_config_timeout_default || 30000;
+String(typeof location === "object" && location && location.search).replace((
+    /\b(modeTest|modeTestCase|timeoutDefault)=([^&#]+)/g
+), function (ignore, key, val) {
+    local[key] = decodeURIComponent(val);
+    return "";
+});
+local.timeoutDefault |= 0;
+/* validateLineSortedReset */
+// init listener
 localEventListenerDict = {};
 localEventListenerId = 0;
 
@@ -1677,7 +1740,6 @@ local.browserTest = function ({
     }
     Promise.resolve().then(function () {
         // node - init
-        url = url.replace("{{timeExit}}", Date.now() + local.timeoutDefault);
         testId = Math.random().toString(16);
         testName = process.env.MODE_BUILD + ".browser." + encodeURIComponent(
             require("url").parse(url).pathname.replace(
@@ -1772,11 +1834,6 @@ local.buildApp = function ({
 /*
  * this function will build app
  */
-    let buildAppAssets;
-    let buildAppStandalone;
-    let buildLib;
-    let buildReadme;
-    let buildTest;
     let fileDict;
     let packageJson;
     let packageNameLib;
@@ -1784,10 +1841,7 @@ local.buildApp = function ({
     let promiseList;
     let src;
     let tgt;
-    let tgtReplaceConditional;
-    let writeFile;
-    let writeFileLog;
-    tgtReplaceConditional = function (condition, replaceList) {
+    function tgtReplaceConditional(condition, replaceList) {
     /*
      * this function will conditionally replace <tgt> with replacements in
      * <replaceList>
@@ -1835,8 +1889,14 @@ local.buildApp = function ({
                 );
             }
         });
-    };
-    writeFile = function (file, data, resolve) {
+    }
+    function writeFileLog(file) {
+    /*
+     * this function will notify <file> written
+     */
+        console.error("buildApp - wrote - " + require("path").resolve(file));
+    }
+    function writeFile(file, data, resolve) {
     /*
      * this function will write <data> to <file> with notification
      */
@@ -1845,18 +1905,10 @@ local.buildApp = function ({
             writeFileLog(file);
             resolve();
         });
-    };
-    writeFileLog = function (file) {
-    /*
-     * this function will notify <file> written
-     */
-        console.error("buildApp - wrote - " + require("path").resolve(file));
-    };
-    buildAppAssets = function (resolve) {
-        let promiseList2;
-        promiseList2 = [];
+    }
+    async function buildAppAssets(resolve) {
         // fetch assets
-        [
+        await Promise.all([
             {
                 url: "/LICENSE"
             }, {
@@ -1882,81 +1934,82 @@ local.buildApp = function ({
                 url: "/assets.utility2.rollup.js"
             }, {
                 url: "/index.html"
-            }, {
-                url: "/index.rollup.html"
-            }, {
-                url: "/utility2.state.init.js"
             }
-        ].concat(assetsList).forEach(function (elem) {
-            promiseList2.push(new Promise(function (resolve) {
+        ].concat(assetsList).map(function (elem) {
+            return new Promise(function (resolve) {
                 require("http").request((
                     "http://127.0.0.1:" + process.env.PORT + elem.url
                 ), function (res) {
-                    let file;
-                    file = ".tmp/build/app/" + (elem.file || elem.url);
-                    res.pipe(require("fs").createWriteStream(
-                        file
-                    ).on("close", function () {
-                        writeFileLog(file);
-                        resolve();
-                    }));
+                    let bufList;
+                    local.assertOrThrow(res.statusCode === 200, elem);
+                    bufList = [];
+                    res.on("data", function (chunk) {
+                        bufList.push(chunk);
+                    }).on("end", function () {
+                        writeFile(
+                            ".tmp/build/app/" + (elem.file || elem.url),
+                            Buffer.concat(bufList),
+                            resolve
+                        );
+                    });
                 }).end();
-            }));
-        });
+            });
+        }));
         // jslint assets
-        Promise.all(promiseList2).then(function (errList) {
-            errList.forEach(local.onErrorThrow);
-            require("child_process").spawn("node", [
-                "assets.utility2.lib.jslint.js", "dir", ".", "--conditional"
+        require("child_process").spawn("node", [
+            "assets.utility2.lib.jslint.js", "dir", ".", "--conditional"
+        ], {
+            cwd: ".tmp/build/app",
+            stdio: [
+                "ignore", 1, 2
+            ]
+        }).on("exit", resolve);
+    }
+    async function buildAppStandalone(resolve) {
+        let fileList;
+        // write native-module
+        fileList = await require("fs").promises.readdir(".");
+        await Promise.all(fileList.map(function (file) {
+            return new Promise(function (resolve) {
+                if (require("path").extname(file) !== ".node") {
+                    resolve();
+                    return;
+                }
+                require("fs").copyFile(file, (
+                    ".tmp/build/app.standalone/" + file
+                ), function (err) {
+                    local.onErrorThrow(err);
+                    resolve();
+                });
+            });
+        }));
+        // write assets.app.js
+        writeFile((
+            ".tmp/build/app.standalone/assets.app.js"
+        ), local.assetsDict["/assets.app.js"], function () {
+            let child;
+            // test-file assets.app.js
+            child = require("child_process").spawn("node", [
+                "assets.app.js"
             ], {
-                cwd: ".tmp/build/app",
+                cwd: ".tmp/build/app.standalone",
+                env: {
+                    PATH: process.env.PATH,
+                    PORT: port
+                },
                 stdio: [
                     "ignore", 1, 2
                 ]
-            }).on("exit", resolve);
-        });
-    };
-    buildAppStandalone = function (resolve) {
-        // write native-module
-        require("fs").readdir(".", function (err, fileList) {
-            local.onErrorThrow(err);
-            Promise.all(fileList.map(function (file) {
-                return new Promise(function (resolve) {
-                    if (require("path").extname(file) !== ".node") {
-                        resolve();
-                        return;
-                    }
-                    require("fs").copyFile(file, (
-                        ".tmp/build/app.standalone/" + file
-                    ), function (err) {
-                        local.onErrorThrow(err);
-                        resolve();
-                    });
-                });
-            })).then(function () {
-                // write assets.app.js
-                writeFile((
-                    ".tmp/build/app.standalone/assets.app.js"
-                ), local.assetsDict["/assets.app.js"], function () {
-                    // test-file assets.app.js
-                    require("child_process").spawn("node", [
-                        "assets.app.js"
-                    ], {
-                        cwd: ".tmp/build/app.standalone",
-                        env: {
-                            PATH: process.env.PATH,
-                            PORT: port,
-                            npm_config_timeout_exit: 4000
-                        },
-                        stdio: [
-                            "ignore", 1, 2
-                        ]
-                    }).on("exit", resolve);
-                });
+            }).on("exit", function (exitCode, signal) {
+                local.assertOrThrow(!exitCode && signal === "SIGTERM", [
+                    exitCode, signal
+                ]);
+                resolve();
             });
+            setTimeout(child.kill.bind(child, "SIGTERM"), 4000);
         });
-    };
-    buildLib = function (resolve) {
+    }
+    function buildLib(resolve) {
         src = fileDict["lib." + packageNameLib + ".js"];
         // render lib.xxx.js
         tgt = local.templateRenderMyApp(
@@ -1987,8 +2040,8 @@ local.buildApp = function ({
         ]);
         // write lib.xxx.js
         writeFile("lib." + packageNameLib + ".js", tgt, resolve);
-    };
-    buildReadme = function (resolve) {
+    }
+    function buildReadme(resolve) {
     /*
      * this function will build readme with template assets.readme.template.md
      */
@@ -2268,8 +2321,8 @@ local.buildApp = function ({
         ), "\n\n\n");
         // write README.md
         writeFile("README.md", tgt, resolve);
-    };
-    buildTest = function (resolve) {
+    }
+    function buildTest(resolve) {
         src = fileDict["test.js"];
         // render test.js
         tgt = local.templateRenderMyApp(
@@ -2298,7 +2351,7 @@ local.buildApp = function ({
         });
         // write test.js
         writeFile("test.js", tgt, resolve);
-    };
+    }
     // buildInit
     Promise.resolve().then(function () {
         // init packageJson
@@ -3699,7 +3752,7 @@ local.middlewareInit = function (req, res, next) {
     // init timerTimeout
     local.serverRespondTimeoutDefault(req, res, local.timeoutDefault);
     // init req.urlParsed
-    req.urlParsed = local.urlParse(req.url);
+    req.urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
     // set reponse-header "content-type"
     contentType = {
         // application
@@ -3981,21 +4034,26 @@ local.requireReadme = function () {
 /*
  * this function will require and export example.js embedded in README.md
  */
+    let Module;
     let code;
-    let env;
     let module;
     let tmp;
-    // init env
-    env = (typeof process === "object" && process && process.env) || {};
+    if (local.isBrowser) {
+        module.exports = local.objectAssignDefault(
+            globalThis.utility2_rollup || globalThis.local,
+            local
+        );
+        return module.exports;
+    }
     // library-mode
-    if (env.npm_config_mode_lib) {
+    if (npm_config_mode_lib) {
         local.testRunDefault = local.noop;
         return local;
     }
     // init module.exports
     module = {};
     // if file is modified, then restart process
-    if (env.npm_config_mode_auto_restart) {
+    if (npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(function (file) {
                 require("fs").stat(file, function (err, data) {
@@ -4016,13 +4074,6 @@ local.requireReadme = function () {
             });
         });
     }
-    if (local.isBrowser) {
-        module.exports = local.objectAssignDefault(
-            globalThis.utility2_rollup || globalThis.local,
-            local
-        );
-        return module.exports;
-    }
     // start repl-debugger
     local.replStart();
     // jslint process.cwd()
@@ -4030,24 +4081,18 @@ local.requireReadme = function () {
         "-e", (
             "require(" + JSON.stringify(__filename)
             + ").jslint.jslintAndPrintDir(" + JSON.stringify(process.cwd())
-            + ", {modeAutofix:" + (!env.npm_config_mode_test)
+            + ", {modeAutofix:" + (!npm_config_mode_test)
             + ",modeConditional:true});"
         )
     ], {
-        env: Object.assign({}, env, {
+        env: Object.assign({}, process.env, {
             npm_config_mode_lib: "1"
         }),
         stdio: [
             "ignore", 1, 2
         ]
     });
-    if (globalThis.utility2_rollup || env.npm_config_mode_start) {
-        // init assets index.html
-        local.assetsDict["/index.html"] = (
-            local.fsReadFileOrDefaultSync("index.html", "utf8", "")
-            || local.assetsDict["/index.rollup.html"] || ""
-        );
-        local.assetsDict["/"] = local.assetsDict["/index.html"];
+    if (globalThis.utility2_rollup || npm_config_mode_start) {
         local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
@@ -4055,13 +4100,13 @@ local.requireReadme = function () {
             /^#!\//
         ), "// ");
         // init exports
-        local[env.npm_package_nameLib] = local;
+        local[npm_package_nameLib] = local;
         module.exports = local;
         return module.exports;
     }
     // init file $npm_package_main
     globalThis.utility2_moduleExports = require(
-        require("path").resolve(env.npm_package_main)
+        require("path").resolve(npm_package_main)
     );
     globalThis.utility2_moduleExports.globalThis = globalThis;
     // read code from README.md
@@ -4077,10 +4122,10 @@ local.requireReadme = function () {
     });
     // alias require($npm_package_name) to utility2_moduleExports;
     code = code.replace(
-        new RegExp("require\\(." + env.npm_package_name + ".\\)"),
+        new RegExp("require\\(." + npm_package_name + ".\\)"),
         "globalThis.utility2_moduleExports"
     ).replace(
-        new RegExp("require\\(." + env.npm_package_nameOriginal + ".\\)"),
+        new RegExp("require\\(." + npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
     // init example.js
@@ -4090,12 +4135,13 @@ local.requireReadme = function () {
     // instrument code
     code = local.istanbulInstrumentInPackage(code, tmp);
     // init module.exports
-    module = new local.Module(tmp);
+    Module = require("module");
+    module = new Module(tmp);
     require.cache[tmp] = module;
     module._compile(code, tmp);
     // init exports
     module.exports.utility2 = local;
-    module.exports[env.npm_package_nameLib] = (
+    module.exports[npm_package_nameLib] = (
         globalThis.utility2_moduleExports
     );
     // init assets lib.xxx.js
@@ -4103,9 +4149,9 @@ local.requireReadme = function () {
         ".css", ".js"
     ].forEach(function (extname) {
         local.assetsDict[
-            "/assets." + env.npm_package_nameLib + extname
+            "/assets." + npm_package_nameLib + extname
         ] = local.fsReadFileOrDefaultSync(
-            require("path").resolve(env.npm_package_main).replace((
+            require("path").resolve(npm_package_main).replace((
                 /\.\w+?$/
             ), extname),
             "utf8",
@@ -4116,12 +4162,12 @@ local.requireReadme = function () {
     });
     Object.assign(local.assetsDict, module.exports.assetsDict);
     // instrument assets lib.xxx.js
-    local.assetsDict["/assets." + env.npm_package_nameLib + ".js"] = (
+    local.assetsDict["/assets." + npm_package_nameLib + ".js"] = (
         local.istanbulInstrumentInPackage(
             local.assetsDict[
-                "/assets." + env.npm_package_nameLib + ".js"
+                "/assets." + npm_package_nameLib + ".js"
             ],
-            env.npm_package_main
+            npm_package_main
         )
     );
     module.exports.assetsDict = local.assetsDict;
@@ -4131,34 +4177,21 @@ local.requireReadme = function () {
         "test.js"
     );
     // init assets index.html
-    [
-        [
-            "index", ""
-        ],
-        [
-            "index", ".rollup"
-        ]
-    ].forEach(function ([
-        file, isRollup
-    ]) {
-        tmp = "assets." + file + ".template.html";
-        local.assetsDict["/" + tmp] = local.assetsDict["/" + tmp];
-        file = file + isRollup + ".html";
-        local.assetsDict["/" + file] = local.templateRender(
-            // uncomment utility2-comment
-            local.assetsDict["/" + tmp].replace((
-                /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
-            ), "$1"),
-            {
-                env,
-                isRollup,
-                packageJson: {
-                    nameLib: env.npm_package_nameLib
-                }
-            }
-        );
+    tmp = local.assetsDict["/assets.index.template.html"];
+    // uncomment utility2-comment
+    tmp = tmp.replace((
+        /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
+    ), "$1");
+    // interpolate {{...}}
+    tmp = tmp.replace((
+        /\{\{\w+\}\}/g
+    ), function (key) {
+        return String(processEnv[key.slice(2, -2)]).replace((
+            /<\//g
+        ), "<\\/");
     });
-    local.assetsDict["/"] = local.assetsDict["/index.html"];
+    local.assetsDict["/"] = tmp;
+    local.assetsDict["/index.html"] = tmp;
     // init assets.app.js
     local.assetsDict["/assets.app.js"] = [
         "header",
@@ -4171,32 +4204,8 @@ local.requireReadme = function () {
         "/assets.utility2.rollup.end.js"
     ].map(function (key) {
         switch (key) {
-/* jslint ignore:start */
-case 'header':
-return '\
-/* this rollup was created with utility2\n\
- * https://github.com/kaizhu256/node-utility2\n\
- */\n\
-\n\
-\n\
-/*\n\
-assets.app.js\n\
-\n\
-' + env.npm_package_description + '\n\
-\n\
-instruction\n\
-    1. save this script as assets.app.js\n\
-    2. run shell-command:\n\
-        $ PORT=8081 node assets.app.js\n\
-    3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
-    4. edit this script to suit your needs\n\
-*/\n\
-' + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
-    /utility2_rollup/g
-), "utility2_app");
-/* jslint ignore:end */
         case "/assets.my_app.css":
-            tmp = "/assets." + env.npm_package_nameLib + ".css";
+            tmp = "/assets." + npm_package_nameLib + ".css";
             // disable $-escape in replacement-string
             code = local.assetsDict[
                 "/assets.utility2.rollup.content.js"
@@ -4215,7 +4224,7 @@ instruction\n\
             });
             break;
         case "/assets.my_app.js":
-            tmp = "/assets." + env.npm_package_nameLib + ".js";
+            tmp = "/assets." + npm_package_nameLib + ".js";
             // disable $-escape in replacement-string
             code = local.assetsDict[
                 "/assets.utility2.rollup.content.js"
@@ -4234,6 +4243,30 @@ instruction\n\
                 );
             });
             break;
+        case "header":
+            return (
+                "/* this rollup was created with utility2\n"
+                + " * https://github.com/kaizhu256/node-utility2\n"
+                + " */\n"
+                + "\n"
+                + "\n"
+                + "/*\n"
+                + "assets.app.js\n"
+                + "\n"
+                + npm_package_description + "\n"
+                + "\n"
+                + "instruction\n"
+                + "    1. save this script as assets.app.js\n"
+                + "    2. run shell-command:\n"
+                + "        $ PORT=8081 node assets.app.js\n"
+                + "    3. open browser to http://127.0.0.1:8081 "
+                + "and play with web-demo\n"
+                + "    4. edit this script to suit your needs\n"
+                + "*/\n"
+                + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
+                    /utility2_rollup/g
+                ), "utility2_app")
+            );
         default:
             code = local.assetsDict[key];
         }
@@ -4558,219 +4591,9 @@ local.svgBadgeCreate = function ({
     );
 };
 
-local.templateRender = function (template, dict, opt = {}, ii = 0) {
-/*
- * this function will render <template> with given <dict>
- */
-    let argList;
-    let getVal;
-    let match;
-    let renderPartial;
-    let rgx;
-    let skip;
-    let val;
-    if (dict === null || dict === undefined) {
-        dict = {};
-    }
-    getVal = function (key) {
-        argList = key.split(" ");
-        val = dict;
-        if (argList[0] === "#this/") {
-            return val;
-        }
-        if (argList[0] === "#ii/") {
-            return ii;
-        }
-        // iteratively lookup nested val in dict
-        argList[0].split(".").forEach(function (key) {
-            val = val && val[key];
-        });
-        return val;
-    };
-    renderPartial = function (match0, helper, key, partial) {
-        switch (helper) {
-        case "each":
-        case "eachTrimEndComma":
-            val = getVal(key);
-            val = (
-                Array.isArray(val)
-                ? val.map(function (dict, ii) {
-                    // recurse with partial
-                    return local.templateRender(partial, dict, opt, ii);
-                }).join("")
-                : ""
-            );
-            // remove trailing-comma from last elem
-            if (helper === "eachTrimEndComma") {
-                val = val.trimEnd().replace((
-                    /,$/
-                ), "");
-            }
-            return val;
-        case "if":
-            partial = partial.split("{{#unless " + key + "}}");
-            partial = (
-                getVal(key)
-                ? partial[0]
-                // handle "unless" case
-                : partial.slice(1).join("{{#unless " + key + "}}")
-            );
-            // recurse with partial
-            return local.templateRender(partial, dict, opt);
-        case "unless":
-            return (
-                getVal(key)
-                ? ""
-                // recurse with partial
-                : local.templateRender(partial, dict, opt)
-            );
-        default:
-            // recurse with partial
-            return match0[0] + local.templateRender(match0.slice(1), dict, opt);
-        }
-    };
-    // render partials
-    rgx = (
-        /\{\{#(\w+)\u0020([^}]+?)\}\}/g
-    );
-    template = template || "";
-    match = rgx.exec(template);
-    while (match) {
-        rgx.lastIndex += 1 - match[0].length;
-        template = template.replace(
-            new RegExp(
-                "\\{\\{#(" + match[1] + ") (" + match[2]
-                + ")\\}\\}([\\S\\s]*?)\\{\\{/" + match[1] + " " + match[2]
-                + "\\}\\}"
-            ),
-            renderPartial
-        );
-        match = rgx.exec(template);
-    }
-    // search for keys in template
-    return template.replace((
-        /\{\{[^}]+?\}\}/g
-    ), function (match0) {
-        let markdownToHtml;
-        let notHtmlSafe;
-        notHtmlSafe = opt.notHtmlSafe;
-        try {
-            val = getVal(match0.slice(2, -2));
-            if (val === undefined) {
-                return match0;
-            }
-            argList.slice(1).forEach(function (fmt, ii, list) {
-                switch (fmt) {
-                case "*":
-                case "+":
-                case "-":
-                case "/":
-                    skip = ii + 1;
-                    val = String(
-                        fmt === "*"
-                        ? Number(val) * Number(list[skip])
-                        : fmt === "+"
-                        ? Number(val) + Number(list[skip])
-                        : fmt === "-"
-                        ? Number(val) - Number(list[skip])
-                        : Number(val) / Number(list[skip])
-                    );
-                    break;
-                case "alphanumeric":
-                    val = val.replace((
-                        /\W/g
-                    ), "_");
-                    break;
-                case "decodeURIComponent":
-                    val = decodeURIComponent(val);
-                    break;
-                case "encodeURIComponent":
-                    val = encodeURIComponent(val);
-                    break;
-                case "jsonStringify":
-                    val = JSON.stringify(val);
-                    break;
-                case "jsonStringify4":
-                    val = JSON.stringify(val, undefined, 4);
-                    break;
-                case "markdownSafe":
-                    val = val.replace((
-                        /`/g
-                    ), "'"); // `
-                    break;
-                case "markdownToHtml":
-                    markdownToHtml = true;
-                    break;
-                case "notHtmlSafe":
-                    notHtmlSafe = true;
-                    break;
-                case "padEnd":
-                case "padStart":
-                case "replace":
-                case "slice":
-                    skip = ii + 2;
-                    val = String(val)[fmt](
-                        list[skip - 1],
-                        list[skip].replace("\"\"", "").replace("\"_\"", " ")
-                    );
-                    break;
-                case "truncate":
-                    skip = ii + 1;
-                    if (val.length > list[skip]) {
-                        val = val.slice(
-                            0,
-                            Math.max(list[skip] - 3, 0)
-                        ).trimEnd() + "...";
-                    }
-                    break;
-                // default to String.prototype[fmt]()
-                default:
-                    if (ii <= skip) {
-                        break;
-                    }
-                    val = val[fmt]();
-                }
-            });
-            val = String(val);
-            // default to htmlSafe
-            if (!notHtmlSafe) {
-                val = val.replace((
-                    /&/gu
-                ), "&amp;").replace((
-                    /"/gu
-                ), "&quot;").replace((
-                    /'/gu
-                ), "&apos;").replace((
-                    /</gu
-                ), "&lt;").replace((
-                    />/gu
-                ), "&gt;").replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
-                ), "&$1");
-            }
-            markdownToHtml = (
-                markdownToHtml
-                && (typeof local.marked === "function" && local.marked)
-            );
-            if (markdownToHtml) {
-                val = markdownToHtml(val).replace((
-                    /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
-                ), "&$1");
-            }
-            return val;
-        } catch (errCaught) {
-            errCaught.message = (
-                "templateRender could not render expression "
-                + JSON.stringify(match0) + "\n"
-            ) + errCaught.message;
-            local.assertOrThrow(undefined, errCaught);
-        }
-    });
-};
-
 local.templateRenderMyApp = function (template) {
 /*
- * this function will render my-app-lite template
+ * this function will render my-app template
  */
     let githubRepo;
     let packageJson;
@@ -4794,7 +4617,7 @@ local.templateRenderMyApp = function (template) {
         /kaizhu256(\.github\.io\/|%252F|\/)/g
     ), githubRepo[0] + ("$1"));
     template = template.replace((
-        /node-my-app-lite/g
+        /node-my-app/g
     ), githubRepo[1]);
     template = template.replace((
         /\bh1-my-app\b/g
@@ -4805,7 +4628,7 @@ local.templateRenderMyApp = function (template) {
         ), "-"))
     ));
     template = template.replace((
-        /my-app-lite/g
+        /my-app/g
     ), packageJson.name);
     template = template.replace((
         /my_app/g
@@ -4883,13 +4706,11 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
  * 1. merge <testReport2> into <testReport>
  * 2. render <testReport>.html
  */
-    let env;
     let html;
     let testCaseNumber;
     let testPlatformDict;
     let testPlatformList;
     // 1. merge <testReport2> into <testReport>
-    env = (globalThis.process && process.env) || {};
     local.objectAssignDefault(testReport, {
         coverage: globalThis.__coverage__,
         date: new Date().toISOString(),
@@ -4905,7 +4726,7 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
     ).reverse().map(function (testPlatform) {
         local.objectAssignDefault(testPlatform, {
             date: new Date().toISOString(),
-            modeBuild: env.MODE_BUILD,
+            modeBuild: MODE_BUILD,
             nameBase: (
                 local.isBrowser
                 ? "browser - " + location.pathname + " - " + navigator.userAgent
@@ -5058,9 +4879,8 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
             + "<div class=\"test-report-div\">\n"
             // init html - header
             + "<h1>test-report for\n"
-            + "    <a href=\"" + (env.npm_package_homepage || "#") + "\">\n"
-            + "    " + env.npm_package_name
-            + " (" + env.npm_package_version + ")\n"
+            + "    <a href=\"" + (npm_package_homepage || "#") + "\">\n"
+            + "    " + npm_package_name + " (" + npm_package_version + ")\n"
             + "    </a>\n"
             + "</h1>\n"
             + "\n"
@@ -5068,10 +4888,10 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
             + "<div class=\"platform summary\">\n"
             + "<h2>summary</h2>\n"
             + "<h4>\n"
-            + "    <span>version</span>- " + env.npm_package_version + "<br>\n"
+            + "    <span>version</span>- " + npm_package_version + "<br>\n"
             + "    <span>test-date</span>- " + testReport.date + "<br>\n"
-            + "    <span>commit-info</span>- \n"
-            + (env.CI_COMMIT_INFO || "undefined") + "<br>\n"
+            + "    <span>commit-info</span>-\n"
+            + (CI_COMMIT_INFO || "undefined") + "<br>\n"
             + "</h4>\n"
             + "<table>\n"
             + "<thead>\n"
@@ -5156,10 +4976,10 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
                     }) {
                         testCaseNumber += 1;
                         if (errStack) {
-                            errStackList.push({
-                                errStack: testCaseNumber + ". " + name + "\n"
+                            errStackList.push(
+                                testCaseNumber + ". " + name + "\n"
                                 + errStack
-                            });
+                            );
                         }
                         return (
                             "<tr>\n"
@@ -5233,7 +5053,6 @@ local.testRunDefault = function (opt) {
  * this function will run tests in testPlatform.testCaseList
  */
     let consoleError;
-    let env;
     let isCoverage;
     let processExit;
     let testPlatform;
@@ -5246,7 +5065,6 @@ local.testRunDefault = function (opt) {
         opt.timeStart = opt.timeStart || Date.now();
         opt.timeElapsed = Date.now() - opt.timeStart;
     }
-    env = (globalThis.process && process.env) || local.env;
     (function () {
         // run-server
         // 1. create server from local.middlewareList
@@ -5261,7 +5079,7 @@ local.testRunDefault = function (opt) {
             local.middlewareAssetsCached,
             local.middlewareFileServer
         ];
-        if (globalThis.utility2_serverHttp1 || env.npm_config_mode_lib) {
+        if (globalThis.utility2_serverHttp1 || npm_config_mode_lib) {
             return;
         }
         globalThis.utility2_onReadyBefore.cnt += 1;
@@ -5289,14 +5107,14 @@ local.testRunDefault = function (opt) {
                 }
             }());
         };
-        globalThis.utility2_serverHttp1 = local.http.createServer(
+        globalThis.utility2_serverHttp1 = require("http").createServer(
             local.serverLocalReqHandler
         );
         // 2. start server on env.PORT
-        console.error("http-server listening on port " + env.PORT);
+        console.error("http-server listening on port " + PORT);
         globalThis.utility2_onReadyBefore.cnt += 1;
         globalThis.utility2_serverHttp1.listen(
-            env.PORT,
+            PORT,
             globalThis.utility2_onReadyBefore
         );
         // 3. run tests
@@ -5307,7 +5125,7 @@ local.testRunDefault = function (opt) {
         globalThis.utility2_modeTest
         || opt.modeTest
         || local.modeTest
-        || env.npm_config_mode_test
+        || npm_config_mode_test
     );
     switch (globalThis.utility2_modeTest) {
     // init
@@ -5360,10 +5178,7 @@ local.testRunDefault = function (opt) {
         };
     }
     // init modeTestCase
-    local.modeTestCase = (
-        local.modeTestCase
-        || env.npm_config_mode_test_case || ""
-    );
+    local.modeTestCase = local.modeTestCase || npm_config_mode_test_case || "";
     // init testReport
     testReport = globalThis.utility2_testReport;
     // init testPlatform
@@ -5522,7 +5337,7 @@ local.testRunDefault = function (opt) {
         // create test-report.json
         delete testReport.coverage;
         local.fsWriteFileWithMkdirpSync(
-            env.UTILITY2_DIR_BUILD + "/test-report.json",
+            UTILITY2_DIR_BUILD + "/test-report.json",
             JSON.stringify(testReport, undefined, 4)
         );
         // restore console.log
@@ -5663,98 +5478,6 @@ local.urlJoin = function (aa, bb) {
     ), "") + bb;
 };
 
-local.urlParse = function (url) {
-/*
- * this function will parse <url> according to below spec,
- * with additional query-property
- * https://developer.mozilla.org/en-US/docs/Web/API/URL
- */
-    let urlParsed;
-    urlParsed = {};
-    // try to parse url
-    local.tryCatchOnError(function () {
-        // resolve host-less url
-        if (local.isBrowser) {
-            local.serverLocalHost = (
-                local.serverLocalHost
-                || location.protocol + "//" + location.host
-            );
-            // resolve absolute path
-            if (url[0] === "/") {
-                url = local.serverLocalHost + url;
-            // resolve relative path
-            } else if (!(
-                /^\w+?:\/\//
-            ).test(url)) {
-                url = (
-                    local.serverLocalHost
-                    + location.pathname.replace((
-                        /\/[^\/]*?$/
-                    ), "") + "/" + url
-                );
-            }
-            urlParsed = new globalThis.URL(url);
-            urlParsed.path = (
-                "/" + urlParsed.href.split("/").slice(3).join("/").split("#")[0]
-            );
-        } else {
-            process.env.PORT = process.env.PORT || "8081";
-            local.serverLocalHost = (
-                local.serverLocalHost
-                || ("http://127.0.0.1:" + process.env.PORT)
-            );
-            // resolve absolute path
-            if (url[0] === "/") {
-                url = local.serverLocalHost + url;
-            // resolve relative path
-            } else if (!(
-                /^\w+?:\/\//
-            ).test(url)) {
-                url = local.serverLocalHost + "/" + url;
-            }
-            urlParsed = require("url").parse(url);
-        }
-        // init query
-        urlParsed.query = {};
-        local.coalesce(urlParsed.search, "").slice(1).replace((
-            /[^&]+/g
-        ), function (item) {
-            item = item.split("=");
-            item[0] = decodeURIComponent(item[0]);
-            item[1] = decodeURIComponent(item.slice(1).join("="));
-            // parse repeating query-param as an array
-            if (urlParsed.query[item[0]]) {
-                if (!Array.isArray(urlParsed.query[item[0]])) {
-                    urlParsed.query[item[0]] = [
-                        urlParsed.query[item[0]]
-                    ];
-                }
-                urlParsed.query[item[0]].push(item[1]);
-            } else {
-                urlParsed.query[item[0]] = item[1];
-            }
-            return "";
-        });
-        urlParsed.basename = urlParsed.pathname.replace((
-            /^.*\//
-        ), "");
-    }, local.noop);
-    // https://developer.mozilla.org/en/docs/Web/API/URL#Properties
-    return {
-        basename: urlParsed.basename || "",
-        hash: urlParsed.hash || "",
-        host: urlParsed.host || "",
-        hostname: urlParsed.hostname || "",
-        href: urlParsed.href || "",
-        path: urlParsed.path || "",
-        pathname: urlParsed.pathname || "",
-        port: urlParsed.port || "",
-        protocol: urlParsed.protocol || "",
-        query: urlParsed.query || {},
-        search: urlParsed.search || ""
-    };
-};
-
 local.uuid4Create = function () {
 /*
  * this function will create random uuid,
@@ -5800,21 +5523,6 @@ local.apidocCreate = local.apidoc.apidocCreate;
 globalThis.utility2_testReport = local.testReportMerge(
     globalThis.utility2_testReport
 );
-local.env = (typeof process === "object" && process && process.env) || {};
-local.objectAssignDefault(local.env, {
-    npm_package_nameLib: local.coalesce(
-        local.env.npm_package_name,
-        ""
-    ).replace((
-        /\W/g
-    ), "_")
-});
-local.objectAssignDefault(local.env, {
-    npm_package_description: "the greatest app in the world!",
-    npm_package_name: "my-app-lite",
-    npm_package_nameLib: "my_app",
-    npm_package_version: "0.0.1"
-});
 local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
 // cbranch-no cstat-no fstat-no missing-if-branch
 local.istanbulCoverageReportCreate = (
@@ -5864,36 +5572,6 @@ local.stringCharsetEncodeUriComponent = (
     + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringHelloEmoji = "hello \ud83d\ude01\n";
-// init timeoutDefault
-local.timeoutDefault = local.env.npm_config_timeout_default;
-String(
-    (typeof location === "object" && location && location.search) || ""
-).replace((
-    /\b(NODE_ENV|mode[A-Z]\w+?|timeExit|timeoutDefault)=([^&#]+)/g
-), function (match0, key, val) {
-    local[key] = decodeURIComponent(val);
-    local.env[key] = local[key];
-    // try to JSON.parse string
-    try {
-        local[key] = JSON.parse(match0);
-    } catch (ignore) {}
-    return "";
-});
-/* validateLineSortedReset */
-// init timeExit
-local.timeExit = (
-    Number(local.env.npm_config_time_exit) || local.timeExit
-    || Number(Date.now() + Number(local.env.npm_config_timeout_exit))
-);
-if (local.timeExit) {
-    local.timeoutDefault = local.timeExit - Date.now();
-    setTimeout(
-        typeof process === "object" && process && process.exit,
-        local.timeoutDefault
-    );
-}
-// re-init timeoutDefault
-local.timeoutDefault = Number(local.timeoutDefault) || 30000;
 globalThis.utility2_onReadyAfter = (
     globalThis.utility2_onReadyAfter || function (onError) {
     /*
@@ -5924,8 +5602,6 @@ globalThis.utility2_onReadyAfter(local.noop);
 if (!local.isBrowser) {
     return;
 }
-// require modules
-local.http = local._http;
 }());
 
 
@@ -5935,9 +5611,13 @@ local.http = local._http;
 if (local.isBrowser) {
     return;
 }
-local.http = require("http");
-/* validateLineSortedReset */
-local.Module = require("module");
+// exit after $npm_config_timeout_exit
+if (process.env.npm_config_timeout_exit) {
+    setTimeout(
+        process.exit.bind(undefined, 15),
+        process.env.npm_config_timeout_exit | 0
+    ).unref();
+}
 // init env
 local.objectAssignDefault(process.env, {
     UTILITY2_DIR_BUILD: require("path").resolve(".tmp/build")
@@ -6055,12 +5735,12 @@ if (globalThis.utility2_rollup) {
             match0 = match0.replace((
                 /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
             ), "$1");
-            local.assetsDict[key] = local.templateRender(match0, {
-                env: local.objectAssignDefault({
-                    version: "0.0.1"
-                }, require(__dirname + "/package.json")),
-                isRollup: true
-            });
+            //!! local.assetsDict[key] = local.templateRender((
+                //!! match0
+            //!! ), local.objectAssignDefault({
+                //!! isRollup: true,
+                //!! version: "0.0.1"
+            //!! }, require(__dirname + "/package.json")));
             return "";
         });
         break;
