@@ -34,9 +34,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -81,9 +81,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -141,9 +141,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -162,9 +162,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -321,7 +321,7 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 // customize quickstart-example-js-script
                 merge: (
-                    /\n<\/script>[\S\s]*?\n<script\u0020src="assets\.example\.js">/
+                    /\n<script>window.processEnv[\S\s]*?\n<script\u0020src="assets\.example\.js">/
                 )
             }, {
                 // customize quickstart-example-js-screenshot
@@ -607,8 +607,8 @@ local.testCase_stringHtmlSafe_default = function (opt, onError) {
             local.stringHtmlSafe(local.stringCharsetAscii).slice(32, -1)
         ),
         (
-            " !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@"
-            + "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
+            " !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@" +
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         )
     );
     onError(undefined, opt);
@@ -632,14 +632,14 @@ local.testCase_stringRegexpEscape_default = function (opt, onError) {
     assertJsonEqual(
         local.stringRegexpEscape(local.stringCharsetAscii),
         (
-            "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007"
-            + "\b\t\n\u000b\f\r\u000e\u000f"
-            + "\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017"
-            + "\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f"
-            + " !\"#\\$%&'\\(\\)\\*\\+,\\-\\.\\/0123456789:;<=>\\?@"
-            + "ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\\\\\]\\^_`"
-            + "abcdefghijklmnopqrstuvwxyz\\{\\|\\}~"
-            + "\u007f"
+            "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007" +
+            "\b\t\n\u000b\f\r\u000e\u000f" +
+            "\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017" +
+            "\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f" +
+            " !\"#\\$%&'\\(\\)\\*\\+,\\-\\.\\/0123456789:;<=>\\?@" +
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ\\[\\\\\\]\\^_`" +
+            "abcdefghijklmnopqrstuvwxyz\\{\\|\\}~" +
+            "\u007f"
         )
     );
     onError(undefined, opt);
@@ -744,9 +744,9 @@ local.testCase_webpage_err = function (opt, onError) {
         local.browserTest({
             modeSilent: true,
             url: (
-                "http://127.0.0.1:" + process.env.PORT
-                + "/?modeTest=1"
-                + "&modeTestCase=testCase_webpage_err"
+                "http://127.0.0.1:" + process.env.PORT +
+                "/?modeTest=1" +
+                "&modeTestCase=testCase_webpage_err"
             )
         }, function (err) {
             onError(undefined, err);
@@ -831,12 +831,12 @@ if (module !== require.main || globalThis.utility2_rollup) {
     return;
 }
 local.assetsDict["/assets.script_only.html"] = (
-    "<h1>script_only_test</h1>\n"
-    + "<script src=\"assets.utility2.js\"></script>\n"
-    + "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n"
-    + "<script src=\"assets.example.js\"></script>\n"
-    + "<script src=\"assets.test.js\"></script>\n"
-    + "<script>window.utility2_onReadyBefore();</script>\n"
+    "<h1>script_only_test</h1>\n" +
+    "<script src=\"assets.utility2.js\"></script>\n" +
+    "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n" +
+    "<script src=\"assets.example.js\"></script>\n" +
+    "<script src=\"assets.test.js\"></script>\n" +
+    "<script>window.utility2_onReadyBefore();</script>\n"
 );
 if (process.argv[2]) {
     // start with coverage

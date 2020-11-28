@@ -43,9 +43,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -90,9 +90,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -150,9 +150,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -171,9 +171,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -208,10 +208,10 @@
 (function () {
 // init local
 local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
+    globalThis.utility2_rollup ||
+    // globalThis.utility2_rollup_old ||
+    // require("./assets.utility2.rollup.js") ||
+    globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
@@ -291,11 +291,11 @@ local.cliRun = function ({
             }
             commandList[ii] = rgxComment.exec(str);
             local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND "
-                + key
-                + ":\nnew RegExp("
-                + JSON.stringify(rgxComment.source)
-                + ").exec(" + JSON.stringify(str).replace((
+                "cliRun - cannot parse comment in COMMAND " +
+                key +
+                ":\nnew RegExp(" +
+                JSON.stringify(rgxComment.source) +
+                ").exec(" + JSON.stringify(str).replace((
                     /\\\\/g
                 ), "\u0000").replace((
                     /\\n/g
@@ -329,15 +329,15 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND "
-                    + (elem.command[0] || "<none>") + "\n# "
-                    + elem.description
+                    "# COMMAND " +
+                    (elem.command[0] || "<none>") + "\n# " +
+                    elem.description
                 );
             }
             return (
-                elem.description + "\n  " + file
-                + "  " + elem.command.sort().join("|") + "  "
-                + elem.argList.join("  ")
+                elem.description + "\n  " + file +
+                "  " + elem.command.sort().join("|") + "  " +
+                elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
@@ -447,28 +447,28 @@ local.svgBadgeCreate = function ({
     xx1 = 6 * str1.length + 20;
     xx2 = 6 * str2.length + 20;
     return (
-        "<svg height=\"20\" width=\""
-        + (xx1 + xx2)
-        + "\" xmlns=\"http://www.w3.org/2000/svg\">\n"
-        + "<rect fill=\"#555\" height=\"20\" width=\""
-        + (xx1 + xx2)
-        + "\"/>\n"
-        + "<rect fill=\"" + fill + "\" height=\"20\" width=\""
-        + xx2 + "\" x=\"" + xx1 + "\"/>\n"
-        + "<g\n"
-        + "fill=\"#fff\"\n"
-        + "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n"
-        + "font-size=\"11\"\n"
-        + "text-anchor=\"middle\"\n"
-        + ">\n"
-        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
-        + 0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n"
-        + "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n"
-        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
-        + (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n"
-        + "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n"
-        + "</g>\n"
-        + "</svg>\n"
+        "<svg height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect fill=\"#555\" height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\"/>\n" +
+        "<rect fill=\"" + fill + "\" height=\"20\" width=\"" +
+        xx2 + "\" x=\"" + xx1 + "\"/>\n" +
+        "<g\n" +
+        "fill=\"#fff\"\n" +
+        "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n" +
+        "font-size=\"11\"\n" +
+        "text-anchor=\"middle\"\n" +
+        ">\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n" +
+        "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n" +
+        "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n" +
+        "</g>\n" +
+        "</svg>\n"
     );
 };
 

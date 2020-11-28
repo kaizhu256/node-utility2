@@ -43,9 +43,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -90,9 +90,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -150,9 +150,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -171,9 +171,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -208,10 +208,10 @@
 (function () {
 // init local
 local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
+    globalThis.utility2_rollup ||
+    // globalThis.utility2_rollup_old ||
+    // require("./assets.utility2.rollup.js") ||
+    globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
@@ -225,6 +225,77 @@ local.utility2 = local;
 
 
 /* validateLineSortedReset */
+let localEventListenerDict;
+let localEventListenerId;
+let processEnv;
+
+
+// init processEnv
+(function () {
+    let packageJson;
+    processEnv = {
+        npm_package_description: "the greatest app in the world!",
+        npm_package_name: "my-app",
+        npm_package_version: "0.0.1"
+    };
+    // update processEnv from globalThis
+    processEnv = Object.assign(processEnv, globalThis.processEnv);
+    // update processEnv from package.json
+    try {
+        packageJson = JSON.parse(require("fs").readFileSync("package.json"));
+        Object.entries(packageJson).forEach(function ([
+            key, val
+        ]) {
+            processEnv["npm_package_" + key] = String(val);
+        });
+    } catch (ignore) {}
+    // update processEnv from process.env
+    processEnv = Object.assign(
+        processEnv,
+        (typeof process === "object" && process && process.env)
+    );
+    // update processEnv from misc
+    processEnv = Object.assign({
+        UTILITY2_DIR_BUILD: ".tmp/build",
+        npm_package_nameLib: String(processEnv.npm_package_name).replace((
+            /\W/g
+        ), "_"),
+        processEnv: JSON.stringify({
+            npm_config_mode_backend: processEnv.npm_config_mode_backend,
+            npm_package_description: processEnv.npm_package_description,
+            npm_package_homepage: processEnv.npm_package_homepage,
+            npm_package_name: processEnv.npm_package_name,
+            npm_package_nameLib: processEnv.npm_package_nameLib,
+            npm_package_version: processEnv.npm_package_version
+        })
+    }, processEnv);
+}());
+let {
+    CI_BRANCH,
+    CI_COMMIT_ID,
+    CI_COMMIT_INFO,
+    CI_HOST,
+    GITHUB_FULLNAME,
+    MODE_BUILD,
+    PATH,
+    PORT,
+    UTILITY2_DIR_BUILD,
+    npm_config_mode_auto_restart,
+    npm_config_mode_lib,
+    npm_config_mode_start,
+    npm_config_mode_test,
+    npm_config_mode_test_case,
+    npm_config_mode_test_report_merge,
+    npm_config_timeout_default,
+    npm_config_timeout_exit,
+    npm_package_description,
+    npm_package_homepage,
+    npm_package_main,
+    npm_package_name,
+    npm_package_nameLib,
+    npm_package_nameOriginal,
+    npm_package_version
+} = processEnv;
 // init lib utility2
 globalThis.utility2 = local;
 // init lib extra
@@ -245,1144 +316,1036 @@ globalThis.utility2 = local;
     }
     local[key] = local[key] || {};
 });
+// init listener
+localEventListenerDict = {};
+localEventListenerId = 0;
+// init timeoutDefault, modeTest, modeTestCase
+local.timeoutDefault = npm_config_timeout_default || 30000;
+String(typeof location === "object" && location && location.search).replace((
+    /\b(modeTest|modeTestCase|timeoutDefault)=([^&#]+)/g
+), function (ignore, key, val) {
+    local[key] = decodeURIComponent(val);
+    return "";
+});
+local.timeoutDefault |= 0;
 
 
+/* validateLineSortedReset */
 // run shared js-env code - assets
 local.assetsDict = local.assetsDict || {};
-
-
-local.assetsDict[
-    "/assets.utility2.header.js"
-] = `// assets.utility2.header.js - start
-/* jslint utility2:true */
-/* istanbul ignore next */
-// run shared js\-env code - init-local
-(function () {
-    "use strict";
-    let isBrowser;
-    let isWebWorker;
-    let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
-    // init debugInline
-    if (!globalThis.debugInline) {
-        let consoleError;
-        consoleError = console.error;
-        globalThis.debugInline = function (...argList) {
-        /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
-         */
-            consoleError("\\n\\ndebugInline");
-            consoleError(...argList);
-            consoleError("\\n");
-            return argList[0];
-        };
-    }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
-    );
-    // init function
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (typeof obj !== "object" || !obj) {
-            return obj;
-        }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    function assertJsonEqual(aa, bb) {
-    /*
-     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
-     */
-        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
-        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
-        if (aa !== bb) {
-            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
-        }
-    }
-    function assertOrThrow(passed, msg) {
-    /*
-     * this function will throw <msg> if <passed> is falsy
-     */
-        if (passed) {
-            return;
-        }
-        throw (
-            (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
-            )
-            // if msg is err, then leave as is
-            ? msg
-            : new Error(
-                typeof msg === "string"
-                // if msg is string, then leave as is
-                ? msg
-                // else JSON.stringify(msg)
-                : JSON.stringify(msg, undefined, 4)
-            )
-        );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
-    function identity(val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    }
-    function noop() {
-    /*
-     * this function will do nothing
-     */
-        return;
-    }
-    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
-    /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
-     */
-        let recurse;
-        recurse = function (tgt, src, depth) {
-            Object.entries(src).forEach(function ([
-                key, bb
-            ]) {
-                let aa;
-                aa = tgt[key];
-                if (aa === undefined || aa === null || aa === "") {
-                    tgt[key] = bb;
-                    return;
-                }
-                if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
-                ) {
-                    recurse(aa, bb, depth - 1);
-                }
-            });
-        };
-        recurse(tgt, src, depth | 0);
-        return tgt;
-    }
-    function onErrorThrow(err) {
-    /*
-     * this function will throw <err> if exists
-     */
-        if (err) {
-            throw err;
-        }
-    }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
-    // init local
-    local = {
-        assertJsonEqual,
-        assertOrThrow,
-        coalesce,
-        identity,
-        isBrowser,
-        isWebWorker,
-        local,
-        noop,
-        objectAssignDefault,
-        objectDeepCopyWithKeysSorted,
-        onErrorThrow
-    };
-    globalThis.globalLocal = local;
-}());
-// assets.utility2.header.js - end
-`;
-
-
-/* jslint ignore:start */
-local.assetsDict["/assets.index.template.html"] =
-local.assetsDict["/assets.utility2.template.html"] = '\
-<!doctype html>\n\
-<html lang="en">\n\
-<head>\n\
-<meta charset="utf-8">\n\
-<meta name="viewport" content="width=device-width, initial-scale=1">\n\
-<!-- "assets.utility2.template.html" -->\n\
-<title>{{npm_package_name}} ({{npm_package_version}})</title>\n\
-<style>\n\
-/* jslint utility2:true */\n\
-/*csslint\n\
-*/\n\
-/* csslint ignore:start */\n\
-*,\n\
-*:after,\n\
-*:before {\n\
-    box-sizing: border-box;\n\
-}\n\
-.uiAnimateSlide {\n\
-    overflow-y: hidden;\n\
-    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;\n\
-}\n\
-/* csslint ignore:end */\n\
-@keyframes uiAnimateSpin {\n\
-0% {\n\
-    transform: rotate(0deg);\n\
-}\n\
-100% {\n\
-    transform: rotate(360deg);\n\
-}\n\
-}\n\
-a {\n\
-    overflow-wrap: break-word;\n\
-}\n\
-body {\n\
-    background: #f7f7f7;\n\
-    font-family: Arial, Helvetica, sans-serif;\n\
-    font-size: small;\n\
-    margin: 0 40px;\n\
-}\n\
-body > div,\n\
-body > input,\n\
-body > pre,\n\
-body > .button,\n\
-body > .textarea {\n\
-    margin-bottom: 20px;\n\
-    margin-top: 0;\n\
-}\n\
-body > input,\n\
-body > .button {\n\
-    width: 20rem;\n\
-}\n\
-body > .readonly {\n\
-    background: #ddd;\n\
-}\n\
-body > .textarea {\n\
-    height: 10rem;\n\
-    resize: vertical;\n\
-    width: 100%;\n\
-}\n\
-code,\n\
-pre,\n\
-.textarea {\n\
-    font-family: Consolas, Menlo, monospace;\n\
-    font-size: smaller;\n\
-}\n\
-pre {\n\
-    overflow-wrap: break-word;\n\
-    white-space: pre-wrap;\n\
-}\n\
-.button {\n\
-    background: #ddd;\n\
-    border: 1px solid #999;\n\
-    color: #000;\n\
-    cursor: pointer;\n\
-    display: inline-block;\n\
-    padding: 2px 5px;\n\
-    text-align: center;\n\
-    text-decoration: none;\n\
-}\n\
-.button:hover {\n\
-    background: #bbb;\n\
-}\n\
-.colorError {\n\
-    color: #d00;\n\
-}\n\
-.textarea {\n\
-    background: #fff;\n\
-    border: 1px solid #999;\n\
-    border-radius: 0;\n\
-    cursor: auto;\n\
-    overflow: auto;\n\
-    padding: 2px;\n\
-}\n\
-.zeroPixel {\n\
-    border: 0;\n\
-    height: 0;\n\
-    margin: 0;\n\
-    padding: 0;\n\
-    width: 0;\n\
-}\n\
-</style>\n\
-</head>\n\
-<body>\n\
-<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>\n\
-<script>\n\
-/* jslint utility2:true */\n\
-// polyfill globalThis\n\
-(function () {\n\
-/*\n\
- * this function will polyfill globalThis\n\
- */\n\
-    "use strict";\n\
-    window.globalThis = window.globalThis || globalThis;\n\
-}());\n\
-\n\
-\n\
-// init domOnEventWindowOnloadTimeElapsed\n\
-(function () {\n\
-/*\n\
- * this function will measure and print time-elapsed for window.onload\n\
- */\n\
-    "use strict";\n\
-    if (!(\n\
-        typeof window === "object" && window && window.document\n\
-        && typeof document.addEventListener === "function"\n\
-    ) || window.domOnEventWindowOnloadTimeElapsed) {\n\
-        return;\n\
-    }\n\
-    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n\
-    window.addEventListener("load", function () {\n\
-        setTimeout(function () {\n\
-            window.domOnEventWindowOnloadTimeElapsed = (\n\
-                Date.now()\n\
-                - window.domOnEventWindowOnloadTimeElapsed\n\
-            );\n\
-            console.error(\n\
-                "domOnEventWindowOnloadTimeElapsed = "\n\
-                + window.domOnEventWindowOnloadTimeElapsed\n\
-            );\n\
-        }, 100);\n\
-    });\n\
-}());\n\
-\n\
-\n\
-// init domOnEventAjaxProgressUpdate\n\
-(function () {\n\
-/*\n\
- * this function will display incrementing ajax-progress-bar\n\
- */\n\
-    "use strict";\n\
-    let opt;\n\
-    let styleBar0;\n\
-    let styleBar;\n\
-    let styleModal0;\n\
-    let styleModal;\n\
-    let timeStart;\n\
-    let timerInterval;\n\
-    let timerTimeout;\n\
-    let tmp;\n\
-    let width;\n\
-    try {\n\
-        if (\n\
-            window.domOnEventAjaxProgressUpdate\n\
-            || !document.getElementById("domElementAjaxProgressBar1").style\n\
-        ) {\n\
-            return;\n\
-        }\n\
-    } catch (ignore) {\n\
-        return;\n\
-    }\n\
-    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {\n\
-        gotoState = (gotoState | 0) + 1;\n\
-        switch (gotoState) {\n\
-        // ajaxProgress - show\n\
-        case 1:\n\
-            // init timerInterval and timerTimeout\n\
-            if (!timerTimeout) {\n\
-                timeStart = Date.now();\n\
-                timerInterval = setInterval(opt, 2000, 1, onError);\n\
-                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);\n\
-            }\n\
-            // show ajaxProgressBar\n\
-            if (width !== -1) {\n\
-                styleBar.background = styleBar0.background;\n\
-            }\n\
-            setTimeout(opt, 50, gotoState, onError);\n\
-            break;\n\
-        // ajaxProgress - increment\n\
-        case 2:\n\
-            // show ajaxProgressBar\n\
-            if (width === -1) {\n\
-                break;\n\
-            }\n\
-            styleBar.background = styleBar0.background;\n\
-            // reset ajaxProgress if it reaches end\n\
-            if ((styleBar.width.slice(0, -1) | 0) > 95) {\n\
-                width = 0;\n\
-            }\n\
-            // this algorithm will indefinitely increment ajaxProgress\n\
-            // with successively smaller increments without reaching 100%\n\
-            width += 1;\n\
-            styleBar.width = Math.max(\n\
-                100 - 75 * Math.exp(-0.125 * width),\n\
-                styleBar.width.slice(0, -1) | 0\n\
-            ) + "%";\n\
-            // show ajaxProgressModal\n\
-            styleModal.height = "100%";\n\
-            styleModal.opacity = styleModal0.opacity;\n\
-            if (!opt.cnt) {\n\
-                setTimeout(opt, 0, gotoState, onError);\n\
-            }\n\
-            break;\n\
-        // ajaxProgress - 100%\n\
-        case 3:\n\
-            width = -1;\n\
-            styleBar.width = "100%";\n\
-            setTimeout(opt, 1000, gotoState, onError);\n\
-            break;\n\
-        // ajaxProgress - hide\n\
-        case 4:\n\
-            // debug timeElapsed\n\
-            tmp = Date.now();\n\
-            console.error(\n\
-                "domOnEventAjaxProgressUpdate - timeElapsed - "\n\
-                + (tmp - timeStart)\n\
-                + " ms"\n\
-            );\n\
-            // cleanup timerInterval and timerTimeout\n\
-            timeStart = tmp;\n\
-            clearInterval(timerInterval);\n\
-            timerInterval = undefined;\n\
-            clearTimeout(timerTimeout);\n\
-            timerTimeout = undefined;\n\
-            // hide ajaxProgressBar\n\
-            styleBar.background = "transparent";\n\
-            // hide ajaxProgressModal\n\
-            styleModal.opacity = "0";\n\
-            if (onError) {\n\
-                onError();\n\
-            }\n\
-            setTimeout(opt, 250, gotoState);\n\
-            break;\n\
-        // ajaxProgress - reset\n\
-        default:\n\
-            opt.cnt = 0;\n\
-            width = 0;\n\
-            styleBar.width = "0%";\n\
-            styleModal.height = "0";\n\
-        }\n\
-    };\n\
-    opt = window.domOnEventAjaxProgressUpdate;\n\
-    opt.end = function (onError) {\n\
-        opt.cnt = 0;\n\
-        window.domOnEventAjaxProgressUpdate(2, onError);\n\
-    };\n\
-    // init styleBar\n\
-    styleBar = document.getElementById("domElementAjaxProgressBar1").style;\n\
-    styleBar0 = Object.assign({}, styleBar);\n\
-    Object.entries({\n\
-        background: "#d00",\n\
-        height: "2px",\n\
-        left: "0",\n\
-        margin: "0",\n\
-        padding: "0",\n\
-        position: "fixed",\n\
-        top: "0",\n\
-        transition: "background 250ms, width 750ms",\n\
-        width: "0%",\n\
-        "z-index": "1"\n\
-    }).forEach(function (entry) {\n\
-        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];\n\
-    });\n\
-    // init styleModal\n\
-    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};\n\
-    styleModal = styleModal.style || {};\n\
-    styleModal0 = Object.assign({}, styleModal);\n\
-    Object.entries({\n\
-        height: "0",\n\
-        left: "0",\n\
-        margin: "0",\n\
-        padding: "0",\n\
-        position: "fixed",\n\
-        top: "0",\n\
-        transition: "opacity 125ms",\n\
-        width: "100%",\n\
-        "z-index": "1"\n\
-    }).forEach(function (entry) {\n\
-        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];\n\
-    });\n\
-    // init state\n\
-    width = 0;\n\
-    opt.cnt = 0;\n\
-    opt.timeout = 30000;\n\
-    // init ajaxProgress\n\
-    window.domOnEventAjaxProgressUpdate();\n\
-}());\n\
-\n\
-\n\
-// init domOnEventDelegateDict\n\
-(function () {\n\
-/*\n\
- * this function will handle delegated dom-evt\n\
- */\n\
-    "use strict";\n\
-    let debounce;\n\
-    let timerTimeout;\n\
-    debounce = function () {\n\
-        return setTimeout(function () {\n\
-            timerTimeout = undefined;\n\
-        }, 30);\n\
-    };\n\
-    if (!(\n\
-        typeof window === "object" && window && window.document\n\
-        && typeof document.addEventListener === "function"\n\
-    ) || window.domOnEventDelegateDict) {\n\
-        return;\n\
-    }\n\
-    window.domOnEventDelegateDict = {};\n\
-    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {\n\
-        evt.targetOnEvent = evt.target.closest("[data-onevent]");\n\
-        if (\n\
-            !evt.targetOnEvent\n\
-            || evt.targetOnEvent.dataset.onevent === "domOnEventNoop"\n\
-            || evt.target.closest(".disabled,.readonly")\n\
-        ) {\n\
-            return;\n\
-        }\n\
-        // filter evt-change\n\
-        switch (evt.type !== "change" && evt.target.type) {\n\
-        case "checkbox":\n\
-        case "file":\n\
-        case "select-one":\n\
-        case "radio":\n\
-            return;\n\
-        }\n\
-        // filter evt-keyup\n\
-        switch (evt.type) {\n\
-        case "keyup":\n\
-            if (!timerTimeout && (\n\
-                evt.target.tagName === "INPUT"\n\
-                || evt.target.tagName === "TEXTAREA"\n\
-            )) {\n\
-                timerTimeout = debounce();\n\
-                if (evt.target.dataset.valueOld !== evt.target.value) {\n\
-                    evt.target.dataset.valueOld = evt.target.value;\n\
-                    break;\n\
-                }\n\
-            }\n\
-            return;\n\
-        }\n\
-        switch (evt.targetOnEvent.tagName) {\n\
-        case "BUTTON":\n\
-        case "FORM":\n\
-            evt.preventDefault();\n\
-            break;\n\
-        }\n\
-        evt.stopPropagation();\n\
-        // handle domOnEventClickTarget\n\
-        if (evt.targetOnEvent.dataset.onevent === "domOnEventClickTarget") {\n\
-            document.querySelector(\n\
-                evt.targetOnEvent.dataset.clickTarget\n\
-            ).click();\n\
-            return;\n\
-        }\n\
-        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](evt);\n\
-    };\n\
-    // handle evt\n\
-    [\n\
-        "change",\n\
-        "click",\n\
-        "keyup",\n\
-        "submit"\n\
-    ].forEach(function (eventType) {\n\
-        document.addEventListener(\n\
-            eventType,\n\
-            window.domOnEventDelegateDict.domOnEventDelegate\n\
-        );\n\
-    });\n\
-}());\n\
-\n\
-\n\
-// init domOnEventSelectAllWithinPre\n\
-(function () {\n\
-/*\n\
- * this function will limit select-all within <pre tabIndex="0"> elem\n\
- * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse\n\
- */\n\
-    "use strict";\n\
-    if (!(\n\
-        typeof window === "object" && window && window.document\n\
-        && typeof document.addEventListener === "function"\n\
-    ) || window.domOnEventSelectAllWithinPre) {\n\
-        return;\n\
-    }\n\
-    window.domOnEventSelectAllWithinPre = function (evt) {\n\
-        let range;\n\
-        let selection;\n\
-        if (\n\
-            evt && (evt.ctrlKey || evt.metaKey) && evt.key === "a"\n\
-            && evt.target.closest("pre")\n\
-        ) {\n\
-            range = document.createRange();\n\
-            range.selectNodeContents(evt.target.closest("pre"));\n\
-            selection = window.getSelection();\n\
-            selection.removeAllRanges();\n\
-            selection.addRange(range);\n\
-            evt.preventDefault();\n\
-        }\n\
-    };\n\
-    // handle evt\n\
-    document.addEventListener(\n\
-        "keydown",\n\
-        window.domOnEventSelectAllWithinPre\n\
-    );\n\
-}());\n\
-</script>\n\
-<h1>\n\
-<a href="{{npm_package_homepage}}" target="_blank">\n\
-    {{npm_package_name}} ({{npm_package_version}})\n\
-</a>\n\
-</h1>\n\
-<h3>{{npm_package_description}}</h3>\n\
-<!-- utility2-comment\n\
-<a class="button" download href="assets.app.js">download standalone app</a><br>\n\
-<button class="button" data-onevent="testRunBrowser" id="buttonTestRun1">run browser-tests</button><br>\n\
-<div class="uiAnimateSlide" id="htmlTestReport1" style="border-bottom: 0; border-top: 0; margin-bottom: 0; margin-top: 0; max-height: 0; padding-bottom: 0; padding-top: 0;"></div>\n\
-utility2-comment -->\n\
-\n\
-\n\
-<!-- custom-html-start -->\n\
-<label>stderr and stdout</label>\n\
-<textarea class="onevent-reset-output readonly textarea" id="outputStdout1" readonly></textarea>\n\
-<!-- custom-html-end -->\n\
-\n\
-\n\
-<!-- utility2-comment\n\
-<script>window.processEnv = {{processEnv}}</script>\n\
-<script src="assets.utility2.rollup.js"></script>\n\
-<script>window.utility2_onReadyBefore.cnt += 1;</script>\n\
-utility2-comment -->\n\
-<script src="assets.{{npm_package_nameLib}}.js"></script>\n\
-<script src="assets.example.js"></script>\n\
-<script src="assets.test.js"></script>\n\
-<script>\n\
-if (window.utility2_onReadyBefore) {\n\
-    window.utility2_onReadyBefore();\n\
-}\n\
-</script>\n\
-<div style="text-align: center;">\n\
-    [\n\
-    this app was created with\n\
-    <a\n\
-        href="https://github.com/kaizhu256/node-utility2" target="_blank"\n\
-    >utility2</a>\n\
-    ]\n\
-</div>\n\
-</body>\n\
-</html>\n\
-';
-
-
+local.assetsDict["/assets.utility2.header.js"] = (
+    "// assets.utility2.header.js - start\n" +
+    "/* jslint utility2:true */\n" +
+    "/* istanbul ignore next */\n" +
+    "// run shared js\u002denv code - init-local\n" +
+    "(function () {\n" +
+    "    \"use strict\";\n" +
+    "    let isBrowser;\n" +
+    "    let isWebWorker;\n" +
+    "    let local;\n" +
+    "    // polyfill globalThis\n" +
+    "    if (!(typeof globalThis === \"object\" && globalThis)) {\n" +
+    "        if (typeof window === \"object\" && window && " +
+    "window.window === window) {\n" +
+    "            window.globalThis = window;\n" +
+    "        }\n" +
+    "        if (typeof global === \"object\" && global && " +
+    "global.global === global) {\n" +
+    "            global.globalThis = global;\n" +
+    "        }\n" +
+    "    }\n" +
+    "    // init debugInline\n" +
+    "    if (!globalThis.debugInline) {\n" +
+    "        let consoleError;\n" +
+    "        consoleError = console.error;\n" +
+    "        globalThis.debugInline = function (...argList) {\n" +
+    "        /*\n" +
+    "         * this function will both print <argList> to stderr\n" +
+    "         * and return <argList>[0]\n" +
+    "         */\n" +
+    "            consoleError(\"\\n\\ndebugInline\");\n" +
+    "            consoleError(...argList);\n" +
+    "            consoleError(\"\\n\");\n" +
+    "            return argList[0];\n" +
+    "        };\n" +
+    "    }\n" +
+    "    // init isBrowser\n" +
+    "    isBrowser = (\n" +
+    "        typeof globalThis.XMLHttpRequest === \"function\" &&\n" +
+    "        globalThis.navigator &&\n" +
+    "        typeof globalThis.navigator.userAgent === \"string\"\n" +
+    "    );\n" +
+    "    // init isWebWorker\n" +
+    "    isWebWorker = (\n" +
+    "        isBrowser && typeof globalThis.importScripts === \"function\"\n" +
+    "    );\n" +
+    "    // init function\n" +
+    "    function objectDeepCopyWithKeysSorted(obj) {\n" +
+    "    /*\n" +
+    "     * this function will recursively deep-copy <obj> with keys sorted\n" +
+    "     */\n" +
+    "        let sorted;\n" +
+    "        if (typeof obj !== \"object\" || !obj) {\n" +
+    "            return obj;\n" +
+    "        }\n" +
+    "        // recursively deep-copy list with child-keys sorted\n" +
+    "        if (Array.isArray(obj)) {\n" +
+    "            return obj.map(objectDeepCopyWithKeysSorted);\n" +
+    "        }\n" +
+    "        // recursively deep-copy obj with keys sorted\n" +
+    "        sorted = {};\n" +
+    "        Object.keys(obj).sort().forEach(function (key) {\n" +
+    "            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);\n" +
+    "        });\n" +
+    "        return sorted;\n" +
+    "    }\n" +
+    "    function assertJsonEqual(aa, bb) {\n" +
+    "    /*\n" +
+    "     * this function will assert " +
+    "JSON.stringify(<aa>) === JSON.stringify(<bb>)\n" +
+    "     */\n" +
+    "        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n" +
+    "        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n" +
+    "        if (aa !== bb) {\n" +
+    "            throw new " +
+    "Error(JSON.stringify(aa) + \" !== \" + JSON.stringify(bb));\n" +
+    "        }\n" +
+    "    }\n" +
+    "    function assertOrThrow(passed, msg) {\n" +
+    "    /*\n" +
+    "     * this function will throw <msg> if <passed> is falsy\n" +
+    "     */\n" +
+    "        if (passed) {\n" +
+    "            return;\n" +
+    "        }\n" +
+    "        throw (\n" +
+    "            (\n" +
+    "                msg &&\n" +
+    "                typeof msg.message === \"string\" &&\n" +
+    "                typeof msg.stack === \"string\"\n" +
+    "            )\n" +
+    "            // if msg is err, then leave as is\n" +
+    "            ? msg\n" +
+    "            : new Error(\n" +
+    "                typeof msg === \"string\"\n" +
+    "                // if msg is string, then leave as is\n" +
+    "                ? msg\n" +
+    "                // else JSON.stringify(msg)\n" +
+    "                : JSON.stringify(msg, undefined, 4)\n" +
+    "            )\n" +
+    "        );\n" +
+    "    }\n" +
+    "    function coalesce(...argList) {\n" +
+    "    /*\n" +
+    "     * this function will coalesce null, undefined, or \"\" " +
+    "in <argList>\n" +
+    "     */\n" +
+    "        let arg;\n" +
+    "        let ii;\n" +
+    "        ii = 0;\n" +
+    "        while (ii < argList.length) {\n" +
+    "            arg = argList[ii];\n" +
+    "            if (arg !== undefined && arg !== null && arg !== \"\") {\n" +
+    "                return arg;\n" +
+    "            }\n" +
+    "            ii += 1;\n" +
+    "        }\n" +
+    "        return arg;\n" +
+    "    }\n" +
+    "    function identity(val) {\n" +
+    "    /*\n" +
+    "     * this function will return <val>\n" +
+    "     */\n" +
+    "        return val;\n" +
+    "    }\n" +
+    "    function noop() {\n" +
+    "    /*\n" +
+    "     * this function will do nothing\n" +
+    "     */\n" +
+    "        return;\n" +
+    "    }\n" +
+    "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
+    "    /*\n" +
+    "     * this function will if items from <tgt> are null, undefined, " +
+    "or \"\",\n" +
+    "     * then overwrite them with items from <src>\n" +
+    "     */\n" +
+    "        let recurse;\n" +
+    "        recurse = function (tgt, src, depth) {\n" +
+    "            Object.entries(src).forEach(function ([\n" +
+    "                key, bb\n" +
+    "            ]) {\n" +
+    "                let aa;\n" +
+    "                aa = tgt[key];\n" +
+    "                if (aa === undefined || aa === null || aa === \"\") {\n" +
+    "                    tgt[key] = bb;\n" +
+    "                    return;\n" +
+    "                }\n" +
+    "                if (\n" +
+    "                    depth !== 0 &&\n" +
+    "                    typeof aa === \"object\" && aa && " +
+    "!Array.isArray(aa) &&\n" +
+    "                    typeof bb === \"object\" && bb && " +
+    "!Array.isArray(bb)\n" +
+    "                ) {\n" +
+    "                    recurse(aa, bb, depth - 1);\n" +
+    "                }\n" +
+    "            });\n" +
+    "        };\n" +
+    "        recurse(tgt, src, depth | 0);\n" +
+    "        return tgt;\n" +
+    "    }\n" +
+    "    function onErrorThrow(err) {\n" +
+    "    /*\n" +
+    "     * this function will throw <err> if exists\n" +
+    "     */\n" +
+    "        if (err) {\n" +
+    "            throw err;\n" +
+    "        }\n" +
+    "    }\n" +
+    "    // bug-workaround - throw unhandledRejections in node-process\n" +
+    "    if (\n" +
+    "        typeof process === \"object\" && process &&\n" +
+    "        typeof process.on === \"function\" &&\n" +
+    "        process.unhandledRejections !== \"strict\"\n" +
+    "    ) {\n" +
+    "        process.unhandledRejections = \"strict\";\n" +
+    "        process.on(\"unhandledRejection\", function (err) {\n" +
+    "            throw err;\n" +
+    "        });\n" +
+    "    }\n" +
+    "    // init local\n" +
+    "    local = {\n" +
+    "        assertJsonEqual,\n" +
+    "        assertOrThrow,\n" +
+    "        coalesce,\n" +
+    "        identity,\n" +
+    "        isBrowser,\n" +
+    "        isWebWorker,\n" +
+    "        local,\n" +
+    "        noop,\n" +
+    "        objectAssignDefault,\n" +
+    "        objectDeepCopyWithKeysSorted,\n" +
+    "        onErrorThrow\n" +
+    "    };\n" +
+    "    globalThis.globalLocal = local;\n" +
+    "}());\n" +
+    "// assets.utility2.header.js - end\n"
+);
+local.assetsDict["/assets.utility2.template.html"] = (
+    "<!doctype html>\n" +
+    "<html lang=\"en\">\n" +
+    "<head>\n" +
+    "<meta charset=\"utf-8\">\n" +
+    "<meta\n" +
+    "    content=\"width=device-width, initial-scale=1\"\n" +
+    "    name=\"viewport\"\n" +
+    ">\n" +
+    "<!-- \"assets.utility2.template.html\" -->\n" +
+    "<title>{{npm_package_name}} ({{npm_package_version}})</title>\n" +
+    "<style>\n" +
+    "/* jslint\u0020utility2:true */\n" +
+    "/*csslint\n" +
+    "*/\n" +
+    "/* csslint ignore:start */\n" +
+    "*,\n" +
+    "*:after,\n" +
+    "*:before {\n" +
+    "    box-sizing: border-box;\n" +
+    "}\n" +
+    ".uiAnimateSlide {\n" +
+    "    overflow-y: hidden;\n" +
+    "    transition:\n" +
+    "        max-height ease-in 250ms,\n" +
+    "        min-height ease-in 250ms,\n" +
+    "        padding-bottom ease-in 250ms,\n" +
+    "        padding-top ease-in 250ms;\n" +
+    "}\n" +
+    "/* csslint ignore:end */\n" +
+    "@keyframes uiAnimateSpin {\n" +
+    "0% {\n" +
+    "    transform: rotate(0deg);\n" +
+    "}\n" +
+    "100% {\n" +
+    "    transform: rotate(360deg);\n" +
+    "}\n" +
+    "}\n" +
+    "a {\n" +
+    "    overflow-wrap: break-word;\n" +
+    "}\n" +
+    "body {\n" +
+    "    background: #f7f7f7;\n" +
+    "    font-family: Arial, Helvetica, sans-serif;\n" +
+    "    font-size: small;\n" +
+    "    margin: 0 40px;\n" +
+    "}\n" +
+    "body > div,\n" +
+    "body > input,\n" +
+    "body > pre,\n" +
+    "body > .button,\n" +
+    "body > .textarea {\n" +
+    "    margin-bottom: 20px;\n" +
+    "    margin-top: 0;\n" +
+    "}\n" +
+    "body > input,\n" +
+    "body > .button {\n" +
+    "    width: 20rem;\n" +
+    "}\n" +
+    "body > .readonly {\n" +
+    "    background: #ddd;\n" +
+    "}\n" +
+    "body > .textarea {\n" +
+    "    height: 10rem;\n" +
+    "    resize: vertical;\n" +
+    "    width: 100%;\n" +
+    "}\n" +
+    "code,\n" +
+    "pre,\n" +
+    ".textarea {\n" +
+    "    font-family: Consolas, Menlo, monospace;\n" +
+    "    font-size: smaller;\n" +
+    "}\n" +
+    "pre {\n" +
+    "    overflow-wrap: break-word;\n" +
+    "    white-space: pre-wrap;\n" +
+    "}\n" +
+    ".button {\n" +
+    "    background: #ddd;\n" +
+    "    border: 1px solid #999;\n" +
+    "    color: #000;\n" +
+    "    cursor: pointer;\n" +
+    "    display: inline-block;\n" +
+    "    padding: 2px 5px;\n" +
+    "    text-align: center;\n" +
+    "    text-decoration: none;\n" +
+    "}\n" +
+    ".button:hover {\n" +
+    "    background: #bbb;\n" +
+    "}\n" +
+    ".colorError {\n" +
+    "    color: #d00;\n" +
+    "}\n" +
+    ".textarea {\n" +
+    "    background: #fff;\n" +
+    "    border: 1px solid #999;\n" +
+    "    border-radius: 0;\n" +
+    "    cursor: auto;\n" +
+    "    overflow: auto;\n" +
+    "    padding: 2px;\n" +
+    "}\n" +
+    ".zeroPixel {\n" +
+    "    border: 0;\n" +
+    "    height: 0;\n" +
+    "    margin: 0;\n" +
+    "    padding: 0;\n" +
+    "    width: 0;\n" +
+    "}\n" +
+    "</style>\n" +
+    "</head>\n" +
+    "<body>\n" +
+    "<div class=\"uiAnimateSpin\" style=\"\n" +
+    "    animation: uiAnimateSpin 2s linear infinite;\n" +
+    "    border-radius: 50%;\n" +
+    "    border-top: 5px solid #7d7;\n" +
+    "    border: 5px solid #999;\n" +
+    "    display: none;\n" +
+    "    height: 25px;\n" +
+    "    vertical-align: middle;\n" +
+    "    width: 25px;\n" +
+    "\"></div>\n" +
+    "<script>\n" +
+    "/* jslint\u0020utility2:true */\n" +
+    "(function () {\n" +
+    "    \"use strict\";\n" +
+    "    // polyfill globalThis\n" +
+    "    window.globalThis = window;\n" +
+    "    // measure-and-print time-elapsed for window.onload\n" +
+    "    if (!window.domOnEventWindowOnloadTimeElapsed) {\n" +
+    "        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n" +
+    "        window.addEventListener(\"load\", function () {\n" +
+    "            setTimeout(function () {\n" +
+    "                window.domOnEventWindowOnloadTimeElapsed = (\n" +
+    "                    Date.now() -\n" +
+    "                    window.domOnEventWindowOnloadTimeElapsed\n" +
+    "                );\n" +
+    "                console.error(\n" +
+    "                    \"domOnEventWindowOnloadTimeElapsed = \" +\n" +
+    "                    window.domOnEventWindowOnloadTimeElapsed\n" +
+    "                );\n" +
+    "            }, 100);\n" +
+    "        });\n" +
+    "    }\n" +
+    "    // limit select-all within <pre tabIndex=\"0\"> elem\n" +
+    "    if (!window.domOnEventSelectAllWithinPre) {\n" +
+    "        window.domOnEventSelectAllWithinPre = function (evt) {\n" +
+    "            let range;\n" +
+    "            let selection;\n" +
+    "            if (\n" +
+    "                (evt.ctrlKey || evt.metaKey) &&\n" +
+    "                evt.key === \"a\" &&\n" +
+    "                evt.target.closest(\"pre\")\n" +
+    "            ) {\n" +
+    "                range = document.createRange();\n" +
+    "                range.selectNodeContents(evt.target.closest(\"pre\"));\n" +
+    "                selection = window.getSelection();\n" +
+    "                selection.removeAllRanges();\n" +
+    "                selection.addRange(range);\n" +
+    "                evt.preventDefault();\n" +
+    "            }\n" +
+    "        };\n" +
+    "        // handle evt\n" +
+    "        document.addEventListener(\n" +
+    "            \"keydown\",\n" +
+    "            window.domOnEventSelectAllWithinPre\n" +
+    "        );\n" +
+    "    }\n" +
+    "}());\n" +
+    "</script>\n" +
+    "<h1>\n" +
+    "<a href=\"{{npm_package_homepage}}\" target=\"_blank\">\n" +
+    "    {{npm_package_name}} ({{npm_package_version}})\n" +
+    "</a>\n" +
+    "</h1>\n" +
+    "<h3>{{npm_package_description}}</h3>\n" +
+    "<!-- utility2-comment\n" +
+    "<a\n" +
+    "    class=\"button\" download href=\"assets.app.js\"\n" +
+    ">download standalone app</a><br>\n" +
+    "<button\n" +
+    "    class=\"button\"\n" +
+    "    data-onevent=\"testRunBrowser\"\n" +
+    "    id=\"buttonTestRun1\"\n" +
+    ">run browser-tests</button><br>\n" +
+    "<div class=\"uiAnimateSlide\" id=\"htmlTestReport1\" style=\"\n" +
+    "    border-bottom: 0;\n" +
+    "    border-top: 0;\n" +
+    "    margin-bottom: 0;\n" +
+    "    margin-top: 0;\n" +
+    "    max-height: 0;\n" +
+    "    padding-bottom: 0;\n" +
+    "    padding-top: 0;\n" +
+    "\"></div>\n" +
+    "utility2-comment -->\n" +
+    "\n" +
+    "\n" +
+    "<!-- custom-html-start -->\n" +
+    "<label>stderr and stdout</label>\n" +
+    "<textarea\n" +
+    "    class=\"onevent-reset-output readonly textarea\"\n" +
+    "    id=\"outputStdout1\"\n" +
+    "    readonly\n" +
+    "></textarea>\n" +
+    "<!-- custom-html-end -->\n" +
+    "\n" +
+    "\n" +
+    "<!-- utility2-comment\n" +
+    "<script>window.processEnv = {{processEnv}}</script>\n" +
+    "<script src=\"assets.utility2.rollup.js\"></script>\n" +
+    "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n" +
+    "utility2-comment -->\n" +
+    "<script src=\"assets.{{npm_package_nameLib}}.js\"></script>\n" +
+    "<script src=\"assets.example.js\"></script>\n" +
+    "<script src=\"assets.test.js\"></script>\n" +
+    "<script>\n" +
+    "if (window.utility2_onReadyBefore) {\n" +
+    "    window.utility2_onReadyBefore();\n" +
+    "}\n" +
+    "</script>\n" +
+    "<div style=\"text-align: center;\">\n" +
+    "    [\n" +
+    "    this app was created with\n" +
+    "    <a\n" +
+    "        href=\"https://github.com/kaizhu256/node-utility2\"\n" +
+    "        target=\"_blank\"\n" +
+    "    >utility2</a>\n" +
+    "    ]\n" +
+    "</div>\n" +
+    "</body>\n" +
+    "</html>\n"
+);
+/* validateLineSortedReset */
 local.assetsDict["/assets.example.html"] = "";
-
-
-local.assetsDict["/assets.example.template.js"] = '\
-/*\n\
-example.js\n\
-\n\
-this script will run web-demo of my-app\n\
-\n\
-instruction\n\
-    1. save this script as example.js\n\
-    2. run shell-command:\n\
-        $ npm install my-app && \\\n\
-            PORT=8081 node example.js\n\
-    3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
-    4. edit this script to suit your needs\n\
-*/\n\
-\n\
-\n\
-/* istanbul instrument in package my_app */\n\
-' + local.assetsDict["/assets.utility2.header.js"] + '\
-\n\
-\n\
-/* jslint utility2:true */\n\
-(function (local) {\n\
-"use strict";\n\
-\n\
-\n\
-// run shared js\-env code - init-before\n\
-(function () {\n\
-// init local\n\
-local = (\n\
-    globalThis.utility2_rollup\n\
-    || globalThis.utility2_my_app\n\
-    || require("my-app")\n\
-);\n\
-// init exports\n\
-globalThis.local = local;\n\
-}());\n\
-\n\
-\n\
-/* istanbul ignore next */\n\
-// run browser js\-env code - init-test\n\
-(function () {\n\
-if (!local.isBrowser) {\n\
-    return;\n\
-}\n\
-// log stderr and stdout to #outputStdout1\n\
-["error", "log"].forEach(function (key) {\n\
-    let elem;\n\
-    let fnc;\n\
-    elem = document.querySelector("#outputStdout1");\n\
-    if (!elem) {\n\
-        return;\n\
-    }\n\
-    fnc = console[key];\n\
-    console[key] = function (...argList) {\n\
-        fnc(...argList);\n\
-        // append text to #outputStdout1\n\
-        elem.textContent += argList.map(function (arg) {\n\
-            return (\n\
-                typeof arg === "string"\n\
-                ? arg\n\
-                : JSON.stringify(arg, undefined, 4)\n\
-            );\n\
-        }).join(" ").replace((\n\
-            /\\u001b\\[\\d+?m/g\n\
-        ), "") + "\\n";\n\
-        // scroll textarea to bottom\n\
-        elem.scrollTop = elem.scrollHeight;\n\
-    };\n\
-});\n\
-local.objectAssignDefault(local, globalThis.domOnEventDelegateDict);\n\
-globalThis.domOnEventDelegateDict = local;\n\
-}());\n\
-\n\
-\n\
-/* istanbul ignore next */\n\
-// run node js\-env code - init-test\n\
-(function () {\n\
-if (local.isBrowser) {\n\
-    return;\n\
-}\n\
-// init exports\n\
-module.exports = local;\n\
-// init assetsDict\n\
-local.assetsDict = local.assetsDict || {};\n\
-/* jslint ignore:start */\n\
-local.assetsDict["/assets.index.template.html"] = \'\\\n\
-'
-+ local.assetsDict["/assets.index.template.html"].replace((/\n/g), "\\n\\\n")
-+ '\';\n\
-/* jslint ignore:end */\n\
-local.assetsDict["/assets.my_app.js"] = (\n\
-    local.assetsDict["/assets.my_app.js"]\n\
-    || require("fs").readFileSync(\n\
-        require("path").resolve(local.__dirname + "/lib.my_app.js"),\n\
-        "utf8"\n\
-    ).replace((\n\
-        /^#!\\//\n\
-    ), "// ")\n\
-);\n\
-/* validateLineSortedReset */\n\
-local.assetsDict["/"] = local.assetsDict[\n\
-    "/assets.index.template.html"\n\
-].replace((\n\
-    /\\{\\{(\\w+?)\\}\\}/g\n\
-), function (match0, match1) {\n\
-    switch (match1) {\n\
-    case "npm_package_description":\n\
-        return "the greatest app in the world!";\n\
-    case "npm_package_name":\n\
-        return "my-app";\n\
-    case "npm_package_nameLib":\n\
-        return "my_app";\n\
-    case "npm_package_version":\n\
-        return "0.0.1";\n\
-    default:\n\
-        return match0;\n\
-    }\n\
-});\n\
-local.assetsDict["/assets.example.html"] = local.assetsDict["/"];\n\
-// init cli\n\
-if (module !== require.main || globalThis.utility2_rollup) {\n\
-    return;\n\
-}\n\
-local.assetsDict["/assets.example.js"] = (\n\
-    local.assetsDict["/assets.example.js"]\n\
-    || require("fs").readFileSync(__filename, "utf8")\n\
-);\n\
-local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";\n\
-local.assetsDict["/index.html"] = local.assetsDict["/"];\n\
-// if $npm_config_timeout_exit exists,\n\
-// then exit this process after $npm_config_timeout_exit ms\n\
-if (process.env.npm_config_timeout_exit) {\n\
-    setTimeout(\n\
-        process.exit.bind(undefined, 15),\n\
-        process.env.npm_config_timeout_exit | 0\n\
-    ).unref();\n\
-}\n\
-// start server\n\
-if (globalThis.utility2_serverHttp1) {\n\
-    return;\n\
-}\n\
-process.env.PORT = process.env.PORT || "8081";\n\
-console.error("http-server listening on port " + process.env.PORT);\n\
-require("http").createServer(function (req, res) {\n\
-    let data;\n\
-    data = local.assetsDict[require("url").parse(req.url).pathname];\n\
-    if (data !== undefined) {\n\
-        res.end(data);\n\
-        return;\n\
-    }\n\
-    res.statusCode = 404;\n\
-    res.end();\n\
-}).listen(process.env.PORT);\n\
-}());\n\
-}());\n\
-';
-
-
-local.assetsDict["/assets.my_app.template.js"] = '\
-#!/usr/bin/env node\n\
-/*\n\
- * lib.my_app.js ({{packageJson.version}})\n\
- * https://github.com/kaizhu256/node-my-app\n\
- * {{packageJson.description}}\n\
- *\n\
- */\n\
-\n\
-\n\
-/* istanbul instrument in package my_app */\n\
-' + local.assetsDict["/assets.utility2.header.js"] + '\
-\n\
-\n\
-(function (local) {\n\
-"use strict";\n\
-\n\
-\n\
-/* istanbul ignore next */\n\
-// run shared js\-env code - init-before\n\
-(function () {\n\
-// init local\n\
-local = (\n\
-    globalThis.utility2_rollup\n\
-    // || globalThis.utility2_rollup_old\n\
-    // || require("./assets.utility2.rollup.js")\n\
-    || globalThis.globalLocal\n\
-);\n\
-// init exports\n\
-if (local.isBrowser) {\n\
-    globalThis.utility2_my_app = local;\n\
-} else {\n\
-    module.exports = local;\n\
-    module.exports.__dirname = __dirname;\n\
-}\n\
-// init lib main\n\
-local.my_app = local;\n\
-\n\
-\n\
-/* validateLineSortedReset */\n\
-return;\n\
-}());\n\
-}());\n\
-';
-
-
-local.assetsDict["/assets.readme.template.md"] = '\
-# my-app\n\
-the greatest app in the world!\n\
-\n\
-# live web demo\n\
-- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app)\n\
-\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app)\n\
-\n\
-\n\
-[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-my-app.svg)](https://travis-ci.com/kaizhu256/node-my-app) [![coverage](https://kaizhu256.github.io/node-my-app/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build/coverage/index.html)\n\
-\n\
-[![NPM](https://nodei.co/npm/my-app.png?downloads=true)](https://www.npmjs.com/package/my-app)\n\
-\n\
-[![build commit status](https://kaizhu256.github.io/node-my-app/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-my-app)\n\
-\n\
-| git-branch : | [master](https://github.com/kaizhu256/node-my-app/tree/master) | [beta](https://github.com/kaizhu256/node-my-app/tree/beta) | [alpha](https://github.com/kaizhu256/node-my-app/tree/alpha)|\n\
-|--:|:--|:--|:--|\n\
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-my-app/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/app)|\n\
-| test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-my-app/heroku-logo.75x25.png)](https://h1-my-app-alpha.herokuapp.com)|\n\
-| test-report : | [![test-report](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/test-report.html)|\n\
-| coverage : | [![coverage](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..master..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-my-app/build..alpha..travis-ci.com/coverage/index.html)|\n\
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-my-app/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-my-app/tree/gh-pages/build..alpha..travis-ci.com)|\n\
-\n\
-[![npmPackageListing](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-my-app)\n\
-\n\
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageDependencyTree.svg)\n\
-\n\
-\n\
-# table of contents\n\
-\n\
-\n\
-# cdn download\n\
-- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.my_app.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.my_app.js)\n\
-\n\
-\n\
-# documentation\n\
-#### api doc\n\
-- [https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html)\n\
-\n\
-[![apidoc](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/apidoc.html)\n\
-\n\
-#### cli help\n\
-![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.npmPackageCliHelp.svg)\n\
-\n\
-#### changelog 0.0.1\n\
-- update build\n\
-- none\n\
-\n\
-#### todo\n\
-- none\n\
-\n\
-\n\
-# quickstart standalone app\n\
-#### to run this example, follow instruction in script below\n\
-- [assets.app.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.app.js)\n\
-```shell\n\
-# example.sh\n\
-\n\
-# this shell script will download and run web-demo of my-app as standalone app\n\
-\n\
-# 1. download standalone app\n\
-curl -O https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/app/assets.app.js\n\
-# 2. run standalone app\n\
-PORT=8081 node ./assets.app.js\n\
-# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n\
-# 4. edit file assets.app.js to suit your needs\n\
-```\n\
-\n\
-#### output from browser\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
-\n\
-#### output from shell\n\
-![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.svg)\n\
-\n\
-\n\
-# quickstart example.js\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
-\n\
-#### to run this example, follow instruction in script below\n\
-- [example.js](https://kaizhu256.github.io/node-my-app/build..beta..travis-ci.com/example.js)\n\
-```javascript\n' + local.assetsDict["/assets.example.template.js"] + '```\n\
-\n\
-#### output from browser\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/app/assets.example.html)\n\
-\n\
-#### output from shell\n\
-![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.svg)\n\
-\n\
-\n\
-# extra screenshots\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithub.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployGithubTest.browser.%252Fnode-my-app%252Fbuild%252Fapp.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHeroku.browser.%252F.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.deployHerokuTest.browser.%252F.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.npmTest.browser.%252F.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleJs.browser.%252F.png)\n\
-\n\
-1. [https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-my-app/build/screenshot.testExampleSh.browser.%252F.png)\n\
-\n\
-\n\
-# package.json\n\
-```json\n\
-{\n\
-    "!!jslint_utility2": true,\n\
-    "author": "kai zhu <kaizhu256@gmail.com>",\n\
-    "description": "the greatest app in the world!",\n\
-    "devDependencies": {\n\
-        "utility2": "kaizhu256/node-utility2#alpha"\n\
-    },\n\
-    "engines": {\n\
-        "node": ">=12.0"\n\
-    },\n\
-    "fileCount": 0,\n\
-    "homepage": "https://github.com/kaizhu256/node-my-app",\n\
-    "keywords": [],\n\
-    "license": "MIT",\n\
-    "main": "lib.my_app.js",\n\
-    "name": "my-app",\n\
-    "nameAliasPublish": "",\n\
-    "repository": {\n\
-        "type": "git",\n\
-        "url": "https://github.com/kaizhu256/node-my-app.git"\n\
-    },\n\
-    "scripts": {\n\
-        "build-ci": "sh npm_scripts.sh",\n\
-        "env": "env",\n\
-        "eval": "sh npm_scripts.sh",\n\
-        "heroku-postbuild": "sh npm_scripts.sh",\n\
-        "postinstall": "sh npm_scripts.sh",\n\
-        "start": "sh npm_scripts.sh",\n\
-        "test": "sh npm_scripts.sh",\n\
-        "utility2": "sh npm_scripts.sh"\n\
-    },\n\
-    "version": "0.0.1"\n\
-}\n\
-```\n\
-\n\
-\n\
-# changelog of last 50 commits\n\
-[![screenshot](https://kaizhu256.github.io/node-my-app/build/screenshot.gitLog.svg)](https://github.com/kaizhu256/node-my-app/commits)\n\
-\n\
-\n\
-# internal build script\n\
-- build_ci.sh\n\
-```shell\n\
-# build_ci.sh\n\
-\n\
-# this shell script will run build-ci for this package\n\
-\n\
-shBuildCiAfter () {(set -e\n\
-    # shDeployCustom\n\
-    shDeployGithub\n\
-    # shDeployHeroku\n\
-    shReadmeEval example.sh\n\
-)}\n\
-\n\
-shBuildCiBefore () {(set -e\n\
-    # shNpmTestPublished\n\
-    shReadmeEval example.js\n\
-)}\n\
-\n\
-# run shBuildCi\n\
-eval "$(utility2 source)"\n\
-shBuildCi\n\
-```\n\
-\n\
-\n\
-# misc\n\
-- this package was created with [utility2](https://github.com/kaizhu256/node-utility2)\n\
-';
-
-
-local.assetsDict["/assets.test.template.js"] = '\
-/* istanbul instrument in package my_app */\n\
-' + local.assetsDict["/assets.utility2.header.js"] + '\
-\n\
-\n\
-/* jslint utility2:true */\n\
-(function (local) {\n\
-"use strict";\n\
-\n\
-\n\
-/* istanbul ignore next */\n\
-// run shared js\-env code - init-before\n\
-(function () {\n\
-// init local\n\
-local = globalThis.utility2 || require("utility2");\n\
-local = local.requireReadme();\n\
-globalThis.local = local;\n\
-// init test\n\
-local.testRunDefault(local);\n\
-}());\n\
-\n\
-\n\
-// run shared js\-env code - function\n\
-(function () {\n\
-return;\n\
-}());\n\
-}());\n\
-';
-
-
-local.assetsDict["/assets.utility2.rollup.start.js"] = '\
-/* utility2.rollup.js begin */\n\
-/* istanbul ignore all */\n\
-' + local.assetsDict["/assets.utility2.header.js"] + '\
-\n\
-\n\
-/* jslint utility2:true */\n\
-(function () {\n\
-    "use strict";\n\
-    // init utility2_rollup\n\
-    globalThis.utility2_rollup = (\n\
-        globalThis.utility2_rollup_old\n\
-        || globalThis.globalLocal\n\
-    );\n\
-    globalThis.utility2_rollup.local = globalThis.utility2_rollup;\n\
-    globalThis.utility2_rollup_old = null;\n\
-}());\n\
-';
-
-
-local.assetsDict["/assets.utility2.rollup.content.js"] = '\
-(function (local) {\n\
-    "use strict";\n\
-/* jslint ignore:start */\n\
-/* utility2.rollup.js content */\n\
-/* jslint ignore:end */\n\
-    return local;\n\
-}(globalThis.utility2_rollup));\n\
-';
-
-
-local.assetsDict["/assets.utility2.rollup.end.js"] = '\
-(function () {\n\
-    "use strict";\n\
-    globalThis.utility2_rollup_old = globalThis.utility2_rollup;\n\
-    globalThis.utility2_rollup = null;\n\
-}());\n\
-/* utility2.rollup.js end */\n\
-';
-
-
+local.assetsDict["/assets.example.template.js"] = (
+    "/*\n" +
+    "example.js\n" +
+    "\n" +
+    "this script will run web-demo of my-app\n" +
+    "\n" +
+    "instruction\n" +
+    "    1. save this script as example.js\n" +
+    "    2. run shell-command:\n" +
+    "        $ npm install my-app && \\\n" +
+    "            PORT=8081 node example.js\n" +
+    "    3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
+    "    4. edit this script to suit your needs\n" +
+    "*/\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul instrument in package my_app */\n" +
+    local.assetsDict["/assets.utility2.header.js"] +
+    "\n" +
+    "\n" +
+    "/* jslint utility2:true */\n" +
+    "(function (local) {\n" +
+    "\"use strict\";\n" +
+    "\n" +
+    "\n" +
+    "// run shared js\u002denv code - init-before\n" +
+    "(function () {\n" +
+    "// init local\n" +
+    "local = (\n" +
+    "    globalThis.utility2_rollup ||\n" +
+    "    globalThis.utility2_my_app ||\n" +
+    "    require(\"my-app\")\n" +
+    ");\n" +
+    "// init exports\n" +
+    "globalThis.local = local;\n" +
+    "}());\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul ignore next */\n" +
+    "// run browser js\u002denv code - init-test\n" +
+    "(function () {\n" +
+    "if (!local.isBrowser) {\n" +
+    "    return;\n" +
+    "}\n" +
+    "// log stderr and stdout to #outputStdout1\n" +
+    "[\"error\", \"log\"].forEach(function (key) {\n" +
+    "    let elem;\n" +
+    "    let fnc;\n" +
+    "    elem = document.querySelector(\"#outputStdout1\");\n" +
+    "    if (!elem) {\n" +
+    "        return;\n" +
+    "    }\n" +
+    "    fnc = console[key];\n" +
+    "    console[key] = function (...argList) {\n" +
+    "        fnc(...argList);\n" +
+    "        // append text to #outputStdout1\n" +
+    "        elem.textContent += argList.map(function (arg) {\n" +
+    "            return (\n" +
+    "                typeof arg === \"string\"\n" +
+    "                ? arg\n" +
+    "                : JSON.stringify(arg, undefined, 4)\n" +
+    "            );\n" +
+    "        }).join(\" \").replace((\n" +
+    "            /\\u001b\\[\\d+?m/g\n" +
+    "        ), \"\") + \"\\n\";\n" +
+    "        // scroll textarea to bottom\n" +
+    "        elem.scrollTop = elem.scrollHeight;\n" +
+    "    };\n" +
+    "});\n" +
+    "}());\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul ignore next */\n" +
+    "// run node js\u002denv code - init-test\n" +
+    "(function () {\n" +
+    "if (local.isBrowser) {\n" +
+    "    return;\n" +
+    "}\n" +
+    "// init exports\n" +
+    "module.exports = local;\n" +
+    "// init assetsDict\n" +
+    "local.assetsDict = local.assetsDict || {};\n" +
+    "/* jslint ignore:start */\n" +
+    "local.assetsDict[\"/assets.index.template.html\"] = `" +
+    local.assetsDict["/assets.utility2.template.html"].replace((
+        /[$\\`]/g
+    ), "\\$&") +
+    "`;\n" +
+    "/* jslint ignore:end */\n" +
+    "local.assetsDict[\"/assets.my_app.js\"] = (\n" +
+    "    local.assetsDict[\"/assets.my_app.js\"]\n" +
+    "    || require(\"fs\").readFileSync(\n" +
+    "        require(\"path\").resolve(local.__dirname + " +
+    "\"/lib.my_app.js\"),\n" +
+    "        \"utf8\"\n" +
+    "    ).replace((\n" +
+    "        /^#!\\//\n" +
+    "    ), \"// \")\n" +
+    ");\n" +
+    "/* validateLineSortedReset */\n" +
+    "local.assetsDict[\"/\"] = local.assetsDict[\n" +
+    "    \"/assets.index.template.html\"\n" +
+    "].replace((\n" +
+    "    /\\{\\{(\\w+?)\\}\\}/g\n" +
+    "), function (match0, match1) {\n" +
+    "    switch (match1) {\n" +
+    "    case \"npm_package_description\":\n" +
+    "        return \"the greatest app in the world!\";\n" +
+    "    case \"npm_package_name\":\n" +
+    "        return \"my-app\";\n" +
+    "    case \"npm_package_nameLib\":\n" +
+    "        return \"my_app\";\n" +
+    "    case \"npm_package_version\":\n" +
+    "        return \"0.0.1\";\n" +
+    "    default:\n" +
+    "        return match0;\n" +
+    "    }\n" +
+    "});\n" +
+    "local.assetsDict[\"/assets.example.html\"] = local.assetsDict[\"/\"];\n" +
+    "// init cli\n" +
+    "if (module !== require.main || globalThis.utility2_rollup) {\n" +
+    "    return;\n" +
+    "}\n" +
+    "local.assetsDict[\"/assets.example.js\"] = (\n" +
+    "    local.assetsDict[\"/assets.example.js\"]\n" +
+    "    || require(\"fs\").readFileSync(__filename, \"utf8\")\n" +
+    ");\n" +
+    "local.assetsDict[\"/favicon.ico\"] = " +
+    "local.assetsDict[\"/favicon.ico\"] || \"\";\n" +
+    "local.assetsDict[\"/index.html\"] = local.assetsDict[\"/\"];\n" +
+    "// if $npm_config_timeout_exit exists,\n" +
+    "// then exit this process after $npm_config_timeout_exit ms\n" +
+    "if (process.env.npm_config_timeout_exit) {\n" +
+    "    setTimeout(\n" +
+    "        process.exit.bind(undefined, 15),\n" +
+    "        process.env.npm_config_timeout_exit | 0\n" +
+    "    ).unref();\n" +
+    "}\n" +
+    "// start server\n" +
+    "if (globalThis.utility2_serverHttp1) {\n" +
+    "    return;\n" +
+    "}\n" +
+    "process.env.PORT = process.env.PORT || \"8081\";\n" +
+    "console.error(\"http-server listening on port \" + process.env.PORT);\n" +
+    "require(\"http\").createServer(function (req, res) {\n" +
+    "    let data;\n" +
+    "    data = local.assetsDict[require(\"url\").parse(req.url).pathname];\n" +
+    "    if (data !== undefined) {\n" +
+    "        res.end(data);\n" +
+    "        return;\n" +
+    "    }\n" +
+    "    res.statusCode = 404;\n" +
+    "    res.end();\n" +
+    "}).listen(process.env.PORT);\n" +
+    "}());\n" +
+    "}());\n"
+);
+local.assetsDict["/assets.my_app.template.js"] = (
+    "#!/usr/bin/env node\n" +
+    "/*\n" +
+    " * lib.my_app.js ({{packageJson.version}})\n" +
+    " * https://github.com/kaizhu256/node-my-app\n" +
+    " * {{packageJson.description}}\n" +
+    " *\n" +
+    " */\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul instrument in package my_app */\n" +
+    local.assetsDict["/assets.utility2.header.js"] +
+    "\n" +
+    "\n" +
+    "(function (local) {\n" +
+    "\"use strict\";\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul ignore next */\n" +
+    "// run shared js\u002denv code - init-before\n" +
+    "(function () {\n" +
+    "// init local\n" +
+    "local = (\n" +
+    "    globalThis.utility2_rollup ||\n" +
+    "    // globalThis.utility2_rollup_old ||\n" +
+    "    // require(\"./assets.utility2.rollup.js\") ||\n" +
+    "    globalThis.globalLocal\n" +
+    ");\n" +
+    "// init exports\n" +
+    "if (local.isBrowser) {\n" +
+    "    globalThis.utility2_my_app = local;\n" +
+    "} else {\n" +
+    "    module.exports = local;\n" +
+    "    module.exports.__dirname = __dirname;\n" +
+    "}\n" +
+    "// init lib main\n" +
+    "local.my_app = local;\n" +
+    "\n" +
+    "\n" +
+    "/* validateLineSortedReset */\n" +
+    "return;\n" +
+    "}());\n" +
+    "}());\n"
+);
+local.assetsDict["/assets.readme.template.md"] = String(
+    "# my-app\n" +
+    "the greatest app in the world!\n" +
+    "\n" +
+    "# live web demo\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app]" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
+    "\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.deployGithub.{{app.png}})]" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
+    "\n" +
+    "\n" +
+    "[![travis-ci.com build-status]" +
+    "(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]" +
+    "({{app.io}}/build/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build/coverage/index.html)\n" +
+    "\n" +
+    "[![NPM]" +
+    "(https://nodei.co/npm/my-app.png?downloads=true)]" +
+    "(https://www.npmjs.com/package/my-app)\n" +
+    "\n" +
+    "[![build commit status]" +
+    "({{app.io}}/build/build.badge.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app)\n" +
+    "\n" +
+    "| git-branch : | " +
+    "[master]" +
+    "({{app.com}}/tree/master) | " +
+    "[beta]" +
+    "({{app.com}}/tree/beta) | " +
+    "[alpha]" +
+    "({{app.com}}/tree/alpha)|\n" +
+    "|--:|:--|:--|:--|\n" +
+    "| test-server-github : | " +
+    "[![github.com test-server]" +
+    "({{app.io}}/GitHub-Mark-32px.png)]" +
+    "({{app.io}}/build..master..travis-ci.com/app) | " +
+    "[![github.com test-server]" +
+    "({{app.io}}/GitHub-Mark-32px.png)]" +
+    "({{app.io}}/build..beta..travis-ci.com/app) | " +
+    "[![github.com test-server]" +
+    "({{app.io}}/GitHub-Mark-32px.png)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/app)|\n" +
+    "| test-server-heroku : | " +
+    "[![heroku.com test-server]" +
+    "({{app.io}}/heroku-logo.75x25.png)]" +
+    "(https://h1-my-app-master.herokuapp.com) | " +
+    "[![heroku.com test-server]" +
+    "({{app.io}}/heroku-logo.75x25.png)]" +
+    "(https://h1-my-app-beta.herokuapp.com) | " +
+    "[![heroku.com test-server]" +
+    "({{app.io}}/heroku-logo.75x25.png)]" +
+    "(https://h1-my-app-alpha.herokuapp.com)|\n" +
+    "| test-report : | " +
+    "[![test-report]" +
+    "({{app.io}}/build..master..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/test-report.html) | " +
+    "[![test-report]" +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.html) | " +
+    "[![test-report]" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.html)|\n" +
+    "| coverage : | " +
+    "[![coverage]" +
+    "({{app.io}}/build..master..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/coverage/index.html) | " +
+    "[![coverage]" +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/index.html) | " +
+    "[![coverage]" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/index.html)|\n" +
+    "| build-artifacts : | " +
+    "[![build-artifacts]" +
+    "({{app.io}}/glyphicons_144_folder_open.png)]" +
+    "({{app.com}}/tree/gh-pages/build..master..travis-ci.com) | " +
+    "[![build-artifacts]" +
+    "({{app.io}}/glyphicons_144_folder_open.png)]" +
+    "({{app.com}}/tree/gh-pages/build..beta..travis-ci.com) | " +
+    "[![build-artifacts]" +
+    "({{app.io}}/glyphicons_144_folder_open.png)]" +
+    "({{app.com}}/tree/gh-pages/build..alpha..travis-ci.com)|\n" +
+    "\n" +
+    "[![npmPackageListing]" +
+    "({{app.io}}/build/screenshot.npmPackageListing.svg)]" +
+    "({{app.com}})\n" +
+    "\n" +
+    "![npmPackageDependencyTree]" +
+    "({{app.io}}/build/screenshot.npmPackageDependencyTree.svg)\n" +
+    "\n" +
+    "\n" +
+    "# table of contents\n" +
+    "\n" +
+    "\n" +
+    "# cdn download\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js)\n" +
+    "\n" +
+    "\n" +
+    "# documentation\n" +
+    "#### api doc\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/apidoc.html]" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
+    "\n" +
+    "[![apidoc]" +
+    "({{app.io}}/build/{{screenshot}}apidoc.html.png)]" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
+    "\n" +
+    "#### cli help\n" +
+    "![screenshot]" +
+    "({{app.io}}/build/screenshot.npmPackageCliHelp.svg)\n" +
+    "\n" +
+    "#### changelog 0.0.1\n" +
+    "- update build\n" +
+    "- none\n" +
+    "\n" +
+    "#### todo\n" +
+    "- none\n" +
+    "\n" +
+    "\n" +
+    "# quickstart standalone app\n" +
+    "#### to run this example, follow instruction in script below\n" +
+    "- [assets.app.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.app.js)\n" +
+    "```shell\n" +
+    "# example.sh\n" +
+    "\n" +
+    "# this shell script will download and run web-demo of my-app " +
+    "as standalone app\n" +
+    "\n" +
+    "# 1. download standalone app\n" +
+    "curl -O {{app.io}}/build..beta..travis-ci.com/app/assets.app.js\n" +
+    "# 2. run standalone app\n" +
+    "PORT=8081 node ./assets.app.js\n" +
+    "# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
+    "# 4. edit file assets.app.js to suit your needs\n" +
+    "```\n" +
+    "\n" +
+    "#### output from browser\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/app/assets.example.html)\n" +
+    "\n" +
+    "#### output from shell\n" +
+    "![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleSh.svg)\n" +
+    "\n" +
+    "\n" +
+    "# quickstart example.js\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/app/assets.example.html)\n" +
+    "\n" +
+    "#### to run this example, follow instruction in script below\n" +
+    "- [example.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/example.js)\n" +
+    "```javascript\n" +
+    local.assetsDict["/assets.example.template.js"] +
+    "```\n" +
+    "\n" +
+    "#### output from browser\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/app/assets.example.html)\n" +
+    "\n" +
+    "#### output from shell\n" +
+    "![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleJs.svg)\n" +
+    "\n" +
+    "\n" +
+    "# extra screenshots\n" +
+    "1. [{{app.io}}/build/{{screenshot}}apidoc.html.png]" +
+    "({{app.io}}/build/{{screenshot}}apidoc.html.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/{{screenshot}}apidoc.html.png)]" +
+    "({{app.io}}/build/{{screenshot}}apidoc.html.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/{{screenshot}}coverage.lib.html.png]" +
+    "({{app.io}}/build/{{screenshot}}coverage.lib.html.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/{{screenshot}}coverage.lib.html.png)]" +
+    "({{app.io}}/build/{{screenshot}}coverage.lib.html.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/{{screenshot}}test-report.html.png]" +
+    "({{app.io}}/build/{{screenshot}}test-report.html.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/{{screenshot}}test-report.html.png)]" +
+    "({{app.io}}/build/{{screenshot}}test-report.html.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.deployGithub.{{app.png}}]" +
+    "({{app.io}}/build/screenshot.deployGithub.{{app.png}})\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.deployGithub.{{app.png}})]" +
+    "({{app.io}}/build/screenshot.deployGithub.{{app.png}})\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.deployGithubTest.{{app.png}}]" +
+    "({{app.io}}/build/screenshot.deployGithubTest.{{app.png}})\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.deployGithubTest.{{app.png}})]" +
+    "({{app.io}}/build/screenshot.deployGithubTest.{{app.png}})\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.deployHeroku.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.deployHeroku.browser.%252F.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.deployHeroku.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.deployHeroku.browser.%252F.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.deployHerokuTest.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.deployHerokuTest.browser.%252F.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.deployHerokuTest.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.deployHerokuTest.browser.%252F.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.npmTest.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.testExampleJs.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "\n" +
+    "1. [{{app.io}}/build/screenshot.testExampleSh.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "\n" +
+    "\n" +
+    "# package.json\n" +
+    "```json\n" +
+    "{\n" +
+    "    \"!!jslint_utility2\": true,\n" +
+    "    \"author\": \"kai zhu <kaizhu256@gmail.com>\",\n" +
+    "    \"description\": \"the greatest app in the world!\",\n" +
+    "    \"devDependencies\": {\n" +
+    "        \"utility2\": \"kaizhu256/node-utility2#alpha\"\n" +
+    "    },\n" +
+    "    \"engines\": {\n" +
+    "        \"node\": \">=12.0\"\n" +
+    "    },\n" +
+    "    \"fileCount\": 0,\n" +
+    "    \"homepage\": \"{{app.com}}\",\n" +
+    "    \"keywords\": [],\n" +
+    "    \"license\": \"MIT\",\n" +
+    "    \"main\": \"lib.my_app.js\",\n" +
+    "    \"name\": \"my-app\",\n" +
+    "    \"nameAliasPublish\": \"\",\n" +
+    "    \"repository\": {\n" +
+    "        \"type\": \"git\",\n" +
+    "        \"url\": \"{{app.com}}.git\"\n" +
+    "    },\n" +
+    "    \"scripts\": {\n" +
+    "        \"build-ci\": \"sh npm_scripts.sh\",\n" +
+    "        \"env\": \"env\",\n" +
+    "        \"eval\": \"sh npm_scripts.sh\",\n" +
+    "        \"heroku-postbuild\": \"sh npm_scripts.sh\",\n" +
+    "        \"postinstall\": \"sh npm_scripts.sh\",\n" +
+    "        \"start\": \"sh npm_scripts.sh\",\n" +
+    "        \"test\": \"sh npm_scripts.sh\",\n" +
+    "        \"utility2\": \"sh npm_scripts.sh\"\n" +
+    "    },\n" +
+    "    \"version\": \"0.0.1\"\n" +
+    "}\n" +
+    "```\n" +
+    "\n" +
+    "\n" +
+    "# changelog of last 50 commits\n" +
+    "[![screenshot]" +
+    "({{app.io}}/build/screenshot.gitLog.svg)]" +
+    "({{app.com}}/commits)\n" +
+    "\n" +
+    "\n" +
+    "# internal build script\n" +
+    "- build_ci.sh\n" +
+    "```shell\n" +
+    "# build_ci.sh\n" +
+    "\n" +
+    "# this shell script will run build-ci for this package\n" +
+    "\n" +
+    "shBuildCiAfter () {(set -e\n" +
+    "    # shDeployCustom\n" +
+    "    shDeployGithub\n" +
+    "    # shDeployHeroku\n" +
+    "    shReadmeEval example.sh\n" +
+    ")}\n" +
+    "\n" +
+    "shBuildCiBefore () {(set -e\n" +
+    "    # shNpmTestPublished\n" +
+    "    shReadmeEval example.js\n" +
+    ")}\n" +
+    "\n" +
+    "# run shBuildCi\n" +
+    "eval \"$(utility2 source)\"\n" +
+    "shBuildCi\n" +
+    "```\n" +
+    "\n" +
+    "\n" +
+    "# misc\n" +
+    "- this package was created with [utility2]" +
+    "(https://github.com/kaizhu256/node-utility2)\n"
+).replace((
+    /\{\{app\.com\}\}/g
+), "https://github.com/kaizhu256/node-my-app").replace((
+    /\{\{app\.io\}\}/g
+), "https://kaizhu256.github.io/node-my-app").replace((
+    /\{\{app.png\}\}/g
+), "browser.%252Fnode-my-app%252Fbuild%252Fapp.png").replace((
+    /\{\{screenshot\}\}/g
+), "screenshot.buildCi.browser.%252F.tmp%252Fbuild%252F");
+local.assetsDict["/assets.test.template.js"] = (
+    "/* istanbul instrument in package my_app */\n" +
+    local.assetsDict["/assets.utility2.header.js"] +
+    "\n" +
+    "\n" +
+    "/* jslint utility2:true */\n" +
+    "(function (local) {\n" +
+    "\"use strict\";\n" +
+    "\n" +
+    "\n" +
+    "/* istanbul ignore next */\n" +
+    "// run shared js\u002denv code - init-before\n" +
+    "(function () {\n" +
+    "// init local\n" +
+    "local = globalThis.utility2 || require(\"utility2\");\n" +
+    "local = local.requireReadme();\n" +
+    "globalThis.local = local;\n" +
+    "// init test\n" +
+    "local.testRunDefault(local);\n" +
+    "}());\n" +
+    "\n" +
+    "\n" +
+    "// run shared js\u002denv code - function\n" +
+    "(function () {\n" +
+    "return;\n" +
+    "}());\n" +
+    "}());\n"
+);
+local.assetsDict["/assets.utility2.rollup.content.js"] = (
+    "(function (local) {\n" +
+    "    \"use strict\";\n" +
+    "/* jslint ignore:start */\n" +
+    "/* utility2.rollup.js content */\n" +
+    "/* jslint ignore:end */\n" +
+    "    return local;\n" +
+    "}(globalThis.utility2_rollup));\n"
+);
+local.assetsDict["/assets.utility2.rollup.end.js"] = (
+    "(function () {\n" +
+    "    \"use strict\";\n" +
+    "    globalThis.utility2_rollup_old = globalThis.utility2_rollup;\n" +
+    "    globalThis.utility2_rollup = null;\n" +
+    "}());\n" +
+    "/* utility2.rollup.js end */\n"
+);
+local.assetsDict["/assets.utility2.rollup.start.js"] = (
+    "/* utility2.rollup.js begin */\n" +
+    "/* istanbul ignore all */\n" +
+    local.assetsDict["/assets.utility2.header.js"] +
+    "\n" +
+    "\n" +
+    "/* jslint utility2:true */\n" +
+    "(function () {\n" +
+    "    \"use strict\";\n" +
+    "    // init utility2_rollup\n" +
+    "    globalThis.utility2_rollup = (\n" +
+    "        globalThis.utility2_rollup_old\n" +
+    "        || globalThis.globalLocal\n" +
+    "    );\n" +
+    "    globalThis.utility2_rollup.local = globalThis.utility2_rollup;\n" +
+    "    globalThis.utility2_rollup_old = null;\n" +
+    "}());\n"
+);
 local.assetsDict["/favicon.ico"] = "";
-/* jslint ignore:end */
 
 
 // run shared js-env code - cli
@@ -1420,166 +1383,18 @@ local.cliDict["utility2.testReportCreate"] = function () {
  *
  * will create test-report
  */
-    let html;
-    let testPlatformList;
     let testReport;
-    let {
-        CI_BRANCH,
-        CI_COMMIT_ID,
-        UTILITY2_DIR_BUILD
-    } = process.env;
-    function fileWrite(file, data) {
-        file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
-        require("fs").writeFileSync(file, data);
-        console.error("test-report - wrote " + file);
-    }
-    testReport = local.testReportMerge(JSON.parse(require("fs").readFileSync(
-        UTILITY2_DIR_BUILD + "/test-report.json",
-        "utf8"
-    )));
-    html = testReport.html;
-    testPlatformList = testReport.testPlatformList;
-    delete testReport.coverage;
-    delete testReport.html;
-    // print test-report summary
-    console.error(
-        "\n" + new Array(56).join("-") + "\n"
-        + testPlatformList.filter(function (testPlatform) {
-            // if testPlatform has no tests, then filter it out
-            return testPlatform.testCaseList.length;
-        }).map(function (testPlatform) {
-            return (
-                "| test-report - " + testPlatform.name + "\n|"
-                + String(
-                    testPlatform.timeElapsed + " ms     "
-                ).padStart(16, " ")
-                + String(
-                    testPlatform.testsFailed + " failed "
-                ).padStart(16, " ")
-                + String(
-                    testPlatform.testsPassed + " passed "
-                ).padStart(16, " ")
-                + "     |\n" + new Array(56).join("-") + "\n"
-            );
-        }).join("")
-    );
-    // print failed testCase
-    testPlatformList.forEach(function (testPlatform) {
-        testPlatform.testCaseList.forEach(function (testCase) {
-            if (testCase.status !== "passed") {
-                console.error(JSON.stringify(testCase, undefined, 4));
-            }
-        });
-    });
-    // jslint html
-    local.jslintAndPrint(html, "test-report.html");
-    // create test-report.html
-    fileWrite("test-report.html", html);
-    // create build.badge.svg
-    fileWrite("build.badge.svg", local.svgBadgeCreate({
-        fill: "#07f",
-        str1: "last build",
-        str2: (
-            new Date().toISOString().slice(0, 19).replace("T", " ")
-            + " - " + CI_BRANCH + " - " + CI_COMMIT_ID
-        )
-    }));
-    // create test-report.badge.svg
-    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
-        fill: (
-            testPlatformList[0].testsFailed
-            ? "#d00"
-            : "#0d0"
-        ),
-        str1: "tests failed",
-        str2: testPlatformList[0].testsFailed
-    }));
-    // if any test failed, then exit with non-zero exitCode
-    process.exit(testReport.testsFailed !== 0);
-};
-}());
-
-
-// run shared js-env code - function
-(function () {
-let localEventListenerDict;
-let localEventListenerId;
-let processEnv;
-
-
-// init processEnv
-(function () {
-    let packageJson;
-    processEnv = {
-        npm_package_description: "the greatest app in the world!",
-        npm_package_name: "my-app",
-        npm_package_version: "0.0.1"
-    };
-    // update processEnv from globalThis
-    processEnv = Object.assign(processEnv, globalThis.processEnv);
-    // update processEnv from package.json
     try {
-        packageJson = JSON.parse(require("fs").readFileSync("package.json"));
-        Object.entries(packageJson).forEach(function ([
-            key, val
-        ]) {
-            processEnv["npm_package_" + key] = String(val);
-        });
+        testReport = JSON.parse(require("fs").readFileSync(
+            UTILITY2_DIR_BUILD + "/test-report.json",
+            "utf8"
+        ));
     } catch (ignore) {}
-    // update processEnv from process.env
-    processEnv = Object.assign(
-        processEnv,
-        (typeof process === "object" && process && process.env)
-    );
-    // update processEnv from misc
-    processEnv = Object.assign({
-        npm_package_nameLib: String(processEnv.npm_package_name).replace((
-            /\W/g
-        ), "_"),
-        processEnv: JSON.stringify({
-            npm_config_mode_backend: processEnv.npm_config_mode_backend,
-            npm_package_description: processEnv.npm_package_description,
-            npm_package_homepage: processEnv.npm_package_homepage,
-            npm_package_name: processEnv.npm_package_name,
-            npm_package_nameLib: processEnv.npm_package_nameLib,
-            npm_package_version: processEnv.npm_package_version
-        })
-    }, processEnv);
-}());
-let {
-    CI_COMMIT_INFO,
-    MODE_BUILD,
-    PORT,
-    UTILITY2_DIR_BUILD,
-    npm_config_mode_auto_restart,
-    npm_config_mode_lib,
-    npm_config_mode_start,
-    npm_config_mode_test,
-    npm_config_mode_test_case,
-    npm_config_timeout_default,
-    npm_package_description,
-    npm_package_homepage,
-    npm_package_main,
-    npm_package_name,
-    npm_package_nameLib,
-    npm_package_nameOriginal,
-    npm_package_version
-} = processEnv;
-// init timeoutDefault, modeTest, modeTestCase
-local.timeoutDefault = npm_config_timeout_default || 30000;
-String(typeof location === "object" && location && location.search).replace((
-    /\b(modeTest|modeTestCase|timeoutDefault)=([^&#]+)/g
-), function (ignore, key, val) {
-    local[key] = decodeURIComponent(val);
-    return "";
-});
-local.timeoutDefault |= 0;
+    local.testReportMerge(testReport, {}, "modeWrite");
+};
+
 /* validateLineSortedReset */
-// init listener
-localEventListenerDict = {};
-localEventListenerId = 0;
-
-
+// run shared js-env code - function
 local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
@@ -1647,10 +1462,9 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             mockDict = {};
             Object.keys(dict).forEach(function (key) {
                 if (typeof dict[key] === "function" && (
-                    process.env.npm_config_mode_test_case
-                    === "testCase_buildApidoc_default"
                     // coverage-hack
-                    || key === "__zjqx1234__"
+                    key === "__zjqx1234__" ||
+                    npm_config_mode_test_case === "testCase_buildApidoc_default"
                 )) {
                     mockDict[key] = noop;
                 }
@@ -1676,8 +1490,8 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         Object.assign({
             blacklistDict: local,
             modeNoop: (
-                process.env.npm_config_mode_test_case
-                !== "testCase_buildApidoc_default"
+                npm_config_mode_test_case !==
+                "testCase_buildApidoc_default"
             ),
             require: require2
         }, opt)
@@ -1707,13 +1521,13 @@ local._testCase_webpage_default = function (opt, onError) {
     }
     local.browserTest({
         fileScreenshot: (
-            process.env.UTILITY2_DIR_BUILD
-            + "/screenshot." + process.env.MODE_BUILD + ".browser.%2F.png"
+            UTILITY2_DIR_BUILD +
+            "/screenshot." + MODE_BUILD + ".browser.%2F.png"
         ),
         url: (
-            "http://127.0.0.1:" + process.env.PORT
-            + "/?modeTest=1&timeoutDefault=" + local.timeoutDefault
-            + "&modeTestCase=" + local.modeTestCase.replace((
+            "http://127.0.0.1:" + PORT +
+            "/?modeTest=1&timeoutDefault=" + local.timeoutDefault +
+            "&modeTestCase=" + local.modeTestCase.replace((
                 /_?testCase_webpage_default/
             ), "")
         )
@@ -1741,15 +1555,14 @@ local.browserTest = function ({
     Promise.resolve().then(function () {
         // node - init
         testId = Math.random().toString(16);
-        testName = process.env.MODE_BUILD + ".browser." + encodeURIComponent(
+        testName = MODE_BUILD + ".browser." + encodeURIComponent(
             require("url").parse(url).pathname.replace(
-                "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
+                "/build.." + CI_BRANCH + ".." + CI_HOST,
                 "/build"
             )
         );
         fileScreenshot = (
-            process.env.UTILITY2_DIR_BUILD
-            + "/screenshot." + testName + ".png"
+            UTILITY2_DIR_BUILD + "/screenshot." + testName + ".png"
         );
         return local.chromeDevtoolsClientCreate({
             modeSilent,
@@ -1769,11 +1582,11 @@ local.browserTest = function ({
         }));
         chromeClient.evaluate(
             // coverage-hack
-            "console.timeStamp();\n"
-            + "window.utility2_testId=\"" + testId + "\";\n"
-            + "if(!window.utility2_modeTest){\n"
-            + "console.timeStamp(window.utility2_testId);\n"
-            + "}\n"
+            "console.timeStamp();\n" +
+            "window.utility2_testId=\"" + testId + "\";\n" +
+            "if(!window.utility2_modeTest){\n" +
+            "console.timeStamp(window.utility2_testId);\n" +
+            "}\n"
         );
         return new Promise(function (resolve) {
             chromeClient.on("Performance.metrics", function ({
@@ -1784,10 +1597,10 @@ local.browserTest = function ({
                 }
                 isDone = true;
                 resolve(chromeClient.evaluate(
-                    "JSON.stringify(\n"
-                    + "window.utility2_testReport\n"
-                    + "||{testPlatformList:[{}]}\n"
-                    + ");\n"
+                    "JSON.stringify(\n" +
+                    "window.utility2_testReport\n" +
+                    "||{testPlatformList:[{}]}\n" +
+                    ");\n"
                 ));
             });
         });
@@ -1805,15 +1618,15 @@ local.browserTest = function ({
         promiseList.push(new Promise(function (resolve) {
             require("fs").writeFile(
                 require("path").resolve(
-                    process.env.UTILITY2_DIR_BUILD + "/test-report.json"
+                    UTILITY2_DIR_BUILD + "/test-report.json"
                 ),
                 JSON.stringify(globalThis.utility2_testReport),
                 function (err) {
                     local.onErrorThrow(err);
                     console.error(
-                        "\nbrowserTest - merged test-report "
-                        + process.env.UTILITY2_DIR_BUILD + "/test-report.json"
-                        + "\n"
+                        "\nbrowserTest - merged test-report " +
+                        UTILITY2_DIR_BUILD + "/test-report.json" +
+                        "\n"
                     );
                     resolve();
                 }
@@ -1855,16 +1668,16 @@ local.buildApp = function ({
             if (!condition) {
                 aa = aa || merge;
                 console.error(
-                    "buildApp - replace-skipped - "
-                    + JSON.stringify((aa && aa.source) || aa)
+                    "buildApp - replace-skipped - " +
+                    JSON.stringify((aa && aa.source) || aa)
                 );
                 return;
             }
             if (aa) {
                 if (!tgt.match(aa)) {
                     console.error(
-                        "buildApp - replace-unmatched - "
-                        + JSON.stringify((aa && aa.source) || aa)
+                        "buildApp - replace-unmatched - " +
+                        JSON.stringify((aa && aa.source) || aa)
                     );
                     return;
                 }
@@ -1884,8 +1697,8 @@ local.buildApp = function ({
             });
             if (!isMatch) {
                 console.error(
-                    "buildApp - replace-unmatched - "
-                    + JSON.stringify(merge.source)
+                    "buildApp - replace-unmatched - " +
+                    JSON.stringify(merge.source)
                 );
             }
         });
@@ -1938,7 +1751,7 @@ local.buildApp = function ({
         ].concat(assetsList).map(function (elem) {
             return new Promise(function (resolve) {
                 require("http").request((
-                    "http://127.0.0.1:" + process.env.PORT + elem.url
+                    "http://127.0.0.1:" + PORT + elem.url
                 ), function (res) {
                     let bufList;
                     local.assertOrThrow(res.statusCode === 200, elem);
@@ -1994,7 +1807,7 @@ local.buildApp = function ({
             ], {
                 cwd: ".tmp/build/app.standalone",
                 env: {
-                    PATH: process.env.PATH,
+                    PATH,
                     PORT: port
                 },
                 stdio: [
@@ -2142,7 +1955,7 @@ local.buildApp = function ({
             }, {
                 // customize example.js - html-body
                 merge: (
-                    /\n<!--\u0020custom-html-start\u0020-->\\n\\\n[^`]*?\n<!--\u0020custom-html-end\u0020-->\\n\\\n/
+                    /\n<!--\u0020custom-html-start\u0020-->\n[\S\s]*?\n<!--\u0020custom-html-end\u0020-->\n/
                 )
             }, {
                 // customize build_ci - shBuildCiAfter
@@ -2166,8 +1979,8 @@ local.buildApp = function ({
             }, {
                 aa: "$ npm install ",
                 bb: (
-                    "$ git clone \\\n"
-                    + packageJson.repository.url.replace(
+                    "$ git clone \\\n" +
+                    packageJson.repository.url.replace(
                         "git+https://github.com/",
                         "git@github.com:"
                     ) + " \\\n--single-branch -b beta node_modules/"
@@ -2239,13 +2052,13 @@ local.buildApp = function ({
         ]);
         // customize shNpmTestPublished
         tgt = tgt.replace(
-            "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha",
+            "$ npm install " + GITHUB_FULLNAME + "#alpha",
             "$ npm install " + packageJson.name
         );
         tgtReplaceConditional(src.indexOf("    shNpmTestPublished\n") < 0, [
             {
                 aa: "$ npm install " + packageJson.name,
-                bb: "$ npm install " + process.env.GITHUB_FULLNAME + "#alpha"
+                bb: "$ npm install " + GITHUB_FULLNAME + "#alpha"
             }, {
                 aa: (
                     /\n.*?\bhttps:\/\/www.npmjs.com\/package\/.*?\n/
@@ -2289,9 +2102,9 @@ local.buildApp = function ({
             // customize test-server
             tgt = tgt.replace(
                 new RegExp(
-                    "\\n\\| test-server-"
-                    + condition.replace("shDeploy", "").toLowerCase()
-                    + " : \\|.*?\\n"
+                    "\\n\\| test-server-" +
+                    condition.replace("shDeploy", "").toLowerCase() +
+                    " : \\|.*?\\n"
                 ),
                 "\n"
             );
@@ -2365,8 +2178,8 @@ local.buildApp = function ({
         // cleanup build-dir
         promiseList.push(new Promise(function (resolve) {
             require("child_process").spawn((
-                "for DIR in .tmp/build/app/ .tmp/build/app.standalone/;"
-                + "do rm -rf $DIR; mkdir -p $DIR; done"
+                "for DIR in .tmp/build/app/ .tmp/build/app.standalone/;" +
+                "do rm -rf $DIR; mkdir -p $DIR; done"
             ), {
                 shell: true,
                 stdio: [
@@ -2548,9 +2361,9 @@ local.chromeDevtoolsClientCreate = function ({
             } else {
                 local.assertOrThrow(
                     payload.length < 65536,
-                    "chrome-devtools - "
-                    + "payload-length must be less than 65536 bytes, not "
-                    + payload.length
+                    "chrome-devtools - " +
+                    "payload-length must be less than 65536 bytes, not " +
+                    payload.length
                 );
                 header = header.slice(0, 2 + 2 + 4);
                 header[1] |= 126;
@@ -2618,8 +2431,8 @@ local.chromeDevtoolsClientCreate = function ({
             // callback.resolve
             if (callback) {
                 // preserve stack-trace
-                callback.err.message = "chrome-devtools - "
-                + JSON.stringify(error);
+                callback.err.message = "chrome-devtools - " +
+                JSON.stringify(error);
                 local.assertOrThrow(!error, callback.err);
                 callback.resolve(result);
                 return;
@@ -2705,8 +2518,8 @@ local.chromeDevtoolsClientCreate = function ({
                         ), Buffer.from(data, "base64"), function (err) {
                             local.onErrorThrow(err);
                             console.error(
-                                "chrome-devtools - Page.captureScreenshot "
-                                + file
+                                "chrome-devtools - Page.captureScreenshot " +
+                                file
                             );
                             resolve();
                         });
@@ -2854,8 +2667,8 @@ Application data: y bytes
                 opcode = buf[0] & 0x0f;
                 local.assertOrThrow(
                     opcode === 0x01,
-                    "chrome-devtools - opcode must be 0x01, not 0x0"
-                    + opcode.toString(16)
+                    "chrome-devtools - opcode must be 0x01, not 0x0" +
+                    opcode.toString(16)
                 );
                 wsPayloadLength = buf[1] & 0x7f;
                 wsReadState = (
@@ -2883,9 +2696,9 @@ Application data: y bytes
             case WS_READ_PAYLOAD:
                 local.assertOrThrow(
                     0 <= wsPayloadLength && wsPayloadLength <= 10000000,
-                    "chrome-devtools - "
-                    + "payload-length must be between 0 and 256 MiB, not "
-                    + wsPayloadLength
+                    "chrome-devtools - " +
+                    "payload-length must be between 0 and 256 MiB, not " +
+                    wsPayloadLength
                 );
                 buf = wsBufListRead(wsPayloadLength);
                 wsReadState = WS_READ_HEADER;
@@ -2925,11 +2738,11 @@ Application data: y bytes
         ));
         chromeBin = chromeBin || (
             processPlatform === "darwin"
-            ? "/Applications/Google Chrome.app/Contents/MacOS/"
-            + "Google Chrome"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/" +
+            "Google Chrome"
             : processPlatform === "win32"
-            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\"
-            + "chrome.exe"
+            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\" +
+            "chrome.exe"
             : "/usr/bin/google-chrome-stable"
         );
         console.error("chrome-devtools - spawn " + chromeBin);
@@ -3021,10 +2834,11 @@ Application data: y bytes
             })).once("upgrade", function (res, _websocket, head) {
                 local.assertOrThrow(
                     (
-                        res.headers["sec-websocket-accept"]
-                        === require("crypto").createHash("sha1").update(
-                            secWebsocketKey
-                            + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                        res.headers[
+                            "sec-websocket-accept"
+                        ] === require("crypto").createHash("sha1").update(
+                            secWebsocketKey +
+                            "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
                         ).digest("base64")
                     ),
                     "chrome-devtools - invalid sec-websocket-accept header"
@@ -3153,11 +2967,11 @@ local.cliRun = function ({
             }
             commandList[ii] = rgxComment.exec(str);
             local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND "
-                + key
-                + ":\nnew RegExp("
-                + JSON.stringify(rgxComment.source)
-                + ").exec(" + JSON.stringify(str).replace((
+                "cliRun - cannot parse comment in COMMAND " +
+                key +
+                ":\nnew RegExp(" +
+                JSON.stringify(rgxComment.source) +
+                ").exec(" + JSON.stringify(str).replace((
                     /\\\\/g
                 ), "\u0000").replace((
                     /\\n/g
@@ -3191,15 +3005,15 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND "
-                    + (elem.command[0] || "<none>") + "\n# "
-                    + elem.description
+                    "# COMMAND " +
+                    (elem.command[0] || "<none>") + "\n# " +
+                    elem.description
                 );
             }
             return (
-                elem.description + "\n  " + file
-                + "  " + elem.command.sort().join("|") + "  "
-                + elem.argList.join("  ")
+                elem.description + "\n  " + file +
+                "  " + elem.command.sort().join("|") + "  " +
+                elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
@@ -3462,8 +3276,8 @@ local.jslintAutofixLocalFunction = function (code, file) {
     }
     switch (file) {
     case "README.md":
-    case "lib." + process.env.npm_package_nameLib + ".js":
-    case "lib." + process.env.npm_package_nameLib + ".sh":
+    case "lib." + npm_package_nameLib + ".js":
+    case "lib." + npm_package_nameLib + ".sh":
     case "lib.apidoc.js":
     case "lib.istanbul.js":
     case "lib.jslint.js":
@@ -3490,8 +3304,8 @@ local.jslintAutofixLocalFunction = function (code, file) {
     );
     // customize local for assets.utility2.rollup.js
     if (
-        file === "lib." + process.env.npm_package_nameLib + ".js"
-        && require("fs").existsSync("./assets.utility2.rollup.js")
+        file === "lib." + npm_package_nameLib + ".js" &&
+        require("fs").existsSync("./assets.utility2.rollup.js")
     ) {
         code = code.replace(
             "    // || globalThis.utility2_rollup_old",
@@ -3524,8 +3338,8 @@ local.jslintAutofixLocalFunction = function (code, file) {
                 if (
                     !(
                         /^[A-Z_]|^testCase_/m
-                    ).test(key)
-                    && typeof dict[key] === "function"
+                    ).test(key) &&
+                    typeof dict[key] === "function"
                 ) {
                     local[dictFnc][key] = (
                         local[dictFnc][key] || String(dict[key])
@@ -3673,14 +3487,14 @@ local.middlewareAssetsCached = function (req, res, next) {
     if (!(res.headersSent || req.url.indexOf("?") >= 0)) {
         // init serverResponseHeaderLastModified
         local.serverResponseHeaderLastModified = (
-            local.serverResponseHeaderLastModified
+            local.serverResponseHeaderLastModified ||
             // resolve to 1000 ms
-            || new Date()
+            new Date()
         );
         // respond with 304 If-Modified-Since serverResponseHeaderLastModified
         if (
-            new Date(req.headers["if-modified-since"])
-            >= local.serverResponseHeaderLastModified
+            new Date(req.headers["if-modified-since"]) >=
+            local.serverResponseHeaderLastModified
         ) {
             res.statusCode = 304;
             res.end();
@@ -3918,7 +3732,7 @@ local.replStart = function () {
                     break;
                 // syntax-sugar - run git log
                 case "git --no-pager log":
-                    match2 = "git log -n 4";
+                    match2 = "git log -n 10";
                     break;
                 // syntax-sugar - run ll
                 case "ll":
@@ -3926,15 +3740,17 @@ local.replStart = function () {
                     break;
                 }
                 // source lib.utility2.sh
-                if (
-                    process.platform !== "win32"
-                    && process.env.UTILITY2_DIR_BIN && (match2 !== ":")
-                ) {
-                    match2 = (
-                        ". " + process.env.UTILITY2_DIR_BIN
-                        + "/lib.utility2.sh;" + match2
-                    );
-                }
+                match2 = (
+                    (
+                        process.platform !== "win32" &&
+                        process.env.UTILITY2_DIR_BIN && (match2 !== ":")
+                    )
+                    ? (
+                        ". " + process.env.UTILITY2_DIR_BIN +
+                        "/lib.utility2.sh;" + match2
+                    )
+                    : match2
+                );
                 // run shell-command
                 require("child_process").spawn(match2, {
                     shell: true,
@@ -3953,8 +3769,8 @@ local.replStart = function () {
                 console.error(
                     match2.split("").map(function (chr) {
                         return (
-                            "\\u"
-                            + chr.charCodeAt(0).toString(16).padStart(4, 0)
+                            "\\u" +
+                            chr.charCodeAt(0).toString(16).padStart(4, 0)
                         );
                     }).join("")
                 );
@@ -3969,30 +3785,26 @@ local.replStart = function () {
             case "grep":
                 // run shell-command
                 require("child_process").spawn((
-                    "find . -type f | grep -v -E "
-/* jslint ignore:start */
-+ '"\
-/\\.|~\$|/(obj|release)/|(\\b|_)(\\.\\d|\
-archive|artifact|\
-bower_component|build|\
-coverage|\
-doc|\
-external|\
-fixture|\
-git_module|\
-jquery|\
-log|\
-min|misc|mock|\
-node_module|\
-old|\
-raw|\rollup|\
-swp|\
-tmp|\
-vendor)s{0,1}(\\b|_)\
-" '
-/* jslint ignore:end */
-                    + "| tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \""
-                    + match2 + "\""
+                    "find . -type f | grep -v -E \"" +
+                    "/\\.|~$|/(obj|release)/|(\\b|_)(\\.\\d|" +
+                    "archive|artifact|" +
+                    "bower_component|build|" +
+                    "coverage|" +
+                    "doc|" +
+                    "external|" +
+                    "fixture|" +
+                    "git_module|" +
+                    "jquery|" +
+                    "log|" +
+                    "min|misc|mock|" +
+                    "node_module|" +
+                    "old|" +
+                    "raw|\rollup|" +
+                    "swp|" +
+                    "tmp|" +
+                    "vendor)s{0,1}(\\b|_)" +
+                    "\" | tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \"" +
+                    match2 + "\""
                 ), {
                     shell: true,
                     stdio: [
@@ -4004,19 +3816,19 @@ vendor)s{0,1}(\\b|_)\
                 });
                 script = "\n";
                 break;
-            // syntax-sugar - list obj's keys, sorted by item-type
+            // syntax-sugar - list obj-keys, sorted by item-type
             // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) // jslint ignore:line
             case "keys":
                 script = (
-                    "console.error(Object.keys(" + match2
-                    + ").map(function(key){return("
-                    + "typeof " + match2 + "[key]==='object'&&"
-                    + match2 + "[key]&&"
-                    + match2 + "[key]===global[key]"
-                    + "?'global'"
-                    + ":typeof " + match2 + "[key]"
-                    + ")+' '+key;"
-                    + "}).sort().join('\\n'))\n"
+                    "console.error(Object.keys(" + match2 +
+                    ").map(function(key){return(" +
+                    "typeof " + match2 + "[key]==='object'&&" +
+                    match2 + "[key]&&" +
+                    match2 + "[key]===global[key]" +
+                    "?'global'" +
+                    ":typeof " + match2 + "[key]" +
+                    ")+' '+key;" +
+                    "}).sort().join('\\n'))\n"
                 );
                 break;
             // syntax-sugar - print String(val)
@@ -4038,13 +3850,6 @@ local.requireReadme = function () {
     let code;
     let module;
     let tmp;
-    if (local.isBrowser) {
-        module.exports = local.objectAssignDefault(
-            globalThis.utility2_rollup || globalThis.local,
-            local
-        );
-        return module.exports;
-    }
     // library-mode
     if (npm_config_mode_lib) {
         local.testRunDefault = local.noop;
@@ -4052,6 +3857,13 @@ local.requireReadme = function () {
     }
     // init module.exports
     module = {};
+    if (local.isBrowser) {
+        module.exports = local.objectAssignDefault(
+            globalThis.utility2_rollup || globalThis.local,
+            local
+        );
+        return module.exports;
+    }
     // if file is modified, then restart process
     if (npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
@@ -4079,10 +3891,10 @@ local.requireReadme = function () {
     // jslint process.cwd()
     require("child_process").spawn("node", [
         "-e", (
-            "require(" + JSON.stringify(__filename)
-            + ").jslint.jslintAndPrintDir(" + JSON.stringify(process.cwd())
-            + ", {modeAutofix:" + (!npm_config_mode_test)
-            + ",modeConditional:true});"
+            "require(" + JSON.stringify(__filename) +
+            ").jslint.jslintAndPrintDir(" + JSON.stringify(process.cwd()) +
+            ", {modeAutofix:" + (!npm_config_mode_test) +
+            ",modeConditional:true});"
         )
     ], {
         env: Object.assign({}, process.env, {
@@ -4211,15 +4023,15 @@ local.requireReadme = function () {
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n"
-                    + JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
+                    JSON.stringify(local.assetsDict[tmp]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
                     ), "\\n\\\n").replace((
                         /\u0000/g
-                    ), "\\\\")
-                    + ");\n"
+                    ), "\\\\") +
+                    ");\n"
                 );
             });
             break;
@@ -4230,40 +4042,40 @@ local.requireReadme = function () {
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n"
-                    + JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
+                    JSON.stringify(local.assetsDict[tmp]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
                     ), "\\n\\\n").replace((
                         /\u0000/g
-                    ), "\\\\")
-                    + ");\n"
-                    + local.assetsDict[tmp]
+                    ), "\\\\") +
+                    ");\n" +
+                    local.assetsDict[tmp]
                 );
             });
             break;
         case "header":
             return (
-                "/* this rollup was created with utility2\n"
-                + " * https://github.com/kaizhu256/node-utility2\n"
-                + " */\n"
-                + "\n"
-                + "\n"
-                + "/*\n"
-                + "assets.app.js\n"
-                + "\n"
-                + npm_package_description + "\n"
-                + "\n"
-                + "instruction\n"
-                + "    1. save this script as assets.app.js\n"
-                + "    2. run shell-command:\n"
-                + "        $ PORT=8081 node assets.app.js\n"
-                + "    3. open browser to http://127.0.0.1:8081 "
-                + "and play with web-demo\n"
-                + "    4. edit this script to suit your needs\n"
-                + "*/\n"
-                + local.assetsDict["/assets.utility2.rollup.start.js"].replace((
+                "/* this rollup was created with utility2\n" +
+                " * https://github.com/kaizhu256/node-utility2\n" +
+                " */\n" +
+                "\n" +
+                "\n" +
+                "/*\n" +
+                "assets.app.js\n" +
+                "\n" +
+                npm_package_description + "\n" +
+                "\n" +
+                "instruction\n" +
+                "    1. save this script as assets.app.js\n" +
+                "    2. run shell-command:\n" +
+                "        $ PORT=8081 node assets.app.js\n" +
+                "    3. open browser to http://127.0.0.1:8081 " +
+                "and play with web-demo\n" +
+                "    4. edit this script to suit your needs\n" +
+                "*/\n" +
+                local.assetsDict["/assets.utility2.rollup.start.js"].replace((
                     /utility2_rollup/g
                 ), "utility2_app")
             );
@@ -4271,17 +4083,17 @@ local.requireReadme = function () {
             code = local.assetsDict[key];
         }
         return (
-            "/* script-begin " + key + " */\n"
-            + code.trim()
-            + "\n/* script-end " + key + " */\n"
+            "/* script-begin " + key + " */\n" +
+            code.trim() +
+            "\n/* script-end " + key + " */\n"
         );
     }).join("\n\n\n");
     local.objectAssignDefault(module.exports, local);
     // init testCase_buildXxx
     Object.keys(local).forEach(function (key) {
         if (
-            key.indexOf("_testCase_build") === 0
-            || key === "_testCase_webpage_default"
+            key.indexOf("_testCase_build") === 0 ||
+            key === "_testCase_webpage_default"
         ) {
             module.exports[key.slice(1)] = (
                 module.exports[key.slice(1)] || local[key]
@@ -4304,8 +4116,8 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
     if (err) {
         // debug statusCode / method / url
         err.message = (
-            res.statusCode + " " + req.method + " " + req.url + "\n"
-            + err.message
+            res.statusCode + " " + req.method + " " + req.url + "\n" +
+            err.message
         );
         // print err.stack to stderr
         console.error(err);
@@ -4388,9 +4200,9 @@ local.serverRespondEcho = function (req, res) {
  * this function will respond with debug info
  */
     res.write(
-        req.method + " " + req.url
-        + " HTTP/" + req.httpVersion + "\r\n"
-        + Object.keys(req.headers).map(function (key) {
+        req.method + " " + req.url +
+        " HTTP/" + req.httpVersion + "\r\n" +
+        Object.keys(req.headers).map(function (key) {
             return key + ": " + req.headers[key] + "\r\n";
         }).join("") + "\r\n"
     );
@@ -4459,8 +4271,8 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
         req.onTimeout,
         timeout,
         new Error(
-            "timeout - " + timeout + " ms - "
-            + "server " + req.method + " " + req.url
+            "timeout - " + timeout + " ms - " +
+            "server " + req.method + " " + req.url
         )
     );
     res.contentLength = 0;
@@ -4566,28 +4378,28 @@ local.svgBadgeCreate = function ({
     xx1 = 6 * str1.length + 20;
     xx2 = 6 * str2.length + 20;
     return (
-        "<svg height=\"20\" width=\""
-        + (xx1 + xx2)
-        + "\" xmlns=\"http://www.w3.org/2000/svg\">\n"
-        + "<rect fill=\"#555\" height=\"20\" width=\""
-        + (xx1 + xx2)
-        + "\"/>\n"
-        + "<rect fill=\"" + fill + "\" height=\"20\" width=\""
-        + xx2 + "\" x=\"" + xx1 + "\"/>\n"
-        + "<g\n"
-        + "fill=\"#fff\"\n"
-        + "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n"
-        + "font-size=\"11\"\n"
-        + "text-anchor=\"middle\"\n"
-        + ">\n"
-        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
-        + 0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n"
-        + "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n"
-        + "<text fill-opacity=\".5\" fill=\"#777\" x=\""
-        + (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n"
-        + "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n"
-        + "</g>\n"
-        + "</svg>\n"
+        "<svg height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect fill=\"#555\" height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\"/>\n" +
+        "<rect fill=\"" + fill + "\" height=\"20\" width=\"" +
+        xx2 + "\" x=\"" + xx1 + "\"/>\n" +
+        "<g\n" +
+        "fill=\"#fff\"\n" +
+        "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n" +
+        "font-size=\"11\"\n" +
+        "text-anchor=\"middle\"\n" +
+        ">\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n" +
+        "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n" +
+        "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n" +
+        "</g>\n" +
+        "</svg>\n"
     );
 };
 
@@ -4622,8 +4434,8 @@ local.templateRenderMyApp = function (template) {
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        packageJson.nameHeroku
-        || ("h1-" + packageJson.nameLib.replace((
+        packageJson.nameHeroku ||
+        ("h1-" + packageJson.nameLib.replace((
             /_/g
         ), "-"))
     ));
@@ -4700,18 +4512,28 @@ local.testMock = function (mockList, onTestCase, onError) {
     }
 };
 
-local.testReportMerge = function (testReport = {}, testReport2 = {}) {
+local.testReportMerge = function (
+    testReport = {},
+    testReport2 = {},
+    mode = undefined
+) {
 /*
  * this function will
  * 1. merge <testReport2> into <testReport>
  * 2. render <testReport>.html
+ * 3. write <testReport> to fs
  */
     let html;
     let testCaseNumber;
     let testPlatformDict;
     let testPlatformList;
+    function fileWrite(file, data) {
+        file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
+        require("fs").writeFileSync(file, data);
+        console.error("test-report - wrote " + file);
+    }
     // 1. merge <testReport2> into <testReport>
-    local.objectAssignDefault(testReport, {
+    testReport = local.objectAssignDefault(testReport, {
         coverage: globalThis.__coverage__,
         date: new Date().toISOString(),
         testPlatformList: [
@@ -4739,8 +4561,8 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
             testsPending: 0,
             timeElapsed: 0,
             timeOnload: (
-                globalThis.domOnEventWindowOnloadTimeElapsed < 0x10000000000
-                && globalThis.domOnEventWindowOnloadTimeElapsed | 0
+                globalThis.domOnEventWindowOnloadTimeElapsed < 0x10000000000 &&
+                globalThis.domOnEventWindowOnloadTimeElapsed | 0
             ),
             timeStart: 0
         });
@@ -4802,8 +4624,8 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
         // sort testCaseList by status and name
         testPlatform.testCaseList.sort(function (aa, bb) {
             return (
-                (aa.status.replace("passed", "z") + aa.name)
-                > (bb.status.replace("passed", "z") + bb.name)
+                (aa.status.replace("passed", "z") + aa.name) >
+                (bb.status.replace("passed", "z") + bb.name)
                 ? 1
                 : -1
             );
@@ -4820,103 +4642,103 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
     html = html.replace((
         "\n</style>\n"
     ), (
-        "\n"
-        + "</style>\n"
-        + "<style>\n"
-        + "/* jslint utility2:true */\n"
-        + ".test-report-div img {\n"
-        + "    border: 1px solid #999;\n"
-        + "    margin: 5px 0 5px 0;\n"
-        + "    max-height: 256px;\n"
-        + "    max-width: 512px;\n"
-        + "}\n"
-        + ".test-report-div pre {\n"
-        + "    background: #fdd;\n"
-        + "    border-top: 1px solid #999;\n"
-        + "    margin-bottom: 0;\n"
-        + "    padding: 10px;\n"
-        + "}\n"
-        + ".test-report-div span {\n"
-        + "    display: inline-block;\n"
-        + "    width: 120px;\n"
-        + "}\n"
-        + ".test-report-div table {\n"
-        + "    border-top: 1px solid #999;\n"
-        + "    text-align: left;\n"
-        + "    width: 100%;\n"
-        + "}\n"
-        + ".test-report-div table > tbody > tr:nth-child(odd) {\n"
-        + "    background: #bfb;\n"
-        + "}\n"
-        + ".test-report-div .footer {\n"
-        + "    text-align: center;\n"
-        + "}\n"
-        + ".test-report-div .platform {\n"
-        + "    background: #fff;\n"
-        + "    border: 1px solid #999;\n"
-        + "    margin-bottom: 20px;\n"
-        + "    padding: 0 10px 10px 10px;\n"
-        + "    text-align: left;\n"
-        + "}\n"
-        + ".test-report-div .summary {\n"
-        + "    background: #bfb;\n"
-        + "}\n"
-        + ".test-report-div .test-failed {\n"
-        + "    background: #f99;\n"
-        + "}\n"
-        + ".test-report-div .test-pending {\n"
-        + "    background: #99f;\n"
-        + "}\n"
-        + "</style>\n"
+        "\n" +
+        "</style>\n" +
+        "<style>\n" +
+        "/* jslint utility2:true */\n" +
+        ".test-report-div img {\n" +
+        "    border: 1px solid #999;\n" +
+        "    margin: 5px 0 5px 0;\n" +
+        "    max-height: 256px;\n" +
+        "    max-width: 512px;\n" +
+        "}\n" +
+        ".test-report-div pre {\n" +
+        "    background: #fdd;\n" +
+        "    border-top: 1px solid #999;\n" +
+        "    margin-bottom: 0;\n" +
+        "    padding: 10px;\n" +
+        "}\n" +
+        ".test-report-div span {\n" +
+        "    display: inline-block;\n" +
+        "    width: 120px;\n" +
+        "}\n" +
+        ".test-report-div table {\n" +
+        "    border-top: 1px solid #999;\n" +
+        "    text-align: left;\n" +
+        "    width: 100%;\n" +
+        "}\n" +
+        ".test-report-div table > tbody > tr:nth-child(odd) {\n" +
+        "    background: #bfb;\n" +
+        "}\n" +
+        ".test-report-div .footer {\n" +
+        "    text-align: center;\n" +
+        "}\n" +
+        ".test-report-div .platform {\n" +
+        "    background: #fff;\n" +
+        "    border: 1px solid #999;\n" +
+        "    margin-bottom: 20px;\n" +
+        "    padding: 0 10px 10px 10px;\n" +
+        "    text-align: left;\n" +
+        "}\n" +
+        ".test-report-div .summary {\n" +
+        "    background: #bfb;\n" +
+        "}\n" +
+        ".test-report-div .test-failed {\n" +
+        "    background: #f99;\n" +
+        "}\n" +
+        ".test-report-div .test-pending {\n" +
+        "    background: #99f;\n" +
+        "}\n" +
+        "</style>\n"
     ));
     // init html - body
     html = html.replace((
         /\n<\/script>[\S\s]*?<\/body>\n/
     ), function () {
         return (
-            "\n"
-            + "</script>\n"
-            + "<div class=\"test-report-div\">\n"
+            "\n" +
+            "</script>\n" +
+            "<div class=\"test-report-div\">\n" +
             // init html - header
-            + "<h1>test-report for\n"
-            + "    <a href=\"" + (npm_package_homepage || "#") + "\">\n"
-            + "    " + npm_package_name + " (" + npm_package_version + ")\n"
-            + "    </a>\n"
-            + "</h1>\n"
-            + "\n"
+            "<h1>test-report for\n" +
+            "    <a href=\"" + (npm_package_homepage || "#") + "\">\n" +
+            "    " + npm_package_name + " (" + npm_package_version + ")\n" +
+            "    </a>\n" +
+            "</h1>\n" +
+            "\n" +
             // init html - summary
-            + "<div class=\"platform summary\">\n"
-            + "<h2>summary</h2>\n"
-            + "<h4>\n"
-            + "    <span>version</span>- " + npm_package_version + "<br>\n"
-            + "    <span>test-date</span>- " + testReport.date + "<br>\n"
-            + "    <span>commit-info</span>-\n"
-            + (CI_COMMIT_INFO || "undefined") + "<br>\n"
-            + "</h4>\n"
-            + "<table>\n"
-            + "<thead>\n"
-            + "    <tr>\n"
-            + "    <th>total tests-failed</th>\n"
-            + "    <th>total tests-passed</th>\n"
-            + "    <th>total tests-pending</th>\n"
-            + "    </tr>\n"
-            + "</thead>\n"
-            + "<tbody>\n"
-            + "    <tr>\n"
-            + "    <td class=\"" + (
+            "<div class=\"platform summary\">\n" +
+            "<h2>summary</h2>\n" +
+            "<h4>\n" +
+            "    <span>version</span>- " + npm_package_version + "<br>\n" +
+            "    <span>test-date</span>- " + testReport.date + "<br>\n" +
+            "    <span>commit-info</span>-\n" +
+            (CI_COMMIT_INFO || "undefined") + "<br>\n" +
+            "</h4>\n" +
+            "<table>\n" +
+            "<thead>\n" +
+            "    <tr>\n" +
+            "    <th>total tests-failed</th>\n" +
+            "    <th>total tests-passed</th>\n" +
+            "    <th>total tests-pending</th>\n" +
+            "    </tr>\n" +
+            "</thead>\n" +
+            "<tbody>\n" +
+            "    <tr>\n" +
+            "    <td class=\"" + (
                 testReport.testsFailed
                 ? "testFailed"
                 : "testPassed"
-            ) + "\">" + testReport.testsFailed + "</td>\n"
-            + "    <td>" + testReport.testsPassed + "</td>\n"
-            + "    <td>" + testReport.testsPending + "</td>\n"
-            + "    </tr>\n"
-            + "</tbody>\n"
-            + "</table>\n"
-            + "</div>\n"
-            + "\n"
+            ) + "\">" + testReport.testsFailed + "</td>\n" +
+            "    <td>" + testReport.testsPassed + "</td>\n" +
+            "    <td>" + testReport.testsPending + "</td>\n" +
+            "    </tr>\n" +
+            "</tbody>\n" +
+            "</table>\n" +
+            "</div>\n" +
+            "\n" +
             // init html - testPlatformList
-            + testPlatformList.map(function ({
+            testPlatformList.map(function ({
                 date,
                 name,
                 screenshot,
@@ -4931,44 +4753,42 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
                 errStackList = [];
                 screenshot = screenshot && encodeURIComponent(screenshot);
                 return (
-                    "<div class=\"platform\">\n"
-                    + "<h4>\n"
-                    + (ii + 1) + ". " + name + "<br>\n"
-                    + (
+                    "<div class=\"platform\">\n" +
+                    "<h4>\n" +
+                    (ii + 1) + ". " + name + "<br>\n" + (
                         screenshot
-                        ? "<a href=\"" + screenshot + "\">\n"
-                        + "<img\n"
-                        + "alt=\"" + screenshot + "\"\n"
-                        + "src=\"" + screenshot + "\"\n"
-                        + ">\n"
-                        + "</a>\n"
-                        + "<br>\n"
+                        ? "<a href=\"" + screenshot + "\">\n" +
+                        "<img\n" +
+                        "alt=\"" + screenshot + "\"\n" +
+                        "src=\"" + screenshot + "\"\n" +
+                        ">\n" +
+                        "</a>\n" +
+                        "<br>\n"
                         : ""
-                    )
-                    + (
+                    ) + (
                         timeOnload
-                        ? "<span>onload-time</span>- "
-                        + timeOnload
-                        + " ms<br>\n"
+                        ? "<span>onload-time</span>- " +
+                        timeOnload +
+                        " ms<br>\n"
                         : ""
-                    )
-                    + "<span>test-date</span>- " + date + "<br>\n"
-                    + "<span>time-elapsed</span>- " + timeElapsed + " ms<br>\n"
-                    + "<span>tests-failed</span>- " + testsFailed + "<br>\n"
-                    + "<span>tests-passed</span>- " + testsPassed + "<br>\n"
-                    + "<span>tests-pending</span>- " + testsPending + "<br>\n"
-                    + "</h4>\n"
-                    + "\n"
+                    ) +
+                    "<span>test-date</span>- " + date + "<br>\n" +
+                    "<span>time-elapsed</span>- " + timeElapsed + " ms<br>\n" +
+                    "<span>tests-failed</span>- " + testsFailed + "<br>\n" +
+                    "<span>tests-passed</span>- " + testsPassed + "<br>\n" +
+                    "<span>tests-pending</span>- " + testsPending + "<br>\n" +
+                    "</h4>\n" +
+                    "\n" +
                     // init html - testCaseList
-                    + "<table>\n"
-                    + "<thead><tr>\n"
-                    + "<th>#</th>\n"
-                    + "<th>time-elapsed</th>\n"
-                    + "<th>status</th>\n"
-                    + "<th>test-case</th>\n"
-                    + "</tr></thead>\n"
-                    + "<tbody>\n"
-                    + testCaseList.map(function ({
+                    "<table>\n" +
+                    "<thead><tr>\n" +
+                    "<th>#</th>\n" +
+                    "<th>time-elapsed</th>\n" +
+                    "<th>status</th>\n" +
+                    "<th>test-case</th>\n" +
+                    "</tr></thead>\n" +
+                    "<tbody>\n" +
+                    testCaseList.map(function ({
                         errStack,
                         name,
                         status,
@@ -4977,50 +4797,110 @@ local.testReportMerge = function (testReport = {}, testReport2 = {}) {
                         testCaseNumber += 1;
                         if (errStack) {
                             errStackList.push(
-                                testCaseNumber + ". " + name + "\n"
-                                + errStack
+                                testCaseNumber + ". " + name + "\n" +
+                                errStack
                             );
                         }
                         return (
-                            "<tr>\n"
-                            + "<td>" + testCaseNumber + "</td>\n"
-                            + "<td>" + timeElapsed + " ms</td>\n"
-                            + "<td class=\"test-" + status + "\">"
-                            + status + "</td>\n"
-                            + "<td>" + name + "</td>\n"
-                            + "</tr>\n"
+                            "<tr>\n" +
+                            "<td>" + testCaseNumber + "</td>\n" +
+                            "<td>" + timeElapsed + " ms</td>\n" +
+                            "<td class=\"test-" + status + "\">" +
+                            status + "</td>\n" +
+                            "<td>" + name + "</td>\n" +
+                            "</tr>\n"
                         );
-                    }).join("")
-                    + "</tbody>\n"
-                    + "</table>\n"
-                    + "\n"
-                    + (
+                    }).join("") +
+                    "</tbody>\n" +
+                    "</table>\n" +
+                    "\n" + (
                         errStackList.length
-                        ? "<pre tabIndex=\"0\">\n"
-                        + errStackList.join("\n") + "\n"
-                        + "</pre>\n"
+                        ? "<pre tabIndex=\"0\">\n" +
+                        errStackList.join("\n") + "\n" +
+                        "</pre>\n"
                         : ""
-                    )
-                    + "</div>\n"
+                    ) +
+                    "</div>\n"
                 );
-            }).join("")
-            + "\n"
+            }).join("") +
+            "\n" +
             // init html - footer
-            + "<div class=\"footer\">\n"
-            + "[ this document was created with <a\n"
-            + "    href=\"https://github.com/kaizhu256/node-utility2\"\n"
-            + "    target=\"_blank\"\n"
-            + ">utility2</a> ]\n"
-            + "</div>\n"
-            + "\n"
-            + "</div>\n"
-            + "</body>\n"
+            "<div class=\"footer\">\n" +
+            "[ this document was created with <a\n" +
+            "    href=\"https://github.com/kaizhu256/node-utility2\"\n" +
+            "    target=\"_blank\"\n" +
+            ">utility2</a> ]\n" +
+            "</div>\n" +
+            "\n" +
+            "</div>\n" +
+            "</body>\n"
         );
     });
-    return Object.assign(testReport, {
+    testReport = Object.assign(testReport, {
         html,
         testPlatformList
     });
+    // 3. write <testReport> to fs
+    if (mode !== "modeWrite") {
+        return testReport;
+    }
+    delete testReport.coverage;
+    delete testReport.html;
+    // print test-report summary
+    console.error(
+        "\n" + new Array(56).join("-") + "\n" +
+        testPlatformList.filter(function (testPlatform) {
+            // if testPlatform has no tests, then filter it out
+            return testPlatform.testCaseList.length;
+        }).map(function (testPlatform) {
+            return (
+                "| test-report - " + testPlatform.name + "\n|" +
+                String(
+                    testPlatform.timeElapsed + " ms     "
+                ).padStart(16, " ") +
+                String(
+                    testPlatform.testsFailed + " failed "
+                ).padStart(16, " ") +
+                String(
+                    testPlatform.testsPassed + " passed "
+                ).padStart(16, " ") +
+                "     |\n" + new Array(56).join("-") + "\n"
+            );
+        }).join("")
+    );
+    // print failed testCase
+    testPlatformList.forEach(function (testPlatform) {
+        testPlatform.testCaseList.forEach(function (testCase) {
+            if (testCase.status !== "passed") {
+                console.error(JSON.stringify(testCase, undefined, 4));
+            }
+        });
+    });
+    // jslint html
+    local.jslintAndPrint(html, "test-report.html");
+    // create test-report.html
+    fileWrite("test-report.html", html);
+    // create build.badge.svg
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
+        fill: "#07f",
+        str1: "last build",
+        str2: (
+            new Date().toISOString().slice(0, 19).replace("T", " ") +
+            " - " + CI_BRANCH + " - " + CI_COMMIT_ID
+        )
+    }));
+    // create test-report.badge.svg
+    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
+        fill: (
+            testPlatformList[0].testsFailed
+            ? "#d00"
+            : "#0d0"
+        ),
+        str1: "tests failed",
+        str2: testPlatformList[0].testsFailed
+    }));
+    // if any test failed, then exit with non-zero exitCode
+    process.exit(testReport.testsFailed !== 0);
 };
 
 local.testRunBrowser = function () {
@@ -5122,10 +5002,10 @@ local.testRunDefault = function (opt) {
         globalThis.utility2_onReadyBefore();
     }());
     globalThis.utility2_modeTest = Number(
-        globalThis.utility2_modeTest
-        || opt.modeTest
-        || local.modeTest
-        || npm_config_mode_test
+        globalThis.utility2_modeTest ||
+        opt.modeTest ||
+        local.modeTest ||
+        npm_config_mode_test
     );
     switch (globalThis.utility2_modeTest) {
     // init
@@ -5140,9 +5020,9 @@ local.testRunDefault = function (opt) {
     default:
         // test-ignore
         if (
-            globalThis.utility2_onReadyBefore.cnt
-            || !globalThis.utility2_modeTest
-            || globalThis.utility2_modeTest > 2
+            globalThis.utility2_onReadyBefore.cnt ||
+            !globalThis.utility2_modeTest ||
+            globalThis.utility2_modeTest > 2
         ) {
             return;
         }
@@ -5150,12 +5030,12 @@ local.testRunDefault = function (opt) {
         globalThis.utility2_modeTest += 1;
     }
     // visual notification - testRun
-    //!! local.ajaxProgressUpdate();
     // mock console.error
     consoleError = console.error;
     isCoverage = (
-        typeof globalThis.__coverage__ === "object" && globalThis.__coverage__
-        && Object.keys(globalThis.__coverage__).length
+        typeof globalThis.__coverage__ === "object" &&
+        globalThis.__coverage__ &&
+        Object.keys(globalThis.__coverage__).length
     );
     console.error = function (...argList) {
     /*
@@ -5232,9 +5112,9 @@ local.testRunDefault = function (opt) {
         // list pending testCase every 5000 ms
         if (testPlatform.timeElapsed % 5000 < 3000) {
             consoleError(
-                "testRunDefault - "
-                + testPlatform.timeElapsed + " ms - testCase pending - "
-                + testPlatform.testCaseList.filter(function (testCase) {
+                "testRunDefault - " +
+                testPlatform.timeElapsed + " ms - testCase pending - " +
+                testPlatform.testCaseList.filter(function (testCase) {
                     return testCase.status === "pending";
                 }).slice(0, 4).map(function (testCase) {
                     return testCase.name;
@@ -5257,9 +5137,9 @@ local.testRunDefault = function (opt) {
             // if testCase isDone, then fail testCase
             if (testCase.isDone) {
                 err = err || new Error(
-                    "callback in testCase "
-                    + testCase.name
-                    + " called multiple times"
+                    "callback in testCase " +
+                    testCase.name +
+                    " called multiple times"
                 );
             }
             // if err occurred, then fail testCase
@@ -5268,9 +5148,9 @@ local.testRunDefault = function (opt) {
                 console.error = consoleError;
                 testCase.status = "failed";
                 consoleError(
-                    "\ntestRunDefault - "
-                    + testPlatform.timeElapsed + " ms - testCase failed - "
-                    + testCase.name + "\n" + err.message + "\n" + err.stack
+                    "\ntestRunDefault - " +
+                    testPlatform.timeElapsed + " ms - testCase failed - " +
+                    testCase.name + "\n" + err.message + "\n" + err.stack
                 );
                 testCase.errStack = (
                     testCase.errStack || err.message + "\n" + err.stack
@@ -5292,16 +5172,16 @@ local.testRunDefault = function (opt) {
             // stop testCase timer
             timeElapsedPoll(testCase);
             consoleError(
-                "testRunDefault - "
-                + testPlatform.timeElapsed + " ms - [" + (
+                "testRunDefault - " +
+                testPlatform.timeElapsed + " ms - [" + (
                     local.isBrowser
                     ? "browser"
                     : "node"
-                ) + " test-case "
-                + testPlatform.testCaseList.filter(function (testCase) {
+                ) + " test-case " +
+                testPlatform.testCaseList.filter(function (testCase) {
                     return testCase.isDone;
-                }).length + " of " + testPlatform.testCaseList.length + " "
-                + testCase.status + "] - " + testCase.name
+                }).length + " of " + testPlatform.testCaseList.length + " " +
+                testCase.status + "] - " + testCase.name
             );
             // if all testCase.isDone, then create test-report
             onParallel();
@@ -5312,8 +5192,8 @@ local.testRunDefault = function (opt) {
             onError,
             local.timeoutDefault,
             new Error(
-                "timeout - " + local.timeoutDefault + " ms - "
-                + testCase.name
+                "timeout - " + local.timeoutDefault + " ms - " +
+                testCase.name
             )
         );
         // increment number of tests remaining
@@ -5331,7 +5211,6 @@ local.testRunDefault = function (opt) {
         // update timeElapsed
         timeElapsedPoll(testPlatform);
         globalThis.utility2_modeTest = 1;
-        //!! local.ajaxProgressUpdate();
         // finalize testReport
         local.testReportMerge(testReport);
         // create test-report.json
@@ -5407,9 +5286,9 @@ local.uiAnimateSlideDown = function (elem, onError) {
  */
     onError = onError || local.noop;
     if (!(
-        elem
-        && elem.style && elem.style.maxHeight !== "100%"
-        && elem.classList && elem.classList.contains("uiAnimateSlide")
+        elem &&
+        elem.style && elem.style.maxHeight !== "100%" &&
+        elem.classList && elem.classList.contains("uiAnimateSlide")
     )) {
         onError();
         return;
@@ -5432,9 +5311,9 @@ local.uiAnimateSlideUp = function (elem, onError) {
  * this function will slideUp dom-<elem>
  */
     if (!(
-        elem
-        && elem.style && elem.style.maxHeight !== "0px"
-        && elem.classList && elem.classList.contains("uiAnimateSlide")
+        elem &&
+        elem.style && elem.style.maxHeight !== "0px" &&
+        elem.classList && elem.classList.contains("uiAnimateSlide")
     )) {
         local.setTimeoutOnError(onError);
         return;
@@ -5512,12 +5391,9 @@ local.uuid4Create = function () {
     }
     return id;
 };
-}());
 
-
-/* istanbul ignore next */
+/* validateLineSortedReset */
 // run shared js-env code - init-after
-(function () {
 local.apidocCreate = local.apidoc.apidocCreate;
 // init utility2_testReport
 globalThis.utility2_testReport = local.testReportMerge(
@@ -5555,21 +5431,21 @@ local.regexpValidateUuid = (
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 );
 local.stringCharsetAscii = (
-    "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007"
-    + "\b\t\n\u000b\f\r\u000e\u000f"
-    + "\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017"
-    + "\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f"
-    + " !\"#$%&'()*+,-./0123456789:;<=>?"
-    + "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-    + "`abcdefghijklmnopqrstuvwxyz{|}~\u007f"
+    "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007" +
+    "\b\t\n\u000b\f\r\u000e\u000f" +
+    "\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017" +
+    "\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f" +
+    " !\"#$%&'()*+,-./0123456789:;<=>?" +
+    "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" +
+    "`abcdefghijklmnopqrstuvwxyz{|}~\u007f"
 );
 local.stringCharsetEncodeUri = (
-    "!#$%&'()*+,-./"
-    + "0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+    "!#$%&'()*+,-./" +
+    "0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringCharsetEncodeUriComponent = (
-    "!%'()*-."
-    + "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
+    "!%'()*-." +
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringHelloEmoji = "hello \ud83d\ude01\n";
 globalThis.utility2_onReadyAfter = (
@@ -5586,64 +5462,53 @@ globalThis.utility2_onReadyAfter = (
     }
 );
 globalThis.utility2_onReadyBefore = (
-    globalThis.utility2_onReadyBefore || local.onParallel(function (err) {
+    globalThis.utility2_onReadyBefore || function (err) {
     /*
      * this function will keep track of utility2_onReadyBefore.cnt
      */
-        local.eventListenerEmit("utility2_onReadyAfter", err);
-    })
+        globalThis.utility2_onReadyBefore.cnt -= 1;
+        if (globalThis.utility2_onReadyBefore.cnt === 0) {
+            local.eventListenerEmit("utility2_onReadyAfter", err);
+        }
+    }
 );
+globalThis.utility2_onReadyBefore.cnt |= 0;
 globalThis.utility2_onReadyAfter(local.noop);
-}());
-
-
-// run browser js-env code - init-after
-(function () {
-if (!local.isBrowser) {
-    return;
-}
-}());
 
 
 /* istanbul ignore next */
 // run node js-env code - init-after
-(function () {
 if (local.isBrowser) {
     return;
 }
 // exit after $npm_config_timeout_exit
-if (process.env.npm_config_timeout_exit) {
-    setTimeout(
-        process.exit.bind(undefined, 15),
-        process.env.npm_config_timeout_exit | 0
-    ).unref();
-}
-// init env
-local.objectAssignDefault(process.env, {
-    UTILITY2_DIR_BUILD: require("path").resolve(".tmp/build")
-});
+setTimeout((
+    (!npm_config_mode_lib && npm_config_timeout_exit)
+    ? process.exit.bind(undefined, 15)
+    : local.noop
+), npm_config_timeout_exit).unref();
 // merge previous test-report
-if (process.env.npm_config_mode_test_report_merge) {
+if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
     local.testReportMerge(
         globalThis.utility2_testReport,
         local.fsReadFileOrDefaultSync(
-            process.env.UTILITY2_DIR_BUILD + "/test-report.json",
+            UTILITY2_DIR_BUILD + "/test-report.json",
             "json",
             {}
         )
     );
     if (process.argv[2] !== "--help") {
         console.error(
-            "\n" + process.env.MODE_BUILD + " - merged test-report from file "
-            + process.env.UTILITY2_DIR_BUILD + "/test-report.json"
+            "\n" + MODE_BUILD + " - merged test-report from file " +
+            UTILITY2_DIR_BUILD + "/test-report.json"
         );
     }
 }
 // init cli
 if (module === require.main && (!globalThis.utility2_rollup || (
-    process.argv[2]
-    && local.cliDict[process.argv[2]]
-    && process.argv[2].indexOf("utility2.") === 0
+    process.argv[2] &&
+    local.cliDict[process.argv[2]] &&
+    process.argv[2].indexOf("utility2.") === 0
 ))) {
     local.cliRun({});
     if (local.cliDict[process.argv[2]]) {
@@ -5651,7 +5516,6 @@ if (module === require.main && (!globalThis.utility2_rollup || (
         switch (process.argv[2]) {
         case "--interactive":
         case "-i":
-        case "utility2.swaggerValidateFile":
         case "utility2.start":
             break;
         default:
@@ -5665,8 +5529,8 @@ if (globalThis.utility2_rollup) {
         require("fs").readFileSync(
             __filename,
             "utf8"
-        ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0]
-        + "\n/* script-end /assets.utility2.rollup.end.js */\n"
+        ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0] +
+        "\n/* script-end /assets.utility2.rollup.end.js */\n"
     );
     return;
 }
@@ -5713,12 +5577,12 @@ if (globalThis.utility2_rollup) {
             match0 = match0.replace(
                 "<script src=\"assets.app.js\"></script>\n",
                 (
-                    "<script "
-                    + "src=\"assets.utility2.rollup.js\"></script>\n"
-                    + "<script "
-                    + "src=\"assets.utility2.example.js\"></script>\n"
-                    + "<script "
-                    + "src=\"assets.utility2.test.js\"></script>\n"
+                    "<script " +
+                    "src=\"assets.utility2.rollup.js\"></script>\n" +
+                    "<script " +
+                    "src=\"assets.utility2.example.js\"></script>\n" +
+                    "<script " +
+                    "src=\"assets.utility2.test.js\"></script>\n"
                 )
             );
             match0 = match0.replace(
@@ -5773,6 +5637,7 @@ if (globalThis.utility2_rollup) {
         );
     }
 });
+/* validateLineSortedReset */
 local.assetsDict["/assets.utility2.rollup.js"] = [
     "header",
     "/assets.utility2.rollup.start.js",
@@ -5798,15 +5663,15 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
             "/assets.utility2.rollup.content.js"
         ].replace("/* utility2.rollup.js content */", function () {
             return (
-                "local.assetsDict[\"" + key + "\"] = (\n"
-                + JSON.stringify(local.assetsDict[key]).replace((
+                "local.assetsDict[\"" + key + "\"] = (\n" +
+                JSON.stringify(local.assetsDict[key]).replace((
                     /\\\\/g
                 ), "\u0000").replace((
                     /\\n/g
                 ), "\\n\\\n").replace((
                     /\u0000/g
-                ), "\\\\")
-                + ");\n"
+                ), "\\\\") +
+                ");\n"
             );
         });
         break;
@@ -5816,9 +5681,9 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         break;
     case "header":
         return (
-            "/* this rollup was created with utility2\n"
-            + " * https://github.com/kaizhu256/node-utility2\n"
-            + " */\n"
+            "/* this rollup was created with utility2\n" +
+            " * https://github.com/kaizhu256/node-utility2\n" +
+            " */\n"
         );
     case "lib.utility2.js":
         key = "/assets." + key.replace("lib.", "");
@@ -5829,9 +5694,9 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         code = local.assetsDict[key];
     }
     return (
-        "/* script-begin " + key + " */\n"
-        + code.trim()
-        + "\n/* script-end " + key + " */\n"
+        "/* script-begin " + key + " */\n" +
+        code.trim() +
+        "\n/* script-end " + key + " */\n"
     );
 }).join("\n\n\n");
 }());

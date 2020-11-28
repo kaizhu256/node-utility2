@@ -251,14 +251,14 @@ shBrowserScreenshot () {(set -e
         file = file.replace(process.cwd(), "");
     }
     file = require("path").resolve(
-        process.env.UTILITY2_DIR_BUILD
-        + "/screenshot."
-        + process.env.MODE_BUILD + ".browser."
-        + encodeURIComponent(file.replace(
+        process.env.UTILITY2_DIR_BUILD +
+        "/screenshot." +
+        process.env.MODE_BUILD + ".browser." +
+        encodeURIComponent(file.replace(
             "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
             "/build"
-        ))
-        + ".png"
+        )) +
+        ".png"
     );
     process.on("exit", function (exitCode) {
         if (typeof exitCode === "object" && exitCode) {
@@ -266,12 +266,12 @@ shBrowserScreenshot () {(set -e
             exitCode = 1;
         }
         console.error(
-            "\nshBrowserScreenshot"
-            + " - " + (Date.now() - timeStart) + " ms"
-            + " - exitCode " + exitCode
-            + " - " + url
-            + " - " + file
-            + "\n"
+            "\nshBrowserScreenshot" +
+            " - " + (Date.now() - timeStart) + " ms" +
+            " - exitCode " + exitCode +
+            " - " + url +
+            " - " + file +
+            "\n"
         );
     });
     process.on("uncaughtException", process.exit);
@@ -408,9 +408,9 @@ shBuildApp () {(set -e
             "assets.utility2.rollup.js"
         ]).forEach(function (file) {
             if (!(
-                file === ".gitignore"
-                || file === "assets.utility2.rollup.js"
-                || file.indexOf("lib.") === 0
+                file === ".gitignore" ||
+                file === "assets.utility2.rollup.js" ||
+                file.indexOf("lib.") === 0
             )) {
                 return;
             }
@@ -504,8 +504,8 @@ shBuildApp () {(set -e
                 return;
             }
             require("https").request((
-                "https://raw.githubusercontent.com/kaizhu256/node-utility2"
-                + "/alpha/" + file
+                "https://raw.githubusercontent.com/kaizhu256/node-utility2" +
+                "/alpha/" + file
             ), function (res) {
                 res.pipe(fs.createWriteStream(file).on("close", function () {
                     if (file === "npm_scripts.sh") {
@@ -1036,9 +1036,9 @@ shBuildInit () {
     });
     // init $GITHUB_FULLNAME, $GITHUB_OWNER, $GITHUB_REPO
     String(
-        (packageJson.repository && packageJson.repository.url)
-        || packageJson.repository
-        || ""
+        (packageJson.repository && packageJson.repository.url) ||
+        packageJson.repository ||
+        ""
     ).replace((
         /([^\/]+?)\/([^\/]+?)(?:\.git)?$/
     ), function (ignore, owner, repo) {
@@ -1065,8 +1065,8 @@ shBuildInit () {
         export2("UTILITY2_DIR_BUILD", path.resolve(".tmp/build"));
         // interpolate $PATH
         cmd += (
-            "PATH=\"$PATH:" + dir + ":" + path.resolve(dir + "/../.bin")
-            + "\"\n"
+            "PATH=\"$PATH:" + dir + ":" + path.resolve(dir + "/../.bin") +
+            "\"\n"
         );
         // mkdir $UTILITY2_DIR_BUILD
         dir = path.resolve(".tmp/build");
@@ -1078,9 +1078,9 @@ shBuildInit () {
     });
     // init $CI_*
     export2("CI_BRANCH", (
-        process.env.CI_BRANCH
-        || process.env.GITHUB_REF
-        || "alpha"
+        process.env.CI_BRANCH ||
+        process.env.GITHUB_REF ||
+        "alpha"
     ));
     process.stderr.write(cmd);
     process.stdout.write(cmd);
@@ -1160,8 +1160,8 @@ shBuildPrint () {(set -e
 (function () {
     "use strict";
     process.stderr.write(
-        "\n\u001b[35m[MODE_BUILD=" + process.env.MODE_BUILD + "]\u001b[0m - "
-        + new Date().toISOString() + " - " + process.argv[1] + "\n\n"
+        "\n\u001b[35m[MODE_BUILD=" + process.env.MODE_BUILD + "]\u001b[0m - " +
+        new Date().toISOString() + " - " + process.argv[1] + "\n\n"
     );
 }());
 ' "$1" # '
@@ -1313,9 +1313,9 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -1963,14 +1963,14 @@ shGitLsTree () {(set -e
         sizePad = String(Math.ceil(Number(list[0].size) / 1024)).length;
         process.stdout.write(list.map(function (elem, ii) {
             return (
-                String(ii + ".").padStart(iiPad, " ")
-                + "  " + elem.mode
-                + "  " + elem.date
-                + "  " + String(
+                String(ii + ".").padStart(iiPad, " ") +
+                "  " + elem.mode +
+                "  " + elem.date +
+                "  " + String(
                     Math.ceil(Number(elem.size) / 1024)
-                ).padStart(sizePad, " ") + " KB"
-                + "  " + elem.file
-                + "\n"
+                ).padStart(sizePad, " ") + " KB" +
+                "  " + elem.file +
+                "\n"
             );
         }).join(""));
     });
@@ -2043,9 +2043,9 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
     "use strict";
     [
         (
-            "https://api.github.com/orgs/"
-            + process.argv[1].split("/")[0]
-            + "/repos"
+            "https://api.github.com/orgs/" +
+            process.argv[1].split("/")[0] +
+            "/repos"
         ),
         "https://api.github.com/user/repos"
     ].forEach(function (url) {
@@ -2094,8 +2094,8 @@ shGithubRepoTouch () {(set -e
 (function () {
     "use strict";
     require("https").request((
-        "https://api.github.com/repos/" + process.argv[1]
-        + "/contents/package.json?ref=" + process.argv[2]
+        "https://api.github.com/repos/" + process.argv[1] +
+        "/contents/package.json?ref=" + process.argv[2]
     ), {
         headers: {
             "authorization": "token " + process.env.GITHUB_TOKEN,
@@ -2113,8 +2113,8 @@ shGithubRepoTouch () {(set -e
             data = JSON.parse(data);
             require("https").request((
 
-                "https://api.github.com/repos/" + process.argv[1]
-                + "/contents/package.json?branch=" + process.argv[2]
+                "https://api.github.com/repos/" + process.argv[1] +
+                "/contents/package.json?branch=" + process.argv[2]
             ), {
                 headers: {
                     "authorization": "token " + process.env.GITHUB_TOKEN,
@@ -2150,7 +2150,7 @@ shGrep () {(set -e
     REGEXP="$1"
     shift
     FILE_FILTER="\
-/\\.|~\$|/(obj|release)/|(\\b|_)(\\.\\d|\
+/\\.|~$|/(obj|release)/|(\\b|_)(\\.\\d|\
 archive|artifact|\
 bower_component|build|\
 coverage|\
@@ -2276,10 +2276,10 @@ shImageToDataUri () {(set -e
 (function () {
     "use strict";
     console.log(
-        "data:image/"
-        + require("path").extname(process.argv[1]).slice(1)
-        + ";base64,"
-        + require("fs").readFileSync(process.argv[1]).toString("base64")
+        "data:image/" +
+        require("path").extname(process.argv[1]).slice(1) +
+        ";base64," +
+        require("fs").readFileSync(process.argv[1]).toString("base64")
     );
 }());
 ' "$FILE" # '
@@ -2433,8 +2433,8 @@ shNpmPackageDependencyTreeCreate () {(set -e
     let result;
     result = "";
     result += (
-        "npm install - " + process.argv[1].split("\t")[0]
-        + " KB\n\nnode_modules\n"
+        "npm install - " + process.argv[1].split("\t")[0] +
+        " KB\n\nnode_modules\n"
     );
     require("fs").readFileSync(
         require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
@@ -2655,15 +2655,15 @@ shPackageJsonVersionIncrement () {(set -e
         cc = aa[ii];
         dd = bb[ii];
         if (
-            dd === undefined
-            || (typeof cc !== "number" && typeof dd === "number")
+            dd === undefined ||
+            (typeof cc !== "number" && typeof dd === "number")
         ) {
             result = bb;
             break;
         }
         if (
-            cc === undefined
-            || (typeof cc === "number" && typeof dd !== "number")
+            cc === undefined ||
+            (typeof cc === "number" && typeof dd !== "number")
         ) {
             result = aa;
             break;
@@ -2784,8 +2784,8 @@ shRawLibFetch () {(set -e
             result = result.replace(new RegExp(elem.aa, elem.flags), elem.bb);
             if (result0 === result) {
                 throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet "
-                    + JSON.stringify(elem.aa)
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(elem.aa)
                 );
             }
         });
@@ -2806,8 +2806,8 @@ shRawLibFetch () {(set -e
             });
             if (result0 === result) {
                 throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet "
-                    + JSON.stringify(aa)
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(aa)
                 );
             }
             return "";
@@ -2818,8 +2818,8 @@ shRawLibFetch () {(set -e
                 return;
             }
             data = (
-                "data:" + elem.contentType + ";base64,"
-                + elem.data.toString("base64")
+                "data:" + elem.contentType + ";base64," +
+                elem.data.toString("base64")
             );
             result0 = result;
             result = result.replace(
@@ -2831,8 +2831,8 @@ shRawLibFetch () {(set -e
             );
             if (result0 === result) {
                 throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet "
-                    + JSON.stringify(elem.exports)
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(elem.exports)
                 );
             }
         });
@@ -2856,9 +2856,9 @@ shRawLibFetch () {(set -e
     );
     // init header
     header = (
-        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n"
-        + JSON.stringify(JSON.parse(opt[1]), undefined, 4) + "\n"
-        + opt[2].split("\n\n").filter(function (elem) {
+        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n" +
+        JSON.stringify(JSON.parse(opt[1]), undefined, 4) + "\n" +
+        opt[2].split("\n\n").filter(function (elem) {
             return elem.trim();
         }).map(function (elem) {
             return elem.trim() + "\n";
@@ -2946,12 +2946,12 @@ shRawLibFetch () {(set -e
             }
             if (elem.dateCommitted) {
                 result += (
-                    "\n\n\n/*\n"
-                    + "repo " + elem.prefix.replace("/blob/", "/tree/") + "\n"
-                    + "committed " + (
+                    "\n\n\n/*\n" +
+                    "repo " + elem.prefix.replace("/blob/", "/tree/") + "\n" +
+                    "committed " + (
                         /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
-                    ).exec(elem.dateCommitted)[0] + "\n"
-                    + "*/"
+                    ).exec(elem.dateCommitted)[0] + "\n" +
+                    "*/"
                 );
             }
             // mangle module.exports
@@ -3092,8 +3092,8 @@ shRawLibFetch () {(set -e
                     /(.*?)\u0020=\u0020(.*?)$/gm
                 ), function (ignore, match1, match2) {
                     return (
-                        match2 + "\u0000"
-                        + match1.padEnd(19, " ") + " = " + match2
+                        match2 + "\u0000" +
+                        match1.padEnd(19, " ") + " = " + match2
                     );
                 })
                 : ""
@@ -3219,8 +3219,8 @@ shReadmeLinkValidate () {(set -e
         ), "/build..alpha..travis-ci.com/");
         // ignore private-link
         if (
-            process.env.npm_package_private
-            && match0.indexOf("https://github.com/") === 0
+            process.env.npm_package_private &&
+            match0.indexOf("https://github.com/") === 0
         ) {
             return;
         }
@@ -3363,13 +3363,13 @@ shRunWithScreenshotTxt () {(set -e
         ), "\\$1").slice();
     }) + "\n";
     result = (
-        "<svg height=\"" + (yy + 20)
-        + "px\" width=\"720px\" xmlns=\"http://www.w3.org/2000/svg\">\n"
-        + "<rect height=\"" + (yy + 20)
-        + "px\" fill=\"#555\" width=\"720px\"></rect>\n"
-        + "<text fill=\"#7f7\" font-family=\"Consolas, Menlo, monospace\" "
-        + "font-size=\"12\" xml:space=\"preserve\">\n"
-        + result + "</text>\n</svg>\n"
+        "<svg height=\"" + (yy + 20) +
+        "px\" width=\"720px\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect height=\"" + (yy + 20) +
+        "px\" fill=\"#555\" width=\"720px\"></rect>\n" +
+        "<text fill=\"#7f7\" font-family=\"Consolas, Menlo, monospace\" " +
+        "font-size=\"12\" xml:space=\"preserve\">\n" +
+        result + "</text>\n</svg>\n"
     );
     try {
         require("fs").mkdirSync(require("path").dirname(process.argv[1]), {
@@ -3480,26 +3480,26 @@ shTravisRepoCreate () {(set -e
     // request github-assets
     [
         (
-            "https://raw.githubusercontent.com"
-            + "/kaizhu256/node-utility2/alpha/.gitignore"
+            "https://raw.githubusercontent.com" +
+            "/kaizhu256/node-utility2/alpha/.gitignore"
         ), (
-            "https://raw.githubusercontent.com"
-            + "/kaizhu256/node-utility2/alpha/.travis.yml"
+            "https://raw.githubusercontent.com" +
+            "/kaizhu256/node-utility2/alpha/.travis.yml"
         )
     ].forEach(function (url) {
         httpRequest({
             url
         }).then(function (opt) {
             require("fs").promises.writeFile((
-                require("os").tmpdir() + "/githubRepo/"
-                + process.env.GITHUB_FULLNAME + "/"
-                + require("path").basename(url)
+                require("os").tmpdir() + "/githubRepo/" +
+                process.env.GITHUB_FULLNAME + "/" +
+                require("path").basename(url)
             ), opt.responseText);
         });
     });
     require("fs").promises.writeFile((
-        require("os").tmpdir() + "/githubRepo/"
-        + process.env.GITHUB_FULLNAME + "/package.json"
+        require("os").tmpdir() + "/githubRepo/" +
+        process.env.GITHUB_FULLNAME + "/package.json"
     ), JSON.stringify({
         devDependencies: {
             utility2: "kaizhu256/node-utility2#alpha"
@@ -3537,8 +3537,8 @@ shTravisRepoCreate () {(set -e
         },
         method: "POST",
         url: (
-            "https://api.travis-ci.com/user/" + JSON.parse(tmp.responseText).id
-            + "/sync"
+            "https://api.travis-ci.com/user/" +
+            JSON.parse(tmp.responseText).id + "/sync"
         )
     });
     // activate travis-repo
@@ -3553,9 +3553,9 @@ shTravisRepoCreate () {(set -e
             method: "POST",
             modeIgnoreStatusCode: true,
             url: (
-                "https://api.travis-ci.com/repo/"
-                + process.env.GITHUB_FULLNAME.replace("/", "%2F")
-                + "/activate"
+                "https://api.travis-ci.com/repo/" +
+                process.env.GITHUB_FULLNAME.replace("/", "%2F") +
+                "/activate"
             )
         });
         if (tmp.statusCode < 400) {
@@ -3580,9 +3580,9 @@ shTravisRepoCreate () {(set -e
             },
             method: "PATCH",
             url: (
-                "https://api.travis-ci.com/repo/"
-                + process.env.GITHUB_FULLNAME.replace("/", "%2F")
-                + "/setting/" + setting
+                "https://api.travis-ci.com/repo/" +
+                process.env.GITHUB_FULLNAME.replace("/", "%2F") +
+                "/setting/" + setting
             )
         });
     });
@@ -3605,9 +3605,9 @@ shTravisRepoTrigger () {(set -e
 (function () {
     // trigger travis-repo
     require("https").request((
-        "https://api.travis-ci.com/repo/"
-        + process.argv[1].replace("/", "%2F")
-        + "/requests"
+        "https://api.travis-ci.com/repo/" +
+        process.argv[1].replace("/", "%2F") +
+        "/requests"
     ), {
         headers: {
             authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
