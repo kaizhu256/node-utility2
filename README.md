@@ -47,7 +47,7 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.11.13
+#### changelog 2020.12.1
 - rename var command to cmd
 - replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and onReadyDecrement
 - remove jslint-ignore statements from file lib.utility2.js
@@ -79,6 +79,7 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- add persistent repl-history between restart in .tmp/
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
@@ -398,7 +399,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2020.11.13)</title>
+<title>utility2 (2020.12.1)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -559,7 +560,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2020.11.13)
+    utility2 (2020.12.1)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -714,7 +715,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2020.11.13"
+npm_package_version: "2020.12.1"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>
@@ -847,7 +848,8 @@ require("http").createServer(function (req, res) {
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "npmtest-lite test-lite",
+    "nameAliasPublish": "",
+    "nameAliasPublish2": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "repository": {
@@ -872,7 +874,7 @@ require("http").createServer(function (req, res) {
         "2020.11.12 istanbul-lite",
         "2020.11.12 utility2"
     ],
-    "version": "2020.11.13"
+    "version": "2020.12.1"
 }
 ```
 

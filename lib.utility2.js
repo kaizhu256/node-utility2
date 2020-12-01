@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.11.13)
+ * lib.utility2.js (2020.12.1)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *

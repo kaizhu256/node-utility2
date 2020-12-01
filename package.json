@@ -24,7 +24,8 @@
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "npmtest-lite test-lite",
+    "nameAliasPublish": "",
+    "nameAliasPublish2": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "repository": {
@@ -49,5 +50,5 @@
         "2020.11.12 istanbul-lite",
         "2020.11.12 utility2"
     ],
-    "version": "2020.11.13"
+    "version": "2020.12.1"
 }
