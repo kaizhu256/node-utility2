@@ -96,22 +96,6 @@
             )
         );
     }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -175,7 +159,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -212,7 +195,8 @@ local.testRunDefault(local);
 let {
     assertJsonEqual,
     assertOrThrow,
-    onErrorThrow
+    onErrorThrow,
+    tryCatchOnError
 } = local;
 
 local.testCase_assertXxx_default = function (opt, onError) {
@@ -222,57 +206,34 @@ local.testCase_assertXxx_default = function (opt, onError) {
     // test assertion passed
     assertOrThrow(true, true);
     // test assertion failed with undefined message
-    local.tryCatchOnError(function () {
+    tryCatchOnError(function () {
         assertOrThrow(undefined);
     }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        // validate err.message
+        // validate err
         assertJsonEqual(err.message, "");
     });
     // test assertion failed with string message
-    local.tryCatchOnError(function () {
+    tryCatchOnError(function () {
         assertOrThrow(undefined, "aa");
     }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        // validate err.message
+        // validate err
         assertJsonEqual(err.message, "aa");
     });
     // test assertion failed with errObj
-    local.tryCatchOnError(function () {
-        assertOrThrow(undefined, new Error());
+    tryCatchOnError(function () {
+        assertOrThrow(undefined, new Error("aa"));
     }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
+        // validate err
+        assertJsonEqual(err.message, "aa");
     });
     // test assertion failed with json object
-    local.tryCatchOnError(function () {
+    tryCatchOnError(function () {
         assertOrThrow(undefined, {
             aa: 1
         });
     }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        // validate err.message
+        // validate err
         assertJsonEqual(err.message, "{\n    \"aa\": 1\n}");
-    });
-    onError(undefined, opt);
-};
-
-local.testCase_bufferValidateAndCoerce_err = function (opt, onError) {
-/*
- * this function will test bufferValidateAndCoerce's err handling-behavior
- */
-    [[], 0, {}].forEach(function (elem) {
-        opt = null;
-        try {
-            local.bufferValidateAndCoerce(elem);
-        } catch (errCaught) {
-            opt = errCaught;
-        }
-        // handle err
-        assertOrThrow(opt, elem);
     });
     onError(undefined, opt);
 };
@@ -316,17 +277,17 @@ local.testCase_buildApp_default = function (opt, onError) {
             {
                 // customize quickstart-example-js-instruction
                 merge: (
-                    /#\u0020quickstart\u0020example.js[\S\s]*?\n\n\n/
+                    /\n#\u0020quickstart\u0020example.js\n[\S\s]*?\n\n\n/
                 )
             }, {
                 // customize quickstart-example-js-script
                 merge: (
-                    /\n<script>window.processEnv[\S\s]*?\n<script\u0020src="assets\.example\.js">/
+                    /\n<script\u0020src=[^`]*?\n<script\u0020src="assets\.example\.js"><\/script>\n/
                 )
             }, {
                 // customize quickstart-example-js-screenshot
                 merge: (
-                    /```[^`]*?\n#\u0020extra\u0020screenshots/
+                    /\n```[^`]*?\n#\u0020extra\u0020screenshots\n/
                 )
             }, {
                 // customize build-script
@@ -336,22 +297,6 @@ local.testCase_buildApp_default = function (opt, onError) {
             }
         ]
     }, onError, opt);
-};
-
-local.testCase_buildXxx_default = function (opt, onError) {
-/*
- * this function will test buildXxx's default handling-behavior
- */
-    local.testMock([
-        [
-            local, {
-                browserTest: local.noop
-            }
-        ]
-    ], function (onError) {
-        local._testCase_webpage_default({}, local.noop);
-        onError(undefined, opt);
-    }, onError);
 };
 
 local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
@@ -385,13 +330,10 @@ local.testCase_cliRun_default = function (opt, onError) {
     local.testMock([
         [
             local, {
-                replStart: null
+                replStart: undefined
             }
         ], [
-            local.cliDict, {
-                _default: local.noop,
-                _help: null
-            }
+            local.cliDict, {}
         ], [
             process, {
                 argv: []
@@ -407,6 +349,9 @@ local.testCase_cliRun_default = function (opt, onError) {
         ]
     ], function (onError) {
         // test default handling-behavior
+        local.cliDict = {
+            _default: local.noop
+        };
         local.cliRun({
             rgxComment: (
                 /^/
@@ -421,12 +366,16 @@ local.testCase_cliRun_default = function (opt, onError) {
             "undefined"
         ].forEach(function (key) {
             process.argv[2] = key;
-            local.cliRun({});
+            local.cliDict = {};
+            local.cliRun({
+                rgxComment: (
+                    /^/
+                )
+            });
         });
         // test err handling-behavior
-        local.cliDict._default = null;
-        local.cliDict._help = null;
-        local.tryCatchOnError(local.cliRun, local.noop);
+        local.cliDict = {};
+        tryCatchOnError(local.cliRun.bind(undefined, {}), assertOrThrow);
         onError(undefined, opt);
     }, onError);
 };
@@ -538,8 +487,6 @@ local.testCase_replStart_default = function (opt, onError) {
             "charCode abcd\n",
             // test charSort handling-behavior
             "charSort abcd\n",
-            // test grep handling-behavior
-            "grep \\baa\\b\n",
             // test keys handling-behavior
             "keys {}\n",
             // test print handling-behavior
@@ -660,19 +607,6 @@ local.testCase_testMock_err = function (opt, onError) {
     }
 };
 
-local.testCase_throwError_default = function (opt, onError) {
-/*
- * this function will test throwError's default handling-behavior
- */
-    local.tryCatchOnError(function () {
-        local.throwError();
-    }, function (err) {
-        // handle err
-        assertOrThrow(err, err);
-        onError(undefined, opt);
-    });
-};
-
 local.testCase_uiAnimateXxx_default = function (opt, onError) {
 /*
  * this function will test uiAnimateXxx's default handling-behavior
@@ -767,54 +701,8 @@ local.testCase_webpage_err = function (opt, onError) {
         onError(undefined, opt);
     }, 2000);
     // test uncaught-err handling-behavior
-    setTimeout(local.throwError);
+    setTimeout(assertOrThrow.bind(undefined, undefined));
 };
-}());
-
-
-// run shared js-env code - init-after
-(function () {
-    return;
-//!! // init test-middleware
-//!! local.middlewareList.push(function (req, res, next) {
-//!! /*
- //!! * this function will run test-middleware
- //!! */
-    //!! switch (req.urlParsed.pathname) {
-    //!! // test http POST handling-behavior
-    //!! case "/test.body":
-        //!! // test req-body-read handling-behavior
-        //!! local.middlewareBodyRead(req, res, function () {
-            //!! // test multiple req-body-read handling-behavior
-            //!! local.middlewareBodyRead(req, res, function () {
-                //!! res.write(req.bodyRaw);
-                //!! res.end();
-            //!! });
-        //!! });
-        //!! break;
-    //!! // test http POST handling-behavior
-    //!! case "/test.echo":
-        //!! // test res-header handling-behavior
-        //!! local.serverRespondHeadSet(req, res, null, {
-            //!! "X-Res-Header-Test": "bb"
-        //!! });
-        //!! local.serverRespondEcho(req, res);
-        //!! break;
-    //!! // test undefined-status-code handling-behavior
-    //!! case "/test.err-undefined":
-        //!! local.serverRespondDefault(req, res, 999);
-        //!! break;
-    //!! // test timeout handling-behavior
-    //!! case "/test.timeout":
-        //!! setTimeout(function () {
-            //!! res.end();
-        //!! }, 2000);
-        //!! break;
-    //!! // serve file
-    //!! default:
-        //!! local.middlewareFileServer(req, res, next);
-    //!! }
-//!! });
 }());
 
 
@@ -824,8 +712,6 @@ local.testCase_webpage_err = function (opt, onError) {
 if (local.isBrowser) {
     return;
 }
-
-
 // init cli
 if (module !== require.main || globalThis.utility2_rollup) {
     return;
@@ -833,10 +719,12 @@ if (module !== require.main || globalThis.utility2_rollup) {
 local.assetsDict["/assets.script_only.html"] = (
     "<h1>script_only_test</h1>\n" +
     "<script src=\"assets.utility2.js\"></script>\n" +
-    "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n" +
+    "<script>\n" +
+    "window.utility2.onReadyIncrement();\n" +
+    "window.addEventListener(\"load\", window.utility2.onReadyDecrement);\n" +
+    "</script>\n" +
     "<script src=\"assets.example.js\"></script>\n" +
-    "<script src=\"assets.test.js\"></script>\n" +
-    "<script>window.utility2_onReadyBefore();</script>\n"
+    "<script src=\"assets.test.js\"></script>\n"
 );
 if (process.argv[2]) {
     // start with coverage

@@ -105,22 +105,6 @@
             )
         );
     }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -184,7 +168,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -225,50 +208,130 @@ local.utility2 = local;
 
 
 /* validateLineSortedReset */
+}());
+
+
+// run shared js-env code - function
+(function () {
 let localEventListenerDict;
 let localEventListenerId;
-let processEnv;
+let localOnReadyCnt;
+localEventListenerDict = {};
+localEventListenerId = 0;
+localOnReadyCnt = 0;
 
 
-// init processEnv
+// init lib utility2
+globalThis.utility2 = local;
+
+
+// update local
 (function () {
+    let dict;
     let packageJson;
-    processEnv = {
+    // update dict - default
+    dict = {
+        apidocCreate: local.identity,
+        coverageMerge: local.identity,
+        instrumentInPackage: local.identity,
+        jslintAndPrint: local.identity,
+        jslintAndPrintDir: local.identity,
         npm_package_description: "the greatest app in the world!",
         npm_package_name: "my-app",
         npm_package_version: "0.0.1"
     };
-    // update processEnv from globalThis
-    processEnv = Object.assign(processEnv, globalThis.processEnv);
-    // update processEnv from package.json
+    // update dict - globalThis
+    dict = Object.assign(dict, globalThis.utility2_state);
+    // update dict - package.json
     try {
         packageJson = JSON.parse(require("fs").readFileSync("package.json"));
         Object.entries(packageJson).forEach(function ([
             key, val
         ]) {
-            processEnv["npm_package_" + key] = String(val);
+            dict["npm_package_" + key] = String(val);
+        });
+        packageJson.repository.url.replace((
+            /https:\/\/github\.com\/([^\/]+?\/[^.]+)/
+        ), function (ignore, match1) {
+            dict.GITHUB_FULLNAME = match1;
+            return "";
         });
     } catch (ignore) {}
-    // update processEnv from process.env
-    processEnv = Object.assign(
-        processEnv,
+    // update dict - process.env
+    dict = Object.assign(
+        dict,
         (typeof process === "object" && process && process.env)
     );
-    // update processEnv from misc
-    processEnv = Object.assign({
+    // update dict - misc
+    dict = Object.assign({
+        GITHUB_OWNER: String(dict.GITHUB_FULLNAME).split("/")[0],
+        GITHUB_REPO: String(dict.GITHUB_FULLNAME).split("/")[1],
         UTILITY2_DIR_BUILD: ".tmp/build",
-        npm_package_nameLib: String(processEnv.npm_package_name).replace((
+        npm_package_nameLib: String(dict.npm_package_name).replace((
             /\W/g
-        ), "_"),
-        processEnv: JSON.stringify({
-            npm_config_mode_backend: processEnv.npm_config_mode_backend,
-            npm_package_description: processEnv.npm_package_description,
-            npm_package_homepage: processEnv.npm_package_homepage,
-            npm_package_name: processEnv.npm_package_name,
-            npm_package_nameLib: processEnv.npm_package_nameLib,
-            npm_package_version: processEnv.npm_package_version
-        })
-    }, processEnv);
+        ), "_")
+    }, dict);
+    // init lib extra
+    [
+        "apidoc",
+        "dummy",
+        // cbranch-no cstat-no fstat-no missing-if-branch
+        "istanbul",
+        "jslint",
+        "marked"
+    ].forEach(function (key) {
+        try {
+            local[key] = (
+                local.isBrowser
+                ? globalThis["utility2_" + key]
+                : require("./lib." + key + ".js")
+            );
+        } catch (errCaught) {
+            local.assertOrThrow(
+                errCaught.code === "MODULE_NOT_FOUND",
+                errCaught
+            );
+        }
+        local[key] = local[key] || {};
+        Object.assign(dict, local[key]);
+    });
+    [
+        "jslintAndPrintDir",
+        "CI_BRANCH",
+        "CI_COMMIT_ID",
+        "CI_COMMIT_INFO",
+        "CI_HOST",
+        "GITHUB_FULLNAME",
+        "GITHUB_OWNER",
+        "GITHUB_REPO",
+        "MODE_BUILD",
+        "PATH",
+        "PORT",
+        "UTILITY2_DIR_BUILD",
+        "apidocCreate",
+        "coverageMerge",
+        "instrumentInPackage",
+        "jslintAndPrint",
+        "npm_config_mode_auto_restart",
+        "npm_config_mode_lib",
+        "npm_config_mode_start",
+        "npm_config_mode_test",
+        "npm_config_mode_test_case",
+        "npm_config_mode_test_report_merge",
+        "npm_config_runme",
+        "npm_config_timeout_default",
+        "npm_config_timeout_exit",
+        "npm_package_description",
+        "npm_package_homepage",
+        "npm_package_main",
+        "npm_package_name",
+        "npm_package_nameHeroku",
+        "npm_package_nameLib",
+        "npm_package_nameOriginal",
+        "npm_package_version"
+    ].forEach(function (key) {
+        local[key] = dict[key];
+    });
 }());
 let {
     CI_BRANCH,
@@ -276,49 +339,34 @@ let {
     CI_COMMIT_INFO,
     CI_HOST,
     GITHUB_FULLNAME,
+    GITHUB_OWNER,
+    GITHUB_REPO,
     MODE_BUILD,
     PATH,
     PORT,
     UTILITY2_DIR_BUILD,
+    apidocCreate,
+    coverageMerge,
+    instrumentInPackage,
+    jslintAndPrint,
     npm_config_mode_auto_restart,
     npm_config_mode_lib,
     npm_config_mode_start,
     npm_config_mode_test,
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
+    npm_config_runme,
     npm_config_timeout_default,
     npm_config_timeout_exit,
     npm_package_description,
     npm_package_homepage,
     npm_package_main,
     npm_package_name,
+    npm_package_nameHeroku,
     npm_package_nameLib,
     npm_package_nameOriginal,
     npm_package_version
-} = processEnv;
-// init lib utility2
-globalThis.utility2 = local;
-// init lib extra
-[
-    "apidoc",
-    "istanbul",
-    "jslint",
-    "marked"
-].forEach(function (key) {
-    try {
-        local[key] = (
-            local.isBrowser
-            ? globalThis["utility2_" + key]
-            : require("./lib." + key + ".js")
-        );
-    } catch (errCaught) {
-        local.assertOrThrow(errCaught.code === "MODULE_NOT_FOUND", errCaught);
-    }
-    local[key] = local[key] || {};
-});
-// init listener
-localEventListenerDict = {};
-localEventListenerId = 0;
+} = local;
 // init timeoutDefault, modeTest, modeTestCase
 local.timeoutDefault = npm_config_timeout_default || 30000;
 String(typeof location === "object" && location && location.search).replace((
@@ -435,23 +483,6 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            )\n" +
     "        );\n" +
     "    }\n" +
-    "    function coalesce(...argList) {\n" +
-    "    /*\n" +
-    "     * this function will coalesce null, undefined, or \"\" " +
-    "in <argList>\n" +
-    "     */\n" +
-    "        let arg;\n" +
-    "        let ii;\n" +
-    "        ii = 0;\n" +
-    "        while (ii < argList.length) {\n" +
-    "            arg = argList[ii];\n" +
-    "            if (arg !== undefined && arg !== null && arg !== \"\") {\n" +
-    "                return arg;\n" +
-    "            }\n" +
-    "            ii += 1;\n" +
-    "        }\n" +
-    "        return arg;\n" +
-    "    }\n" +
     "    function identity(val) {\n" +
     "    /*\n" +
     "     * this function will return <val>\n" +
@@ -518,7 +549,6 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    local = {\n" +
     "        assertJsonEqual,\n" +
     "        assertOrThrow,\n" +
-    "        coalesce,\n" +
     "        identity,\n" +
     "        isBrowser,\n" +
     "        isWebWorker,\n" +
@@ -739,18 +769,25 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "\n" +
     "\n" +
     "<!-- utility2-comment\n" +
-    "<script>window.processEnv = {{processEnv}}</script>\n" +
+    "<script>\n" +
+    "window.utility2_state = {\n" +
+    "npm_config_mode_backend: {{npm_config_mode_backend jsonStringify}},\n" +
+    "npm_package_description: {{npm_package_description jsonStringify}},\n" +
+    "npm_package_homepage: {{npm_package_homepage jsonStringify}},\n" +
+    "npm_package_name: {{npm_package_name jsonStringify}},\n" +
+    "npm_package_nameLib: {{npm_package_nameLib jsonStringify}},\n" +
+    "npm_package_version: {{npm_package_version jsonStringify}}\n" +
+    "}\n" +
+    "</script>\n" +
     "<script src=\"assets.utility2.rollup.js\"></script>\n" +
-    "<script>window.utility2_onReadyBefore.cnt += 1;</script>\n" +
+    "<script>\n" +
+    "window.utility2.onReadyIncrement();\n" +
+    "window.addEventListener(\"load\", window.utility2.onReadyDecrement);\n" +
+    "</script>\n" +
     "utility2-comment -->\n" +
     "<script src=\"assets.{{npm_package_nameLib}}.js\"></script>\n" +
     "<script src=\"assets.example.js\"></script>\n" +
     "<script src=\"assets.test.js\"></script>\n" +
-    "<script>\n" +
-    "if (window.utility2_onReadyBefore) {\n" +
-    "    window.utility2_onReadyBefore();\n" +
-    "}\n" +
-    "</script>\n" +
     "<div style=\"text-align: center;\">\n" +
     "    [\n" +
     "    this app was created with\n" +
@@ -773,7 +810,7 @@ local.assetsDict["/assets.example.template.js"] = (
     "\n" +
     "instruction\n" +
     "    1. save this script as example.js\n" +
-    "    2. run shell-command:\n" +
+    "    2. run shell-cmd:\n" +
     "        $ npm install my-app && \\\n" +
     "            PORT=8081 node example.js\n" +
     "    3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
@@ -847,16 +884,9 @@ local.assetsDict["/assets.example.template.js"] = (
     "module.exports = local;\n" +
     "// init assetsDict\n" +
     "local.assetsDict = local.assetsDict || {};\n" +
-    "/* jslint ignore:start */\n" +
-    "local.assetsDict[\"/assets.index.template.html\"] = `" +
-    local.assetsDict["/assets.utility2.template.html"].replace((
-        /[$\\`]/g
-    ), "\\$&") +
-    "`;\n" +
-    "/* jslint ignore:end */\n" +
     "local.assetsDict[\"/assets.my_app.js\"] = (\n" +
-    "    local.assetsDict[\"/assets.my_app.js\"]\n" +
-    "    || require(\"fs\").readFileSync(\n" +
+    "    local.assetsDict[\"/assets.my_app.js\"] ||\n" +
+    "    require(\"fs\").readFileSync(\n" +
     "        require(\"path\").resolve(local.__dirname + " +
     "\"/lib.my_app.js\"),\n" +
     "        \"utf8\"\n" +
@@ -865,32 +895,21 @@ local.assetsDict["/assets.example.template.js"] = (
     "    ), \"// \")\n" +
     ");\n" +
     "/* validateLineSortedReset */\n" +
-    "local.assetsDict[\"/\"] = local.assetsDict[\n" +
-    "    \"/assets.index.template.html\"\n" +
-    "].replace((\n" +
-    "    /\\{\\{(\\w+?)\\}\\}/g\n" +
-    "), function (match0, match1) {\n" +
-    "    switch (match1) {\n" +
-    "    case \"npm_package_description\":\n" +
-    "        return \"the greatest app in the world!\";\n" +
-    "    case \"npm_package_name\":\n" +
-    "        return \"my-app\";\n" +
-    "    case \"npm_package_nameLib\":\n" +
-    "        return \"my_app\";\n" +
-    "    case \"npm_package_version\":\n" +
-    "        return \"0.0.1\";\n" +
-    "    default:\n" +
-    "        return match0;\n" +
-    "    }\n" +
-    "});\n" +
+    "/* jslint ignore:start */\n" +
+    "local.assetsDict[\"/\"] = `" +
+    local.assetsDict["/assets.utility2.template.html"].replace((
+        /[$\\`]/g
+    ), "\\$&") +
+    "`;\n" +
+    "/* jslint ignore:end */\n" +
     "local.assetsDict[\"/assets.example.html\"] = local.assetsDict[\"/\"];\n" +
     "// init cli\n" +
     "if (module !== require.main || globalThis.utility2_rollup) {\n" +
     "    return;\n" +
     "}\n" +
     "local.assetsDict[\"/assets.example.js\"] = (\n" +
-    "    local.assetsDict[\"/assets.example.js\"]\n" +
-    "    || require(\"fs\").readFileSync(__filename, \"utf8\")\n" +
+    "    local.assetsDict[\"/assets.example.js\"] ||\n" +
+    "    require(\"fs\").readFileSync(__filename, \"utf8\")\n" +
     ");\n" +
     "local.assetsDict[\"/favicon.ico\"] = " +
     "local.assetsDict[\"/favicon.ico\"] || \"\";\n" +
@@ -925,9 +944,9 @@ local.assetsDict["/assets.example.template.js"] = (
 local.assetsDict["/assets.my_app.template.js"] = (
     "#!/usr/bin/env node\n" +
     "/*\n" +
-    " * lib.my_app.js ({{packageJson.version}})\n" +
+    " * lib.my_app.js ({{npm_package_version}})\n" +
     " * https://github.com/kaizhu256/node-my-app\n" +
-    " * {{packageJson.description}}\n" +
+    " * {{npm_package_description}}\n" +
     " *\n" +
     " */\n" +
     "\n" +
@@ -1373,8 +1392,8 @@ local.cliDict["utility2.start"] = function () {
     globalThis.local = local;
     local.replStart();
     local.testRunDefault({});
-    if (process.env.npm_config_runme) {
-        require(require("path").resolve(process.env.npm_config_runme));
+    if (npm_config_runme) {
+        require(require("path").resolve(npm_config_runme));
     }
 };
 
@@ -1486,7 +1505,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
     // coverage-hack
     require2();
     // save apidoc.html
-    local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", local.apidocCreate(
+    local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", apidocCreate(
         Object.assign({
             blacklistDict: local,
             modeNoop: (
@@ -1611,7 +1630,7 @@ local.browserTest = function ({
             /.*\//
         ), "");
         // merge browser-coverage
-        local.istanbulCoverageMerge(globalThis.__coverage__, data.coverage);
+        coverageMerge(globalThis.__coverage__, data.coverage);
         // merge browser-test-report
         local.testReportMerge(globalThis.utility2_testReport, data);
         // save test-report.json
@@ -2019,13 +2038,13 @@ local.buildApp = function ({
         });
         // customize - user-defined
         tgtReplaceConditional(true, customizeReadmeList);
-        // customize assets.index.template.html
+        // customize index.html
         tgtReplaceConditional(local.assetsDict[
-            "/assets.index.template.html"
+            "/index.html"
         ].indexOf("\"assets.utility2.template.html\"") < 0, [
             {
                 aa: (
-                    /\n\/\*\u0020jslint\u0020ignore:start\u0020\*\/\nlocal.assetsDict\["\/assets.index.template.html"\]\u0020=\u0020'\\\n[\S\s]*?\n\/\*\u0020jslint\u0020ignore:end\u0020\*\/\n/
+                    /\n\/\*\u0020jslint\u0020ignore:start\u0020\*\/\nlocal.assetsDict\["\/index.html"\]\u0020=\u0020'\\\n[\S\s]*?\n\/\*\u0020jslint\u0020ignore:end\u0020\*\/\n/
                 ),
                 bb: "\n"
             }
@@ -2297,7 +2316,7 @@ local.chromeDevtoolsClientCreate = function ({
                         stdio: "ignore"
                     });
                 } else {
-                    // kill child process tree with ".kill(-pid)" command.
+                    // kill child process tree with ".kill(-pid)" cmd.
                     process.kill(-chromeProcess.pid, "SIGKILL");
                 }
             } catch (ignore) {}
@@ -2761,7 +2780,7 @@ Application data: y bytes
         ], {
             // On non-windows platforms, `detached: false` makes child process
             // a leader of a new process group, making it possible to kill
-            // child process tree with `.kill(-pid)` command.
+            // child process tree with `.kill(-pid)` cmd.
             // https://nodejs.org/api/child_process.html#child_process_options_detached
             detached: process.platform !== "win32",
             stdio: [
@@ -2907,37 +2926,46 @@ local.cliRun = function ({
 /*
  * this function will run cli
  */
-    let cliDict;
-    cliDict = local.cliDict;
-    cliDict._eval = cliDict._eval || function () {
+    let {
+        cliDict,
+        replStart
+    } = local;
+    let {
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    } = cliDict;
+    _eval = _eval || function () {
     /*
      * <code>
      * will eval <code>
      */
-        globalThis.local = local;
+        Object.assign(globalThis, local);
         require("vm").runInThisContext(process.argv[3]);
     };
-    cliDict._help = cliDict._help || function () {
+    _help = _help || function () {
     /*
      *
      * will print help
      */
-        let commandList;
+        let cmdList;
         let file;
         let packageJson;
         let str;
         let strDict;
-        commandList = [
+        cmdList = [
             {
                 argList: "<arg2>  ...",
                 description: "usage:",
-                command: [
+                cmd: [
                     "<arg1>"
                 ]
             }, {
                 argList: "'console.log(\"hello world\")'",
                 description: "example:",
-                command: [
+                cmd: [
                     "--eval"
                 ]
             }
@@ -2961,38 +2989,39 @@ local.cliRun = function ({
             }
             strDict[str] = strDict[str] || (ii + 2);
             ii = strDict[str];
-            if (commandList[ii]) {
-                commandList[ii].command.push(key);
+            if (cmdList[ii]) {
+                cmdList[ii].cmd.push(key);
                 return;
             }
-            commandList[ii] = rgxComment.exec(str);
-            local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND " +
-                key +
-                ":\nnew RegExp(" +
-                JSON.stringify(rgxComment.source) +
-                ").exec(" + JSON.stringify(str).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\") + ");"
-            ));
-            commandList[ii] = {
-                argList: local.coalesce(commandList[ii][1], "").trim(),
-                command: [
+            cmdList[ii] = rgxComment.exec(str);
+            if (!cmdList[ii]) {
+                throw new Error(
+                    "cliRun - cannot parse comment in cmd " +
+                    key + ":\nnew RegExp(" +
+                    JSON.stringify(rgxComment.source) +
+                    ").exec(" + JSON.stringify(str).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                );
+            }
+            cmdList[ii] = {
+                argList: String(cmdList[ii][1] || "").trim(),
+                cmd: [
                     key
                 ],
-                description: commandList[ii][2]
+                description: cmdList[ii][2]
             };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";
-        str += commandList.filter(function (elem) {
+        str += cmdList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
-            elem.command = elem.command.filter(function (elem) {
+            elem.cmd = elem.cmd.filter(function (elem) {
                 return elem;
             });
             switch (ii) {
@@ -3005,56 +3034,65 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND " +
-                    (elem.command[0] || "<none>") + "\n# " +
+                    "# CMD " +
+                    (elem.cmd[0] || "<none>") + "\n# " +
                     elem.description
                 );
             }
             return (
                 elem.description + "\n  " + file +
-                "  " + elem.command.sort().join("|") + "  " +
+                "  " + elem.cmd.sort().join("|") + "  " +
                 elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
     };
-    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
-    cliDict["--help"] = cliDict["--help"] || cliDict._help;
-    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
-    cliDict["-h"] = cliDict["-h"] || cliDict._help;
-    cliDict._default = cliDict._default || cliDict._help;
-    cliDict.help = cliDict.help || cliDict._help;
-    cliDict._interactive = cliDict._interactive || function () {
+    _interactive = _interactive || function () {
     /*
      *
      * will start interactive-mode
      */
-        globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        Object.assign(globalThis, local);
+        replStart = replStart || require("repl").start;
+        replStart({
             useGlobal: true
         });
     };
-    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
-    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
-    cliDict._version = cliDict._version || function () {
+    _version = _version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    cliDict["--version"] = cliDict["--version"] || cliDict._version;
-    cliDict["-v"] = cliDict["-v"] || cliDict._version;
-    // default to --help command if no arguments are given
+    _default = _default || _help;
+    Object.assign(cliDict, {
+        "--eval": _eval,
+        "--help": _help,
+        "--interactive": _interactive,
+        "--version": _version,
+        "-e": _eval,
+        "-h": _help,
+        "-i": _interactive,
+        "-v": _version,
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    });
+    // run help-cmd if no arguments are given
     if (process.argv.length <= 2) {
-        cliDict._help();
+        _help();
         return;
     }
+    // run defined-cmd if it exists
     if (cliDict[process.argv[2]]) {
         cliDict[process.argv[2]]();
         return;
     }
-    cliDict._default();
+    // run default-cmd
+    _default();
 };
 
 local.domQuerySelectorAllTagName = function (selector) {
@@ -3243,6 +3281,68 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
     return true;
 };
 
+local.httpFetch = async function (url, opt = {}) {
+/*
+ * this function fetch <url> with given <opt>
+ */
+    let buf;
+    let bufList;
+    let req;
+    let res;
+    function arrayBuffer() {
+        return buf;
+    }
+    async function json() {
+        return JSON.stringify(await buf);
+    }
+    async function text() {
+        return String(await buf);
+    }
+    // use browser fetch
+    if (
+        typeof globalThis.XMLHttpRequest === "function" &&
+        typeof globalThis.fetch === "function"
+    ) {
+        return globalThis.fetch(url, opt);
+    }
+    // use node http-request
+    if (!(
+        /^https?:/
+    ).test(url)) {
+        url = "http://127.0.0.1:" + process.env.PORT + "/" + url.replace((
+            /^\//
+        ), "");
+    }
+    res = await new Promise(function (resolve) {
+        req = require(url.split(":")[0]).request(url, opt, resolve).end();
+    });
+    let {
+        headers,
+        statusCode
+    } = res;
+    bufList = [];
+    res.on("data", function (chunk) {
+        bufList.push(chunk);
+    });
+    buf = new Promise(function (resolve) {
+        res.on("end", function () {
+            resolve(Buffer.concat(bufList));
+        });
+    });
+    return Object.assign(res, {
+        arrayBuffer,
+        blob: arrayBuffer,
+        headers: new Map(Object.entries(headers)),
+        json,
+        ok: 200 <= statusCode && statusCode <= 299,
+        req,
+        status: statusCode,
+        statusText: require("http").STATUS_CODES[statusCode],
+        text,
+        url
+    });
+};
+
 local.jslintAutofixLocalFunction = function (code, file) {
 /*
  * this function will jslint-autofix local-function
@@ -3298,8 +3398,14 @@ local.jslintAutofixLocalFunction = function (code, file) {
         local.assetsDict["/assets.my_app.template.js"].replace((
             /my_app/g
         ), file.split(".")[1]),
-        file !== "README.md" && local.identity(
-            /\n\/\*\u0020istanbul\u0020instrument\u0020in\u0020package\u0020[\S\s]*?\n\/\*\u0020validateLineSortedReset\u0020\*\/\n/
+        (
+            file === "README.md"
+            ? (
+                /$^/m
+            )
+            : (
+                /\n\/\*\u0020istanbul\u0020instrument\u0020in\u0020package\u0020[\S\s]*?\n\/\*\u0020validateLineSortedReset\u0020\*\/\n/
+            )
         )
     );
     // customize local for assets.utility2.rollup.js
@@ -3413,7 +3519,6 @@ local.jslintAutofixLocalFunction = function (code, file) {
     [
         "assertJsonEqual",
         "assertOrThrow",
-        "coalesce",
         "identity",
         "noop",
         "objectAssignDefault",
@@ -3699,6 +3804,25 @@ local.onParallelList = function (opt, onEach, onError) {
     onParallel();
 };
 
+local.onReadyDecrement = function (err) {
+/*
+ * this function will decrement <onReadyCnt>
+ */
+    localOnReadyCnt -= 1;
+    if (!localOnReadyCnt) {
+        local.eventListenerEmit("utility2.onReady", err);
+    }
+    return localOnReadyCnt;
+};
+
+local.onReadyIncrement = function () {
+/*
+ * this function will increment <onReadyCnt>
+ */
+    localOnReadyCnt += 1;
+    return localOnReadyCnt;
+};
+
 local.replStart = function () {
 /*
  * this function will start repl-debugger
@@ -3720,38 +3844,42 @@ local.replStart = function () {
             /^(\S+)\u0020(.*?)\n/
         ), function (ignore, match1, match2) {
             switch (match1) {
-            // syntax-sugar - run shell-command
+            // syntax-sugar - run shell-cmd
             case "$":
-                match2 = match2.replace((
-                    /^git\b/
-                ), "git --no-pager");
-                switch (match2) {
+                switch (match2.split(" ").slice(0, 2).join(" ")) {
                 // syntax-sugar - run git diff
-                case "git --no-pager diff":
-                    match2 = "git diff --color";
+                case "git diff":
+                    match2 += " --color";
                     break;
                 // syntax-sugar - run git log
-                case "git --no-pager log":
-                    match2 = "git log -n 10";
+                case "git log":
+                    match2 += " -n 10";
                     break;
                 // syntax-sugar - run ll
                 case "ll":
                     match2 = "ls -Fal";
                     break;
+                case "npm test":
+                case "shBuildApp":
+                    if (process.platform === "win32") {
+                        match2 = process.env.UTILITY2_BIN + " " + match2;
+                    }
+                    break;
                 }
+                match2 = match2.replace((
+                    /^git\u0020/
+                ), "git --no-pager ");
                 // source lib.utility2.sh
                 match2 = (
                     (
                         process.platform !== "win32" &&
-                        process.env.UTILITY2_DIR_BIN && (match2 !== ":")
+                        process.env.UTILITY2_BIN && (match2 !== ":")
                     )
-                    ? (
-                        ". " + process.env.UTILITY2_DIR_BIN +
-                        "/lib.utility2.sh;" + match2
-                    )
+                    ? ". " + process.env.UTILITY2_BIN + ";" + match2
                     : match2
                 );
-                // run shell-command
+                // run shell-cmd
+                console.error("$ " + match2);
                 require("child_process").spawn(match2, {
                     shell: true,
                     stdio: [
@@ -3759,7 +3887,7 @@ local.replStart = function () {
                     ]
                 // print exitCode
                 }).on("exit", function (exitCode) {
-                    console.error("exitCode " + exitCode);
+                    console.error("$ EXIT_CODE=" + exitCode);
                     that.evalDefault("\n", context, file, onError);
                 });
                 script = "\n";
@@ -3779,41 +3907,6 @@ local.replStart = function () {
             // syntax-sugar - sort chr
             case "charSort":
                 console.error(JSON.stringify(match2.split("").sort().join("")));
-                script = "\n";
-                break;
-            // syntax-sugar - grep current dir
-            case "grep":
-                // run shell-command
-                require("child_process").spawn((
-                    "find . -type f | grep -v -E \"" +
-                    "/\\.|~$|/(obj|release)/|(\\b|_)(\\.\\d|" +
-                    "archive|artifact|" +
-                    "bower_component|build|" +
-                    "coverage|" +
-                    "doc|" +
-                    "external|" +
-                    "fixture|" +
-                    "git_module|" +
-                    "jquery|" +
-                    "log|" +
-                    "min|misc|mock|" +
-                    "node_module|" +
-                    "old|" +
-                    "raw|\rollup|" +
-                    "swp|" +
-                    "tmp|" +
-                    "vendor)s{0,1}(\\b|_)" +
-                    "\" | tr \"\\n\" \"\\000\" | xargs -0 grep -HIin -E \"" +
-                    match2 + "\""
-                ), {
-                    shell: true,
-                    stdio: [
-                        "ignore", 1, 2
-                    ]
-                }).on("exit", function (exitCode) {
-                    console.error("exitCode " + exitCode);
-                    that.evalDefault("\n", context, file, onError);
-                });
                 script = "\n";
                 break;
             // syntax-sugar - list obj-keys, sorted by item-type
@@ -3855,15 +3948,6 @@ local.requireReadme = function () {
         local.testRunDefault = local.noop;
         return local;
     }
-    // init module.exports
-    module = {};
-    if (local.isBrowser) {
-        module.exports = local.objectAssignDefault(
-            globalThis.utility2_rollup || globalThis.local,
-            local
-        );
-        return module.exports;
-    }
     // if file is modified, then restart process
     if (npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
@@ -3886,13 +3970,22 @@ local.requireReadme = function () {
             });
         });
     }
+    // init module.exports
+    module = {};
+    if (local.isBrowser) {
+        module.exports = local.objectAssignDefault(
+            globalThis.utility2_rollup || globalThis.local,
+            local
+        );
+        return module.exports;
+    }
     // start repl-debugger
     local.replStart();
     // jslint process.cwd()
     require("child_process").spawn("node", [
         "-e", (
             "require(" + JSON.stringify(__filename) +
-            ").jslint.jslintAndPrintDir(" + JSON.stringify(process.cwd()) +
+            ").jslintAndPrintDir(" + JSON.stringify(process.cwd()) +
             ", {modeAutofix:" + (!npm_config_mode_test) +
             ",modeConditional:true});"
         )
@@ -3943,9 +4036,9 @@ local.requireReadme = function () {
     // init example.js
     tmp = require("path").resolve("example.js");
     // jslint code
-    local.jslintAndPrint(code, tmp);
+    jslintAndPrint(code, tmp);
     // instrument code
-    code = local.istanbulInstrumentInPackage(code, tmp);
+    code = instrumentInPackage(code, tmp);
     // init module.exports
     Module = require("module");
     module = new Module(tmp);
@@ -3975,7 +4068,7 @@ local.requireReadme = function () {
     Object.assign(local.assetsDict, module.exports.assetsDict);
     // instrument assets lib.xxx.js
     local.assetsDict["/assets." + npm_package_nameLib + ".js"] = (
-        local.istanbulInstrumentInPackage(
+        instrumentInPackage(
             local.assetsDict[
                 "/assets." + npm_package_nameLib + ".js"
             ],
@@ -3984,24 +4077,18 @@ local.requireReadme = function () {
     );
     module.exports.assetsDict = local.assetsDict;
     local.assetsDict["/assets.example.js"] = code;
-    local.assetsDict["/assets.test.js"] = local.istanbulInstrumentInPackage(
+    local.assetsDict["/assets.test.js"] = instrumentInPackage(
         require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
-    tmp = local.assetsDict["/assets.index.template.html"];
+    tmp = local.assetsDict["/"];
     // uncomment utility2-comment
     tmp = tmp.replace((
-        /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
+        /\n<!--\u0020utility2-comment(\n[\S\s]*?\n)utility2-comment\u0020-->\n/g
     ), "$1");
     // interpolate {{...}}
-    tmp = tmp.replace((
-        /\{\{\w+\}\}/g
-    ), function (key) {
-        return String(processEnv[key.slice(2, -2)]).replace((
-            /<\//g
-        ), "<\\/");
-    });
+    tmp = local.templateRenderMyApp(tmp);
     local.assetsDict["/"] = tmp;
     local.assetsDict["/index.html"] = tmp;
     // init assets.app.js
@@ -4069,7 +4156,7 @@ local.requireReadme = function () {
                 "\n" +
                 "instruction\n" +
                 "    1. save this script as assets.app.js\n" +
-                "    2. run shell-command:\n" +
+                "    2. run shell-cmd:\n" +
                 "        $ PORT=8081 node assets.app.js\n" +
                 "    3. open browser to http://127.0.0.1:8081 " +
                 "and play with web-demo\n" +
@@ -4108,7 +4195,6 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
  * this function will respond with default http <statusCode> and message,
  * or <err>.stack for given statusCode
  */
-    let msg;
     // init statusCode and contentType
     local.serverRespondHeadSet(req, res, statusCode, {
         "Content-Type": "text/plain; charset=utf-8"
@@ -4126,73 +4212,7 @@ local.serverRespondDefault = function (req, res, statusCode, err) {
         return;
     }
     // end res with default statusCode and http-message
-    msg = {
-        "100": "Continue",
-        "101": "Switching Protocols",
-        "102": "Processing",
-        "103": "Early Hints",
-        "200": "OK",
-        "201": "Created",
-        "202": "Accepted",
-        "203": "Non-Authoritative Information",
-        "204": "No Content",
-        "205": "Reset Content",
-        "206": "Partial Content",
-        "207": "Multi-Status",
-        "208": "Already Reported",
-        "226": "IM Used",
-        "300": "Multiple Choices",
-        "301": "Moved Permanently",
-        "302": "Found",
-        "303": "See Other",
-        "304": "Not Modified",
-        "305": "Use Proxy",
-        "307": "Temporary Redirect",
-        "308": "Permanent Redirect",
-        "400": "Bad Request",
-        "401": "Unauthorized",
-        "402": "Payment Required",
-        "403": "Forbidden",
-        "404": "Not Found",
-        "405": "Method Not Allowed",
-        "406": "Not Acceptable",
-        "407": "Proxy Authentication Required",
-        "408": "Request Timeout",
-        "409": "Conflict",
-        "410": "Gone",
-        "411": "Length Required",
-        "412": "Precondition Failed",
-        "413": "Payload Too Large",
-        "414": "URI Too Long",
-        "415": "Unsupported Media Type",
-        "416": "Range Not Satisfiable",
-        "417": "Expectation Failed",
-        "418": "I'm a Teapot",
-        "421": "Misdirected Request",
-        "422": "Unprocessable Entity",
-        "423": "Locked",
-        "424": "Failed Dependency",
-        "425": "Unordered Collection",
-        "426": "Upgrade Required",
-        "428": "Precondition Required",
-        "429": "Too Many Requests",
-        "431": "Request Header Fields Too Large",
-        "451": "Unavailable For Legal Reasons",
-        "500": "Internal Server Error",
-        "501": "Not Implemented",
-        "502": "Bad Gateway",
-        "503": "Service Unavailable",
-        "504": "Gateway Timeout",
-        "505": "HTTP Version Not Supported",
-        "506": "Variant Also Negotiates",
-        "507": "Insufficient Storage",
-        "508": "Loop Detected",
-        "509": "Bandwidth Limit Exceeded",
-        "510": "Not Extended",
-        "511": "Network Authentication Required"
-    };
-    msg = statusCode + " " + msg[statusCode];
-    res.end(msg);
+    res.end(statusCode + " " + require("http").STATUS_CODES[statusCode]);
 };
 
 local.serverRespondEcho = function (req, res) {
@@ -4237,6 +4257,8 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
             return;
         }
         isDone = true;
+        // cleanup timerTimeout
+        clearTimeout(req.timerTimeout);
         // debug res
         console.error("serverLog - " + JSON.stringify({
             time: new Date(req.timeStart).toISOString(),
@@ -4253,16 +4275,14 @@ local.serverRespondTimeoutDefault = function (req, res, timeout) {
             reqHeaderReferer: req.headers.referer || "",
             reqHeaderUserAgent: req.headers["user-agent"]
         }) + "\n");
-        // cleanup timerTimeout
-        clearTimeout(req.timerTimeout);
     };
     req.timeStart = Date.now();
     req.onTimeout = req.onTimeout || function (err) {
         local.serverRespondDefault(req, res, 500, err);
         setTimeout(function () {
             // cleanup req and res
-            local.streamCleanup(req);
-            local.streamCleanup(res);
+            req.destroy();
+            res.destroy();
         }, 1000);
     };
     // init timerTimeout
@@ -4407,48 +4427,36 @@ local.templateRenderMyApp = function (template) {
 /*
  * this function will render my-app template
  */
-    let githubRepo;
-    let packageJson;
-    packageJson = JSON.parse(
-        require("fs").readFileSync("package.json", "utf8")
-    );
-    local.objectAssignDefault(packageJson, {
-        nameLib: packageJson.name.replace((
-            /\W/g
-        ), "_"),
-        repository: {
-            url: (
-                "https://github.com/kaizhu256/node-" + packageJson.name
-            )
-        }
-    }, 2);
-    githubRepo = packageJson.repository.url.replace((
-        /\.git$/
-    ), "").split("/").slice(-2);
     template = template.replace((
         /kaizhu256(\.github\.io\/|%252F|\/)/g
-    ), githubRepo[0] + ("$1"));
+    ), GITHUB_OWNER + "$1");
     template = template.replace((
         /node-my-app/g
-    ), githubRepo[1]);
+    ), GITHUB_REPO);
     template = template.replace((
         /\bh1-my-app\b/g
     ), (
-        packageJson.nameHeroku ||
-        ("h1-" + packageJson.nameLib.replace((
+        npm_package_nameHeroku ||
+        ("h1-" + npm_package_nameLib.replace((
             /_/g
         ), "-"))
     ));
     template = template.replace((
-        /my-app/g
-    ), packageJson.name);
+        /\bmy-app\b/g
+    ), npm_package_name);
     template = template.replace((
         /my_app/g
-    ), packageJson.nameLib);
+    ), npm_package_nameLib);
     template = template.replace((
-        /\{\{packageJson\.(\S+)\}\}/g
-    ), function (ignore, match1) {
-        return packageJson[match1];
+        /\{\{(\w+)(\u0020jsonStringify)?\}\}/g
+    ), function (ignore, key, jsonStringify) {
+        return String(
+            jsonStringify
+            ? JSON.stringify(local[key])
+            : String(local[key])
+        ).replace((
+            /<\//g
+        ), "<\\/");
     });
     return template;
 };
@@ -4527,10 +4535,10 @@ local.testReportMerge = function (
     let testCaseNumber;
     let testPlatformDict;
     let testPlatformList;
-    function fileWrite(file, data) {
+    function write(file, data) {
         file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
         require("fs").writeFileSync(file, data);
-        console.error("test-report - wrote " + file);
+        console.error("test-report - write - " + file);
     }
     // 1. merge <testReport2> into <testReport>
     testReport = local.objectAssignDefault(testReport, {
@@ -4877,11 +4885,11 @@ local.testReportMerge = function (
         });
     });
     // jslint html
-    local.jslintAndPrint(html, "test-report.html");
+    jslintAndPrint(html, "test-report.html");
     // create test-report.html
-    fileWrite("test-report.html", html);
+    write("test-report.html", html);
     // create build.badge.svg
-    fileWrite("build.badge.svg", local.svgBadgeCreate({
+    write("build.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -4890,7 +4898,7 @@ local.testReportMerge = function (
         )
     }));
     // create test-report.badge.svg
-    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
+    write("test-report.badge.svg", local.svgBadgeCreate({
         fill: (
             testPlatformList[0].testsFailed
             ? "#d00"
@@ -4905,9 +4913,9 @@ local.testReportMerge = function (
 
 local.testRunBrowser = function () {
 /*
- * this function will run browser-tests
+ * this function will handle evt to run tests in browser
  */
-    // hide browser-tests
+    // end tests and show test-button
     if (document.querySelector("#htmlTestReport1").style.maxHeight !== "0px") {
         local.uiAnimateSlideUp(document.querySelector("#htmlTestReport1"));
         document.querySelector(
@@ -4915,7 +4923,7 @@ local.testRunBrowser = function () {
         ).textContent = "run browser-tests";
         return;
     }
-    // show browser-tests
+    // start tests and hide test-button
     local.uiAnimateSlideDown(document.querySelector("#htmlTestReport1"));
     document.querySelector(
         "#buttonTestRun1"
@@ -4928,9 +4936,9 @@ local.testRunBrowser = function () {
     });
 };
 
-local.testRunDefault = function (opt) {
+local.testRunDefault = function (testCaseDict = {}) {
 /*
- * this function will run tests in testPlatform.testCaseList
+ * this function will run tests in <testCaseDict>
  */
     let consoleError;
     let isCoverage;
@@ -4962,7 +4970,7 @@ local.testRunDefault = function (opt) {
         if (globalThis.utility2_serverHttp1 || npm_config_mode_lib) {
             return;
         }
-        globalThis.utility2_onReadyBefore.cnt += 1;
+        local.onReadyIncrement();
         local.serverLocalReqHandler = function (req, res) {
         /*
          * this function will emulate express-like middleware-chaining
@@ -4992,18 +5000,13 @@ local.testRunDefault = function (opt) {
         );
         // 2. start server on env.PORT
         console.error("http-server listening on port " + PORT);
-        globalThis.utility2_onReadyBefore.cnt += 1;
-        globalThis.utility2_serverHttp1.listen(
-            PORT,
-            globalThis.utility2_onReadyBefore
-        );
+        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
         // 3. run tests
-        local.testRunDefault(opt);
-        globalThis.utility2_onReadyBefore();
+        local.testRunDefault(testCaseDict);
     }());
     globalThis.utility2_modeTest = Number(
         globalThis.utility2_modeTest ||
-        opt.modeTest ||
+        testCaseDict.modeTest ||
         local.modeTest ||
         npm_config_mode_test
     );
@@ -5011,16 +5014,21 @@ local.testRunDefault = function (opt) {
     // init
     case 1:
         globalThis.utility2_modeTest += 1;
-        // reset db
-        globalThis.utility2_onReadyAfter(function () {
-            local.testRunDefault(opt);
-        });
+        local.eventListenerAdd(
+            "utility2.onReady",
+            local.testRunDefault.bind(undefined, testCaseDict),
+            {
+                once: true
+            }
+        );
+        local.onReadyIncrement();
+        setTimeout(local.onReadyDecrement);
         return;
     // test-run
     default:
         // test-ignore
         if (
-            globalThis.utility2_onReadyBefore.cnt ||
+            localOnReadyCnt ||
             !globalThis.utility2_modeTest ||
             globalThis.utility2_modeTest > 2
         ) {
@@ -5068,10 +5076,10 @@ local.testRunDefault = function (opt) {
     // reset testPlatform.testCaseList
     testPlatform.testCaseList.length = 0;
     // add tests into testPlatform.testCaseList
-    Object.keys(opt).forEach(function (key) {
-        // add testCase opt[key] to testPlatform.testCaseList
+    Object.keys(testCaseDict).forEach(function (key) {
+        // add testCase testCaseDict[key] to testPlatform.testCaseList
         if (
-            typeof opt[key] === "function" && (
+            typeof testCaseDict[key] === "function" && (
                 local.modeTestCase
                 ? local.modeTestCase.split(
                     /[,\s]/g
@@ -5083,7 +5091,7 @@ local.testRunDefault = function (opt) {
                 isBrowser: local.isBrowser,
                 name: key,
                 status: "pending",
-                onTestCase: opt[key]
+                onTestCase: testCaseDict[key]
             });
         }
     });
@@ -5238,13 +5246,6 @@ local.testRunDefault = function (opt) {
     });
 };
 
-local.throwError = function () {
-/*
- * this function will throw new err
- */
-    throw new Error();
-};
-
 local.tryCatchOnError = function (fnc, onError) {
 /*
  * this function will run <fnc> in tryCatch block,
@@ -5394,21 +5395,10 @@ local.uuid4Create = function () {
 
 /* validateLineSortedReset */
 // run shared js-env code - init-after
-local.apidocCreate = local.apidoc.apidocCreate;
 // init utility2_testReport
 globalThis.utility2_testReport = local.testReportMerge(
     globalThis.utility2_testReport
 );
-local.istanbulCoverageMerge = local.istanbul.coverageMerge || local.identity;
-// cbranch-no cstat-no fstat-no missing-if-branch
-local.istanbulCoverageReportCreate = (
-    local.istanbul.coverageReportCreate || local.identity
-);
-local.istanbulInstrumentInPackage = (
-    local.istanbul.instrumentInPackage || local.identity
-);
-local.istanbulInstrumentSync = local.istanbul.instrumentSync || local.identity;
-local.jslintAndPrint = local.jslint.jslintAndPrint || local.identity;
 local.regexpCharsetEncodeUri = (
     /\w!#\$%&'\(\)\*\+,-\.\/:;=\?@~/
 );
@@ -5448,36 +5438,11 @@ local.stringCharsetEncodeUriComponent = (
     "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
 );
 local.stringHelloEmoji = "hello \ud83d\ude01\n";
-globalThis.utility2_onReadyAfter = (
-    globalThis.utility2_onReadyAfter || function (onError) {
-    /*
-     * this function will call onError when utility2_onReadyBefore.cnt === 0
-     */
-        globalThis.utility2_onReadyBefore.cnt += 1;
-        local.eventListenerAdd("utility2_onReadyAfter", onError, {
-            once: true
-        });
-        setTimeout(globalThis.utility2_onReadyBefore);
-        return onError;
-    }
-);
-globalThis.utility2_onReadyBefore = (
-    globalThis.utility2_onReadyBefore || function (err) {
-    /*
-     * this function will keep track of utility2_onReadyBefore.cnt
-     */
-        globalThis.utility2_onReadyBefore.cnt -= 1;
-        if (globalThis.utility2_onReadyBefore.cnt === 0) {
-            local.eventListenerEmit("utility2_onReadyAfter", err);
-        }
-    }
-);
-globalThis.utility2_onReadyBefore.cnt |= 0;
-globalThis.utility2_onReadyAfter(local.noop);
 
 
 /* istanbul ignore next */
 // run node js-env code - init-after
+(function () {
 if (local.isBrowser) {
     return;
 }
@@ -5512,7 +5477,6 @@ if (module === require.main && (!globalThis.utility2_rollup || (
 ))) {
     local.cliRun({});
     if (local.cliDict[process.argv[2]]) {
-        local.cliDict[process.argv[2]]();
         switch (process.argv[2]) {
         case "--interactive":
         case "-i":
@@ -5599,12 +5563,6 @@ if (globalThis.utility2_rollup) {
             match0 = match0.replace((
                 /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
             ), "$1");
-            //!! local.assetsDict[key] = local.templateRender((
-                //!! match0
-            //!! ), local.objectAssignDefault({
-                //!! isRollup: true,
-                //!! version: "0.0.1"
-            //!! }, require(__dirname + "/package.json")));
             return "";
         });
         break;
@@ -5699,5 +5657,6 @@ local.assetsDict["/assets.utility2.rollup.js"] = [
         "\n/* script-end " + key + " */\n"
     );
 }).join("\n\n\n");
+}());
 }());
 }());

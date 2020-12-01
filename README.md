@@ -48,6 +48,8 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.11.13
+- rename var command to cmd
+- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and onReadyDecrement
 - remove jslint-ignore statements from file lib.utility2.js
 - move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&&\|||\|.==\||\|&\) / \2\r\1/gc - ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}
 - merge function testReportCreate into testReportMerge
@@ -60,12 +62,12 @@ this zero-dependency package will provide high-level functions to to build, test
 - remove functions _http.createServer, _http.request,
 - remove functions ajaxProgressUpdate,
 - remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,
-- remove functions corsForwardProxyHostIfNeeded,
+- remove functions coalesce, corsForwardProxyHostIfNeeded,
 - remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate
 - remove functions fsRmrfSync,
 - remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,
 - remove functions serverLocalUrlTest, stateInit, stringMerge,
-- remove functions templateRender, timeElapsedPoll,
+- remove functions templateRender, throwError, timeElapsedPoll,
 - remove functions urlParse,
 - remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
 - rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
@@ -237,22 +239,6 @@ instruction
             )
         );
     }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -316,7 +302,6 @@ instruction
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -393,8 +378,18 @@ if (local.isBrowser) {
 module.exports = local;
 // init assetsDict
 local.assetsDict = local.assetsDict || {};
+local.assetsDict["/assets.utility2.js"] = (
+    local.assetsDict["/assets.utility2.js"] ||
+    require("fs").readFileSync(
+        require("path").resolve(local.__dirname + "/lib.utility2.js"),
+        "utf8"
+    ).replace((
+        /^#!\//
+    ), "// ")
+);
+/* validateLineSortedReset */
 /* jslint ignore:start */
-local.assetsDict["/assets.index.template.html"] = `<!doctype html>
+local.assetsDict["/"] = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -403,7 +398,7 @@ local.assetsDict["/assets.index.template.html"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>{{npm_package_name}} ({{npm_package_version}})</title>
+<title>utility2 (2020.11.13)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -563,11 +558,11 @@ pre {
 }());
 </script>
 <h1>
-<a href="{{npm_package_homepage}}" target="_blank">
-    {{npm_package_name}} ({{npm_package_version}})
+<a href="https://github.com/kaizhu256/node-utility2" target="_blank">
+    utility2 (2020.11.13)
 </a>
 </h1>
-<h3>{{npm_package_description}}</h3>
+<h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
 <!-- utility2-comment
 <a
     class="button" download href="assets.app.js"
@@ -702,27 +697,37 @@ window.addEventListener("load", function () {
     document.querySelector(
         "#inputTextarea1"
     ).addEventListener("keyup", testRun);
+    // testRun
+    testRun({
+        target: {}
+    });
 });
 </script>
 <!-- custom-html-end -->
 
 
 <!-- utility2-comment
-<script>window.processEnv = {{processEnv}}</script>
-<script src="assets.utility2.rollup.js"></script>
-utility2-comment -->
+<script>
+window.utility2_state = {
+npm_config_mode_backend: undefined,
+npm_package_description: "this zero-dependency package will provide high-level functions to to build, test, and deploy webapps",
+npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
+npm_package_name: "utility2",
+npm_package_nameLib: "utility2",
+npm_package_version: "2020.11.13"
+}
+</script>
 <script src="assets.utility2.lib.istanbul.js"></script>
 <script src="assets.utility2.lib.jslint.js"></script>
 <script src="assets.utility2.lib.marked.js"></script>
 <script src="assets.utility2.js"></script>
-<script>window.utility2_onReadyBefore.cnt += 1;</script>
+<script>
+window.utility2.onReadyIncrement();
+window.addEventListener("load", window.utility2.onReadyDecrement);
+</script>
+utility2-comment -->
 <script src="assets.example.js"></script>
 <script src="assets.test.js"></script>
-<script>
-if (window.utility2_onReadyBefore) {
-    window.utility2_onReadyBefore();
-}
-</script>
 <div style="text-align: center;">
     [
     this app was created with
@@ -736,42 +741,14 @@ if (window.utility2_onReadyBefore) {
 </html>
 `;
 /* jslint ignore:end */
-local.assetsDict["/assets.utility2.js"] = (
-    local.assetsDict["/assets.utility2.js"]
-    || require("fs").readFileSync(
-        require("path").resolve(local.__dirname + "/lib.utility2.js"),
-        "utf8"
-    ).replace((
-        /^#!\//
-    ), "// ")
-);
-/* validateLineSortedReset */
-local.assetsDict["/"] = local.assetsDict[
-    "/assets.index.template.html"
-].replace((
-    /\{\{(\w+?)\}\}/g
-), function (match0, match1) {
-    switch (match1) {
-    case "npm_package_description":
-        return "the greatest app in the world!";
-    case "npm_package_name":
-        return "utility2";
-    case "npm_package_nameLib":
-        return "utility2";
-    case "npm_package_version":
-        return "0.0.1";
-    default:
-        return match0;
-    }
-});
 local.assetsDict["/assets.example.html"] = local.assetsDict["/"];
 // init cli
 if (module !== require.main || globalThis.utility2_rollup) {
     return;
 }
 local.assetsDict["/assets.example.js"] = (
-    local.assetsDict["/assets.example.js"]
-    || require("fs").readFileSync(__filename, "utf8")
+    local.assetsDict["/assets.example.js"] ||
+    require("fs").readFileSync(__filename, "utf8")
 );
 local.assetsDict["/favicon.ico"] = local.assetsDict["/favicon.ico"] || "";
 local.assetsDict["/index.html"] = local.assetsDict["/"];

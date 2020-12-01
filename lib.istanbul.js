@@ -105,22 +105,6 @@
             )
         );
     }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -184,7 +168,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -231,37 +214,46 @@ local.cliRun = function ({
 /*
  * this function will run cli
  */
-    let cliDict;
-    cliDict = local.cliDict;
-    cliDict._eval = cliDict._eval || function () {
+    let {
+        cliDict,
+        replStart
+    } = local;
+    let {
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    } = cliDict;
+    _eval = _eval || function () {
     /*
      * <code>
      * will eval <code>
      */
-        globalThis.local = local;
+        Object.assign(globalThis, local);
         require("vm").runInThisContext(process.argv[3]);
     };
-    cliDict._help = cliDict._help || function () {
+    _help = _help || function () {
     /*
      *
      * will print help
      */
-        let commandList;
+        let cmdList;
         let file;
         let packageJson;
         let str;
         let strDict;
-        commandList = [
+        cmdList = [
             {
                 argList: "<arg2>  ...",
                 description: "usage:",
-                command: [
+                cmd: [
                     "<arg1>"
                 ]
             }, {
                 argList: "'console.log(\"hello world\")'",
                 description: "example:",
-                command: [
+                cmd: [
                     "--eval"
                 ]
             }
@@ -285,38 +277,39 @@ local.cliRun = function ({
             }
             strDict[str] = strDict[str] || (ii + 2);
             ii = strDict[str];
-            if (commandList[ii]) {
-                commandList[ii].command.push(key);
+            if (cmdList[ii]) {
+                cmdList[ii].cmd.push(key);
                 return;
             }
-            commandList[ii] = rgxComment.exec(str);
-            local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND " +
-                key +
-                ":\nnew RegExp(" +
-                JSON.stringify(rgxComment.source) +
-                ").exec(" + JSON.stringify(str).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\") + ");"
-            ));
-            commandList[ii] = {
-                argList: local.coalesce(commandList[ii][1], "").trim(),
-                command: [
+            cmdList[ii] = rgxComment.exec(str);
+            if (!cmdList[ii]) {
+                throw new Error(
+                    "cliRun - cannot parse comment in cmd " +
+                    key + ":\nnew RegExp(" +
+                    JSON.stringify(rgxComment.source) +
+                    ").exec(" + JSON.stringify(str).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                );
+            }
+            cmdList[ii] = {
+                argList: String(cmdList[ii][1] || "").trim(),
+                cmd: [
                     key
                 ],
-                description: commandList[ii][2]
+                description: cmdList[ii][2]
             };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";
-        str += commandList.filter(function (elem) {
+        str += cmdList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
-            elem.command = elem.command.filter(function (elem) {
+            elem.cmd = elem.cmd.filter(function (elem) {
                 return elem;
             });
             switch (ii) {
@@ -329,56 +322,65 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND " +
-                    (elem.command[0] || "<none>") + "\n# " +
+                    "# CMD " +
+                    (elem.cmd[0] || "<none>") + "\n# " +
                     elem.description
                 );
             }
             return (
                 elem.description + "\n  " + file +
-                "  " + elem.command.sort().join("|") + "  " +
+                "  " + elem.cmd.sort().join("|") + "  " +
                 elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
     };
-    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
-    cliDict["--help"] = cliDict["--help"] || cliDict._help;
-    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
-    cliDict["-h"] = cliDict["-h"] || cliDict._help;
-    cliDict._default = cliDict._default || cliDict._help;
-    cliDict.help = cliDict.help || cliDict._help;
-    cliDict._interactive = cliDict._interactive || function () {
+    _interactive = _interactive || function () {
     /*
      *
      * will start interactive-mode
      */
-        globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        Object.assign(globalThis, local);
+        replStart = replStart || require("repl").start;
+        replStart({
             useGlobal: true
         });
     };
-    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
-    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
-    cliDict._version = cliDict._version || function () {
+    _version = _version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    cliDict["--version"] = cliDict["--version"] || cliDict._version;
-    cliDict["-v"] = cliDict["-v"] || cliDict._version;
-    // default to --help command if no arguments are given
+    _default = _default || _help;
+    Object.assign(cliDict, {
+        "--eval": _eval,
+        "--help": _help,
+        "--interactive": _interactive,
+        "--version": _version,
+        "-e": _eval,
+        "-h": _help,
+        "-i": _interactive,
+        "-v": _version,
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    });
+    // run help-cmd if no arguments are given
     if (process.argv.length <= 2) {
-        cliDict._help();
+        _help();
         return;
     }
+    // run defined-cmd if it exists
     if (cliDict[process.argv[2]]) {
         cliDict[process.argv[2]]();
         return;
     }
-    cliDict._default();
+    // run default-cmd
+    _default();
 };
 
 local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
