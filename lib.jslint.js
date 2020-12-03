@@ -122,8 +122,7 @@
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +140,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -17229,7 +17228,7 @@ jslintUtility2 = function ({code, errList, fileType}) {
     case ".sh":
         previous = "";
         code2.replace((
-            /(^sh\w+?\u0020\(\)\u0020\{)|^sh\w+?\u0020*?\(\)\u0020*?\{/gm
+            /(^sh\w+?\(\)\u0020\{)|^sh\w+?\u0020*?\(\)\u0020*?\{/gm
         ), function (ignore, match1, ii) {
             err = undefined;
             if (!match1) {

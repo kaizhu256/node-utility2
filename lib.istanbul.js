@@ -122,8 +122,7 @@
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +140,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -11418,22 +11417,19 @@ local.coverageReportCreate = function ({
     let dirCoverage;
     let filePrefix;
     let htmlAll;
-    let nodeChildAdd;
-    let nodeCreate;
     let nodeDict;
-    let nodeNormalize;
     let nodeRoot;
     let summaryDict;
     let tmp;
     // init function
-    nodeChildAdd = function (node, child) {
+    function nodeChildAdd(node, child) {
     /*
      * this function will add <child> to <node>
      */
         node.children.push(child);
         child.parent = node;
-    };
-    nodeCreate = function (pathname) {
+    }
+    function nodeCreate(pathname) {
     /*
      * this function will create a tree-node
      */
@@ -11468,8 +11464,8 @@ local.coverageReportCreate = function ({
             },
             name: pathname
         };
-    };
-    nodeNormalize = function (node, level, filePrefix, parent) {
+    }
+    function nodeNormalize(node, level, filePrefix, parent) {
     /*
      * this function will recursively normalize <node> and its children
      */
@@ -11549,7 +11545,7 @@ local.coverageReportCreate = function ({
                 : "low"
             );
         });
-    };
+    }
     // 1. merge previous <dirCoverage>/coverage.json into <coverage>
     coverage = coverage || globalThis.__coverage__;
     coverageInclude = coverageInclude || globalThis.__coverageInclude__;
@@ -11866,9 +11862,7 @@ local.cliDict.cover = function () {
     console.error("\nistanbul - covering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
-        local.coverageReportCreate({
-            coverage: globalThis.__coverage__
-        });
+        local.coverageReportCreate({});
     });
     // re-init cli
     tmp.runMain();
@@ -11899,9 +11893,7 @@ local.cliDict.report = function () {
     Object.keys(globalThis.__coverage__).forEach(function (file) {
         globalThis.__coverageInclude__[file] = 1;
     });
-    local.coverageReportCreate({
-        coverage: globalThis.__coverage__
-    });
+    local.coverageReportCreate({});
 };
 
 local.cliDict.test = function () {

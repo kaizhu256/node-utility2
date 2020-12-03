@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.12.1)
+ * lib.utility2.js (2020.12.3)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -122,8 +122,7 @@
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +140,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -505,8 +504,7 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "or \"\",\n" +
     "     * then overwrite them with items from <src>\n" +
     "     */\n" +
-    "        let recurse;\n" +
-    "        recurse = function (tgt, src, depth) {\n" +
+    "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
     "                key, bb\n" +
     "            ]) {\n" +
@@ -526,7 +524,7 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "                    recurse(aa, bb, depth - 1);\n" +
     "                }\n" +
     "            });\n" +
-    "        };\n" +
+    "        }\n" +
     "        recurse(tgt, src, depth | 0);\n" +
     "        return tgt;\n" +
     "    }\n" +
@@ -1422,25 +1420,23 @@ local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
-    let require2;
     if (local.isBrowser) {
         onError(undefined, opt);
         return;
     }
-    require2 = function (file) {
+    function require2(file) {
     /*
      * this function will require <file> in sandbox-env
      */
         let exports;
         let mockDict;
         let mockList;
-        let noop;
-        noop = function () {
+        function noop() {
         /*
          * this function will do nothing
          */
             return;
-        };
+        }
         // coverage-hack
         noop();
         mockList = [
@@ -1505,7 +1501,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             onError();
         }, local.onErrorThrow);
         return exports;
-    };
+    }
     // coverage-hack
     require2();
     // save apidoc.html
@@ -2214,9 +2210,8 @@ local.buildApp = function ({
         }));
         // init port
         promiseList.push(new Promise(function (resolve) {
-            let recurse;
             let server;
-            recurse = function (err) {
+            function recurse(err) {
                 if (server) {
                     server.close();
                 }
@@ -2229,7 +2224,7 @@ local.buildApp = function ({
                 ) | 0x8000;
                 server = require("net").createServer().listen(port);
                 server.on("error", recurse).on("listening", recurse);
-            };
+            }
             recurse(true);
         }));
         // read file
@@ -4326,25 +4321,6 @@ local.setTimeoutOnError = function (onError, timeout, err, data) {
         }, timeout);
     }
     return data;
-};
-
-local.streamCleanup = function (stream) {
-/*
- * this function will try to end or destroy <stream>
- */
-    let err;
-    // try to end stream
-    try {
-        stream.end();
-    } catch (errCaught) {
-        err = errCaught;
-    }
-    // if err, then try to destroy stream
-    if (err) {
-        try {
-            stream.destroy();
-        } catch (ignore) {}
-    }
 };
 
 local.stringHtmlSafe = function (str) {

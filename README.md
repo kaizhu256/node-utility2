@@ -51,36 +51,9 @@ this zero-dependency package will provide high-level functions to to build, test
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.12.1
-- add persistent repl-history between restart
-- rename var command to cmd
-- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and onReadyDecrement
-- remove jslint-ignore statements from file lib.utility2.js
-- move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&&\|||\|.==\||\|&\) / \2\r\1/gc - ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}
-- merge function testReportCreate into testReportMerge
-- add custom env-object processEnv
-- rename default env-var \$npm_package_name from utility2-lite to utility2
-- merge shell-function shDockerCdHostPwd into shDockerSh
-- jslint - add prefix "mode" in front of utility2-options
-- add function svgBadgeCreate
-- merge function testReportCreate into testReportMerge
-- remove functions _http.createServer, _http.request,
-- remove functions ajaxProgressUpdate,
-- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,
-- remove functions coalesce, corsForwardProxyHostIfNeeded,
-- remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate
-- remove functions fsRmrfSync,
-- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,
-- remove functions serverLocalUrlTest, stateInit, stringMerge,
-- remove functions templateRender, throwError, timeElapsedPoll,
-- remove functions urlParse,
-- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
-- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
-- remove shell-function shXvfbStart
-- merge function testRunServer into testRunDefault
-- remove function and test for function local.ajax
-- remove nodejs.v10 polyfill TextDecoder, TextEncoder
-- rename shell-function shReadmeTest to shReadmeEval
+#### changelog 2020.12.3
+- remove functions streamCleanup
+- remove whitespace in shell-functions
 - none
 
 #### todo
@@ -263,8 +236,7 @@ instruction
      * this function will if items from <tgt> are null, undefined, or "",
      * then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -282,7 +254,7 @@ instruction
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -455,7 +427,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2020.12.1)</title>
+<title>utility2 (2020.12.3)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -616,7 +588,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2020.12.1)
+    utility2 (2020.12.3)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -777,7 +749,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2020.12.1"
+npm_package_version: "2020.12.3"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>
@@ -935,7 +907,7 @@ require("http").createServer(function (req, res) {
         "2020.11.12 istanbul-lite",
         "2020.12.01 utility2"
     ],
-    "version": "2020.12.1"
+    "version": "2020.12.3"
 }
 ```
 

@@ -38,7 +38,7 @@
 # utility2 shReadmeEval example.js
 # vim rgx-lowercase \L\1\e
 
-shBaseInit () {
+shBaseInit() {
 # this function will init bash-login base-env, and is intended for aws-ec2 setup
     local FILE || return "$?"
     # PATH=/usr/local/bin:/usr/bin:/bin
@@ -81,7 +81,7 @@ shBaseInit () {
     alias lld="ls -adlF" || return "$?"
 }
 
-shBaseInstall () {
+shBaseInstall() {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
@@ -110,7 +110,7 @@ shBaseInstall () {
     . "$HOME/.bashrc" || return "$?"
 }
 
-shBashrcDebianInit () {
+shBashrcDebianInit() {
 # this function will init debian:stable /etc/skel/.bashrc
 # https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
     # ~/.bashrc: executed by bash(1) for non-login shells.
@@ -228,7 +228,7 @@ shBashrcDebianInit () {
     fi
 }
 
-shBrowserScreenshot () {(set -e
+shBrowserScreenshot() {(set -e
 # this function will run headless-chromium to screenshot url "$1"
     node -e '
 /* jslint utility2:true */
@@ -303,7 +303,7 @@ shBrowserScreenshot () {(set -e
 ' "$1" "$2" # '
 )}
 
-shBrowserTest () {(set -e
+shBrowserTest() {(set -e
 # this function will spawn google-chrome-process to test url $1,
 # and merge test-report into existing test-report
     export MODE_BUILD="${MODE_BUILD:-browserTest}"
@@ -314,14 +314,14 @@ shBrowserTest () {(set -e
     lib.utility2.js utility2.testReportCreate
 )}
 
-shBuildApidoc () {(set -e
+shBuildApidoc() {(set -e
 # this function will build apidoc
     shEnvSanitize
     export MODE_BUILD=buildApidoc
     npm test --mode-coverage="" --mode-test-case=testCase_buildApidoc_default
 )}
 
-shBuildApp () {(set -e
+shBuildApp() {(set -e
 # this function will build app in "$PWD" with name "$1"
     shEnvSanitize
     export MODE_BUILD=buildApp
@@ -549,7 +549,7 @@ shBuildApp () {(set -e
     fi
 )}
 
-shBuildCi () {(set -e
+shBuildCi() {(set -e
 # this function will run main-build
     shBuildInit
     export MODE_BUILD=buildCi
@@ -826,7 +826,7 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
     fi
 )}
 
-shBuildCiInternal () {(set -e
+shBuildCiInternal() {(set -e
 # this function will run internal-build
     # run build-ci-before
     if (type shBuildCiBefore > /dev/null 2>&1)
@@ -909,7 +909,7 @@ shBuildCiInternal () {(set -e
     fi
 )}
 
-shBuildGithubUpload () {(set -e
+shBuildGithubUpload() {(set -e
 # this function will upload build-artifacts to github
     local DIR
     local URL
@@ -956,7 +956,7 @@ shBuildGithubUpload () {(set -e
     fi
 )}
 
-shBuildInit () {
+shBuildInit() {
 # this function will init env
     eval "$(node -e '
 /* jslint utility2:true */
@@ -1111,7 +1111,7 @@ shBuildInit () {
     fi
 }
 
-shBuildInsideDocker () {(set -e
+shBuildInsideDocker() {(set -e
 # this function will run build inside docker
     shEnvSanitize
     # npm-install
@@ -1134,7 +1134,7 @@ shBuildInsideDocker () {(set -e
         2>/dev/null || true
 )}
 
-shBuildPrint () {(set -e
+shBuildPrint() {(set -e
 # this function will print debug-info about current build-state
     node -e '
 /* jslint utility2:true */
@@ -1148,7 +1148,7 @@ shBuildPrint () {(set -e
 ' "$1" # '
 )}
 
-shChromeSocks5 () {(set -e
+shChromeSocks5() {(set -e
 # this function will run chrome with socks5 proxy
 # https://sites.google.com/a/chromium.org/dev/developers/design-documents/network-stack/socks-proxy
     if [ "$1" = "canary" ]
@@ -1167,7 +1167,7 @@ shChromeSocks5 () {(set -e
     fi
 )}
 
-shCryptoAesXxxCbcRawDecrypt () {(set -e
+shCryptoAesXxxCbcRawDecrypt() {(set -e
 # this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
@@ -1276,7 +1276,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
 ' "$@" # '
 )}
 
-shCryptoAesXxxCbcRawEncrypt () {(set -e
+shCryptoAesXxxCbcRawEncrypt() {(set -e
 # this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
@@ -1387,7 +1387,7 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 ' "$@" # '
 )}
 
-shCryptoTravisDecrypt () {(set -e
+shCryptoTravisDecrypt() {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
     shBuildInit
     export MODE_BUILD=cryptoTravisDecrypt
@@ -1413,7 +1413,7 @@ shCryptoTravisDecrypt () {(set -e
     curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
-shCryptoTravisEncrypt () {(set -e
+shCryptoTravisEncrypt() {(set -e
 # this function will encrypt $CRYPTO_AES_SH_ENCRYPTED to .travis.yml,
 # and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
     shBuildInit
@@ -1460,7 +1460,7 @@ shCryptoTravisEncrypt () {(set -e
     fi
 )}
 
-shCryptoWithGithubOrg () {(set -e
+shCryptoWithGithubOrg() {(set -e
 # this function will run "$@" with private $GITHUB_OWNER-env
     export GITHUB_OWNER="$1"
     shift
@@ -1468,12 +1468,12 @@ shCryptoWithGithubOrg () {(set -e
     "$@"
 )}
 
-shDeployCustom () {
+shDeployCustom() {
 # this function will do nothing
     return
 }
 
-shDeployGithub () {(set -e
+shDeployGithub() {(set -e
 # this function will deploy app to $GITHUB_FULLNAME
 # and run simple curl-check for $TEST_URL
 # and test $TEST_URL
@@ -1499,7 +1499,7 @@ shDeployGithub () {(set -e
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
 )}
 
-shDeployHeroku () {(set -e
+shDeployHeroku() {(set -e
 # this function will deploy app to heroku
 # and run simple curl-check for $TEST_URL
 # and test $TEST_URL
@@ -1536,7 +1536,7 @@ shDeployHeroku () {(set -e
     MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
 )}
 
-shDockerRestartNginx () {(set -e
+shDockerRestartNginx() {(set -e
 # this function will restart docker-container nginx
     # init htpasswd
     # printf "aa:$(openssl passwd -crypt bb)\n" > \
@@ -1636,7 +1636,7 @@ server {
 "
 )}
 
-shDockerRestartTransmission () {(set -e
+shDockerRestartTransmission() {(set -e
 # this function will restart docker-container transmission
 # http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
@@ -1666,7 +1666,7 @@ shDockerRestartTransmission () {(set -e
 "
 )}
 
-shDockerRestartUtility2 () {(set -e
+shDockerRestartUtility2() {(set -e
 # this function will restart docker-container $1 $2 with utility2 env
     local DOCKER_V_GAME
     docker rm -fv "$1" || true
@@ -1694,27 +1694,27 @@ shDockerRestartUtility2 () {(set -e
         "$2"
 )}
 
-shDockerRm () {(set -e
+shDockerRm() {(set -e
 # this function will rm docker-containers "$@"
     docker rm -fv "$@" || true
 )}
 
-shDockerRmAll () {(set -e
+shDockerRmAll() {(set -e
 # this function will rm all docker-containers
     docker rm -fv $(docker ps -aq) || true
 )}
 
-shDockerRmExited () {(set -e
+shDockerRmExited() {(set -e
 # this function will rm all docker-containers that have exited
     docker rm -fv $(docker ps -aqf status=exited) || true
 )}
 
-shDockerRmiUntagged () {(set -e
+shDockerRmiUntagged() {(set -e
 # this function will rm all untagged docker images
     docker rmi $(docker images -aqf dangling=true) 2>/dev/null || true
 )}
 
-shDockerSh () {
+shDockerSh() {
 # this function will run /bin/bash in docker-container $1
     # run outside vm
     if [ "$1" != init ]
@@ -1777,12 +1777,12 @@ shDockerSh () {
     fi
 }
 
-shDuList () {(set -e
+shDuList() {(set -e
 # this function will du $1 and sort its subdir by size
     du -md1 "$1" | sort -nr
 )}
 
-shEnvSanitize () {
+shEnvSanitize() {
 # this function will unset password-env, e.g.
 # (export CRYPTO_AES_SH=abcd1234; shEnvSanitize; printf "$CRYPTO_AES_SH\n")
 # undefined
@@ -1807,7 +1807,7 @@ shEnvSanitize () {
 ')" # '
 }
 
-shGitCmdWithGithubToken () {(set -e
+shGitCmdWithGithubToken() {(set -e
 # this function will run git $CMD with $GITHUB_TOKEN
 # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     local CMD
@@ -1843,14 +1843,14 @@ shGitCmdWithGithubToken () {(set -e
     git "$CMD" "$URL" "$@" 2>/dev/null
 )}
 
-shGitDirCommitAndPush () {(set -e
+shGitDirCommitAndPush() {(set -e
 # this function will git-commit and git-push dir $1 with msg $2
     cd "$1"
     git commit -am "$2" || true
     git push
 )}
 
-shGitGc () {(set -e
+shGitGc() {(set -e
 # this function will gc unreachable .git objects
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
     git \
@@ -1862,7 +1862,7 @@ shGitGc () {(set -e
         gc
 )}
 
-shGitInfo () {(set -e
+shGitInfo() {(set -e
 # this function will run checks before npm-publish
     git diff HEAD
     printf "\n"
@@ -1881,7 +1881,7 @@ shGitInfo () {(set -e
     git grep -E '\bset -\w*x\b' *.sh || true
 )}
 
-shGitInitBase () {(set -e
+shGitInitBase() {(set -e
 # this function will git init && git fetch utility2 base
     git init
     if [ "$DOS2UNIX" ]
@@ -1898,7 +1898,7 @@ shGitInitBase () {(set -e
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
-shGitLsTree () {(set -e
+shGitLsTree() {(set -e
 # this function will "git ls-tree" all files committed in HEAD
 # example use:
 # shGitLsTree | sort -rk3 # sort by date
@@ -1964,7 +1964,7 @@ shGitLsTree () {(set -e
 ' # '
 )}
 
-shGitSquashPop () {(set -e
+shGitSquashPop() {(set -e
 # this function will squash HEAD to given $COMMIT
 # http://stackoverflow.com/questions/5189560
 # /how-can-i-squash-my-last-x-commits-together-using-git
@@ -1977,7 +1977,7 @@ shGitSquashPop () {(set -e
     git commit -am "$MESSAGE" || true
 )}
 
-shGitSquashShift () {(set -e
+shGitSquashShift() {(set -e
 # this function will squash $RANGE to first commit
     BRANCH="$(git rev-parse --abbrev-ref HEAD)"
     RANGE="$1"
@@ -1991,12 +1991,12 @@ shGitSquashShift () {(set -e
     git checkout "$BRANCH"
 )}
 
-shGithubApiRateLimitGet () {(set -e
+shGithubApiRateLimitGet() {(set -e
 # this function will fetch current rate-limit with given $GITHUB_TOKEN
     curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
 )}
 
-shGithubRepoCreate () {(set -e
+shGithubRepoCreate() {(set -e
 # this function will create base github-repo https://github.com/$GITHUB_FULLNAME
     local GITHUB_FULLNAME="$1"
     export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
@@ -2053,7 +2053,7 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         true
 )}
 
-shGithubRepoDescriptionUpdate () {(set -e
+shGithubRepoDescriptionUpdate() {(set -e
 # this function will update github-repo description
     shSleep 5
     GITHUB_FULLNAME="$1"
@@ -2073,7 +2073,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     "https://api.github.com/repos/$GITHUB_FULLNAME"
 )}
 
-shGithubRepoTouch () {(set -e
+shGithubRepoTouch() {(set -e
 # this function will touch github-repo $1, branch $2, with commit-message $2
     node -e '
 /* jslint utility2:true */
@@ -2129,7 +2129,7 @@ shGithubRepoTouch () {(set -e
 ' "$@" # '
 )}
 
-shGrep () {(set -e
+shGrep() {(set -e
 # this function will recursively grep $DIR for $REGEXP
     DIR="$1"
     shift
@@ -2163,7 +2163,7 @@ vendor)s{0,1}(\\b|_)\
         xargs -0 grep -HIn -E "$REGEXP" "$@" || true
 )}
 
-shGrepReplace () {(set -e
+shGrepReplace() {(set -e
 # this function will inline grep-and-replace files in $1
     node -e '
 /* jslint utility2:true */
@@ -2194,7 +2194,7 @@ shGrepReplace () {(set -e
 ' "$@" # '
 )}
 
-shHttpFileServer () {(set -e
+shHttpFileServer() {(set -e
 # this function will run simple node http-file-server on port $PORT
     node -e '
 /* jslint utility2:true */
@@ -2242,7 +2242,7 @@ shHttpFileServer () {(set -e
 ' # '
 )}
 
-shImageToDataUri () {(set -e
+shImageToDataUri() {(set -e
 # this function will convert image $FILE to data-uri string
     case "$1" in
     http://*)
@@ -2271,7 +2271,7 @@ shImageToDataUri () {(set -e
 ' "$FILE" # '
 )}
 
-shIstanbulCover () {(set -e
+shIstanbulCover() {(set -e
 # this function will run cmd "$NODE_BIN" "$@" with istanbul-coverage
     export NODE_BIN="${NODE_BIN:-node}"
     if [ "$npm_config_mode_coverage" ]
@@ -2287,7 +2287,7 @@ shIstanbulCover () {(set -e
     "$NODE_BIN" "$@"
 )}
 
-shJsonNormalize () {(set -e
+shJsonNormalize() {(set -e
 # this function will
 # 1. read json-data from file $1
 # 2. normalize json-data
@@ -2326,7 +2326,7 @@ shJsonNormalize () {(set -e
 ' "$1" # '
 )}
 
-shMacAddressSpoof () {(set -e
+shMacAddressSpoof() {(set -e
 # this function will spoof mac-address $1
     MAC_ADDRESS="${1-$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')}"
     printf "spoofing mac address $MAC_ADDRESS\n"
@@ -2335,7 +2335,7 @@ shMacAddressSpoof () {(set -e
     ifconfig en0
 )}
 
-shNpmDeprecateAlias () {(set -e
+shNpmDeprecateAlias() {(set -e
 # this function will deprecate npm-package $NAME with given $MESSAGE
 # example use:
 # shNpmDeprecateAlias deprecated-package
@@ -2380,7 +2380,7 @@ shNpmDeprecateAlias () {(set -e
     npm deprecate "$NAME" "$MESSAGE"
 )}
 
-shNpmPackageCliHelpCreate () {(set -e
+shNpmPackageCliHelpCreate() {(set -e
 # this function will create svg of cli-help in current npm-package
     local FILE
     export MODE_BUILD=npmPackageCliHelp
@@ -2396,7 +2396,7 @@ node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
     shBuildPrint "end"
 )}
 
-shNpmPackageDependencyTreeCreate () {(set -e
+shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create svg-dependency-tree of npm-package
     local DIR
     if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
@@ -2442,7 +2442,7 @@ shNpmPackageDependencyTreeCreate () {(set -e
     shBuildPrint "end"
 )}
 
-shNpmPackageListingCreate () {(set -e
+shNpmPackageListingCreate() {(set -e
 # this function will create svg-listing of npm-package
     export MODE_BUILD=npmPackageListing
     shBuildPrint "start"
@@ -2462,7 +2462,7 @@ node_modules
     shBuildPrint "end"
 )}
 
-shNpmPublishAlias () {(set -e
+shNpmPublishAlias() {(set -e
 # this function will npm-publish $DIR as $NAME@$VERSION
     cd "$1"
     NAME="$2"
@@ -2496,7 +2496,7 @@ shNpmPublishAlias () {(set -e
     npm publish
 )}
 
-shNpmPublishV0 () {(set -e
+shNpmPublishV0() {(set -e
 # this function will npm-publish name $1 with bare package.json
     DIR=/tmp/npmPublishV0
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
@@ -2504,7 +2504,7 @@ shNpmPublishV0 () {(set -e
     npm publish
 )}
 
-shNpmTest () {(set -e
+shNpmTest() {(set -e
 # this function will npm-test with coverage and create test-report
     shBuildInit
     EXIT_CODE=0
@@ -2536,7 +2536,7 @@ shNpmTest () {(set -e
     return "$EXIT_CODE"
 )}
 
-shNpmTestPublished () {(set -e
+shNpmTestPublished() {(set -e
 # this function will npm-test published npm-package $npm_package_name
     export MODE_BUILD=npmTestPublished
     if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
@@ -2568,7 +2568,7 @@ shNpmTestPublished () {(set -e
     npm test --mode-coverage
 )}
 
-shPackageJsonVersionIncrement () {(set -e
+shPackageJsonVersionIncrement() {(set -e
 # this function will increment package.json version
     node -e '
 /* jslint utility2:true */
@@ -2697,7 +2697,7 @@ shPackageJsonVersionIncrement () {(set -e
 ' "$1" # '
 )}
 
-shRawLibDiff () {(set -e
+shRawLibDiff() {(set -e
 # this function will diff-compare raw.xxx.js to lib.xxx.js
     diff -u "$(
         printf "$1" | sed -e "s/[^\\.]*\\./raw./"
@@ -2705,7 +2705,7 @@ shRawLibDiff () {(set -e
     vim -R /tmp/shRawLibDiff.diff
 )}
 
-shRawLibFetch () {(set -e
+shRawLibFetch() {(set -e
 # this function will fetch raw-lib from $1
     export DIR=".tmp/raw.lib"
     rm -rf "$DIR" && mkdir -p "$DIR"
@@ -3099,7 +3099,7 @@ shRawLibFetch () {(set -e
 ' "$@" # '
 )}
 
-shReadmeEval () {(set -e
+shReadmeEval() {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
     shBuildInit
     export MODE_BUILD=readmeTest
@@ -3184,7 +3184,7 @@ shReadmeEval () {(set -e
     shBuildPrint "... finished running cmd 'shReadmeEval $*'"
 )}
 
-shReadmeLinkValidate () {(set -e
+shReadmeLinkValidate() {(set -e
 # this function will validate http-links embedded in README.md
     node -e '
 /* jslint utility2:true */
@@ -3236,7 +3236,7 @@ shReadmeLinkValidate () {(set -e
 ' # '
 )}
 
-shRmDsStore () {(set -e
+shRmDsStore() {(set -e
 # this function will recursively rm .DS_Store from current-dir
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     for NAME in "._*" ".DS_Store" "desktop.ini" "npm-debug.log" "*~"
@@ -3245,7 +3245,7 @@ shRmDsStore () {(set -e
     done
 )}
 
-shRun () {(set -e
+shRun() {(set -e
 # this function will run cmd "$@" with auto-restart
     local EXIT_CODE
     EXIT_CODE=0
@@ -3278,7 +3278,7 @@ shRun () {(set -e
     return "$EXIT_CODE"
 )}
 
-shRunWithScreenshotTxt () {(set -e
+shRunWithScreenshotTxt() {(set -e
 # this function will run cmd "$@" and screenshot text-output
 # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
     local EXIT_CODE
@@ -3368,7 +3368,7 @@ shRunWithScreenshotTxt () {(set -e
     return "$EXIT_CODE"
 )}
 
-shServerPortRandom () {(set -e
+shServerPortRandom() {(set -e
 # this function will print random, unused tcp-port in range [0x8000, 0xffff]
     node -e '
 /* jslint utility2:true */
@@ -3395,18 +3395,18 @@ shServerPortRandom () {(set -e
 ' # '
 )}
 
-shSleep () {(set -e
+shSleep() {(set -e
 # this function will sleep $1
     shBuildPrint "sleep $1 ..."
     sleep "$1"
 )}
 
-shSource () {
+shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc"
 }
 
-shTravisRepoCreate () {(set -e
+shTravisRepoCreate() {(set -e
 # this function will create travis-repo https://github.com/$GITHUB_FULLNAME
     export GITHUB_FULLNAME="$1"
     export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
@@ -3582,7 +3582,7 @@ shTravisRepoCreate () {(set -e
     shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" -f alpha
 )}
 
-shTravisRepoTrigger () {(set -e
+shTravisRepoTrigger() {(set -e
 # this function will trigger travis-repo $1, branch $2
     node -e '
 /* jslint utility2:true */
@@ -3608,7 +3608,7 @@ shTravisRepoTrigger () {(set -e
 ' "$@" # '
 )}
 
-shUtility2DependentsGitCommit () {(set -e
+shUtility2DependentsGitCommit() {(set -e
 # this function will git-commit-and-push $UTILITY2_DEPENDENTS
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
@@ -3619,7 +3619,7 @@ shUtility2DependentsGitCommit () {(set -e
     done
 )}
 
-shUtility2DependentsGrep () {(set -e
+shUtility2DependentsGrep() {(set -e
 # this function will grep $UTILITY2_DEPENDENTS for regexp $1
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
@@ -3632,7 +3632,7 @@ shUtility2DependentsGrep () {(set -e
     done
 )}
 
-shUtility2DependentsShellEval () {(set -e
+shUtility2DependentsShellEval() {(set -e
 # this function will shell-eval "$@" in utility2 and its dependents
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
@@ -3644,7 +3644,7 @@ shUtility2DependentsShellEval () {(set -e
     printf "\n\n\n"
 )}
 
-shUtility2DependentsVersion () {(set -e
+shUtility2DependentsVersion() {(set -e
 # this function will print latest versions of $UTILITY2_DEPENDENTS
     node -e '
 /* jslint utility2:true */
@@ -3682,7 +3682,7 @@ shUtility2DependentsVersion () {(set -e
 ' # '
 )}
 
-shUtility2FncStat () {(set -e
+shUtility2FncStat() {(set -e
 # this function will print histogram of utility2-fnc code-frequency
 # in current dir
     node -e '
