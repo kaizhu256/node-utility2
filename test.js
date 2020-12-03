@@ -685,21 +685,20 @@ local.testCase_uuid4Create_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_webpage_err = function (opt, onError) {
+local.testCase_webpage_err = async function (opt, onError) {
 /*
  * this function will test webpage's err handling-behavior
  */
     if (!local.isBrowser) {
-        local.browserTest({
+        await local.browserTest({
             modeSilent: true,
             url: (
                 "http://127.0.0.1:" + process.env.PORT +
                 "/?modeTest=1" +
                 "&modeTestCase=testCase_webpage_err"
             )
-        }, function (err) {
-            onError(undefined, err);
         });
+        onError(undefined, opt);
         return;
     }
     if (local.modeTestCase !== "testCase_webpage_err") {

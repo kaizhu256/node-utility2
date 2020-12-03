@@ -4,6 +4,7 @@
 # POSIX reference
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+
 # curl with custom CA certificates
 # openssl x509 -in a00.pem -text
 # openssl verify --verbose -CAfile ca.pem a00.pem
@@ -11,7 +12,7 @@
 # cp a00.crt /usr/local/share/ca-certificates/
 # update-ca-certificates
 
-# useful sh one-liners
+# sh one-liner
 # http://sed.sourceforge.net/sed1line.txt
 # apt list --installed
 # export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
@@ -287,6 +288,7 @@ shBrowserScreenshot() {(set -e
         "--incognito",
         "--screenshot",
         "--timeout=30000",
+        "--window-size=800x600",
         "-screenshot=" + file,
         (
             process.platform === "linux"
@@ -1102,7 +1104,7 @@ shBuildInit() {
             if (err) {
                 throw err;
             }
-            console.error("shBuildInit - write - " + file);
+            console.error("shBuildInit - wrote - " + file);
         }
 );
     });
@@ -1675,6 +1677,9 @@ shDockerRestartUtility2() {(set -e
         LOCALHOST="${LOCALHOST:-192.168.99.100}"
         ;;
     MINGW*)
+        HOME="$USERPROFILE"
+        ;;
+    MSYS*)
         HOME="$USERPROFILE"
         ;;
     *)

@@ -210,26 +210,16 @@ local.utility2 = local;
 }());
 
 
-// run shared js-env code - function
 (function () {
-let localEventListenerDict;
-let localEventListenerId;
-let localOnReadyCnt;
-localEventListenerDict = {};
-localEventListenerId = 0;
-localOnReadyCnt = 0;
-
-
 // init lib utility2
 globalThis.utility2 = local;
 
 
-// update local
+// run shared js-env code - state
 (function () {
-    let dict;
-    let packageJson;
-    // update dict - default
-    dict = {
+    let state;
+    // init state - default
+    state = {
         apidocCreate: local.identity,
         coverageMerge: local.identity,
         coverageReportCreate: local.identity,
@@ -240,37 +230,38 @@ globalThis.utility2 = local;
         npm_package_name: "my-app",
         npm_package_version: "0.0.1"
     };
-    // update dict - globalThis
-    dict = Object.assign(dict, globalThis.utility2_state);
-    // update dict - package.json
+    // init state - utility2_state
+    state = Object.assign(state, globalThis.utility2_state);
+    // init state - package.json
     try {
+        let packageJson;
         packageJson = JSON.parse(require("fs").readFileSync("package.json"));
         Object.entries(packageJson).forEach(function ([
             key, val
         ]) {
-            dict["npm_package_" + key] = String(val);
+            state["npm_package_" + key] = String(val);
         });
         packageJson.repository.url.replace((
             /https:\/\/github\.com\/([^\/]+?\/[^.]+)/
         ), function (ignore, match1) {
-            dict.GITHUB_FULLNAME = match1;
+            state.GITHUB_FULLNAME = match1;
             return "";
         });
     } catch (ignore) {}
-    // update dict - process.env
-    dict = Object.assign(
-        dict,
+    // init state - process.env
+    state = Object.assign(
+        state,
         (typeof process === "object" && process && process.env)
     );
-    // update dict - misc
-    dict = Object.assign({
-        GITHUB_OWNER: String(dict.GITHUB_FULLNAME).split("/")[0],
-        GITHUB_REPO: String(dict.GITHUB_FULLNAME).split("/")[1],
+    // init state - misc
+    state = Object.assign({
+        GITHUB_OWNER: String(state.GITHUB_FULLNAME).split("/")[0],
+        GITHUB_REPO: String(state.GITHUB_FULLNAME).split("/")[1],
         UTILITY2_DIR_BUILD: ".tmp/build",
-        npm_package_nameLib: String(dict.npm_package_name).replace((
+        npm_package_nameLib: String(state.npm_package_name).replace((
             /\W/g
         ), "_")
-    }, dict);
+    }, state);
     // init lib extra
     [
         "apidoc",
@@ -293,7 +284,7 @@ globalThis.utility2 = local;
             );
         }
         local[key] = local[key] || {};
-        Object.assign(dict, local[key]);
+        Object.assign(state, local[key]);
     });
     [
         "jslintAndPrintDir",
@@ -332,10 +323,12 @@ globalThis.utility2 = local;
         "npm_package_nameOriginal",
         "npm_package_version"
     ].forEach(function (key) {
-        local[key] = dict[key];
+        local[key] = state[key];
     });
 }());
 let {
+    noop,
+    onErrorThrow,
     CI_BRANCH,
     CI_COMMIT_ID,
     CI_COMMIT_INFO,
@@ -1369,53 +1362,15 @@ local.assetsDict["/assets.utility2.rollup.start.js"] = (
 local.assetsDict["/favicon.ico"] = "";
 
 
-// run shared js-env code - cli
-local.cliDict = {};
-
-local.cliDict["utility2.browserTest"] = function () {
-/*
- * <urlList> <mode>
- * will browser-test in parallel, comma-separated <urlList> with given <mode>
- */
-    local.browserTest({
-        url: process.argv[3]
-    }, function (err) {
-        if (err) {
-            console.log(err);
-        }
-    });
-};
-
-local.cliDict["utility2.start"] = function () {
-/*
- * <port>
- * will start utility2 http-server on given <port> (default 8081)
- */
-    globalThis.local = local;
-    local.replStart();
-    local.testRunDefault({});
-    if (npm_config_runme) {
-        require(require("path").resolve(npm_config_runme));
-    }
-};
-
-local.cliDict["utility2.testReportCreate"] = function () {
-/*
- *
- * will create test-report
- */
-    let testReport;
-    try {
-        testReport = JSON.parse(require("fs").readFileSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            "utf8"
-        ));
-    } catch (ignore) {}
-    local.testReportMerge(testReport, {}, "modeWrite");
-};
-
 /* validateLineSortedReset */
 // run shared js-env code - function
+let localEventListenerDict;
+let localEventListenerId;
+let localOnReadyCnt;
+localEventListenerDict = {};
+localEventListenerId = 0;
+localOnReadyCnt = 0;
+
 local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
@@ -1431,14 +1386,6 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         let exports;
         let mockDict;
         let mockList;
-        function noop() {
-        /*
-         * this function will do nothing
-         */
-            return;
-        }
-        // coverage-hack
-        noop();
         mockList = [
             [
                 globalThis, {
@@ -1499,7 +1446,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
                 console.error(errCaught);
             }
             onError();
-        }, local.onErrorThrow);
+        }, onErrorThrow);
         return exports;
     }
     // coverage-hack
@@ -1509,8 +1456,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
         Object.assign({
             blacklistDict: local,
             modeNoop: (
-                npm_config_mode_test_case !==
-                "testCase_buildApidoc_default"
+                npm_config_mode_test_case !== "testCase_buildApidoc_default"
             ),
             require: require2
         }, opt)
@@ -1528,7 +1474,7 @@ local._testCase_buildApp_default = function (opt, onError) {
     local.buildApp(opt, onError);
 };
 
-local._testCase_webpage_default = function (opt, onError) {
+local._testCase_webpage_default = async function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
@@ -1538,7 +1484,7 @@ local._testCase_webpage_default = function (opt, onError) {
         onError(undefined, opt);
         return;
     }
-    local.browserTest({
+    await local.browserTest({
         url: (
             "http://127.0.0.1:" + PORT +
             "/?modeTest=1&timeoutDefault=" + local.timeoutDefault +
@@ -1546,118 +1492,139 @@ local._testCase_webpage_default = function (opt, onError) {
                 /_?testCase_webpage_default/
             ), "")
         )
-    }, onError);
+    });
+    onError(undefined, opt);
 };
 
-local.browserTest = function ({
+local.browserTest = async function ({
     modeSilent,
+    modeWindowSize,
     url
-}, onError) {
+}) {
 /*
  * this function will spawn google-chrome-process to test <url>
  */
     let chromeClient;
+    let chromeFrameId;
     let fileScreenshot;
     let isDone;
-    let promiseList;
+    let promiseScreenshot;
     let testErr;
     let testId;
     let testName;
-    function onError2(err) {
-        // cleanup chromeClient
-        chromeClient.destroy();
-        onError(err);
-    }
-    Promise.resolve().then(function () {
-        // node - init
-        testId = Math.random().toString(16);
-        testName = MODE_BUILD + ".browser." + encodeURIComponent(
-            require("url").parse(url).pathname.replace(
-                "/build.." + CI_BRANCH + ".." + CI_HOST,
-                "/build"
-            )
-        );
-        fileScreenshot = (
-            UTILITY2_DIR_BUILD + "/screenshot." + testName + ".png"
-        );
-        return local.chromeDevtoolsClientCreate({
-            modeSilent,
-            timeout: local.timeoutDefault,
-            url
-        });
-    }).then(function (data) {
-        chromeClient = data;
-        return chromeClient.navigate({
-            url
-        });
-    }).then(function () {
-        promiseList = [];
-        promiseList.push(chromeClient.screenshot({
-            delay: 100,
-            file: fileScreenshot
-        }));
-        chromeClient.evaluate(
-            // coverage-hack
-            "console.timeStamp();\n" +
-            "window.utility2_testId=\"" + testId + "\";\n" +
-            "if(!window.utility2_modeTest){\n" +
-            "console.timeStamp(window.utility2_testId);\n" +
-            "}\n"
-        );
-        return new Promise(function (resolve) {
-            chromeClient.on("Performance.metrics", function ({
-                title
-            }) {
-                if (isDone || title !== testId) {
-                    return;
-                }
-                isDone = true;
-                resolve(chromeClient.evaluate(
-                    "JSON.stringify(\n" +
-                    "window.utility2_testReport\n" +
-                    "||{testPlatformList:[{}]}\n" +
-                    ");\n"
-                ));
-            });
-        });
-    }).then(function (data) {
-        data = JSON.parse(data);
-        // init testErr
-        testErr = data.testPlatformList[0].testsFailed && new Error(
-            data.testPlatformList[0].testsFailed
-        );
-        // merge browser-screenshot
-        data.testPlatformList[0].screenshot = fileScreenshot.replace((
-            /.*\//
-        ), "");
-        // merge browser-coverage
-        coverageMerge(globalThis.__coverage__, data.coverage);
-        // merge browser-test-report
-        local.testReportMerge(globalThis.utility2_testReport, data);
-        // save test-report.json
-        promiseList.push(new Promise(function (resolve) {
-            require("fs").writeFile(
-                require("path").resolve(
-                    UTILITY2_DIR_BUILD + "/test-report.json"
-                ),
-                JSON.stringify(globalThis.utility2_testReport),
-                function (err) {
-                    local.onErrorThrow(err);
-                    console.error(
-                        "\nbrowserTest - merged test-report " +
-                        UTILITY2_DIR_BUILD + "/test-report.json" +
-                        "\n"
-                    );
-                    resolve();
-                }
-            );
-        }));
-        return Promise.all(promiseList);
-    }).then(function () {
-        // cleanup chromeClient
-        chromeClient.destroy();
-        onError2(testErr);
+    let testReport;
+    let {
+        chromeDevtoolsClientCreate,
+        testReportMerge,
+        timeoutDefault
+    } = local;
+    // node - init
+    testId = Math.random().toString(16);
+    testName = MODE_BUILD + ".browser." + encodeURIComponent(
+        require("url").parse(url).pathname.replace(
+            "/build.." + CI_BRANCH + ".." + CI_HOST,
+            "/build"
+        )
+    );
+    fileScreenshot = (
+        UTILITY2_DIR_BUILD + "/screenshot." + testName + ".png"
+    );
+    chromeClient = await chromeDevtoolsClientCreate({
+        modeSilent,
+        modeWindowSize,
+        timeout: timeoutDefault
     });
+    // init page
+    chromeClient.rpc("Page.enable");
+    chromeClient.rpc("Page.setLifecycleEventsEnabled", {
+        enabled: true
+    });
+    chromeClient.rpc("Performance.enable");
+    // load url
+    chromeClient.rpc("Page.navigate", {
+        url
+    });
+    chromeFrameId = (
+        await chromeClient.rpc("Page.getFrameTree")
+    ).frameTree.frame.id;
+    await new Promise(function (resolve) {
+        chromeClient.on("Page.lifecycleEvent", function onLoad({
+            frameId,
+            name
+        }) {
+            if (frameId === chromeFrameId && name === "load") {
+                chromeClient.removeListener("Page.lifecycleEvent", onLoad);
+                resolve();
+            }
+        });
+    });
+    console.error("chrome-devtools - loaded - page " + url);
+    // screenshot
+    promiseScreenshot = new Promise(async function (resolve) {
+        let data;
+        await new Promise(function (resolve) {
+            setTimeout(resolve, 100);
+        });
+        data = await chromeClient.rpc("Page.captureScreenshot", {
+            format: "png"
+        });
+        await require("fs").promises.writeFile(
+            fileScreenshot,
+            Buffer.from(data.data, "base64")
+        );
+        console.error("chrome-devtools - wrote - screenshot " + fileScreenshot);
+        resolve();
+    });
+    chromeClient.evaluate(
+        // coverage-hack
+        "console.timeStamp();\n" +
+        "window.utility2_testId=\"" + testId + "\";\n" +
+        "if(!window.utility2_modeTest){\n" +
+        "console.timeStamp(window.utility2_testId);\n" +
+        "}\n"
+    );
+    testReport = await new Promise(function (resolve) {
+        chromeClient.on("Performance.metrics", function ({
+            title
+        }) {
+            if (isDone || title !== testId) {
+                return;
+            }
+            isDone = true;
+            resolve(chromeClient.evaluate(
+                "JSON.stringify(\n" +
+                "window.utility2_testReport\n" +
+                "||{testPlatformList:[{}]}\n" +
+                ");\n"
+            ));
+        });
+    });
+    testReport = JSON.parse(testReport);
+    // init testErr
+    testErr = testReport.testPlatformList[0].testsFailed && new Error(
+        testReport.testPlatformList[0].testsFailed
+    );
+    // merge browser-screenshot
+    testReport.testPlatformList[0].screenshot = fileScreenshot.replace((
+        /.*\//
+    ), "");
+    // merge browser-coverage
+    coverageMerge(globalThis.__coverage__, testReport.coverage);
+    // merge browser-test-report
+    testReportMerge(globalThis.utility2_testReport, testReport);
+    // save test-report.json
+    await require("fs").promises.writeFile(
+        require("path").resolve(UTILITY2_DIR_BUILD + "/test-report.json"),
+        JSON.stringify(globalThis.utility2_testReport)
+    );
+    console.error(
+        "\nbrowserTest - merged test-report " +
+        UTILITY2_DIR_BUILD + "/test-report.json" + "\n"
+    );
+    noop(await promiseScreenshot);
+    // cleanup chromeClient
+    chromeClient.destroy();
+    onErrorThrow(testErr);
 };
 
 local.buildApp = function ({
@@ -1674,7 +1641,7 @@ local.buildApp = function ({
     let promiseList;
     let src;
     let tgt;
-    function tgtReplaceConditional(condition, replaceList) {
+    function tgtReplaceConditional(conditional, replaceList) {
     /*
      * this function will conditionally replace <tgt> with replacements in
      * <replaceList>
@@ -1685,7 +1652,7 @@ local.buildApp = function ({
             merge
         }) {
             let isMatch;
-            if (!condition) {
+            if (!conditional) {
                 aa = aa || merge;
                 console.error(
                     "buildApp - replace-skipped - " +
@@ -1734,7 +1701,7 @@ local.buildApp = function ({
      * this function will write <data> to <file> with notification
      */
         require("fs").writeFile(file, data, function (err) {
-            local.onErrorThrow(err);
+            onErrorThrow(err);
             writeFileLog(file);
             resolve();
         });
@@ -1811,7 +1778,7 @@ local.buildApp = function ({
                 require("fs").copyFile(file, (
                     ".tmp/build/app.standalone/" + file
                 ), function (err) {
-                    local.onErrorThrow(err);
+                    onErrorThrow(err);
                     resolve();
                 });
             });
@@ -2115,16 +2082,16 @@ local.buildApp = function ({
                 "__zjqx1234__" + Math.random(), "__zjqx1234__" + Math.random()
             ]
         ].forEach(function ([
-            condition, rgxScreenshot
+            conditional, rgxScreenshot
         ]) {
-            if (src.indexOf("    " + condition + "\n") >= 0) {
+            if (src.indexOf("    " + conditional + "\n") >= 0) {
                 return;
             }
             // customize test-server
             tgt = tgt.replace(
                 new RegExp(
                     "\\n\\| test-server-" +
-                    condition.replace("shDeploy", "").toLowerCase() +
+                    conditional.replace("shDeploy", "").toLowerCase() +
                     " : \\|.*?\\n"
                 ),
                 "\n"
@@ -2255,317 +2222,360 @@ local.buildApp = function ({
         });
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         promiseList = [];
         promiseList.push(new Promise(buildReadme));
         promiseList.push(new Promise(buildLib));
         promiseList.push(new Promise(buildTest));
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         promiseList = [];
         promiseList.push(new Promise(buildAppAssets));
         promiseList.push(new Promise(buildAppStandalone));
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         onError();
     });
 };
 
-local.chromeDevtoolsClientCreate = function ({
+local.chromeDevtoolsClientCreate = async function ({
     chromeBin,
     modeMockProcessPlatform,
     modeSilent,
+    modeWindowSize = "800x600",
     processPlatform,
     timeout
 }) {
 /*
  * this function with create chrome-devtools-client from <chromeBin>
  */
-    let chromeCleanup;
+    let WS_READ_HEADER;
+    let WS_READ_LENGTH16;
+    let WS_READ_LENGTH63;
+    let WS_READ_PAYLOAD;
+    let callbackDict;
+    let callbackId;
     let chromeClient;
     let chromeProcess;
     let chromeSessionId;
     let chromeUserDataDir;
+    let secWebsocketKey;
+    let timerTimeout;
+    let tmp;
     let websocket;
+    let websocketUrl;
+    let wsBufList;
+    let wsPayloadLength;
+    let wsReadState;
     let wsReader;
-    return Promise.resolve().then(function () {
+    WS_READ_HEADER = 0;
+    WS_READ_LENGTH16 = 1;
+    WS_READ_LENGTH63 = 2;
+    WS_READ_PAYLOAD = 3;
+    callbackDict = {};
+    callbackId = 0;
+    wsBufList = [];
+    wsPayloadLength = 0;
+    wsReadState = WS_READ_HEADER;
+    function chromeCleanup() {
     /*
-     * this function will init <chromeCleanup> and <chromeClient>
+     * this function will
+     * 1. kill <chromeProcess>
+     * 2. rm -rf <chromeUserDataDir>
+     * 3. destroy <chromeClient>, <websocket>, <wsReader>
      */
-        let callbackDict;
-        let callbackId;
-        let timerTimeout;
-        callbackDict = {};
-        callbackId = 0;
-        chromeCleanup = function () {
-        /*
-         * this function will
-         * kill <chromeProcess>
-         * rm -rf <chromeUserDataDir>
-         * destroy <chromeClient>, <websocket>, <wsReader>
-         */
-            // cleanup timerTimeout
-            clearTimeout(timerTimeout);
-            // kill <chromeProcess>
-            try {
-                if (processPlatform === "win32") {
-                    require("child_process").spawnSync("taskkill", [
-                        "/pid", chromeProcess.pid, "/T", "/F"
-                    ], {
-                        stdio: "ignore"
-                    });
-                } else {
-                    // kill child process tree with ".kill(-pid)" cmd.
-                    process.kill(-chromeProcess.pid, "SIGKILL");
-                }
-            } catch (ignore) {}
-            // rm -rf <chromeUserDataDir>
-            require("fs").rmdirSync(chromeUserDataDir, {
-                recursive: true
-            });
-            // destroy <chromeClient>, <websocket>, <wsReader>
-            chromeClient.destroy();
-            try {
-                websocket.destroy();
-            } catch (ignore) {}
-            wsReader.destroy();
-        };
-        // init timerTimeout
-        timeout = timeout || 30000;
-        timerTimeout = setTimeout(function () {
-            chromeCleanup();
-            chromeClient.emit("error", new Error(
-                "chrome-devtools - timeout " + timeout + " ms"
-            ));
-        }, timeout);
-        function ChromeClient() {
-        /*
-         * this function will construct <chromeClient>
-         */
-            require("stream").Duplex.call(this);
-        }
-        require("util").inherits(ChromeClient, require("stream").Duplex);
-        chromeClient = new ChromeClient();
-        chromeClient.__proto__._destroy = chromeCleanup;
-        chromeClient.__proto__._read = function () {
-        /*
-         * this function will implement stream.Duplex.prototype._read
-         */
-            if (websocket && websocket.readable) {
-                websocket.resume();
-            }
-        };
-        chromeClient.__proto__._write = function (payload, ignore, callback) {
-        /*
-         * this function will implement stream.Duplex.prototype._write
-         */
-            // console.error("SEND \u25ba " + payload.slice(0, 256).toString());
-            let header;
-            let maskKey;
-            let result;
-            // init header
-            header = Buffer.alloc(2 + 8 + 4);
-            // init fin = true
-            header[0] |= 0x80;
-            // init opcode = text-frame
-            header[0] |= 1;
-            // init mask = true
-            header[1] |= 0x80;
-            // init payload.length
-            if (payload.length < 126) {
-                header = header.slice(0, 2 + 0 + 4);
-                header[1] |= payload.length;
-            // } else if (payload.length < 65536) {
-            } else {
-                local.assertOrThrow(
-                    payload.length < 65536,
-                    "chrome-devtools - " +
-                    "payload-length must be less than 65536 bytes, not " +
-                    payload.length
-                );
-                header = header.slice(0, 2 + 2 + 4);
-                header[1] |= 126;
-                header.writeUInt16BE(payload.length, 2);
-            /*
-            } else {
-                header[1] |= 127;
-                header.writeUInt32BE(payload.length, 6);
-            */
-            }
-            // init maskKey
-            maskKey = require("crypto").randomBytes(4);
-            maskKey.copy(header, header.length - 4);
-            // send header
-            websocket.cork();
-            websocket.write(header);
-            // send payload ^ maskKey
-            payload.forEach(function (ignore, ii) {
-                payload[ii] ^= maskKey[ii & 3];
-            });
-            // return write-result
-            result = websocket.write(payload, callback);
-            websocket.uncork();
-            return result;
-        };
-        chromeClient.evaluate = function (expression) {
-            return chromeClient.rpc("Runtime.evaluate", {
-                awaitPromise: true,
-                expression,
-                returnByValue: false,
-                userGesture: true
-            }).then(function ({
-                exceptionDetails,
-                result
-            }) {
-                local.assertOrThrow(
-                    !exceptionDetails,
-                    "chrome-devtools - " + JSON.stringify(exceptionDetails)
-                );
-                return result.value;
-            });
-        };
-        chromeClient.on("data", function (payload) {
-        /*
-         * this function will handle callback for <payload>
-         * received from chrome-browser using chrome-devtools-protocol
-         */
-            // console.error("\u25c0 RECV " + payload.slice(0, 256).toString());
-            let callback;
-            let {
-                method,
-                id,
-                error,
-                params,
-                result
-            } = JSON.parse(payload);
-            local.assertOrThrow(!method || (
-                /^[A-Z]\w*?\.[a-z]\w*?$/
-            ).test(method), new Error(
-                "chrome-devtools - invalid method " + method
-            ));
-            // init callback
-            callback = callbackDict[id];
-            delete callbackDict[id];
-            // callback.resolve
-            if (callback) {
-                // preserve stack-trace
-                callback.err.message = "chrome-devtools - " +
-                JSON.stringify(error);
-                local.assertOrThrow(!error, callback.err);
-                callback.resolve(result);
-                return;
-            }
-            local.assertOrThrow(!error, "chrome-devtools - " + error);
-            chromeClient.emit(method, params);
-        });
-        chromeClient.navigate = function ({
-            url
-        }) {
-        /*
-         * this function will navigate to webpage <url>
-         */
-            let chromeFrameId;
-            console.error("chrome-devtools - Page.navigate " + url);
-            chromeClient.rpc("Page.navigate", {
-                url
-            });
-            // wait for page to load
-            chromeClient.rpc("Page.getFrameTree").then(function ({
-                frameTree
-            }) {
-                chromeFrameId = frameTree.frame.id;
-            });
-            return new Promise(function (resolve) {
-                chromeClient.on("Page.lifecycleEvent", function onLoad({
-                    frameId,
-                    name
-                }) {
-                    if (frameId === chromeFrameId && name === "load") {
-                        chromeClient.removeListener(
-                            "Page.lifecycleEvent",
-                            onLoad
-                        );
-                        resolve();
-                    }
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        // 1. kill <chromeProcess>
+        try {
+            if (processPlatform === "win32") {
+                require("child_process").spawnSync("taskkill", [
+                    "/pid", chromeProcess.pid, "/T", "/F"
+                ], {
+                    stdio: "ignore"
                 });
-            });
-        };
-        chromeClient.rpc = function (method, params) {
-        /*
-         * this function will message-pass
-         * JSON.stringify({
-         *     id: <callbackId>,
-         *     method: <method>,
-         *     params: <params>,
-         *     sessionId: <chromeSessionId>
-         * })
-         * to chrome-browser using chrome-devtools-protocol
-         */
-            callbackId = (callbackId % 256) + 1;
-            chromeClient.write(Buffer.from(JSON.stringify({
-                id: callbackId,
-                method,
-                params,
-                sessionId: chromeSessionId
-            })));
-            return new Promise(function (resolve) {
-                callbackDict[callbackId] = {
-                    err: new Error(),
-                    method,
-                    resolve
-                };
-            });
-        };
-        chromeClient.screenshot = function ({
-            delay,
-            file
-        }) {
-        /*
-         * this function will screenshot browser to <file> given <delay> ms
-         */
-            local.assertOrThrow(file, "chrome-devtools - file required");
-            return new Promise(function (resolve) {
-                setTimeout(function () {
-                    chromeClient.rpc("Page.captureScreenshot", {
-                        format: "png"
-                    }).then(function ({
-                        data
-                    }) {
-                        require("fs").writeFile((
-                            file
-                        ), Buffer.from(data, "base64"), function (err) {
-                            local.onErrorThrow(err);
-                            console.error(
-                                "chrome-devtools - Page.captureScreenshot " +
-                                file
-                            );
-                            resolve();
-                        });
-                    });
-                }, delay);
-            });
-        };
-    }).then(function () {
+            } else {
+                // kill child process tree with ".kill(-pid)" cmd.
+                process.kill(-chromeProcess.pid, "SIGKILL");
+            }
+        } catch (ignore) {}
+        // 2. rm -rf <chromeUserDataDir>
+        require("fs").rmdirSync(chromeUserDataDir, {
+            recursive: true
+        });
+        // 3. destroy <chromeClient>, <websocket>, <wsReader>
+        chromeClient.destroy();
+        try {
+            websocket.destroy();
+        } catch (ignore) {}
+        wsReader.destroy();
+    }
+    async function chromeEvaluate(expression) {
     /*
-     * this function will init <wsReader>
-     * that can read websocket-frames from <websocket>
+     * this function will eval <expression> in chrome-browser
      */
-        let WS_READ_HEADER;
-        let WS_READ_LENGTH16;
-        let WS_READ_LENGTH63;
-        let WS_READ_PAYLOAD;
-        let wsBufList;
-        let wsPayloadLength;
-        let wsReadState;
-        WS_READ_HEADER = 0;
-        WS_READ_LENGTH16 = 1;
-        WS_READ_LENGTH63 = 2;
-        WS_READ_PAYLOAD = 3;
-        wsBufList = [];
-        wsPayloadLength = 0;
-        wsReadState = WS_READ_HEADER;
+        let {
+            exceptionDetails,
+            result
+        } = await chromeClient.rpc("Runtime.evaluate", {
+            awaitPromise: true,
+            expression,
+            returnByValue: false,
+            userGesture: true
+        });
+        local.assertOrThrow(!exceptionDetails, (
+            "chrome-devtools - evaluate - " +
+            JSON.stringify(exceptionDetails)
+        ));
+        return result.value;
+    }
+    function chromeOnData(payload) {
+    /*
+     * this function will handle callback for <payload>
+     * received from chrome-browser using chrome-devtools-protocol
+     */
+        // console.error("\u25c0 RECV " + payload.slice(0, 256).toString());
+        let callback;
+        let {
+            error,
+            id,
+            method,
+            params,
+            result
+        } = JSON.parse(payload);
+        local.assertOrThrow(!method || (
+            /^[A-Z]\w*?\.[a-z]\w*?$/
+        ).test(method), new Error(
+            "chrome-devtools - read - invalid method " + method
+        ));
+        // init callback
+        callback = callbackDict[id];
+        delete callbackDict[id];
+        // callback.resolve
+        if (callback) {
+            // preserve stack-trace
+            callback.err.message = (
+                "chrome-devtools - read - " + JSON.stringify(error)
+            );
+            local.assertOrThrow(!error, callback.err);
+            callback.resolve(result);
+            return;
+        }
+        local.assertOrThrow(
+            !error,
+            "chrome-devtools - read - " + JSON.stringify(error)
+        );
+        chromeClient.emit(method, params);
+    }
+    function chromeRead() {
+    /*
+     * this function will implement stream.Duplex.prototype._read
+     */
+        if (websocket && websocket.readable) {
+            websocket.resume();
+        }
+    }
+    function chromeRpc(method, params) {
+    /*
+     * this function will message-pass
+     * JSON.stringify({
+     *     id: <callbackId>,
+     *     method: <method>,
+     *     params: <params>,
+     *     sessionId: <chromeSessionId>
+     * })
+     * to chrome-browser using chrome-devtools-protocol
+     */
+        callbackId = (callbackId % 256) + 1;
+        chromeClient.write(Buffer.from(JSON.stringify({
+            id: callbackId,
+            method,
+            params,
+            sessionId: chromeSessionId
+        })));
+        return new Promise(function (resolve) {
+            callbackDict[callbackId] = {
+                err: new Error(),
+                method,
+                resolve
+            };
+        });
+    }
+    function chromeWrite(payload, ignore, callback) {
+    /*
+     * this function will implement stream.Duplex.prototype._write
+     */
+        // console.error("SEND \u25ba " + payload.slice(0, 256).toString());
+        let header;
+        let maskKey;
+        let result;
+        // init header
+        header = Buffer.alloc(2 + 8 + 4);
+        // init fin = true
+        header[0] |= 0x80;
+        // init opcode = text-frame
+        header[0] |= 1;
+        // init mask = true
+        header[1] |= 0x80;
+        // init payload.length
+        if (payload.length < 126) {
+            header = header.slice(0, 2 + 0 + 4);
+            header[1] |= payload.length;
+        // } else if (payload.length < 65536) {
+        } else {
+            local.assertOrThrow(payload.length < 65536, (
+                "chrome-devtools - write - " +
+                "payload-length must be less than 65536 bytes, not " +
+                payload.length
+            ));
+            header = header.slice(0, 2 + 2 + 4);
+            header[1] |= 126;
+            header.writeUInt16BE(payload.length, 2);
+        /*
+        } else {
+            header[1] |= 127;
+            header.writeUInt32BE(payload.length, 6);
+        */
+        }
+        // init maskKey
+        maskKey = require("crypto").randomBytes(4);
+        maskKey.copy(header, header.length - 4);
+        // send header
+        websocket.cork();
+        websocket.write(header);
+        // send payload ^ maskKey
+        payload.forEach(function (ignore, ii) {
+            payload[ii] ^= maskKey[ii & 3];
+        });
+        // return write-result
+        result = websocket.write(payload, callback);
+        websocket.uncork();
+        return result;
+    }
+    function wsBufListRead(nn) {
+    /*
+     * this function will read <nn> bytes from <wsBufList>
+     */
+        let buf;
+        wsBufList = (
+            wsBufList.length === 1
+            ? wsBufList[0]
+            : Buffer.concat(wsBufList)
+        );
+        buf = wsBufList.slice(0, nn);
+        wsBufList = [
+            wsBufList.slice(nn)
+        ];
+        return buf;
+    }
+    function wsFrameRead() {
+    /*
+     * this function will read websocket-data-frame
+     */
+        let buf;
+        let opcode;
+        if (wsBufList.reduce(function (aa, bb) {
+            return aa + bb.length;
+        }, 0) < (
+            wsReadState === WS_READ_PAYLOAD
+            ? Math.max(wsPayloadLength, 1)
+            : wsReadState === WS_READ_LENGTH63
+            ? 8
+            : 2
+        )) {
+            return;
+        }
+        switch (wsReadState) {
+        // read frame-header
+        case WS_READ_HEADER:
+            buf = wsBufListRead(2);
+            // validate opcode
+            opcode = buf[0] & 0x0f;
+            local.assertOrThrow(opcode === 0x01, (
+                "chrome-devtools - read - opcode must be 0x01, not 0x0" +
+                opcode.toString(16)
+            ));
+            wsPayloadLength = buf[1] & 0x7f;
+            wsReadState = (
+                wsPayloadLength === 126
+                ? WS_READ_LENGTH16
+                : wsPayloadLength === 127
+                ? WS_READ_LENGTH63
+                : WS_READ_PAYLOAD
+            );
+            break;
+        // read frame-payload-length-16
+        case WS_READ_LENGTH16:
+            wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-length-63
+        case WS_READ_LENGTH63:
+            buf = wsBufListRead(8);
+            wsPayloadLength = (
+                buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
+            );
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-data
+        case WS_READ_PAYLOAD:
+            local.assertOrThrow((
+                0 <= wsPayloadLength && wsPayloadLength <= 10000000
+            ), (
+                "chrome-devtools - read - " +
+                "payload-length must be between 0 and 256 MiB, not " +
+                wsPayloadLength
+            ));
+            buf = wsBufListRead(wsPayloadLength);
+            wsReadState = WS_READ_HEADER;
+            chromeClient.push(buf);
+            break;
+        }
+        return true;
+    }
+    function wsReaderTransform(chunk, ignore, callback) {
+    /*
+     * this function will implement Transform.prototype._transform
+     */
+        wsBufList.push(chunk);
+        while (true) {
+            if (!wsFrameRead()) {
+                break;
+            }
+        }
+        callback();
+    }
+    // init timerTimeout
+    timeout = timeout || 30000;
+    if (modeMockProcessPlatform) {
+        timeout = 0;
+    }
+    timerTimeout = setTimeout(function () {
+        chromeCleanup();
+        chromeClient.emit("error", new Error(
+            "chrome-devtools - timeout - " + timeout + " ms"
+        ));
+    }, timeout);
+    // init chromeClient
+    function ChromeClient() {
+    /*
+     * this function will construct <chromeClient>
+     */
+        chromeClient = this;
+        require("util").inherits(ChromeClient, require("stream").Duplex);
+        require("stream").Duplex.call(chromeClient);
+        Object.assign(chromeClient.__proto__, {
+            _destroy: chromeCleanup,
+            _read: chromeRead,
+            _write: chromeWrite,
+            evaluate: chromeEvaluate,
+            rpc: chromeRpc
+        });
+        chromeClient.on("data", chromeOnData);
+    }
+    chromeClient = new ChromeClient();
 /*
 https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
 +---------------------------------------------------------------+
@@ -2646,277 +2656,148 @@ Application data: y bytes
     equal to the payload length minus the length of the extension
     data.
 */
-        function wsBufListRead(nn) {
-        /*
-         * this function will read <nn> bytes from <wsBufList>
-         */
-            let buf;
-            wsBufList = (
-                wsBufList.length === 1
-                ? wsBufList[0]
-                : Buffer.concat(wsBufList)
-            );
-            buf = wsBufList.slice(0, nn);
-            wsBufList = [
-                wsBufList.slice(nn)
-            ];
-            return buf;
-        }
-        function wsFrameRead() {
-        /*
-         * this function will read websocket-data-frame
-         */
-            let buf;
-            let opcode;
-            if (wsBufList.reduce(function (aa, bb) {
-                return aa + bb.length;
-            }, 0) < (
-                wsReadState === WS_READ_PAYLOAD
-                ? Math.max(wsPayloadLength, 1)
-                : wsReadState === WS_READ_LENGTH63
-                ? 8
-                : 2
-            )) {
-                return;
-            }
-            switch (wsReadState) {
-            // read frame-header
-            case WS_READ_HEADER:
-                buf = wsBufListRead(2);
-                // validate opcode
-                opcode = buf[0] & 0x0f;
-                local.assertOrThrow(
-                    opcode === 0x01,
-                    "chrome-devtools - opcode must be 0x01, not 0x0" +
-                    opcode.toString(16)
-                );
-                wsPayloadLength = buf[1] & 0x7f;
-                wsReadState = (
-                    wsPayloadLength === 126
-                    ? WS_READ_LENGTH16
-                    : wsPayloadLength === 127
-                    ? WS_READ_LENGTH63
-                    : WS_READ_PAYLOAD
-                );
-                break;
-            // read frame-payload-length-16
-            case WS_READ_LENGTH16:
-                wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
-                wsReadState = WS_READ_PAYLOAD;
-                break;
-            // read frame-payload-length-63
-            case WS_READ_LENGTH63:
-                buf = wsBufListRead(8);
-                wsPayloadLength = (
-                    buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
-                );
-                wsReadState = WS_READ_PAYLOAD;
-                break;
-            // read frame-payload-data
-            case WS_READ_PAYLOAD:
-                local.assertOrThrow(
-                    0 <= wsPayloadLength && wsPayloadLength <= 10000000,
-                    "chrome-devtools - " +
-                    "payload-length must be between 0 and 256 MiB, not " +
-                    wsPayloadLength
-                );
-                buf = wsBufListRead(wsPayloadLength);
-                wsReadState = WS_READ_HEADER;
-                chromeClient.push(buf);
-                break;
-            }
-            return true;
-        }
-        function WsReader() {
-        /*
-         * this function will construct <wsReader>
-         */
-            require("stream").Transform.call(this);
-        }
+    // init wsReader that can read websocket-frames from websocket
+    function WsReader() {
+    /*
+     * this function will construct <wsReader>
+     */
+        wsReader = this;
         require("util").inherits(WsReader, require("stream").Transform);
-        wsReader = new WsReader();
-        wsReader.__proto__._transform = function (chunk, ignore, callback) {
-        /*
-         * this function will implement Transform.prototype._transform
-         */
-            wsBufList.push(chunk);
-            while (true) {
-                if (!wsFrameRead()) {
-                    break;
-                }
-            }
-            callback();
-        };
-    }).then(function () {
-    /*
-     * this function will init <chromeProcess>
-     */
-        processPlatform = processPlatform || process.platform;
-        chromeUserDataDir = require("fs").mkdtempSync(require("path").join(
-            require("os").tmpdir(),
-            "puppeteer_dev_profile-"
-        ));
-        chromeBin = chromeBin || (
-            processPlatform === "darwin"
-            ? "/Applications/Google Chrome.app/Contents/MacOS/" +
-            "Google Chrome"
-            : processPlatform === "win32"
-            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\" +
-            "chrome.exe"
-            : "/usr/bin/google-chrome-stable"
-        );
-        console.error("chrome-devtools - spawn " + chromeBin);
-        chromeProcess = require("child_process").spawn((
-            chromeBin
-        ), [
-            "--headless",
-            "--incognito",
-            "--remote-debugging-port=0",
-            "--user-data-dir=" + chromeUserDataDir,
-            Array.from([
-                "", "--no-sandbox"
-            ])[(process.getuid && process.getuid() === 0) | 0]
-        ], {
-            // On non-windows platforms, `detached: false` makes child process
-            // a leader of a new process group, making it possible to kill
-            // child process tree with `.kill(-pid)` cmd.
-            // https://nodejs.org/api/child_process.html#child_process_options_detached
-            detached: process.platform !== "win32",
-            stdio: [
-                "ignore", (
-                    !modeSilent
-                    ? 1
-                    : "ignore"
-                ), "pipe"
-            ]
+        require("stream").Transform.call(wsReader);
+        Object.assign(wsReader.__proto__, {
+            _transform: wsReaderTransform
         });
-        if (!modeSilent) {
-            chromeProcess.on("error", local.noop);
-            chromeProcess.stderr.pipe(process.stderr, {
-                end: false
-            });
-        }
-        process.on("exit", chromeCleanup);
-        process.on("SIGINT", chromeCleanup);
-        process.on("SIGTERM", chromeCleanup);
-        process.on("SIGHUP", chromeCleanup);
-        return new Promise(function (resolve, reject) {
-            let stderr;
-            // coverage-hack
-            if (modeMockProcessPlatform) {
-                chromeCleanup();
-                reject();
-                return;
-            }
-            stderr = "";
-            chromeProcess.stderr.on("data", function onData(chunk) {
-                local.assertOrThrow(
-                    stderr.length < 65536,
-                    "chrome-devtools - cannot connect to chrome"
-                );
-                stderr += chunk;
-                stderr.replace((
-                    /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
-                ), function (ignore, url) {
-                    chromeProcess.stderr.removeListener("data", onData);
-                    resolve(url);
-                    return "";
-                });
-            });
-        });
-    }).then(function (websocketUrl) {
-    /*
-     * this function will init <websocket>
-     */
-        let secWebsocketKey;
-        console.error(
-            "chrome-devtools - connect websocket " + websocketUrl
-        );
-        secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
-        return new Promise(function (resolve) {
-            require("http").get(Object.assign(require("url").parse(
-                websocketUrl
-            ), {
-                "createConnection": function (opt) {
-                    opt.path = opt.socketPath;
-                    return require("net").connect(opt);
-                },
-                "headers": {
-                    "Connection": "Upgrade",
-                    "Sec-WebSocket-Key": secWebsocketKey,
-                    "Sec-WebSocket-Version": 13,
-                    "Upgrade": "websocket"
-                },
-                "protocol": "http:",
-                "protocolVersion": 13
-            })).once("upgrade", function (res, _websocket, head) {
-                local.assertOrThrow(
-                    (
-                        res.headers[
-                            "sec-websocket-accept"
-                        ] === require("crypto").createHash("sha1").update(
-                            secWebsocketKey +
-                            "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-                        ).digest("base64")
-                    ),
-                    "chrome-devtools - invalid sec-websocket-accept header"
-                );
-                websocket = _websocket;
-                websocket.unshift(head);
-                // websocket - disable timeout
-                websocket.setTimeout(0);
-                // websocket - disable nagle's algorithm
-                websocket.setNoDelay();
-                websocket.on("end", websocket.end.bind(websocket));
-                // pipe websocket to wsReader
-                websocket.pipe(wsReader);
-                resolve();
-            });
-        });
-    }).then(function () {
-    /*
-     * this function will init <chromeSessionId>
-     */
-        console.error("chrome-devtools - Target.createTarget about:blank");
-        return chromeClient.rpc("Target.createTarget", {
-            url: "about:blank"
-        }).then(function (data) {
-            return chromeClient.rpc("Target.attachToTarget", {
-                targetId: data.targetId,
-                flatten: true
-            });
-        }).then(function ({
-            sessionId
-        }) {
-            chromeSessionId = sessionId;
-        });
-    }).then(function () {
-    /*
-     * this function will navigate chrome to <url>
-     */
-        // init screensize
-        chromeClient.rpc("Emulation.setDeviceMetricsOverride", {
-            deviceScaleFactor: 1,
-            height: 600,
-            mobile: false,
-            screenOrientation: {
-                angle: 0,
-                type: "portraitPrimary"
-            },
-            width: 800
-        });
-        // init page
-        chromeClient.rpc("Page.enable", undefined);
-        chromeClient.rpc("Page.setLifecycleEventsEnabled", {
-            enabled: true
-        });
-        chromeClient.rpc("Performance.enable", undefined);
-    }).then(function () {
-    /*
-     * this function will resolve <chromeClient>
-     */
-        return chromeClient;
+    }
+    wsReader = new WsReader();
+    // init chromeProcess
+    processPlatform = processPlatform || process.platform;
+    chromeUserDataDir = await require("fs").promises.mkdtemp(
+        require("path").join(require("os").tmpdir(), "puppeteer_dev_profile-")
+    );
+    chromeBin = chromeBin || (
+        processPlatform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/" +
+        "Google Chrome"
+        : processPlatform === "win32"
+        ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\" +
+        "chrome.exe"
+        : "/usr/bin/google-chrome-stable"
+    );
+    console.error("chrome-devtools - spawning - " + chromeBin);
+    chromeProcess = require("child_process").spawn((
+        chromeBin
+    ), [
+        "--headless",
+        "--incognito",
+        "--remote-debugging-port=0",
+        "--user-data-dir=" + chromeUserDataDir,
+        "--window-size=" + modeWindowSize,
+        Array.from([
+            "", "--no-sandbox"
+        ])[(process.getuid && process.getuid() === 0) | 0]
+    ], {
+        // On non-windows platforms, `detached: false` makes child process
+        // a leader of a new process group, making it possible to kill
+        // child process tree with `.kill(-pid)` cmd.
+        // https://nodejs.org/api/child_process.html#child_process_options_detached
+        detached: process.platform !== "win32",
+        stdio: [
+            "ignore", (
+                !modeSilent
+                ? 1
+                : "ignore"
+            ), "pipe"
+        ]
     });
+    if (!modeSilent) {
+        chromeProcess.on("error", noop);
+        chromeProcess.stderr.pipe(process.stderr, {
+            end: false
+        });
+    }
+    process.on("exit", chromeCleanup);
+    process.on("SIGINT", chromeCleanup);
+    process.on("SIGTERM", chromeCleanup);
+    process.on("SIGHUP", chromeCleanup);
+    // init websocketUrl
+    websocketUrl = await new Promise(function (resolve, reject) {
+        let stderr;
+        // coverage-hack
+        if (modeMockProcessPlatform) {
+            chromeClient.on("error", noop);
+            reject();
+            return;
+        }
+        stderr = "";
+        chromeProcess.stderr.on("data", function onData(chunk) {
+            local.assertOrThrow(
+                stderr.length < 65536,
+                "chrome-devtools - connecting - cannot connect to chrome"
+            );
+            stderr += chunk;
+            stderr.replace((
+                /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
+            ), function (ignore, url) {
+                chromeProcess.stderr.removeListener("data", onData);
+                resolve(url);
+                return "";
+            });
+        });
+    });
+    //init <websocket>
+    console.error("chrome-devtools - connecting - " + websocketUrl);
+    secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
+    await new Promise(function (resolve) {
+        require("http").get((
+            websocketUrl
+        ), {
+            createConnection: function (opt) {
+                delete opt.path;
+                return require("net").connect(opt);
+            },
+            headers: {
+                Connection: "Upgrade",
+                "Sec-WebSocket-Key": secWebsocketKey,
+                "Sec-WebSocket-Version": 13,
+                Upgrade: "websocket"
+            },
+            protocol: "http:",
+            protocolVersion: 13
+        }).once("upgrade", function (res, _, head) {
+            local.assertOrThrow((
+                res.headers[
+                    "sec-websocket-accept"
+                ] === require("crypto").createHash("sha1").update(
+                    secWebsocketKey +
+                    "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                ).digest("base64")
+            ), (
+                "chrome-devtools - connecting - " +
+                "invalid sec-websocket-accept header"
+            ));
+            websocket = _;
+            websocket.unshift(head);
+            // websocket - disable timeout
+            websocket.setTimeout(0);
+            // websocket - disable nagle's algorithm
+            websocket.setNoDelay();
+            websocket.on("end", websocket.end.bind(websocket));
+            // pipe websocket to wsReader
+            websocket.pipe(wsReader);
+            resolve();
+        });
+    });
+    // init chromeSessionId
+    tmp = await chromeClient.rpc("Target.createTarget", {
+        url: "about:blank"
+    });
+    tmp = await chromeClient.rpc("Target.attachToTarget", {
+        targetId: tmp.targetId,
+        flatten: true
+    });
+    chromeSessionId = tmp.sessionId;
+    console.error("chrome-devtools - created - blank-page with sessionId");
+    return chromeClient;
 };
 
 local.cliRun = function ({
@@ -2926,16 +2807,14 @@ local.cliRun = function ({
  * this function will run cli
  */
     let {
-        cliDict,
-        replStart
-    } = local;
-    let {
         _default,
         _eval,
         _help,
         _interactive,
-        _version
-    } = cliDict;
+        _version,
+        cliDict,
+        replStart
+    } = Object.assign({}, local, local.cliDict);
     _eval = _eval || function () {
     /*
      * <code>
@@ -3713,8 +3592,8 @@ local.onParallel = function (onError, onEach, onRetry) {
  * 2. if cnt === 0 or err occurred, then call onError(err)
  */
     let onParallel;
-    onEach = onEach || local.noop;
-    onRetry = onRetry || local.noop;
+    onEach = onEach || noop;
+    onRetry = onRetry || noop;
     onParallel = function (err, data) {
         if (onRetry(err, data)) {
             return;
@@ -3950,7 +3829,7 @@ local.requireReadme = function () {
     let tmp;
     // library-mode
     if (npm_config_mode_lib) {
-        local.testRunDefault = local.noop;
+        local.testRunDefault = noop;
         return local;
     }
     // if file is modified, then restart process
@@ -3958,7 +3837,7 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(function (file) {
                 require("fs").stat(file, function (err, data) {
-                    local.onErrorThrow(err);
+                    onErrorThrow(err);
                     if (!data.isFile()) {
                         return;
                     }
@@ -4451,7 +4330,7 @@ local.testCase_noop_default = function (opt, onError) {
 /*
  * this function will test noop's default handling-behavior
  */
-    local.noop();
+    noop();
     onError(undefined, opt);
 };
 
@@ -4478,8 +4357,8 @@ local.testMock = function (mockList, onTestCase, onError) {
         console, {}
     ]);
     local.objectAssignDefault(mockList[0][1], {
-        error: local.noop,
-        log: local.noop
+        error: noop,
+        log: noop
     });
     // mock mock[0]
     mockList.forEach(function (mock) {
@@ -4524,7 +4403,7 @@ local.testReportMerge = function (
     function write(file, data) {
         file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
         require("fs").writeFileSync(file, data);
-        console.error("test-report - write - " + file);
+        console.error("test-report - wrote - " + file);
     }
     // 1. merge <testReport2> into <testReport>
     testReport = local.objectAssignDefault(testReport, {
@@ -5274,7 +5153,7 @@ local.uiAnimateSlideDown = function (elem, onError) {
 /*
  * this function will slideDown dom-<elem>
  */
-    onError = onError || local.noop;
+    onError = onError || noop;
     if (!(
         elem &&
         elem.style && elem.style.maxHeight !== "100%" &&
@@ -5439,7 +5318,7 @@ if (local.isBrowser) {
 setTimeout((
     (!npm_config_mode_lib && npm_config_timeout_exit)
     ? process.exit.bind(undefined, 15)
-    : local.noop
+    : noop
 ), npm_config_timeout_exit).unref();
 // merge previous test-report
 if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
@@ -5459,6 +5338,49 @@ if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
     }
 }
 // init cli
+local.cliDict = {};
+local.cliDict["utility2.browserTest"] = async function () {
+/*
+ * <urlList> <mode>
+ * will browser-test in parallel, comma-separated <urlList> with given <mode>
+ */
+    try {
+        await local.browserTest({
+            url: process.argv[3]
+        });
+    } catch (errCaught) {
+        console.error(errCaught);
+    }
+};
+
+local.cliDict["utility2.start"] = function () {
+/*
+ * <port>
+ * will start utility2 http-server on given <port> (default 8081)
+ */
+    globalThis.local = local;
+    local.replStart();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require("path").resolve(npm_config_runme));
+    }
+};
+
+local.cliDict["utility2.testReportCreate"] = function () {
+/*
+ *
+ * will create test-report
+ */
+    let testReport;
+    try {
+        testReport = JSON.parse(require("fs").readFileSync(
+            UTILITY2_DIR_BUILD + "/test-report.json",
+            "utf8"
+        ));
+    } catch (ignore) {}
+    local.testReportMerge(testReport, {}, "modeWrite");
+};
+
 if (module === require.main && (!globalThis.utility2_rollup || (
     process.argv[2] &&
     local.cliDict[process.argv[2]] &&

@@ -214,16 +214,14 @@ local.cliRun = function ({
  * this function will run cli
  */
     let {
-        cliDict,
-        replStart
-    } = local;
-    let {
         _default,
         _eval,
         _help,
         _interactive,
-        _version
-    } = cliDict;
+        _version,
+        cliDict,
+        replStart
+    } = Object.assign({}, local, local.cliDict);
     _eval = _eval || function () {
     /*
      * <code>

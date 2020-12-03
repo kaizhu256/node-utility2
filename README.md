@@ -52,12 +52,13 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.12.3
+- add file .windows_terminals_settings.json
+- migrate from .then() to async/await
 - remove functions streamCleanup
 - remove whitespace in shell-functions
 - none
 
 #### todo
-- migrate from promise to async/await
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
@@ -343,7 +344,7 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     onError();
 };
 
-local.testCase_webpage_default = function (opt, onError) {
+local.testCase_webpage_default = async function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
@@ -351,9 +352,10 @@ local.testCase_webpage_default = function (opt, onError) {
         onError(undefined, opt);
         return;
     }
-    local.browserTest({
+    await local.browserTest({
         url: "http://127.0.0.1:" + process.env.PORT + "/?modeTest=1"
-    }, onError);
+    });
+    onError(undefined, opt);
 };
 
 // run tests
@@ -869,7 +871,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 27,
+    "fileCount": 28,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
