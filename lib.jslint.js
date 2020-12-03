@@ -43,9 +43,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -90,9 +90,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -104,22 +104,6 @@
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
     }
     function identity(val) {
     /*
@@ -150,9 +134,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -171,9 +155,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -184,7 +168,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -208,10 +191,10 @@
 (function () {
 // init local
 local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
+    globalThis.utility2_rollup ||
+    // globalThis.utility2_rollup_old ||
+    // require("./assets.utility2.rollup.js") ||
+    globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
@@ -231,37 +214,46 @@ local.cliRun = function ({
 /*
  * this function will run cli
  */
-    let cliDict;
-    cliDict = local.cliDict;
-    cliDict._eval = cliDict._eval || function () {
+    let {
+        cliDict,
+        replStart
+    } = local;
+    let {
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    } = cliDict;
+    _eval = _eval || function () {
     /*
      * <code>
      * will eval <code>
      */
-        globalThis.local = local;
+        Object.assign(globalThis, local);
         require("vm").runInThisContext(process.argv[3]);
     };
-    cliDict._help = cliDict._help || function () {
+    _help = _help || function () {
     /*
      *
      * will print help
      */
-        let commandList;
+        let cmdList;
         let file;
         let packageJson;
         let str;
         let strDict;
-        commandList = [
+        cmdList = [
             {
                 argList: "<arg2>  ...",
                 description: "usage:",
-                command: [
+                cmd: [
                     "<arg1>"
                 ]
             }, {
                 argList: "'console.log(\"hello world\")'",
                 description: "example:",
-                command: [
+                cmd: [
                     "--eval"
                 ]
             }
@@ -285,38 +277,39 @@ local.cliRun = function ({
             }
             strDict[str] = strDict[str] || (ii + 2);
             ii = strDict[str];
-            if (commandList[ii]) {
-                commandList[ii].command.push(key);
+            if (cmdList[ii]) {
+                cmdList[ii].cmd.push(key);
                 return;
             }
-            commandList[ii] = rgxComment.exec(str);
-            local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND "
-                + key
-                + ":\nnew RegExp("
-                + JSON.stringify(rgxComment.source)
-                + ").exec(" + JSON.stringify(str).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\") + ");"
-            ));
-            commandList[ii] = {
-                argList: local.coalesce(commandList[ii][1], "").trim(),
-                command: [
+            cmdList[ii] = rgxComment.exec(str);
+            if (!cmdList[ii]) {
+                throw new Error(
+                    "cliRun - cannot parse comment in cmd " +
+                    key + ":\nnew RegExp(" +
+                    JSON.stringify(rgxComment.source) +
+                    ").exec(" + JSON.stringify(str).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                );
+            }
+            cmdList[ii] = {
+                argList: String(cmdList[ii][1] || "").trim(),
+                cmd: [
                     key
                 ],
-                description: commandList[ii][2]
+                description: cmdList[ii][2]
             };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";
-        str += commandList.filter(function (elem) {
+        str += cmdList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
-            elem.command = elem.command.filter(function (elem) {
+            elem.cmd = elem.cmd.filter(function (elem) {
                 return elem;
             });
             switch (ii) {
@@ -329,56 +322,65 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND "
-                    + (elem.command[0] || "<none>") + "\n# "
-                    + elem.description
+                    "# CMD " +
+                    (elem.cmd[0] || "<none>") + "\n# " +
+                    elem.description
                 );
             }
             return (
-                elem.description + "\n  " + file
-                + "  " + elem.command.sort().join("|") + "  "
-                + elem.argList.join("  ")
+                elem.description + "\n  " + file +
+                "  " + elem.cmd.sort().join("|") + "  " +
+                elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
     };
-    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
-    cliDict["--help"] = cliDict["--help"] || cliDict._help;
-    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
-    cliDict["-h"] = cliDict["-h"] || cliDict._help;
-    cliDict._default = cliDict._default || cliDict._help;
-    cliDict.help = cliDict.help || cliDict._help;
-    cliDict._interactive = cliDict._interactive || function () {
+    _interactive = _interactive || function () {
     /*
      *
      * will start interactive-mode
      */
-        globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        Object.assign(globalThis, local);
+        replStart = replStart || require("repl").start;
+        replStart({
             useGlobal: true
         });
     };
-    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
-    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
-    cliDict._version = cliDict._version || function () {
+    _version = _version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    cliDict["--version"] = cliDict["--version"] || cliDict._version;
-    cliDict["-v"] = cliDict["-v"] || cliDict._version;
-    // default to --help command if no arguments are given
+    _default = _default || _help;
+    Object.assign(cliDict, {
+        "--eval": _eval,
+        "--help": _help,
+        "--interactive": _interactive,
+        "--version": _version,
+        "-e": _eval,
+        "-h": _help,
+        "-i": _interactive,
+        "-v": _version,
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    });
+    // run help-cmd if no arguments are given
     if (process.argv.length <= 2) {
-        cliDict._help();
+        _help();
         return;
     }
+    // run defined-cmd if it exists
     if (cliDict[process.argv[2]]) {
         cliDict[process.argv[2]]();
         return;
     }
-    cliDict._default();
+    // run default-cmd
+    _default();
 };
 }());
 
@@ -11825,7 +11827,7 @@ function tokenize(source) {
             && !regexp_seen
             // hack-jslint - ignore too_long url
             && !(
-                option.utility2
+                option.modeUtility2
                 && (
                     /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
                 ).test(whole_line)
@@ -11871,7 +11873,7 @@ function tokenize(source) {
                 option.node = true;
                 option.nomen = true;
                 option.this = true;
-                option.utility2 = true;
+                option.modeUtility2 = true;
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
@@ -15963,7 +15965,7 @@ function whitage() {
                         open = true;
                         // hack-jslint - conditional-margin
                         if (
-                            !option.utility2
+                            !option.modeUtility2
                             || lines[right.line].startsWith(" ")
                         ) {
                             margin += 4;
@@ -16281,7 +16283,7 @@ local.jslint0 = Object.freeze(function (
         }
         aa = lines_extra[warning.line].source;
         warning.a = warning.a || aa.trim();
-        switch (option.autofix && warning.code) {
+        switch (option.modeAutofix && warning.code) {
         // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
         case "expected_a_at_b_c":
             // autofix indent - increment
@@ -16393,7 +16395,7 @@ local.jslint0 = Object.freeze(function (
     });
     // hack-jslint - debug warning
     warnings.some(function (warning) {
-        if (!option.utility2) {
+        if (!option.modeUtility2) {
             return true;
         }
         warning.option = Object.assign({}, option);
@@ -16446,12 +16448,11 @@ local.CSSLint = CSSLint;
 /* jslint ignore:end */
 
 
-let jslintAutofix;
 let jslintRecurse;
 let jslintUtility2;
 let stringGetLineAndCol;
 
-jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
+function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
 /*
  * this function will jslint-autofix <code>
  */
@@ -16507,9 +16508,9 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
         // autofix-html - recurse <script>...</script>, <style>...</style>
         code = code.replace((
             /^(\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n)(<\/(?:script|style)>)$/gm
-        ), function (ignore, match1, match2, ii) {
+        ), function (ignore, match1, footer, ii) {
             return jslintRecurse(code, file + (
-                match2.indexOf("style") >= 0
+                footer === "</style>"
                 ? ".<style>.css"
                 : ".<script>.js"
             ), opt, {
@@ -16517,7 +16518,7 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
                 iiEnd: ii + match1.length,
                 iiLine,
                 iiStart: ii
-            }) + match2;
+            }) + footer;
         });
         break;
     case ".js":
@@ -16773,7 +16774,7 @@ jslintAutofix = function (code, file, opt, {fileType, globalList, iiLine}) {
         break;
     }
     return code;
-};
+}
 
 jslintRecurse = function (code, file, opt, {
     fileType0,
@@ -16789,9 +16790,6 @@ jslintRecurse = function (code, file, opt, {
     let errMsg;
     let fileType;
     let globalList;
-    let modeAutofix;
-    let modeConditional;
-    let modeCoverage;
     let result;
     let tmp;
     // init opt
@@ -16806,9 +16804,6 @@ jslintRecurse = function (code, file, opt, {
         /\.\w+?$|$/m
     ).exec(file)[0];
     globalList = opt.globalList;
-    modeAutofix = opt.autofix;
-    modeConditional = opt.conditional;
-    modeCoverage = opt.coverage;
     result = {};
     // preserve lineno - save iiLine
     iiLine += stringGetLineAndCol(code, iiStart).line;
@@ -16860,13 +16855,13 @@ jslintRecurse = function (code, file, opt, {
     }
     // init mode-utility2
     tmp = tmp[fileType] && tmp[fileType].exec(code.slice(0, 4096));
-    opt.utility2 = Boolean((tmp && tmp[1]) || modeAutofix);
+    opt.modeUtility2 = Boolean((tmp && tmp[1]) || opt.modeAutofix);
     // if not modeConditional, then do not jslint
-    if ((modeConditional && !tmp) || modeCoverage) {
+    if (opt.modeConditional && !tmp) {
         return code;
     }
     // jslint - modeAutofix
-    if (modeAutofix) {
+    if (opt.modeAutofix) {
         code = jslintAutofix(code, file, opt, {
             fileType,
             globalList,
@@ -16891,6 +16886,12 @@ jslintRecurse = function (code, file, opt, {
         });
         break;
     case ".html":
+        jslintAutofix(code, file, opt, {
+            fileType,
+            globalList,
+            iiLine
+        });
+        break;
     case ".md":
     case ".sh":
         break;
@@ -16916,7 +16917,7 @@ jslintRecurse = function (code, file, opt, {
             return err;
         });
     }
-    if (opt.utility2) {
+    if (opt.modeUtility2) {
         jslintUtility2({
             code,
             errList,
@@ -16962,7 +16963,7 @@ jslintRecurse = function (code, file, opt, {
     // autofix-save
     if (
         !local.isBrowser
-        && modeAutofix
+        && opt.modeAutofix
         && !fileType0
         && !result.stop
         && code !== code0
@@ -17415,8 +17416,8 @@ local.cliDict._default = function () {
             require("fs").readFileSync(require("path").resolve(file), "utf8"),
             file,
             {
-                autofix: process.argv.indexOf("--autofix") >= 0,
-                conditional: process.argv.indexOf("--conditional") >= 0
+                modeAutofix: process.argv.indexOf("--autofix") >= 0,
+                modeConditional: process.argv.indexOf("--conditional") >= 0
             }
         );
     });
@@ -17430,8 +17431,8 @@ local.cliDict.dir = function () {
  * will jslint files in shallow <dir>
  */
     local.jslintAndPrintDir(process.argv[3], {
-        autofix: process.argv.indexOf("--autofix") >= 0,
-        conditional: process.argv.indexOf("--conditional") >= 0
+        modeAutofix: process.argv.indexOf("--autofix") >= 0,
+        modeConditional: process.argv.indexOf("--conditional") >= 0
     });
 };
 

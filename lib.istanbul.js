@@ -43,9 +43,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -90,9 +90,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -104,22 +104,6 @@
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
     }
     function identity(val) {
     /*
@@ -150,9 +134,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -171,9 +155,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -184,7 +168,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -208,10 +191,10 @@
 (function () {
 // init local
 local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
+    globalThis.utility2_rollup ||
+    // globalThis.utility2_rollup_old ||
+    // require("./assets.utility2.rollup.js") ||
+    globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
@@ -231,37 +214,46 @@ local.cliRun = function ({
 /*
  * this function will run cli
  */
-    let cliDict;
-    cliDict = local.cliDict;
-    cliDict._eval = cliDict._eval || function () {
+    let {
+        cliDict,
+        replStart
+    } = local;
+    let {
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    } = cliDict;
+    _eval = _eval || function () {
     /*
      * <code>
      * will eval <code>
      */
-        globalThis.local = local;
+        Object.assign(globalThis, local);
         require("vm").runInThisContext(process.argv[3]);
     };
-    cliDict._help = cliDict._help || function () {
+    _help = _help || function () {
     /*
      *
      * will print help
      */
-        let commandList;
+        let cmdList;
         let file;
         let packageJson;
         let str;
         let strDict;
-        commandList = [
+        cmdList = [
             {
                 argList: "<arg2>  ...",
                 description: "usage:",
-                command: [
+                cmd: [
                     "<arg1>"
                 ]
             }, {
                 argList: "'console.log(\"hello world\")'",
                 description: "example:",
-                command: [
+                cmd: [
                     "--eval"
                 ]
             }
@@ -285,38 +277,39 @@ local.cliRun = function ({
             }
             strDict[str] = strDict[str] || (ii + 2);
             ii = strDict[str];
-            if (commandList[ii]) {
-                commandList[ii].command.push(key);
+            if (cmdList[ii]) {
+                cmdList[ii].cmd.push(key);
                 return;
             }
-            commandList[ii] = rgxComment.exec(str);
-            local.assertOrThrow(commandList[ii], (
-                "cliRun - cannot parse comment in COMMAND "
-                + key
-                + ":\nnew RegExp("
-                + JSON.stringify(rgxComment.source)
-                + ").exec(" + JSON.stringify(str).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\") + ");"
-            ));
-            commandList[ii] = {
-                argList: local.coalesce(commandList[ii][1], "").trim(),
-                command: [
+            cmdList[ii] = rgxComment.exec(str);
+            if (!cmdList[ii]) {
+                throw new Error(
+                    "cliRun - cannot parse comment in cmd " +
+                    key + ":\nnew RegExp(" +
+                    JSON.stringify(rgxComment.source) +
+                    ").exec(" + JSON.stringify(str).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") + ");"
+                );
+            }
+            cmdList[ii] = {
+                argList: String(cmdList[ii][1] || "").trim(),
+                cmd: [
                     key
                 ],
-                description: commandList[ii][2]
+                description: cmdList[ii][2]
             };
         });
         str = "";
         str += packageJson.name + " (" + packageJson.version + ")\n\n";
-        str += commandList.filter(function (elem) {
+        str += cmdList.filter(function (elem) {
             return elem;
         }).map(function (elem, ii) {
-            elem.command = elem.command.filter(function (elem) {
+            elem.cmd = elem.cmd.filter(function (elem) {
                 return elem;
             });
             switch (ii) {
@@ -329,56 +322,65 @@ local.cliRun = function ({
             default:
                 elem.argList = elem.argList.split(" ");
                 elem.description = (
-                    "# COMMAND "
-                    + (elem.command[0] || "<none>") + "\n# "
-                    + elem.description
+                    "# CMD " +
+                    (elem.cmd[0] || "<none>") + "\n# " +
+                    elem.description
                 );
             }
             return (
-                elem.description + "\n  " + file
-                + "  " + elem.command.sort().join("|") + "  "
-                + elem.argList.join("  ")
+                elem.description + "\n  " + file +
+                "  " + elem.cmd.sort().join("|") + "  " +
+                elem.argList.join("  ")
             );
         }).join("\n\n");
         console.log(str);
     };
-    cliDict["--eval"] = cliDict["--eval"] || cliDict._eval;
-    cliDict["--help"] = cliDict["--help"] || cliDict._help;
-    cliDict["-e"] = cliDict["-e"] || cliDict._eval;
-    cliDict["-h"] = cliDict["-h"] || cliDict._help;
-    cliDict._default = cliDict._default || cliDict._help;
-    cliDict.help = cliDict.help || cliDict._help;
-    cliDict._interactive = cliDict._interactive || function () {
+    _interactive = _interactive || function () {
     /*
      *
      * will start interactive-mode
      */
-        globalThis.local = local;
-        local.identity(local.replStart || require("repl").start)({
+        Object.assign(globalThis, local);
+        replStart = replStart || require("repl").start;
+        replStart({
             useGlobal: true
         });
     };
-    cliDict["--interactive"] = cliDict["--interactive"] || cliDict._interactive;
-    cliDict["-i"] = cliDict["-i"] || cliDict._interactive;
-    cliDict._version = cliDict._version || function () {
+    _version = _version || function () {
     /*
      *
      * will print version
      */
         console.log(require(__dirname + "/package.json").version);
     };
-    cliDict["--version"] = cliDict["--version"] || cliDict._version;
-    cliDict["-v"] = cliDict["-v"] || cliDict._version;
-    // default to --help command if no arguments are given
+    _default = _default || _help;
+    Object.assign(cliDict, {
+        "--eval": _eval,
+        "--help": _help,
+        "--interactive": _interactive,
+        "--version": _version,
+        "-e": _eval,
+        "-h": _help,
+        "-i": _interactive,
+        "-v": _version,
+        _default,
+        _eval,
+        _help,
+        _interactive,
+        _version
+    });
+    // run help-cmd if no arguments are given
     if (process.argv.length <= 2) {
-        cliDict._help();
+        _help();
         return;
     }
+    // run defined-cmd if it exists
     if (cliDict[process.argv[2]]) {
         cliDict[process.argv[2]]();
         return;
     }
-    cliDict._default();
+    // run default-cmd
+    _default();
 };
 
 local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
@@ -430,6 +432,46 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
     }
     console.error("fsWriteFileWithMkdirpSync - " + pathname);
     return true;
+};
+
+local.svgBadgeCreate = function ({
+    fill,
+    str1,
+    str2
+}) {
+/*
+ * this function will create svg-badge
+ */
+    let xx1;
+    let xx2;
+    str1 = String(str1);
+    str2 = String(str2);
+    xx1 = 6 * str1.length + 20;
+    xx2 = 6 * str2.length + 20;
+    return (
+        "<svg height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\" xmlns=\"http://www.w3.org/2000/svg\">\n" +
+        "<rect fill=\"#555\" height=\"20\" width=\"" +
+        (xx1 + xx2) +
+        "\"/>\n" +
+        "<rect fill=\"" + fill + "\" height=\"20\" width=\"" +
+        xx2 + "\" x=\"" + xx1 + "\"/>\n" +
+        "<g\n" +
+        "fill=\"#fff\"\n" +
+        "font-family=\"DejaVu Sans,Verdana,Geneva,sans-serif\"\n" +
+        "font-size=\"11\"\n" +
+        "text-anchor=\"middle\"\n" +
+        ">\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        0.5 * xx1 + "\" y=\"15\">" + str1 + "</text>\n" +
+        "<text x=\"" + 0.5 * xx1 + "\" y=\"14\">" + str1 + "</text>\n" +
+        "<text fill-opacity=\".5\" fill=\"#777\" x=\"" +
+        (xx1 + 0.5 * xx2) + "\" y=\"15\">" + str2 + "</text>\n" +
+        "<text x=\"" + (xx1 + 0.5 * xx2) + "\" y=\"14\">" + str2 + "</text>\n" +
+        "</g>\n" +
+        "</svg>\n"
+    );
 };
 
 local.templateRender = function (template, dict, opt = {}, ii = 0) {
@@ -570,7 +612,7 @@ local.templateRender = function (template, dict, opt = {}, ii = 0) {
                 case "markdownSafe":
                     val = val.replace((
                         /`/g
-                    ), "'");
+                    ), "'"); // `
                     break;
                 case "markdownToHtml":
                     markdownToHtml = true;
@@ -10831,13 +10873,6 @@ local.templateCoverageReport = '\
 </html>\n\
 {{/if isBrowser}}\n\
 ';
-
-
-/*
-file https://img.shields.io/badge/coverage-100.0%-00dd00.svg?style=flat
-*/
-local.templateCoverageBadgeSvg =
-'<svg xmlns="http://www.w3.org/2000/svg" width="117" height="20"><linearGradient id="a" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><rect rx="0" width="117" height="20" fill="#555"/><rect rx="0" x="63" width="54" height="20" fill="#0d0"/><path fill="#0d0" d="M63 0h4v20h-4z"/><rect rx="0" width="117" height="20" fill="url(#a)"/><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="32.5" y="15" fill="#010101" fill-opacity=".3">coverage</text><text x="32.5" y="14">coverage</text><text x="89" y="15" fill="#010101" fill-opacity=".3">100.0%</text><text x="89" y="14">100.0%</text></g></svg>';
 /* jslint ignore:end */
 
 
@@ -11516,8 +11551,9 @@ local.coverageReportCreate = function ({
         });
     };
     // 1. merge previous <dirCoverage>/coverage.json into <coverage>
-    dirCoverage = path.resolve(".tmp/build/coverage");
+    coverage = coverage || globalThis.__coverage__;
     coverageInclude = coverageInclude || globalThis.__coverageInclude__;
+    dirCoverage = path.resolve(".tmp/build/coverage");
     if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
         console.error(
             "istanbul - merging file "
@@ -11704,17 +11740,16 @@ local.coverageReportCreate = function ({
     tmp = nodeRoot.metrics.lines.pct;
     fileWrite(
         dirCoverage + "/coverage.badge.svg",
-        // edit coverage badge percent
-        // edit coverage badge color
-        local.templateCoverageBadgeSvg.replace((
-            /100.0/g
-        ), tmp).replace((
-            /0d0/g
-        ), (
-            Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
-            + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
-            + "00"
-        ))
+        local.svgBadgeCreate({
+            fill: (
+                "#"
+                + Math.round((100 - tmp) * 2.21).toString(16).padStart(2, "0")
+                + Math.round(tmp * 2.21).toString(16).padStart(2, "0")
+                + "00"
+            ),
+            str1: "coverage",
+            str2: tmp + " %"
+        })
     );
     console.error(
         "istanbul - created coverage file " + dirCoverage + "/index.html"

@@ -24,7 +24,8 @@
     "license": "MIT",
     "main": "lib.utility2.js",
     "name": "utility2",
-    "nameAliasPublish": "npmtest-lite test-lite",
+    "nameAliasPublish": "",
+    "nameAliasPublish2": "npmtest-lite test-lite",
     "nameLib": "utility2",
     "nameOriginal": "utility2",
     "repository": {
@@ -32,14 +33,14 @@
         "url": "https://github.com/kaizhu256/node-utility2.git"
     },
     "scripts": {
-        "build-ci": "./npm_scripts.sh",
+        "build-ci": "sh npm_scripts.sh",
         "env": "env",
-        "eval": "./npm_scripts.sh",
-        "heroku-postbuild": "./npm_scripts.sh",
-        "postinstall": "./npm_scripts.sh",
-        "start": "./npm_scripts.sh",
-        "test": "./npm_scripts.sh",
-        "utility2": "./npm_scripts.sh"
+        "eval": "sh npm_scripts.sh",
+        "heroku-postbuild": "sh npm_scripts.sh",
+        "postinstall": "sh npm_scripts.sh",
+        "start": "sh npm_scripts.sh",
+        "test": "sh npm_scripts.sh",
+        "utility2": "sh npm_scripts.sh"
     },
     "utility2Dependents": [
         "2020.06.08 apidoc-lite",
@@ -47,7 +48,7 @@
         "2020.08.19 sqlite3-lite",
         "2020.10.27 jslint-lite",
         "2020.11.12 istanbul-lite",
-        "2020.11.12 utility2"
+        "2020.12.01 utility2"
     ],
-    "version": "2020.11.12"
+    "version": "2020.12.1"
 }

@@ -37,9 +37,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function"
-        && globalThis.navigator
-        && typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function" &&
+        globalThis.navigator &&
+        typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -84,9 +84,9 @@
         }
         throw (
             (
-                msg
-                && typeof msg.message === "string"
-                && typeof msg.stack === "string"
+                msg &&
+                typeof msg.message === "string" &&
+                typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -98,22 +98,6 @@
                 : JSON.stringify(msg, undefined, 4)
             )
         );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
     }
     function identity(val) {
     /*
@@ -144,9 +128,9 @@
                     return;
                 }
                 if (
-                    depth !== 0
-                    && typeof aa === "object" && aa && !Array.isArray(aa)
-                    && typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0 &&
+                    typeof aa === "object" && aa && !Array.isArray(aa) &&
+                    typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -165,9 +149,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process
-        && typeof process.on === "function"
-        && process.unhandledRejections !== "strict"
+        typeof process === "object" && process &&
+        typeof process.on === "function" &&
+        process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -178,7 +162,6 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
-        coalesce,
         identity,
         isBrowser,
         isWebWorker,
@@ -202,10 +185,10 @@
 (function () {
 // init local
 local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
+    globalThis.utility2_rollup ||
+    // globalThis.utility2_rollup_old ||
+    // require("./assets.utility2.rollup.js") ||
+    globalThis.globalLocal
 );
 // init exports
 if (local.isBrowser) {
