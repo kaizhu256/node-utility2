@@ -105,6 +105,19 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        if (
+            typeof document === "object" && document &&
+            typeof document.querySelectorAll === "function"
+        ) {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [];
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -167,6 +180,7 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
         isBrowser,
         isWebWorker,

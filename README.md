@@ -52,9 +52,10 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.12.3
-- add file .windows_terminals_settings.json
+- add functions documentQuerySelectorAll
+- remove functions middlewareXxx, onParallelXxx, streamCleanup
 - migrate from .then() to async/await
-- remove functions streamCleanup
+- add file .windows_terminals_settings.json
 - remove whitespace in shell-functions
 - none
 
@@ -220,6 +221,19 @@ instruction
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        if (
+            typeof document === "object" && document &&
+            typeof document.querySelectorAll === "function"
+        ) {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [];
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -282,6 +296,7 @@ instruction
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
         isBrowser,
         isWebWorker,
@@ -599,7 +614,6 @@ pre {
 >download standalone app</a><br>
 <button
     class="button"
-    data-onevent="testRunBrowser"
     id="buttonTestRun1"
 >run browser-tests</button><br>
 <div class="uiAnimateSlide" id="htmlTestReport1" style="
@@ -625,9 +639,11 @@ pre {
     "use strict";
     let local;
     let testCaseDict;
+
     local = window.utility2;
-    testCaseDict = {};
-    testCaseDict.modeTest = 1;
+    testCaseDict = {
+        modeTest: 1
+    };
 
     // comment this testCase to disable failed error demo
     testCaseDict.testCase_failed_error_demo = function (opt, onError) {
@@ -654,7 +670,7 @@ pre {
         }).catch(onError);
     };
 
-    local.eventListenerAdd("utility2.testRunEnd", function () {
+    local.eventListenerAdd("utility2.testRunEnd", {}, function () {
         document.querySelector(
             "#htmlCoverageReport1"
         ).innerHTML = local.coverageReportCreate({});
@@ -677,7 +693,7 @@ pre {
 ></textarea>
 <label>stderr and stdout</label>
 <textarea
-    class="onevent-reset-output readonly textarea"
+    class="onevent-output-reset readonly textarea"
     id="outputStdout1"
     readonly
 ></textarea>
@@ -759,9 +775,77 @@ npm_package_version: "2020.12.3"
 <script src="assets.utility2.lib.marked.js"></script>
 <script src="assets.utility2.js"></script>
 <script>
+/* jslint utility2:true */
 window.utility2.onReadyIncrement();
-window.addEventListener("load", window.utility2.onReadyDecrement);
+window.addEventListener("load", function () {
+    "use strict";
+    let local;
+    let {
+        documentQuerySelectorAll
+    } = window.utility2;
+    function onTestRun({
+        msg,
+        target,
+        type
+    }) {
+        switch ((target && target.id) || type) {
+        case "buttonTestRun1":
+            window.utility2_modeTest = 1;
+            local.testRunDefault(window.local);
+            return;
+        case "utility2.testRunEnd":
+            documentQuerySelectorAll(
+                "#buttonTestRun1"
+            ).forEach(function (elem) {
+                elem.textContent = "run tests";
+            });
+            documentQuerySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                elem.innerHTML = msg.html;
+            });
+            return;
+        case "utility2.testRunStart":
+            documentQuerySelectorAll(
+                ".onevent-output-reset"
+            ).forEach(function (elem) {
+                elem.textContent = "";
+            });
+            documentQuerySelectorAll(
+                "#buttonTestRun1"
+            ).forEach(function (elem) {
+                elem.textContent = "running tests";
+            });
+            documentQuerySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                local.uiAnimateSlideDown(elem);
+                elem.innerHTML = msg.html;
+            });
+            return;
+        case "utility2.testRunUpdate":
+            documentQuerySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                local.uiAnimateSlideDown(elem);
+                elem.innerHTML = msg.html;
+            });
+            return;
+        }
+    }
+    local = window.utility2;
+    documentQuerySelectorAll(
+        "#buttonTestRun1"
+    ).forEach(function (elem) {
+        elem.addEventListener("click", onTestRun);
+    });
+    local.eventListenerAdd("utility2.testRunEnd", {}, onTestRun);
+    local.eventListenerAdd("utility2.testRunUpdate", {}, onTestRun);
+    local.eventListenerAdd("utility2.testRunStart", {}, onTestRun);
+    local.onReadyDecrement();
+});
 </script>
+
 <script src="assets.example.js"></script>
 <script src="assets.test.js"></script>
 <div style="text-align: center;">

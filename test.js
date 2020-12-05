@@ -96,6 +96,19 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        if (
+            typeof document === "object" && document &&
+            typeof document.querySelectorAll === "function"
+        ) {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [];
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -158,6 +171,7 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
         isBrowser,
         isWebWorker,
@@ -194,6 +208,7 @@ local.testRunDefault(local);
 let {
     assertJsonEqual,
     assertOrThrow,
+    noop,
     onErrorThrow,
     tryCatchOnError
 } = local;
@@ -251,7 +266,7 @@ local.testCase_buildApp_default = function (opt, onError) {
  * this function will test buildApp's default handling-behavior
  */
     local._testCase_buildApp_default({
-        assetsList: [
+        customizeAssetsList: [
             {
                 file: "/assets.hello.txt",
                 url: "/assets.hello.txt"
@@ -290,15 +305,26 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 aa: "\n<!-- utility2-comment\n",
                 bb: "\n"
+            // customize quickstart-example-js-script-1
+            }, {
+                aa: "<script src=\"assets.utility2.js\"></script>\n",
+                bb: "\n"
+            // customize quickstart-example-js-script-2
+            }, {
+                aa: "<script src=\"assets.utility2.rollup.js\"></script>\n",
+                bb: (
+                    "<script src=\"assets.utility2.lib.istanbul.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.lib.jslint.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.lib.marked.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.js\"></script>\n"
+                )
             // customize quickstart-example-js-comment
             }, {
                 aa: "\nutility2-comment -->\n",
                 bb: "\n"
-            // customize quickstart-example-js-script
-            }, {
-                merge: (
-                    /\n<script\u0020src=[^`]*?\n<script\u0020src="assets\.example\.js"><\/script>\n/
-                )
             // customize quickstart-example-js-screenshot
             }, {
                 merge: (
@@ -329,7 +355,7 @@ local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
         local.chromeDevtoolsClientCreate({
             modeMockProcessPlatform: true,
             processPlatform
-        }).catch(local.noop);
+        }).catch(noop);
     });
     onError(undefined, opt);
 };
@@ -345,7 +371,7 @@ local.testCase_cliRun_default = function (opt, onError) {
     local.testMock([
         [
             local, {
-                replStart: local.noop
+                replStart: noop
             }
         ], [
             local.cliDict, {}
@@ -355,17 +381,17 @@ local.testCase_cliRun_default = function (opt, onError) {
             }
         ], [
             require("repl"), {
-                start: local.noop
+                start: noop
             }
         ], [
             require("vm"), {
-                runInThisContext: local.noop
+                runInThisContext: noop
             }
         ]
     ], function (onError) {
         // test default handling-behavior
         local.cliDict = {
-            _default: local.noop
+            _default: noop
         };
         local.cliRun({
             rgxComment: (
@@ -400,13 +426,17 @@ local.testCase_eventListenerXxx_default = function (opt, onError) {
  * this function will test eventListenerXxx's default handling-behavior
  */
     let listener;
-    listener = function (msg) {
+    listener = function ({
+        msg,
+        type
+    }) {
         assertJsonEqual(msg, "bb");
+        assertJsonEqual(type, "aa");
     };
-    local.eventListenerAdd("aa", listener);
-    local.eventListenerAdd("aa", listener, {
+    local.eventListenerAdd("aa", {}, listener);
+    local.eventListenerAdd("aa", {
         once: true
-    });
+    }, listener);
     local.eventListenerEmit("aa", "bb");
     local.eventListenerEmit("aa", "bb");
     local.eventListenerRemove(listener);
@@ -483,7 +513,7 @@ local.testCase_replStart_default = function (opt, onError) {
         // suppress process.stdout
         [
             process.stdout, {
-                write: local.noop
+                write: noop
             }
         ]
     ], function (onError) {
@@ -509,39 +539,7 @@ local.testCase_replStart_default = function (opt, onError) {
             // test err handling-behavior
             "undefined()\n"
         ].forEach(function (script) {
-            globalThis.utility2_repl1.eval(script, null, "repl", local.noop);
-        });
-        onError(undefined, opt);
-    }, onError);
-};
-
-local.testCase_serverRespondTimeoutDefault_timeout = function (opt, onError) {
-/*
- * this function will test
- * serverRespondTimeoutDefault's timeout handling-behavior
- */
-    opt = function (fnc1, fnc2) {
-        [
-            fnc1, fnc2
-        ].forEach(function (fnc) {
-            if (typeof fnc === "function") {
-                fnc();
-            }
-        });
-    };
-    local.testMock([
-        [
-            local, {
-                onTimeout: opt,
-                serverRespondDefault: local.noop,
-                setTimeout: opt
-            }
-        ]
-    ], function (onError) {
-        local.serverRespondTimeoutDefault({
-            headers: {}
-        }, {
-            on: opt
+            globalThis.utility2_repl1.eval(script, null, "repl", noop);
         });
         onError(undefined, opt);
     }, onError);

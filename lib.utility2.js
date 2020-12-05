@@ -105,6 +105,19 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        if (
+            typeof document === "object" && document &&
+            typeof document.querySelectorAll === "function"
+        ) {
+            return Array.from(document.querySelectorAll(selector));
+        }
+        return [];
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -167,6 +180,7 @@
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
         isBrowser,
         isWebWorker,
@@ -217,9 +231,11 @@ globalThis.utility2 = local;
 
 // run shared js-env code - state
 (function () {
+    let packageJson;
     let state;
     // init state - default
     state = {
+        UTILITY2_DIR_BUILD: ".tmp/build",
         apidocCreate: local.identity,
         coverageMerge: local.identity,
         coverageReportCreate: local.identity,
@@ -234,7 +250,6 @@ globalThis.utility2 = local;
     state = Object.assign(state, globalThis.utility2_state);
     // init state - package.json
     try {
-        let packageJson;
         packageJson = JSON.parse(require("fs").readFileSync("package.json"));
         Object.entries(packageJson).forEach(function ([
             key, val
@@ -257,7 +272,11 @@ globalThis.utility2 = local;
     state = Object.assign({
         GITHUB_OWNER: String(state.GITHUB_FULLNAME).split("/")[0],
         GITHUB_REPO: String(state.GITHUB_FULLNAME).split("/")[1],
-        UTILITY2_DIR_BUILD: ".tmp/build",
+        UTILITY2_DIR_BUILD: (
+            local.isBrowser
+            ? state.UTILITY2_DIR_BUILD
+            : require("path").resolve(state.UTILITY2_DIR_BUILD)
+        ),
         npm_package_nameLib: String(state.npm_package_name).replace((
             /\W/g
         ), "_")
@@ -327,6 +346,7 @@ globalThis.utility2 = local;
     });
 }());
 let {
+    documentQuerySelectorAll,
     noop,
     onErrorThrow,
     CI_BRANCH,
@@ -375,7 +395,7 @@ local.timeoutDefault |= 0;
 
 
 /* validateLineSortedReset */
-// run shared js-env code - assets
+// run shared js-env code - assetsDict
 local.assetsDict = local.assetsDict || {};
 local.assetsDict["/assets.utility2.header.js"] = (
     "// assets.utility2.header.js - start\n" +
@@ -479,6 +499,19 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            )\n" +
     "        );\n" +
     "    }\n" +
+    "    function documentQuerySelectorAll(selector) {\n" +
+    "    /*\n" +
+    "     * this function will return document.querySelectorAll(<selector>)\n" +
+    "     * or empty list if function is not available\n" +
+    "     */\n" +
+    "        if (\n" +
+    "            typeof document === \"object\" && document &&\n" +
+    "            typeof document.querySelectorAll === \"function\"\n" +
+    "        ) {\n" +
+    "            return Array.from(document.querySelectorAll(selector));\n" +
+    "        }\n" +
+    "        return [];\n" +
+    "    }\n" +
     "    function identity(val) {\n" +
     "    /*\n" +
     "     * this function will return <val>\n" +
@@ -544,6 +577,7 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    local = {\n" +
     "        assertJsonEqual,\n" +
     "        assertOrThrow,\n" +
+    "        documentQuerySelectorAll,\n" +
     "        identity,\n" +
     "        isBrowser,\n" +
     "        isWebWorker,\n" +
@@ -738,7 +772,6 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ">download standalone app</a><br>\n" +
     "<button\n" +
     "    class=\"button\"\n" +
-    "    data-onevent=\"testRunBrowser\"\n" +
     "    id=\"buttonTestRun1\"\n" +
     ">run browser-tests</button><br>\n" +
     "<div class=\"uiAnimateSlide\" id=\"htmlTestReport1\" style=\"\n" +
@@ -756,7 +789,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "<!-- custom-html-start -->\n" +
     "<label>stderr and stdout</label>\n" +
     "<textarea\n" +
-    "    class=\"onevent-reset-output readonly textarea\"\n" +
+    "    class=\"onevent-output-reset readonly textarea\"\n" +
     "    id=\"outputStdout1\"\n" +
     "    readonly\n" +
     "></textarea>\n" +
@@ -776,8 +809,75 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "</script>\n" +
     "<script src=\"assets.utility2.rollup.js\"></script>\n" +
     "<script>\n" +
+    "/* jslint utility2:true */\n" +
     "window.utility2.onReadyIncrement();\n" +
-    "window.addEventListener(\"load\", window.utility2.onReadyDecrement);\n" +
+    "window.addEventListener(\"load\", function () {\n" +
+    "    \"use strict\";\n" +
+    "    let local;\n" +
+    "    let {\n" +
+    "        documentQuerySelectorAll\n" +
+    "    } = window.utility2;\n" +
+    "    function onTestRun({\n" +
+    "        msg,\n" +
+    "        target,\n" +
+    "        type\n" +
+    "    }) {\n" +
+    "        switch ((target && target.id) || type) {\n" +
+    "        case \"buttonTestRun1\":\n" +
+    "            window.utility2_modeTest = 1;\n" +
+    "            local.testRunDefault(window.local);\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunEnd\":\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \"#buttonTestRun1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"run tests\";\n" +
+    "            });\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunStart\":\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \".onevent-output-reset\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"\";\n" +
+    "            });\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \"#buttonTestRun1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"running tests\";\n" +
+    "            });\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                local.uiAnimateSlideDown(elem);\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunUpdate\":\n" +
+    "            documentQuerySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                local.uiAnimateSlideDown(elem);\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        }\n" +
+    "    }\n" +
+    "    local = window.utility2;\n" +
+    "    documentQuerySelectorAll(\n" +
+    "        \"#buttonTestRun1\"\n" +
+    "    ).forEach(function (elem) {\n" +
+    "        elem.addEventListener(\"click\", onTestRun);\n" +
+    "    });\n" +
+    "    local.eventListenerAdd(\"utility2.testRunEnd\", {}, onTestRun);\n" +
+    "    local.eventListenerAdd(\"utility2.testRunUpdate\", {}, onTestRun);\n" +
+    "    local.eventListenerAdd(\"utility2.testRunStart\", {}, onTestRun);\n" +
+    "    local.onReadyDecrement();\n" +
+    "});\n" +
     "</script>\n" +
     "utility2-comment -->\n" +
     "<script src=\"assets.{{npm_package_nameLib}}.js\"></script>\n" +
@@ -1628,7 +1728,7 @@ local.browserTest = async function ({
 };
 
 local.buildApp = function ({
-    assetsList = [],
+    customizeAssetsList = [],
     customizeReadmeList = []
 }, onError) {
 /*
@@ -1735,7 +1835,7 @@ local.buildApp = function ({
             }, {
                 url: "/index.html"
             }
-        ].concat(assetsList).map(function (elem) {
+        ].concat(customizeAssetsList).map(function (elem) {
             return new Promise(function (resolve) {
                 require("http").request((
                     "http://127.0.0.1:" + PORT + elem.url
@@ -2263,7 +2363,6 @@ local.chromeDevtoolsClientCreate = async function ({
     let chromeUserDataDir;
     let secWebsocketKey;
     let timerTimeout;
-    let tmp;
     let websocket;
     let websocketUrl;
     let wsBufList;
@@ -2302,14 +2401,16 @@ local.chromeDevtoolsClientCreate = async function ({
             }
         } catch (ignore) {}
         // 2. rm -rf <chromeUserDataDir>
-        require("fs").rmdirSync(chromeUserDataDir, {
-            recursive: true
-        });
+        if (chromeUserDataDir) {
+            require("fs").rmdirSync(chromeUserDataDir, {
+                recursive: true
+            });
+        }
         // 3. destroy <chromeClient>, <websocket>, <wsReader>
         chromeClient.destroy();
-        try {
+        if (websocket) {
             websocket.destroy();
-        } catch (ignore) {}
+        }
         wsReader.destroy();
     }
     async function chromeEvaluate(expression) {
@@ -2393,7 +2494,11 @@ local.chromeDevtoolsClientCreate = async function ({
             id: callbackId,
             method,
             params,
-            sessionId: chromeSessionId
+            sessionId: (
+                typeof chromeSessionId === "string"
+                ? chromeSessionId
+                : undefined
+            )
         })));
         return new Promise(function (resolve) {
             callbackDict[callbackId] = {
@@ -2547,17 +2652,6 @@ local.chromeDevtoolsClientCreate = async function ({
         }
         callback();
     }
-    // init timerTimeout
-    timeout = timeout || 30000;
-    if (modeMockProcessPlatform) {
-        timeout = 0;
-    }
-    timerTimeout = setTimeout(function () {
-        chromeCleanup();
-        chromeClient.emit("error", new Error(
-            "chrome-devtools - timeout - " + timeout + " ms"
-        ));
-    }, timeout);
     // init chromeClient
     function ChromeClient() {
     /*
@@ -2576,6 +2670,18 @@ local.chromeDevtoolsClientCreate = async function ({
         chromeClient.on("data", chromeOnData);
     }
     chromeClient = new ChromeClient();
+    // init timerTimeout
+    timeout = timeout || 30000;
+    if (modeMockProcessPlatform) {
+        chromeClient.on("error", noop);
+        timeout = 0;
+    }
+    timerTimeout = setTimeout(function () {
+        chromeCleanup();
+        chromeClient.emit("error", new Error(
+            "chrome-devtools - timeout - " + timeout + " ms"
+        ));
+    }, timeout);
 /*
 https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
 +---------------------------------------------------------------+
@@ -2724,7 +2830,6 @@ Application data: y bytes
         let stderr;
         // coverage-hack
         if (modeMockProcessPlatform) {
-            chromeClient.on("error", noop);
             reject();
             return;
         }
@@ -2788,14 +2893,14 @@ Application data: y bytes
         });
     });
     // init chromeSessionId
-    tmp = await chromeClient.rpc("Target.createTarget", {
+    chromeSessionId = await chromeClient.rpc("Target.createTarget", {
         url: "about:blank"
     });
-    tmp = await chromeClient.rpc("Target.attachToTarget", {
-        targetId: tmp.targetId,
+    chromeSessionId = await chromeClient.rpc("Target.attachToTarget", {
+        targetId: chromeSessionId.targetId,
         flatten: true
     });
-    chromeSessionId = tmp.sessionId;
+    chromeSessionId = chromeSessionId.sessionId;
     console.error("chrome-devtools - created - blank-page with sessionId");
     return chromeClient;
 };
@@ -2977,37 +3082,25 @@ local.domQuerySelectorAllTagName = function (selector) {
 /*
  * this function will return list of tagName matching <selector>
  */
-    let set;
-    try {
-        document.getElementById("undefined");
-    } catch (ignore) {
-        return [];
-    }
-    set = new Set();
-    document.querySelectorAll(selector).forEach(function (elem) {
-        set.add(elem.tagName);
+    let dict;
+    dict = {};
+    documentQuerySelectorAll(selector).forEach(function (elem) {
+        dict[elem.tagName] = true;
     });
-    return Array.from(set).sort();
+    return Object.keys(dict).sort();
 };
 
 local.domStyleValidate = function () {
 /*
  * this function will validate <style> tags
  */
+    let list;
     let rgx;
-    let tmp;
-    try {
-        document.getElementById("undefined");
-    } catch (ignore) {
-        return;
-    }
     rgx = (
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
-    tmp = [];
-    Array.from(
-        document.querySelectorAll("style")
-    ).map(function (elem, ii) {
+    list = [];
+    documentQuerySelectorAll("style").forEach(function (elem, ii) {
         elem.innerHTML.replace((
             /\/\*[\S\s]*?\*\/|;|\}/g
         ), "\n").replace((
@@ -3018,12 +3111,12 @@ local.domStyleValidate = function () {
             } catch (errCaught) {
                 console.error(errCaught);
             }
-            if (!(ii > 1)) {
-                tmp.push(ii + " " + match0);
+            if (!(ii > 1) && !rgx.test(elem)) {
+                list.push(ii + " " + match0);
             }
         });
     });
-    tmp.filter(function (elem) {
+    list.filter(function (elem) {
         return !rgx.test(elem);
     }).sort().reverse().forEach(function (elem, ii, list) {
         console.error(
@@ -3032,14 +3125,16 @@ local.domStyleValidate = function () {
     });
 };
 
-local.eventListenerAdd = function (type, listener, opt = {}) {
+local.eventListenerAdd = function (type, {
+    once
+}, listener) {
 /*
  * this function will listen evt <type> with <listener>
  */
     localEventListenerId = (localEventListenerId + 1) | 0;
     localEventListenerDict[localEventListenerId] = {
         listener,
-        once: opt.once,
+        once,
         type
     };
 };
@@ -3055,7 +3150,10 @@ local.eventListenerEmit = function (type, msg) {
             if (elem.once) {
                 delete localEventListenerDict[id];
             }
-            elem.listener(msg);
+            elem.listener({
+                msg,
+                type
+            });
         }
     });
 };
@@ -3458,236 +3556,12 @@ local.listShuffle = function (list) {
     return list;
 };
 
-local.middlewareAssetsCached = function (req, res, next) {
-/*
- * this function will run middleware to serve cached-assets
- */
-    if (!local.assetsDict.hasOwnProperty(req.urlParsed.pathname)) {
-        next();
-        return;
-    }
-    // do not cache if headers already sent or url has '?' search indicator
-    if (!(res.headersSent || req.url.indexOf("?") >= 0)) {
-        // init serverResponseHeaderLastModified
-        local.serverResponseHeaderLastModified = (
-            local.serverResponseHeaderLastModified ||
-            // resolve to 1000 ms
-            new Date()
-        );
-        // respond with 304 If-Modified-Since serverResponseHeaderLastModified
-        if (
-            new Date(req.headers["if-modified-since"]) >=
-            local.serverResponseHeaderLastModified
-        ) {
-            res.statusCode = 304;
-            res.end();
-            return;
-        }
-        res.setHeader("Cache-Control", "no-cache");
-        res.setHeader(
-            "Last-Modified",
-            local.serverResponseHeaderLastModified.toUTCString()
-        );
-    }
-    res.end(local.assetsDict[req.urlParsed.pathname]);
-};
-
-local.middlewareError = function (err, req, res) {
-/*
- * this function will run middleware to handle <err>
- */
-    // default - 404 Not Found
-    if (!err) {
-        local.serverRespondDefault(req, res, 404);
-        return;
-    }
-    // statusCode [400, 600)
-    local.serverRespondDefault(req, res, (
-        (err.statusCode >= 400 && err.statusCode < 600)
-        ? err.statusCode
-        : 500
-    ), err);
-};
-
-local.middlewareFileServer = function (req, res, next) {
-/*
- * this function will run middleware to serve files
- */
-    let file;
-    if (req.method !== "GET" || local.isBrowser) {
-        next();
-        return;
-    }
-    // resolve file
-    file = require("path").resolve(
-        // replace trailing "/" with "/index.html"
-        require("url").parse(req.url).pathname.slice(1).replace((
-            /\/$/
-        ), "/index.html")
-    );
-    // security - disable parent-directory lookup
-    if (file.indexOf(process.cwd() + require("path").sep) !== 0) {
-        next();
-        return;
-    }
-    require("fs").readFile(file, function (err, data) {
-        // default to next
-        if (err) {
-            next();
-            return;
-        }
-        // respond with data
-        res.end(data);
-    });
-};
-
-local.middlewareInit = function (req, res, next) {
-/*
- * this function will run middleware to init <req> and <res>
- */
-    let contentType;
-    // init timerTimeout
-    local.serverRespondTimeoutDefault(req, res, local.timeoutDefault);
-    // init req.urlParsed
-    req.urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
-    // set reponse-header "content-type"
-    contentType = {
-        // application
-        ".js": "application/javascript; charset=utf-8",
-        ".json": "application/json; charset=utf-8",
-        ".mjs": "application/javascript; charset=utf-8",
-        ".pdf": "application/pdf",
-        ".wasm": "application/wasm",
-        ".xml": "application/xml; charset=utf-8",
-        // image
-        ".bmp": "image/bmp",
-        ".gif": "image/gif",
-        ".jpe": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".jpg": "image/jpeg",
-        ".png": "image/png",
-        ".svg": "image/svg+xml; charset=utf-8",
-        // text
-        "/": "text/html; charset=utf-8",
-        ".css": "text/css; charset=utf-8",
-        ".htm": "text/html; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".md": "text/markdown; charset=utf-8",
-        ".txt": "text/plain; charset=utf-8"
-    };
-    contentType = contentType[(
-        /^\/$|\.[^.]*?$|$/m
-    ).exec(req.urlParsed.pathname)[0]];
-    if (contentType) {
-        res.setHeader("content-type", contentType);
-    }
-    // default to next
-    next();
-};
-
-local.onParallel = function (onError, onEach, onRetry) {
-/*
- * this function will create function that will
- * 1. run async tasks in parallel
- * 2. if cnt === 0 or err occurred, then call onError(err)
- */
-    let onParallel;
-    onEach = onEach || noop;
-    onRetry = onRetry || noop;
-    onParallel = function (err, data) {
-        if (onRetry(err, data)) {
-            return;
-        }
-        // decrement cnt
-        onParallel.cnt -= 1;
-        // validate cnt
-        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
-            err = new Error(
-                "invalid onParallel.cnt = " + onParallel.cnt
-            );
-        // ensure onError is run only once
-        } else if (onParallel.cnt < 0) {
-            return;
-        }
-        // handle err
-        if (err) {
-            onParallel.err = err;
-            // ensure cnt <= 0
-            onParallel.cnt = -Math.abs(onParallel.cnt);
-        }
-        // call onError when isDone
-        if (onParallel.cnt <= 0) {
-            onError(err, data);
-            return;
-        }
-        onEach();
-    };
-    // init cnt
-    onParallel.cnt = 0;
-    // return callback
-    return onParallel;
-};
-
-local.onParallelList = function (opt, onEach, onError) {
-/*
- * this function will
- * 1. async-run onEach in parallel,
- *    with given <opt>.rateLimit and <opt>.retryLimit
- * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
- */
-    let isListEnd;
-    let onEach2;
-    let onParallel;
-    opt.list = opt.list || [];
-    onEach2 = function () {
-        while (true) {
-            if (!(onParallel.ii + 1 < opt.list.length)) {
-                isListEnd = true;
-                return;
-            }
-            if (!(onParallel.cnt < opt.rateLimit + 1)) {
-                return;
-            }
-            onParallel.ii += 1;
-            onEach({
-                elem: opt.list[onParallel.ii],
-                ii: onParallel.ii,
-                list: opt.list,
-                retry: 0
-            }, onParallel);
-        }
-    };
-    onParallel = local.onParallel(onError, onEach2, function (err, data) {
-        if (err && data && data.retry < opt.retryLimit) {
-            console.error(err);
-            data.retry += 1;
-            setTimeout(function () {
-                onParallel.cnt -= 1;
-                onEach(data, onParallel);
-            }, 1000);
-            return true;
-        }
-        // restart if opt.list has grown
-        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = undefined;
-            onEach2();
-        }
-    });
-    onParallel.ii = -1;
-    opt.rateLimit = Number(opt.rateLimit) || 6;
-    opt.rateLimit = Math.max(opt.rateLimit, 1);
-    opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.cnt += 1;
-    onEach2();
-    onParallel();
-};
-
 local.onReadyDecrement = function (err) {
 /*
  * this function will decrement <onReadyCnt>
  */
     localOnReadyCnt -= 1;
-    if (!localOnReadyCnt) {
+    if (localOnReadyCnt === 0) {
         local.eventListenerEmit("utility2.onReady", err);
     }
     return localOnReadyCnt;
@@ -4074,29 +3948,179 @@ local.requireReadme = function () {
     return module.exports;
 };
 
-local.serverRespondDefault = function (req, res, statusCode, err) {
+local.serverRequestListener = function (req, res) {
 /*
- * this function will respond with default http <statusCode> and message,
- * or <err>.stack for given statusCode
+ * this function will handle server-<req> and server-<res> using
+ * express-like middleware-chaining
  */
-    // init statusCode and contentType
-    local.serverRespondHeadSet(req, res, statusCode, {
-        "Content-Type": "text/plain; charset=utf-8"
-    });
-    if (err) {
-        // debug statusCode / method / url
-        err.message = (
-            res.statusCode + " " + req.method + " " + req.url + "\n" +
-            err.message
-        );
-        // print err.stack to stderr
-        console.error(err);
-        // end res with err.stack
-        res.end(err.stack);
-        return;
+    let isDone;
+    let list;
+    let timeStart;
+    let timeout;
+    let timerTimeout;
+    let urlParsed;
+    let {
+        assetsDict,
+        middlewareList,
+        timeoutDefault
+    } = local;
+    function onClose() {
+    /*
+     * this function will hand "close" evt
+     */
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "serverResponse",
+            method: req.method,
+            url: urlParsed.pathname,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - timeStart
+        }) + "\n");
+        isDone = true;
+        clearTimeout(timerTimeout);
+        req.destroy();
+        res.destroy();
     }
-    // end res with default statusCode and http-message
-    res.end(statusCode + " " + require("http").STATUS_CODES[statusCode]);
+    function onError(err) {
+    /*
+     * this function will end server-request
+     */
+        if (!isDone && !err) {
+            isDone = true;
+            res.statusCode = 404;
+            res.end("404 Not Found");
+            return;
+        }
+        console.error(err || new Error("onError called more than once"));
+        if (isDone) {
+            req.destroy();
+            res.destroy();
+            return;
+        }
+        isDone = true;
+        res.statusCode = 500;
+        res.end("500 Internal Server Error");
+    }
+    function onTimeout() {
+        isDone = true;
+        onError(new Error("timeout - " + timeout + " ms"));
+    }
+    async function middlewareInit(req, ignore, next) {
+        let contentType;
+        // init timeStart
+        timeStart = Date.now();
+        // init timerTimeout
+        timeout = timeout || timeoutDefault;
+        timerTimeout = setTimeout(onTimeout, timeout);
+        // init urlParsed
+        urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
+        // init evt-handling
+        req.on("abort", onError);
+        req.on("close", onClose);
+        req.on("error", onError);
+        res.on("error", onError);
+        res.on("close", onClose);
+        // set reponse-header "content-type"
+        contentType = {
+            // application
+            ".js": "application/javascript; charset=utf-8",
+            ".json": "application/json; charset=utf-8",
+            ".mjs": "application/javascript; charset=utf-8",
+            ".pdf": "application/pdf",
+            ".wasm": "application/wasm",
+            ".xml": "application/xml; charset=utf-8",
+            // image
+            ".bmp": "image/bmp",
+            ".gif": "image/gif",
+            ".jpe": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".jpg": "image/jpeg",
+            ".png": "image/png",
+            ".svg": "image/svg+xml; charset=utf-8",
+            // text
+            ".css": "text/css; charset=utf-8",
+            ".htm": "text/html; charset=utf-8",
+            ".html": "text/html; charset=utf-8",
+            ".md": "text/markdown; charset=utf-8",
+            ".txt": "text/plain; charset=utf-8",
+            "/": "text/html; charset=utf-8"
+        };
+        contentType = contentType[(
+            /^\/$|\.[^.]*?$|$/m
+        ).exec(urlParsed.pathname)[0]];
+        if (contentType) {
+            res.setHeader("content-type", contentType);
+        }
+        await next();
+    }
+    async function middlewareServeAsset(ignore, res, next) {
+    /*
+     * this function serve asset from <assetsDict>
+     */
+        if (!assetsDict.hasOwnProperty(urlParsed.pathname)) {
+            await next();
+            return;
+        }
+        res.statusCode = 200;
+        res.end(assetsDict[urlParsed.pathname]);
+    }
+    async function middlewareServeFile(req, res, next) {
+    /*
+     * this function will serve <file> from fs
+     */
+        let file;
+        if (req.method !== "GET") {
+            await next();
+            return;
+        }
+        file = urlParsed.pathname.slice(1);
+        // replace trailing "/" with "/index.html"
+        file = file.replace((
+            /\/$/
+        ), "/index.html");
+        // resolve file
+        file = require("path").resolve(file);
+        if (
+            // security - disable parent-directory lookup
+            file.indexOf(process.cwd() + require("path").sep) !== 0 ||
+            // security - ignore file with non-alphanumeric-first-character
+            !(
+                /[0-9A-Za-z]/
+            ).test(require("path").basename(file)[0])
+        ) {
+            await next();
+            return;
+        }
+        try {
+            file = await require("fs").promises.readFile(file);
+        } catch (ignore) {
+            await next();
+            return;
+        }
+        res.end(file);
+    }
+    async function next() {
+        let middleware;
+        try {
+            middleware = list.shift();
+            if (isDone || !middleware) {
+                onError();
+                return;
+            }
+            // recurse
+            await middleware(req, res, next);
+        } catch (errCaught) {
+            onError(errCaught);
+        }
+    }
+    // init list
+    list = [].concat(
+        middlewareInit,
+        middlewareList,
+        middlewareServeAsset,
+        middlewareServeFile
+    );
+    next();
 };
 
 local.serverRespondEcho = function (req, res) {
@@ -4113,80 +4137,21 @@ local.serverRespondEcho = function (req, res) {
     req.pipe(res);
 };
 
-local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
+local.serverStart = function () {
 /*
- * this function will set <res> object's <statusCode> and <headers>
+ * this function will start http-server on $PORT
  */
-    if (res.headersSent) {
-        return;
+    // init middlewareList
+    local.middlewareList = local.middlewareList || [];
+    // start http-server on $PORT
+    if (!local.isBrowser && !globalThis.utility2_serverHttp1) {
+        globalThis.utility2_serverHttp1 = require("http").createServer(
+            local.serverRequestListener
+        );
+        console.error("http-server listening on port " + PORT);
+        local.onReadyIncrement();
+        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
     }
-    // init res.statusCode
-    if (Number(statusCode)) {
-        res.statusCode = Number(statusCode);
-    }
-    Object.keys(headers).forEach(function (key) {
-        res.setHeader(key, headers[key]);
-    });
-    return true;
-};
-
-local.serverRespondTimeoutDefault = function (req, res, timeout) {
-/*
- * this function will create <timeout>-handler for server-<req>
- */
-    let isDone;
-    let onError;
-    onError = function () {
-        if (isDone) {
-            return;
-        }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(req.timerTimeout);
-        // debug res
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(req.timeStart).toISOString(),
-            type: "serverResponse",
-            method: req.method,
-            url: req.url,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - req.timeStart,
-            // extra
-            reqContentLength: req.dataLength || 0,
-            resContentLength: res.contentLength,
-            reqHeaderXForwardedFor: req.headers["x-forwarded-for"] || "",
-            reqHeaderOrigin: req.headers.origin || "",
-            reqHeaderReferer: req.headers.referer || "",
-            reqHeaderUserAgent: req.headers["user-agent"]
-        }) + "\n");
-    };
-    req.timeStart = Date.now();
-    req.onTimeout = req.onTimeout || function (err) {
-        local.serverRespondDefault(req, res, 500, err);
-        setTimeout(function () {
-            // cleanup req and res
-            req.destroy();
-            res.destroy();
-        }, 1000);
-    };
-    // init timerTimeout
-    timeout = timeout || local.timeoutDefault;
-    req.timerTimeout = setTimeout(
-        req.onTimeout,
-        timeout,
-        new Error(
-            "timeout - " + timeout + " ms - " +
-            "server " + req.method + " " + req.url
-        )
-    );
-    res.contentLength = 0;
-    res.writeContentLength = res.writeContentLength || res.write;
-    res.write = function (buf, encoding, callback) {
-        res.contentLength += Buffer.byteLength(buf);
-        res.writeContentLength(buf, encoding, callback);
-    };
-    res.on("error", onError);
-    res.on("finish", onError);
 };
 
 local.setTimeoutOnError = function (onError, timeout, err, data) {
@@ -4776,32 +4741,7 @@ local.testReportMerge = function (
     process.exit(testReport.testsFailed !== 0);
 };
 
-local.testRunBrowser = function () {
-/*
- * this function will handle evt to run tests in browser
- */
-    // end tests and show test-button
-    if (document.querySelector("#htmlTestReport1").style.maxHeight !== "0px") {
-        local.uiAnimateSlideUp(document.querySelector("#htmlTestReport1"));
-        document.querySelector(
-            "#buttonTestRun1"
-        ).textContent = "run browser-tests";
-        return;
-    }
-    // start tests and hide test-button
-    local.uiAnimateSlideDown(document.querySelector("#htmlTestReport1"));
-    document.querySelector(
-        "#buttonTestRun1"
-    ).textContent = "hide browser-tests";
-    local.modeTest = 1;
-    local.testRunDefault(globalThis.local);
-    // reset output
-    document.querySelectorAll(".onevent-reset-output").forEach(function (elem) {
-        elem.textContent = "";
-    });
-};
-
-local.testRunDefault = function (testCaseDict = {}) {
+local.testRunDefault = async function (testCaseDict = {}) {
 /*
  * this function will run tests in <testCaseDict>
  */
@@ -4811,97 +4751,39 @@ local.testRunDefault = function (testCaseDict = {}) {
     let testPlatform;
     let testReport;
     let timerInterval;
+    let {
+        modeTestCase
+    } = local;
     function timeElapsedPoll(opt) {
     /*
-     * this function will poll (Date.now() - <opt>.timeStart)
+     * this function will poll "Date.now() - <opt>.timeStart"
      */
         opt.timeStart = opt.timeStart || Date.now();
         opt.timeElapsed = Date.now() - opt.timeStart;
     }
-    (function () {
-        // run-server
-        // 1. create server from local.middlewareList
-        // 2. start server on env.PORT
-        // 3. run tests
-        if (local.isBrowser) {
-            return;
-        }
-        // 1. create server from local.middlewareList
-        local.middlewareList = local.middlewareList || [
-            local.middlewareInit,
-            local.middlewareAssetsCached,
-            local.middlewareFileServer
-        ];
-        if (globalThis.utility2_serverHttp1 || npm_config_mode_lib) {
-            return;
-        }
-        local.onReadyIncrement();
-        local.serverLocalReqHandler = function (req, res) {
-        /*
-         * this function will emulate express-like middleware-chaining
-         */
-            let gotoState;
-            let isDone;
-            gotoState = -1;
-            (function gotoNext(err) {
-                try {
-                    gotoState += 1;
-                    if (err || gotoState >= local.middlewareList.length) {
-                        local.middlewareError(err, req, res);
-                        return;
-                    }
-                    // recurse with next middleware in middlewareList
-                    local.middlewareList[gotoState](req, res, gotoNext);
-                } catch (errCaught) {
-                    // throw errCaught to break infinite recursion-loop
-                    local.assertOrThrow(!isDone, errCaught);
-                    isDone = true;
-                    gotoNext(errCaught);
-                }
-            }());
-        };
-        globalThis.utility2_serverHttp1 = require("http").createServer(
-            local.serverLocalReqHandler
-        );
-        // 2. start server on env.PORT
-        console.error("http-server listening on port " + PORT);
-        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
-        // 3. run tests
-        local.testRunDefault(testCaseDict);
-    }());
+    if (npm_config_mode_lib) {
+        return;
+    }
+    local.serverStart();
     globalThis.utility2_modeTest = Number(
         globalThis.utility2_modeTest ||
         testCaseDict.modeTest ||
         local.modeTest ||
         npm_config_mode_test
     );
-    switch (globalThis.utility2_modeTest) {
-    // init
-    case 1:
-        globalThis.utility2_modeTest += 1;
-        local.eventListenerAdd(
-            "utility2.onReady",
-            local.testRunDefault.bind(undefined, testCaseDict),
-            {
-                once: true
-            }
-        );
-        local.onReadyIncrement();
-        setTimeout(local.onReadyDecrement);
+    if (
+        globalThis.utility2_modeTest !== 1 ||
+        Object.keys(testCaseDict).length === 0
+    ) {
         return;
-    // test-run
-    default:
-        // test-ignore
-        if (
-            localOnReadyCnt ||
-            !globalThis.utility2_modeTest ||
-            globalThis.utility2_modeTest > 2
-        ) {
-            return;
-        }
-        // test-run
-        globalThis.utility2_modeTest += 1;
     }
+    if (localOnReadyCnt !== 0) {
+        local.eventListenerAdd("utility2.onReady", {
+            once: true
+        }, local.testRunDefault.bind(undefined, testCaseDict));
+        return;
+    }
+    globalThis.utility2_modeTest += 1;
     // visual notification - testRun
     // mock console.error
     consoleError = console.error;
@@ -4931,7 +4813,7 @@ local.testRunDefault = function (testCaseDict = {}) {
         };
     }
     // init modeTestCase
-    local.modeTestCase = local.modeTestCase || npm_config_mode_test_case || "";
+    modeTestCase = modeTestCase || npm_config_mode_test_case || "";
     // init testReport
     testReport = globalThis.utility2_testReport;
     // init testPlatform
@@ -4945,8 +4827,8 @@ local.testRunDefault = function (testCaseDict = {}) {
         // add testCase testCaseDict[key] to testPlatform.testCaseList
         if (
             typeof testCaseDict[key] === "function" && (
-                local.modeTestCase
-                ? local.modeTestCase.split(
+                modeTestCase
+                ? modeTestCase.split(
                     /[,\s]/g
                 ).indexOf(key) >= 0
                 : key.indexOf("testCase_") === 0
@@ -4961,23 +4843,13 @@ local.testRunDefault = function (testCaseDict = {}) {
         }
     });
     local.testReportMerge(testReport);
-    if (local.isBrowser) {
-        document.querySelectorAll("#htmlTestReport1").forEach(function (elem) {
-            local.uiAnimateSlideDown(elem);
-            elem.innerHTML = testReport.html;
-        });
-    }
     local.eventListenerEmit("utility2.testRunStart", testReport);
-    // testRunProgressUpdate every 2000 ms until isDone
+    // testRunUpdate every 2000 ms until isDone
     timerInterval = setInterval(function () {
         // update testPlatform.timeElapsed
         timeElapsedPoll(testPlatform);
-        if (local.isBrowser) {
-            document.querySelector(
-                "#htmlTestReport1"
-            ).innerHTML = local.testReportMerge(testReport).html;
-        }
-        local.eventListenerEmit("utility2.testRunProgressUpdate", testReport);
+        local.testReportMerge(testReport);
+        local.eventListenerEmit("utility2.testRunUpdate", testReport);
         // cleanup timerInterval
         if (!testReport.testsPending) {
             clearInterval(timerInterval);
@@ -4995,123 +4867,103 @@ local.testRunDefault = function (testCaseDict = {}) {
             );
         }
     }, 2000);
-    // shallow-copy testPlatform.testCaseList to prevent side-effects
-    // from in-place sort from testReportMerge
-    local.onParallelList({
-        list: testPlatform.testCaseList.slice()
-    }, function (testCase, onParallel) {
-        let onError;
-        let timerTimeout;
-        onError = function (err) {
-            // update testPlatform.timeElapsed
-            timeElapsedPoll(testPlatform);
-            // cleanup timerTimeout
-            clearTimeout(timerTimeout);
-            // if testCase isDone, then fail testCase
-            if (testCase.isDone) {
-                err = err || new Error(
-                    "callback in testCase " +
-                    testCase.name +
-                    " called multiple times"
-                );
-            }
-            // if err occurred, then fail testCase
-            if (err) {
-                // restore console.log
-                console.error = consoleError;
-                testCase.status = "failed";
+    // run testCaseList
+    await Promise.all(testPlatform.testCaseList.map(function (
+        testCase
+    ) {
+        return new Promise(function (resolve) {
+            function onError(err) {
+                // update testPlatform.timeElapsed
+                timeElapsedPoll(testPlatform);
+                // if testCase isDone, then fail testCase
+                if (testCase.isDone) {
+                    err = err || new Error(
+                        "callback in testCase " +
+                        testCase.name +
+                        " called multiple times"
+                    );
+                }
+                // if err occurred, then fail testCase
+                if (err) {
+                    // restore console.log
+                    console.error = consoleError;
+                    testCase.status = "failed";
+                    consoleError(
+                        "\ntestRunDefault - " +
+                        testPlatform.timeElapsed + " ms - testCase failed - " +
+                        testCase.name + "\n" + err.message + "\n" + err.stack
+                    );
+                    testCase.errStack = (
+                        testCase.errStack || err.message + "\n" + err.stack
+                    );
+                    // validate errStack is non-empty
+                    local.assertOrThrow(
+                        testCase.errStack,
+                        "invalid errStack " + testCase.errStack
+                    );
+                }
+                // if tests isDone, then do nothing
+                if (testCase.isDone) {
+                    return;
+                }
+                testCase.isDone = true;
+                if (testCase.status === "pending") {
+                    testCase.status = "passed";
+                }
+                // stop testCase timer
+                timeElapsedPoll(testCase);
                 consoleError(
-                    "\ntestRunDefault - " +
-                    testPlatform.timeElapsed + " ms - testCase failed - " +
-                    testCase.name + "\n" + err.message + "\n" + err.stack
+                    "testRunDefault - " +
+                    testPlatform.timeElapsed + " ms - [" + (
+                        local.isBrowser
+                        ? "browser"
+                        : "node"
+                    ) + " test-case " +
+                    testPlatform.testCaseList.filter(function (testCase) {
+                        return testCase.isDone;
+                    }).length + " of " + testPlatform.testCaseList.length
+                    + " " + testCase.status + "] - " + testCase.name
                 );
-                testCase.errStack = (
-                    testCase.errStack || err.message + "\n" + err.stack
-                );
-                // validate errStack is non-empty
-                local.assertOrThrow(
-                    testCase.errStack,
-                    "invalid errStack " + testCase.errStack
-                );
+                resolve();
             }
-            // if tests isDone, then do nothing
-            if (testCase.isDone) {
-                return;
+            try {
+                timeElapsedPoll(testCase);
+                testCase.onTestCase({}, onError);
+                if (typeof testCase.onTestCase.catch === "function") {
+                    testCase.onTestCase.catch(onError);
+                }
+            } catch (errCaught) {
+                onError(errCaught);
             }
-            testCase.isDone = true;
-            if (testCase.status === "pending") {
-                testCase.status = "passed";
-            }
-            // stop testCase timer
-            timeElapsedPoll(testCase);
-            consoleError(
-                "testRunDefault - " +
-                testPlatform.timeElapsed + " ms - [" + (
-                    local.isBrowser
-                    ? "browser"
-                    : "node"
-                ) + " test-case " +
-                testPlatform.testCaseList.filter(function (testCase) {
-                    return testCase.isDone;
-                }).length + " of " + testPlatform.testCaseList.length + " " +
-                testCase.status + "] - " + testCase.name
-            );
-            // if all testCase.isDone, then create test-report
-            onParallel();
-        };
-        testCase = testCase.elem;
-        // init timerTimeout
-        timerTimeout = setTimeout(
-            onError,
-            local.timeoutDefault,
-            new Error(
-                "timeout - " + local.timeoutDefault + " ms - " +
-                testCase.name
-            )
-        );
-        // increment number of tests remaining
-        onParallel.cnt += 1;
-        // try to run testCase
-        local.tryCatchOnError(function () {
-            // init timeElapsed
-            timeElapsedPoll(testCase);
-            testCase.onTestCase({}, onError);
-            if (typeof testCase.onTestCase.catch === "function") {
-                testCase.onTestCase.catch(onError);
-            }
-        }, onError);
-    }, function () {
-    /*
-     * this function will create test-report after all tests isDone
-     */
-        // update timeElapsed
-        timeElapsedPoll(testPlatform);
-        globalThis.utility2_modeTest = 1;
-        // finalize testReport
-        local.testReportMerge(testReport);
-        // create test-report.json
-        delete testReport.coverage;
-        local.fsWriteFileWithMkdirpSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            JSON.stringify(testReport, undefined, 4)
-        );
-        // restore console.log
-        console.error = consoleError;
-        // restore process.exit
-        if (processExit) {
-            process.exit = processExit;
-        }
-        // reset utility2_modeTest
-        globalThis.utility2_modeTest = 0;
-        // save testReport and coverage
-        testReport.coverage = globalThis.__coverage__;
-        console.timeStamp(globalThis.utility2_testId);
-        local.eventListenerEmit("utility2.testRunEnd", testReport);
-        // exit with number of tests failed
-        if (processExit) {
-            process.exit(testReport.testsFailed, testReport);
-        }
-    });
+        });
+    }));
+    clearInterval(timerInterval);
+    // update timeElapsed
+    timeElapsedPoll(testPlatform);
+    // finalize testReport
+    local.testReportMerge(testReport);
+    // create test-report.json
+    delete testReport.coverage;
+    local.fsWriteFileWithMkdirpSync(
+        UTILITY2_DIR_BUILD + "/test-report.json",
+        JSON.stringify(testReport, undefined, 4)
+    );
+    // restore console.log
+    console.error = consoleError;
+    // restore process.exit
+    if (processExit) {
+        process.exit = processExit;
+    }
+    // reset utility2_modeTest
+    globalThis.utility2_modeTest = 0;
+    // save testReport and coverage
+    testReport.coverage = globalThis.__coverage__;
+    console.timeStamp(globalThis.utility2_testId);
+    local.eventListenerEmit("utility2.testRunEnd", testReport);
+    // exit with number of tests failed
+    if (processExit) {
+        process.exit(testReport.testsFailed, testReport);
+    }
 };
 
 local.tryCatchOnError = function (fnc, onError) {
