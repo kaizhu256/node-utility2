@@ -315,22 +315,16 @@ local.testCase_buildApp_default = function (opt, onError) {
     }, onError, opt);
 };
 
-local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
+local.testCase_chromeDevtoolsClient_coverage = async function (opt, onError) {
 /*
- * this function will test chromeDevtoolsClient's processPlatform
- * handling-behavior
+ * this function will test chromeDevtoolsClient's coverage handling-behavior
  */
     if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
-    [
-        "darwin", "linux", "win32"
-    ].forEach(function (processPlatform) {
-        local.chromeDevtoolsClientCreate({
-            modeMockProcessPlatform: true,
-            processPlatform
-        }).catch(noop);
+    await local.chromeDevtoolsClientCreate({
+        modeTestCaseCoverage: 1
     });
     onError(undefined, opt);
 };
@@ -545,17 +539,6 @@ local.testCase_stringHtmlSafe_default = function (opt, onError) {
             " !&quot;#$%&amp;&apos;()*+,-./0123456789:;&lt;=&gt;?@" +
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
         )
-    );
-    onError(undefined, opt);
-};
-
-local.testCase_stringQuotedToAscii_default = function (opt, onError) {
-/*
- * this function will test stringQuotedToAscii's default handling-behavior
- */
-    assertJsonEqual(
-        local.stringQuotedToAscii(local.stringHelloEmoji),
-        "hello \\ud83d\\ude01\n"
     );
     onError(undefined, opt);
 };

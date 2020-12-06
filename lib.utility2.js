@@ -2311,8 +2311,8 @@ local.buildApp = function ({
 
 local.chromeDevtoolsClientCreate = async function ({
     chromeBin,
-    modeMockProcessPlatform,
     modeSilent,
+    modeTestCaseCoverage,
     modeWindowSize = "800x600",
     processPlatform,
     timeout
@@ -2339,6 +2339,18 @@ local.chromeDevtoolsClientCreate = async function ({
     let wsPayloadLength;
     let wsReadState;
     let wsReader;
+    // run testCase - coverage
+    if (modeTestCaseCoverage === 1) {
+        [
+            "darwin", "linux", "win32"
+        ].forEach(function (processPlatform) {
+            local.chromeDevtoolsClientCreate({
+                modeTestCaseCoverage: 2,
+                processPlatform
+            }).catch(noop);
+        });
+        return;
+    }
     WS_READ_HEADER = 0;
     WS_READ_LENGTH16 = 1;
     WS_READ_LENGTH63 = 2;
@@ -2638,7 +2650,7 @@ local.chromeDevtoolsClientCreate = async function ({
     chromeClient = new ChromeClient();
     // init timerTimeout
     timeout = timeout || 30000;
-    if (modeMockProcessPlatform) {
+    if (modeTestCaseCoverage === 2) {
         chromeClient.on("error", noop);
         timeout = 0;
     }
@@ -2794,8 +2806,8 @@ Application data: y bytes
     // init websocketUrl
     websocketUrl = await new Promise(function (resolve, reject) {
         let stderr;
-        // coverage-hack
-        if (modeMockProcessPlatform) {
+        // coverage-hack - abort as code below doesn't need coverage
+        if (modeTestCaseCoverage === 2) {
             reject();
             return;
         }
@@ -3558,7 +3570,7 @@ local.replStart = function () {
                         process.platform !== "win32" &&
                         process.env.UTILITY2_BIN && (match2 !== ":")
                     )
-                    ? ". " + process.env.UTILITY2_BIN + ";" + match2
+                    ? ". " + process.env.UTILITY2_BIN + "; " + match2
                     : match2
                 );
                 // run shell-cmd
@@ -4091,22 +4103,6 @@ local.stringHtmlSafe = function (str) {
     ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
-};
-
-local.stringQuotedToAscii = function (str) {
-/*
- * this function will replace non-ascii-chr to unicode-escaped-ascii-chr
- * in quoted-<str>
- */
-    return str.replace((
-        /\r/g
-    ), "\\r").replace((
-        /\t/g
-    ), "\\t").replace((
-        /[^\n\u0020-\u007e]/g
-    ), function (chr) {
-        return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).slice(-4);
-    });
 };
 
 local.stringRegexpEscape = function (str) {

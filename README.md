@@ -52,6 +52,9 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.12.3
+- remove shell-functions shNpmDeprecateAlias, shNpmPublishAlias
+- merge shell-function shIstanbulCover into shNpmTest
+- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE
 - cleanup function requireReadme
 - replace var isBrowser with isEnvNode and remove unused var isWebWorker
 - merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, timeoutDefault into npm_config_timeout

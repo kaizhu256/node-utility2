@@ -647,9 +647,6 @@ https://raw.githubusercontent.com\
             ;;
         esac
         ;;
-    cron)
-        [ ! -f .task.sh ] || /bin/sh .task.sh
-        ;;
     docker.*)
         export CI_BRANCH=alpha
         shBuildCiInternal
@@ -672,50 +669,6 @@ https://raw.githubusercontent.com\
         rm -f "$HOME/.npmrc"
         shSleep 5
         shBuildCiInternal
-        ;;
-    task)
-        case "$CI_COMMIT_MESSAGE" in
-        "[\$ "*)
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
-            ;;
-        # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 task "[debug travis@proxy.com root]"
-        "[debug "*)
-            if [ ! "$SSH_KEY" ]
-            then
-                shBuildPrint "no SSH_KEY"
-                return 1
-            fi
-            # init id_rsa
-            (
-            cd "$HOME/.ssh"
-            printf "$SSH_KEY" | base64 --decode > id_rsa && chmod 600 id_rsa
-            ssh-keygen -y -f id_rsa > authorized_keys
-            )
-            # ssh reverse-tunnel local-machine to middleman
-            eval "$(
-                printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/debug/shSsh5022R/"
-            )"
-            PID="$(pgrep -n -f ssh)"
-            while (kill -0 "$PID" 2>/dev/null)
-            do
-                shSleep 60
-            done
-            ;;
-        # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc task "[git push origin beta:master]"
-        "[git push origin "*)
-            git fetch --depth=50 origin "$(
-                printf "$CI_COMMIT_MESSAGE_META" |
-                sed -e "s/:.*//" -e "s/.* //"
-            )"
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
-                -e "s/git/shGitCmdWithGithubToken/" \
-                -e "s/\([^ ]*:\)/origin\/\1/")"
-            return;
-            ;;
-        esac
-        return
         ;;
     esac
     # restore $CI_BRANCH
@@ -808,24 +761,6 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
         esac
         ;;
     esac
-    # sync with $npm_package_githubRepoAlias
-    if [ "$CI_BRANCH" = alpha ] ||
-        [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ]
-    then
-        for GITHUB_FULLNAME_ALIAS in $npm_package_githubRepoAlias
-        do
-            shGithubRepoCreate "$GITHUB_FULLNAME_ALIAS"
-            shGitCmdWithGithubToken push \
-                "https://github.com/$GITHUB_FULLNAME_ALIAS" --tags \
-                -f "$CI_BRANCH"
-            if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
-            then
-                shGithubRepoDescriptionUpdate "$GITHUB_FULLNAME_ALIAS" \
-                "$npm_package_description" || true
-            fi
-        done
-    fi
 )}
 
 shBuildCiInternal() {(set -e
@@ -2278,22 +2213,6 @@ shImageToDataUri() {(set -e
 ' "$FILE" # '
 )}
 
-shIstanbulCover() {(set -e
-# this function will run cmd "$NODE_BIN" "$@" with istanbul-coverage
-    export NODE_BIN="${NODE_BIN:-node}"
-    if [ "$npm_config_mode_coverage" ]
-    then
-        "$NODE_BIN" "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@"
-        return "$?"
-    fi
-    if [ "$npm_config_mode_inspect" ]
-    then
-        "$NODE_BIN" --inspect-brk=0.0.0.0 "$@"
-        return "$?"
-    fi
-    "$NODE_BIN" "$@"
-)}
-
 shJsonNormalize() {(set -e
 # this function will
 # 1. read json-data from file $1
@@ -2340,51 +2259,6 @@ shMacAddressSpoof() {(set -e
     sudo ifconfig en0 ether "$MAC_ADDRESS"
     # sudo ifconfig en0 ether Wi-Fi "$MAC_ADDRESS"
     ifconfig en0
-)}
-
-shNpmDeprecateAlias() {(set -e
-# this function will deprecate npm-package $NAME with given $MESSAGE
-# example use:
-# shNpmDeprecateAlias deprecated-package
-    shEnvSanitize
-    NAME="$1"
-    MESSAGE="$2"
-    shBuildInit
-    if [ ! "$MESSAGE" ]
-    then
-        MESSAGE="this package is deprecated and superseded by \
-[$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
-    fi
-    export MODE_BUILD=npmDeprecate
-    shBuildPrint "npm-deprecate $NAME"
-    DIR=/tmp/npmDeprecate
-    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    npm install "$NAME" --prefix .
-    cd "node_modules/$NAME"
-    # update README.md
-    printf "$MESSAGE\n" > README.md
-    # update package.json
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let packageJson;
-    packageJson = require("./package.json");
-    packageJson.description = process.argv[1];
-    Object.keys(packageJson).forEach(function (key) {
-        if (key[0] === "_") {
-            delete packageJson[key];
-        }
-    });
-    require("fs").writeFileSync(
-        "package.json",
-        JSON.stringify(packageJson, undefined, 4) + "\n"
-    );
-}());
-' "$MESSAGE" # '
-    shPackageJsonVersionIncrement
-    npm publish
-    npm deprecate "$NAME" "$MESSAGE"
 )}
 
 shNpmPackageCliHelpCreate() {(set -e
@@ -2469,40 +2343,6 @@ node_modules
     shBuildPrint "end"
 )}
 
-shNpmPublishAlias() {(set -e
-# this function will npm-publish $DIR as $NAME@$VERSION
-    cd "$1"
-    NAME="$2"
-    VERSION="$3"
-    export MODE_BUILD=npmPublishAlias
-    shBuildPrint "npm-publish alias $NAME"
-    DIR=/tmp/npmPublishAlias
-    rm -rf "$DIR" && mkdir -p "$DIR"
-    # clean-copy . to $DIR
-    git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C "$DIR" -xvzf -
-    cd "$DIR"
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let name;
-    let packageJson;
-    let version;
-    name = process.argv[1];
-    version = process.argv[2];
-    packageJson = require("./package.json");
-    packageJson.nameOriginal = packageJson.name;
-    packageJson.name = name || packageJson.name;
-    packageJson.version = version || packageJson.version;
-    require("fs").writeFileSync(
-        "package.json",
-        JSON.stringify(packageJson, undefined, 4) + "\n"
-    );
-}());
-' "$NAME" "$VERSION" # '
-    npm publish
-)}
-
 shNpmPublishV0() {(set -e
 # this function will npm-publish name $1 with bare package.json
     DIR=/tmp/npmPublishV0
@@ -2513,33 +2353,41 @@ shNpmPublishV0() {(set -e
 
 shNpmTest() {(set -e
 # this function will npm-test with coverage and create test-report
-    shBuildInit
+    local EXIT_CODE
     EXIT_CODE=0
-    export MODE_BUILD="${MODE_BUILD:-npmTest}"
-    export NODE_BIN="${NODE_BIN:-node}"
-    shBuildPrint "npm-testing $PWD"
-    # init npm-test-mode
-    export NODE_ENV="${NODE_ENV:-test}"
-    export npm_config_mode_test=1
+    shBuildPrint "shNpmTest - (node "$*")"
+    # run node normally
+    if [ ! "$npm_config_mode_test" ]
+    then
+        if [ "$npm_config_mode_coverage" ]
+        then
+            node "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@" ||
+                EXIT_CODE="$?"
+        else
+            node "$@" || EXIT_CODE="$?"
+        fi
+        shBuildPrint "shNpmTest - EXIT_CODE=$EXIT_CODE"
+        return "$EXIT_CODE"
+    fi
     # npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        ("$NODE_BIN" "$@") || EXIT_CODE="$?"
+        node "$@" || EXIT_CODE="$?"
     # npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$UTILITY2_DIR_BUILD/coverage/"coverage.*.json
         # npm-test with coverage
-        (shIstanbulCover "$@") || EXIT_CODE="$?"
+        node "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@" || EXIT_CODE="$?"
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
-            npm_config_mode_coverage="" "$NODE_BIN" "$@" || true
+            npm_config_mode_coverage="" node "$@" || true
         fi
     fi
     # create test-report artifacts
     (lib.utility2.js utility2.testReportCreate) || EXIT_CODE="$?"
-    shBuildPrint "EXIT_CODE - $EXIT_CODE"
+    shBuildPrint "shNpmTest - EXIT_CODE=$EXIT_CODE"
     return "$EXIT_CODE"
 )}
 
@@ -3281,7 +3129,7 @@ shRun() {(set -e
         # else restart process after 1 second
         sleep 1
     done
-    printf "EXIT_CODE - $EXIT_CODE\n"
+    printf "shRun - EXIT_CODE=$EXIT_CODE\n"
     return "$EXIT_CODE"
 )}
 
@@ -3294,12 +3142,13 @@ shRunWithScreenshotTxt() {(set -e
     SCREENSHOT_SVG=\
 "${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}/screenshot.${MODE_BUILD:-undefined}.svg"
     rm -f "$SCREENSHOT_SVG"
+    printf "0\n" > "$SCREENSHOT_SVG.exit_code"
     shBuildPrint "shRunWithScreenshotTxt - (shRun $* 2>&1)"
     (
-        (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
+        (shRun "$@" 2>&1) || printf "$?\n" > "$SCREENSHOT_SVG.exit_code"
     ) | tee /tmp/shRunWithScreenshotTxt.txt
-    EXIT_CODE="$(tail -n 1 /tmp/shRunWithScreenshotTxt.txt)"
-    shBuildPrint "shRunWithScreenshotTxt - EXIT_CODE - $EXIT_CODE"
+    EXIT_CODE="$(cat "$SCREENSHOT_SVG.exit_code")"
+    shBuildPrint "shRunWithScreenshotTxt - EXIT_CODE=$EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
     then
@@ -3317,10 +3166,7 @@ shRunWithScreenshotTxt() {(set -e
     result = require("fs").readFileSync(
         require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
         "utf8"
-    // remove $EXIT_CODE
-    ).replace((
-        /\n.*?\n$/
-    ), "\n");
+    );
     // remove ansi escape-code
     result = result.replace((
         /\u001b.*?m/g
@@ -3370,8 +3216,7 @@ shRunWithScreenshotTxt() {(set -e
     require("fs").writeFileSync(process.argv[1], result);
 }());
 ' "$SCREENSHOT_SVG" # '
-    shBuildPrint \
-"created screenshot file $SCREENSHOT_SVG"
+    shBuildPrint "shRunWithScreenshotTxt - wrote - $SCREENSHOT_SVG"
     return "$EXIT_CODE"
 )}
 
@@ -3621,7 +3466,7 @@ shUtility2DependentsGitCommit() {(set -e
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n#### shUtility2DependentsGitCommit - $PWD - $@ ####\n\n\n"
+        printf "\n\n\n#### shUtility2DependentsGitCommit - $PWD - $* ####\n\n\n"
         git commit -am "${1:-shUtility2GitCommitAndPush}" || true
     done
 )}
@@ -3645,7 +3490,7 @@ shUtility2DependentsShellEval() {(set -e
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n#### shUtility2DependentsShellEval - $PWD - $@ ####\n\n\n"
+        printf "\n\n\n#### shUtility2DependentsShellEval - $PWD - $* ####\n\n\n"
         eval "$@"
     done
     printf "\n\n\n"
@@ -3760,10 +3605,11 @@ sqlite3-lite
             FILE="$UTILITY2_DIR_BIN/test.js"
         fi
         export npm_config_mode_auto_restart=1
-        shRun shIstanbulCover "$FILE"
+        shRun shNpmTest "$FILE"
         ;;
     test)
         shBuildInit
+        export npm_config_mode_test=1
         shRunWithScreenshotTxt shNpmTest "$@"
         ;;
     utility2.*)
