@@ -5,26 +5,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -32,15 +22,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -101,13 +86,14 @@
      * this function will return document.querySelectorAll(<selector>)
      * or empty list if function is not available
      */
-        if (
-            typeof document === "object" && document &&
-            typeof document.querySelectorAll === "function"
-        ) {
-            return Array.from(document.querySelectorAll(selector));
-        }
-        return [];
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
     }
     function identity(val) {
     /*
@@ -123,8 +109,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -156,25 +142,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
         documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -208,6 +182,7 @@ local.testRunDefault(local);
 let {
     assertJsonEqual,
     assertOrThrow,
+    isEnvNode,
     noop,
     onErrorThrow,
     tryCatchOnError
@@ -345,7 +320,7 @@ local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
  * this function will test chromeDevtoolsClient's processPlatform
  * handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -364,7 +339,7 @@ local.testCase_cliRun_default = function (opt, onError) {
 /*
  * this function will test cliRun's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -447,7 +422,7 @@ local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -491,7 +466,7 @@ local.testCase_replStart_default = function (opt, onError) {
 /*
  * this function will test replStart's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -585,10 +560,34 @@ local.testCase_stringQuotedToAscii_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_stringRegexpEscape_default = function (opt, onError) {
+local.testCase_stringXxx_default = function (opt, onError) {
 /*
- * this function will test stringRegexpEscape's default handling-behavior
+ * this function will test stringXxx's default handling-behavior
  */
+    assertJsonEqual(
+        local.regexpCharsetEncodeUri.source,
+        local.stringRegexpEscape(
+            local.stringCharsetEncodeUri
+        ).replace("\\-", "-")
+    );
+    assertJsonEqual(
+        local.regexpCharsetEncodeUriComponent.source,
+        local.stringRegexpEscape(
+            local.stringCharsetEncodeUriComponent
+        ).replace("\\-", "-")
+    );
+    assertJsonEqual(
+        local.stringCharsetEncodeUri,
+        Array.from(
+            new Set(encodeURI(local.stringCharsetAscii).split(""))
+        ).sort().join("")
+    );
+    assertJsonEqual(
+        local.stringCharsetEncodeUriComponent,
+        Array.from(
+            new Set(encodeURIComponent(local.stringCharsetAscii).split(""))
+        ).sort().join("")
+    );
     assertJsonEqual(
         local.stringRegexpEscape(local.stringCharsetAscii),
         (
@@ -624,7 +623,7 @@ local.testCase_uiAnimateXxx_default = function (opt, onError) {
 /*
  * this function will test uiAnimateXxx's default handling-behavior
  */
-    if (!local.isBrowser) {
+    if (isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -687,19 +686,19 @@ local.testCase_webpage_err = async function (opt, onError) {
 /*
  * this function will test webpage's err handling-behavior
  */
-    if (!local.isBrowser) {
+    if (isEnvNode) {
         await local.browserTest({
             modeSilent: true,
             url: (
                 "http://127.0.0.1:" + process.env.PORT +
-                "/?modeTest=1" +
-                "&modeTestCase=testCase_webpage_err"
+                "/?npm_config_mode_test=1" +
+                "&npm_config_mode_test_case=testCase_webpage_err"
             )
         });
         onError(undefined, opt);
         return;
     }
-    if (local.modeTestCase !== "testCase_webpage_err") {
+    if (local.npm_config_mode_test_case !== "testCase_webpage_err") {
         onError(undefined, opt);
         return;
     }
@@ -715,13 +714,12 @@ local.testCase_webpage_err = async function (opt, onError) {
     // test uncaught-err handling-behavior
     setTimeout(assertOrThrow.bind(undefined, undefined));
 };
-}());
 
 
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
-if (local.isBrowser) {
+if (!isEnvNode) {
     return;
 }
 // init cli
@@ -754,5 +752,6 @@ if (process.argv[2]) {
 if (process.env.npm_config_runme) {
     require(require("path").resolve(process.env.npm_config_runme));
 }
+}());
 }());
 }());

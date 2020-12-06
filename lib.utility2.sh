@@ -1498,7 +1498,8 @@ shDeployGithub() {(set -e
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest \
+        "$TEST_URL?npm_config_mode_test=1"
 )}
 
 shDeployHeroku() {(set -e
@@ -1535,7 +1536,8 @@ shDeployHeroku() {(set -e
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
+    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest \
+        "$TEST_URL?npm_config_mode_test=1"
 )}
 
 shDockerRestartNginx() {(set -e

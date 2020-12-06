@@ -14,26 +14,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -41,15 +31,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -110,13 +95,14 @@
      * this function will return document.querySelectorAll(<selector>)
      * or empty list if function is not available
      */
-        if (
-            typeof document === "object" && document &&
-            typeof document.querySelectorAll === "function"
-        ) {
-            return Array.from(document.querySelectorAll(selector));
-        }
-        return [];
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
     }
     function identity(val) {
     /*
@@ -132,8 +118,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -165,25 +151,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
         documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -210,11 +184,11 @@ local = (
     globalThis.globalLocal
 );
 // init exports
-if (local.isBrowser) {
-    globalThis.utility2_jslint = local;
-} else {
+if (local.isEnvNode) {
     module.exports = local;
     module.exports.__dirname = __dirname;
+} else {
+    globalThis.utility2_jslint = local;
 }
 // init lib main
 local.jslint = local;
@@ -16973,7 +16947,7 @@ jslintRecurse = function (code, file, opt, {
     }
     // autofix-save
     if (
-        !local.isBrowser
+        local.isEnvNode
         && opt.modeAutofix
         && !fileType0
         && !result.stop
@@ -17407,7 +17381,7 @@ local.jslintResult = {};
 /* istanbul ignore next */
 // run node js-env code - init-after
 (function () {
-if (local.isBrowser) {
+if (!local.isEnvNode) {
     return;
 }
 

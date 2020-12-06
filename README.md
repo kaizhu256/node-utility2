@@ -52,6 +52,9 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.12.3
+- cleanup function requireReadme
+- replace var isBrowser with isEnvNode and remove unused var isWebWorker
+- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, timeoutDefault into npm_config_timeout
 - add functions documentQuerySelectorAll
 - remove functions middlewareXxx, onParallelXxx, streamCleanup
 - migrate from .then() to async/await
@@ -60,17 +63,15 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- reimplement timerTimeout in function testRunDefault
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
-- update function shRawLibFetch to minify assets
-- remove dependency to req.urlParsed
 - istanbul - inline class Instrumenter into function instrumentSync
-- replace db-lite with sql_lite.js
 - add default testCase _testCase_cliRun_help
-- add server stress-test using puppeteer
+- add server stress-test using chromeDevtoolsClientCreate
 - none
 
 
@@ -130,26 +131,16 @@ instruction
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -157,15 +148,10 @@ instruction
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -226,13 +212,14 @@ instruction
      * this function will return document.querySelectorAll(<selector>)
      * or empty list if function is not available
      */
-        if (
-            typeof document === "object" && document &&
-            typeof document.querySelectorAll === "function"
-        ) {
-            return Array.from(document.querySelectorAll(selector));
-        }
-        return [];
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
     }
     function identity(val) {
     /*
@@ -248,8 +235,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -281,25 +268,13 @@ instruction
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
         documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -363,18 +338,18 @@ local.testCase_webpage_default = async function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!local.isEnvNode) {
         onError(undefined, opt);
         return;
     }
     await local.browserTest({
-        url: "http://127.0.0.1:" + process.env.PORT + "/?modeTest=1"
+        url: "http://127.0.0.1:" + process.env.PORT + "/?npm_config_mode_test=1"
     });
     onError(undefined, opt);
 };
 
 // run tests
-if (!local.isBrowser && process.env.npm_config_mode_test) {
+if (local.isEnvNode && process.env.npm_config_mode_test) {
     local.testRunDefault(local);
 }
 }());
@@ -383,7 +358,7 @@ if (!local.isBrowser && process.env.npm_config_mode_test) {
 /* istanbul ignore next */
 // run browser js-env code - init-test
 (function () {
-if (!local.isBrowser) {
+if (local.isEnvNode) {
     return;
 }
 // log stderr and stdout to #outputStdout1
@@ -417,7 +392,7 @@ if (!local.isBrowser) {
 /* istanbul ignore next */
 // run node js-env code - init-test
 (function () {
-if (local.isBrowser) {
+if (!local.isEnvNode) {
     return;
 }
 // init exports
@@ -637,11 +612,8 @@ pre {
 /*global window*/
 (function () {
     "use strict";
-    let local;
-    let testCaseDict;
-
-    local = window.utility2;
-    testCaseDict = {
+    let local = window.utility2;
+    let testCaseDict = {
         modeTest: 1
     };
 
@@ -670,13 +642,19 @@ pre {
         }).catch(onError);
     };
 
+    // create coverage-report
     local.eventListenerAdd("utility2.testRunEnd", {}, function () {
         document.querySelector(
             "#htmlCoverageReport1"
         ).innerHTML = local.coverageReportCreate({});
     });
 
-    local.testRunDefault(testCaseDict);
+    // run tests
+    if (!(
+        /\bnpm_config_mode_test=1\b/
+    ).test(location.search)) {
+        local.testRunDefault(testCaseDict);
+    }
 }());
 </textarea>
 <button
@@ -780,9 +758,6 @@ window.utility2.onReadyIncrement();
 window.addEventListener("load", function () {
     "use strict";
     let local;
-    let {
-        documentQuerySelectorAll
-    } = window.utility2;
     function onTestRun({
         msg,
         target,
@@ -794,29 +769,29 @@ window.addEventListener("load", function () {
             local.testRunDefault(window.local);
             return;
         case "utility2.testRunEnd":
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 "#buttonTestRun1"
             ).forEach(function (elem) {
                 elem.textContent = "run tests";
             });
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 "#htmlTestReport1"
             ).forEach(function (elem) {
                 elem.innerHTML = msg.html;
             });
             return;
         case "utility2.testRunStart":
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 ".onevent-output-reset"
             ).forEach(function (elem) {
                 elem.textContent = "";
             });
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 "#buttonTestRun1"
             ).forEach(function (elem) {
                 elem.textContent = "running tests";
             });
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 "#htmlTestReport1"
             ).forEach(function (elem) {
                 local.uiAnimateSlideDown(elem);
@@ -824,7 +799,7 @@ window.addEventListener("load", function () {
             });
             return;
         case "utility2.testRunUpdate":
-            documentQuerySelectorAll(
+            document.querySelectorAll(
                 "#htmlTestReport1"
             ).forEach(function (elem) {
                 local.uiAnimateSlideDown(elem);
@@ -834,7 +809,7 @@ window.addEventListener("load", function () {
         }
     }
     local = window.utility2;
-    documentQuerySelectorAll(
+    document.querySelectorAll(
         "#buttonTestRun1"
     ).forEach(function (elem) {
         elem.addEventListener("click", onTestRun);

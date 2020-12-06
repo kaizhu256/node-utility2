@@ -14,26 +14,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -41,15 +31,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -110,13 +95,14 @@
      * this function will return document.querySelectorAll(<selector>)
      * or empty list if function is not available
      */
-        if (
-            typeof document === "object" && document &&
-            typeof document.querySelectorAll === "function"
-        ) {
-            return Array.from(document.querySelectorAll(selector));
-        }
-        return [];
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
     }
     function identity(val) {
     /*
@@ -132,8 +118,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -165,25 +151,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
         documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -210,17 +184,28 @@ local = (
     globalThis.globalLocal
 );
 // init exports
-if (local.isBrowser) {
-    globalThis.utility2_utility2 = local;
-} else {
+if (local.isEnvNode) {
     module.exports = local;
     module.exports.__dirname = __dirname;
+} else {
+    globalThis.utility2_utility2 = local;
 }
 // init lib main
 local.utility2 = local;
 
 
 /* validateLineSortedReset */
+// bug-workaround - throw unhandledRejections in node-process
+if (
+    typeof process === "object" && process &&
+    typeof process.on === "function" &&
+    process.unhandledRejections !== "throw"
+) {
+    process.unhandledRejections = "throw";
+    process.on("unhandledRejection", function (err) {
+        throw err;
+    });
+}
 }());
 
 
@@ -235,13 +220,13 @@ globalThis.utility2 = local;
     let state;
     // init state - default
     state = {
-        UTILITY2_DIR_BUILD: ".tmp/build",
         apidocCreate: local.identity,
         coverageMerge: local.identity,
         coverageReportCreate: local.identity,
         instrumentInPackage: local.identity,
         jslintAndPrint: local.identity,
         jslintAndPrintDir: local.identity,
+        npm_config_timeout: 30000,
         npm_package_description: "the greatest app in the world!",
         npm_package_name: "my-app",
         npm_package_version: "0.0.1"
@@ -268,19 +253,33 @@ globalThis.utility2 = local;
         state,
         (typeof process === "object" && process && process.env)
     );
+    // init state - location.search
+    if (
+        typeof location === "object" && location &&
+        typeof location.search === "string"
+    ) {
+        location.search.replace((
+            /\b(npm_config_mode_test|npm_config_mode_test_case|npm_config_timeout)=([^&#]+)/g
+        ), function (ignore, key, val) {
+            state[key] = decodeURIComponent(val);
+            return "";
+        });
+    }
     // init state - misc
     state = Object.assign({
         GITHUB_OWNER: String(state.GITHUB_FULLNAME).split("/")[0],
         GITHUB_REPO: String(state.GITHUB_FULLNAME).split("/")[1],
         UTILITY2_DIR_BUILD: (
-            local.isBrowser
-            ? state.UTILITY2_DIR_BUILD
-            : require("path").resolve(state.UTILITY2_DIR_BUILD)
+            local.isEnvNode
+            ? require("path").resolve(".tmp/build")
+            : "/"
         ),
+        npm_config_mode_test_case: "",
         npm_package_nameLib: String(state.npm_package_name).replace((
             /\W/g
         ), "_")
     }, state);
+    state.npm_config_timeout |= 0;
     // init lib extra
     [
         "apidoc",
@@ -292,9 +291,9 @@ globalThis.utility2 = local;
     ].forEach(function (key) {
         try {
             local[key] = (
-                local.isBrowser
-                ? globalThis["utility2_" + key]
-                : require("./lib." + key + ".js")
+                local.isEnvNode
+                ? require("./lib." + key + ".js")
+                : globalThis["utility2_" + key]
             );
         } catch (errCaught) {
             local.assertOrThrow(
@@ -306,8 +305,8 @@ globalThis.utility2 = local;
         Object.assign(state, local[key]);
     });
     [
-        "jslintAndPrintDir",
         "coverageReportCreate",
+        "jslintAndPrintDir",
         "CI_BRANCH",
         "CI_COMMIT_ID",
         "CI_COMMIT_INFO",
@@ -331,7 +330,7 @@ globalThis.utility2 = local;
         "npm_config_mode_test_case",
         "npm_config_mode_test_report_merge",
         "npm_config_runme",
-        "npm_config_timeout_default",
+        "npm_config_timeout",
         "npm_config_timeout_exit",
         "npm_package_description",
         "npm_package_homepage",
@@ -346,7 +345,10 @@ globalThis.utility2 = local;
     });
 }());
 let {
+    assertJsonEqual,
+    assertOrThrow,
     documentQuerySelectorAll,
+    isEnvNode,
     noop,
     onErrorThrow,
     CI_BRANCH,
@@ -372,7 +374,7 @@ let {
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
     npm_config_runme,
-    npm_config_timeout_default,
+    npm_config_timeout,
     npm_config_timeout_exit,
     npm_package_description,
     npm_package_homepage,
@@ -383,15 +385,6 @@ let {
     npm_package_nameOriginal,
     npm_package_version
 } = local;
-// init timeoutDefault, modeTest, modeTestCase
-local.timeoutDefault = npm_config_timeout_default || 30000;
-String(typeof location === "object" && location && location.search).replace((
-    /\b(modeTest|modeTestCase|timeoutDefault)=([^&#]+)/g
-), function (ignore, key, val) {
-    local[key] = decodeURIComponent(val);
-    return "";
-});
-local.timeoutDefault |= 0;
 
 
 /* validateLineSortedReset */
@@ -404,28 +397,16 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "// run shared js\u002denv code - init-local\n" +
     "(function () {\n" +
     "    \"use strict\";\n" +
-    "    let isBrowser;\n" +
-    "    let isWebWorker;\n" +
+    "    let isEnvNode;\n" +
     "    let local;\n" +
-    "    // polyfill globalThis\n" +
-    "    if (!(typeof globalThis === \"object\" && globalThis)) {\n" +
-    "        if (typeof window === \"object\" && window && " +
-    "window.window === window) {\n" +
-    "            window.globalThis = window;\n" +
-    "        }\n" +
-    "        if (typeof global === \"object\" && global && " +
-    "global.global === global) {\n" +
-    "            global.globalThis = global;\n" +
-    "        }\n" +
-    "    }\n" +
     "    // init debugInline\n" +
     "    if (!globalThis.debugInline) {\n" +
     "        let consoleError;\n" +
     "        consoleError = console.error;\n" +
     "        globalThis.debugInline = function (...argList) {\n" +
     "        /*\n" +
-    "         * this function will both print <argList> to stderr\n" +
-    "         * and return <argList>[0]\n" +
+    "         * this function will both print <argList> to stderr and\n" +
+    "         * return <argList>[0]\n" +
     "         */\n" +
     "            consoleError(\"\\n\\ndebugInline\");\n" +
     "            consoleError(...argList);\n" +
@@ -433,15 +414,11 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            return argList[0];\n" +
     "        };\n" +
     "    }\n" +
-    "    // init isBrowser\n" +
-    "    isBrowser = (\n" +
-    "        typeof globalThis.XMLHttpRequest === \"function\" &&\n" +
-    "        globalThis.navigator &&\n" +
-    "        typeof globalThis.navigator.userAgent === \"string\"\n" +
-    "    );\n" +
-    "    // init isWebWorker\n" +
-    "    isWebWorker = (\n" +
-    "        isBrowser && typeof globalThis.importScripts === \"function\"\n" +
+    "    // init isEnvNode\n" +
+    "    isEnvNode = (\n" +
+    "        typeof process === \"object\" && process &&\n" +
+    "        process.versions && typeof process.versions.node === " +
+    "\"string\"\n" +
     "    );\n" +
     "    // init function\n" +
     "    function objectDeepCopyWithKeysSorted(obj) {\n" +
@@ -465,14 +442,14 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function assertJsonEqual(aa, bb) {\n" +
     "    /*\n" +
-    "     * this function will assert " +
-    "JSON.stringify(<aa>) === JSON.stringify(<bb>)\n" +
+    "     * this function will assert JSON.stringify(<aa>) === " +
+    "JSON.stringify(<bb>)\n" +
     "     */\n" +
     "        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n" +
     "        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n" +
     "        if (aa !== bb) {\n" +
-    "            throw new " +
-    "Error(JSON.stringify(aa) + \" !== \" + JSON.stringify(bb));\n" +
+    "            throw new Error(JSON.stringify(aa) + \" !== \" + " +
+    "JSON.stringify(bb));\n" +
     "        }\n" +
     "    }\n" +
     "    function assertOrThrow(passed, msg) {\n" +
@@ -504,13 +481,14 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "     * this function will return document.querySelectorAll(<selector>)\n" +
     "     * or empty list if function is not available\n" +
     "     */\n" +
-    "        if (\n" +
-    "            typeof document === \"object\" && document &&\n" +
-    "            typeof document.querySelectorAll === \"function\"\n" +
-    "        ) {\n" +
-    "            return Array.from(document.querySelectorAll(selector));\n" +
-    "        }\n" +
-    "        return [];\n" +
+    "        return Array.from(\n" +
+    "            (\n" +
+    "                typeof document === \"object\" && document &&\n" +
+    "                typeof document.querySelectorAll === \"function\"\n" +
+    "            )\n" +
+    "            ? document.querySelectorAll(selector)\n" +
+    "            : []\n" +
+    "        );\n" +
     "    }\n" +
     "    function identity(val) {\n" +
     "    /*\n" +
@@ -526,9 +504,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
     "    /*\n" +
-    "     * this function will if items from <tgt> are null, undefined, " +
-    "or \"\",\n" +
-    "     * then overwrite them with items from <src>\n" +
+    "     * this function will if items from <tgt> are null, undefined,\n" +
+    "     * or \"\", then overwrite them with items from <src>\n" +
     "     */\n" +
     "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
@@ -562,25 +539,13 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            throw err;\n" +
     "        }\n" +
     "    }\n" +
-    "    // bug-workaround - throw unhandledRejections in node-process\n" +
-    "    if (\n" +
-    "        typeof process === \"object\" && process &&\n" +
-    "        typeof process.on === \"function\" &&\n" +
-    "        process.unhandledRejections !== \"strict\"\n" +
-    "    ) {\n" +
-    "        process.unhandledRejections = \"strict\";\n" +
-    "        process.on(\"unhandledRejection\", function (err) {\n" +
-    "            throw err;\n" +
-    "        });\n" +
-    "    }\n" +
     "    // init local\n" +
     "    local = {\n" +
     "        assertJsonEqual,\n" +
     "        assertOrThrow,\n" +
     "        documentQuerySelectorAll,\n" +
     "        identity,\n" +
-    "        isBrowser,\n" +
-    "        isWebWorker,\n" +
+    "        isEnvNode,\n" +
     "        local,\n" +
     "        noop,\n" +
     "        objectAssignDefault,\n" +
@@ -814,9 +779,6 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "window.addEventListener(\"load\", function () {\n" +
     "    \"use strict\";\n" +
     "    let local;\n" +
-    "    let {\n" +
-    "        documentQuerySelectorAll\n" +
-    "    } = window.utility2;\n" +
     "    function onTestRun({\n" +
     "        msg,\n" +
     "        target,\n" +
@@ -828,29 +790,29 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "            local.testRunDefault(window.local);\n" +
     "            return;\n" +
     "        case \"utility2.testRunEnd\":\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \"#buttonTestRun1\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                elem.textContent = \"run tests\";\n" +
     "            });\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \"#htmlTestReport1\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                elem.innerHTML = msg.html;\n" +
     "            });\n" +
     "            return;\n" +
     "        case \"utility2.testRunStart\":\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \".onevent-output-reset\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                elem.textContent = \"\";\n" +
     "            });\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \"#buttonTestRun1\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                elem.textContent = \"running tests\";\n" +
     "            });\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \"#htmlTestReport1\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                local.uiAnimateSlideDown(elem);\n" +
@@ -858,7 +820,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "            });\n" +
     "            return;\n" +
     "        case \"utility2.testRunUpdate\":\n" +
-    "            documentQuerySelectorAll(\n" +
+    "            document.querySelectorAll(\n" +
     "                \"#htmlTestReport1\"\n" +
     "            ).forEach(function (elem) {\n" +
     "                local.uiAnimateSlideDown(elem);\n" +
@@ -868,7 +830,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "        }\n" +
     "    }\n" +
     "    local = window.utility2;\n" +
-    "    documentQuerySelectorAll(\n" +
+    "    document.querySelectorAll(\n" +
     "        \"#buttonTestRun1\"\n" +
     "    ).forEach(function (elem) {\n" +
     "        elem.addEventListener(\"click\", onTestRun);\n" +
@@ -938,7 +900,7 @@ local.assetsDict["/assets.example.template.js"] = (
     "/* istanbul ignore next */\n" +
     "// run browser js\u002denv code - init-test\n" +
     "(function () {\n" +
-    "if (!local.isBrowser) {\n" +
+    "if (local.isEnvNode) {\n" +
     "    return;\n" +
     "}\n" +
     "// log stderr and stdout to #outputStdout1\n" +
@@ -972,7 +934,7 @@ local.assetsDict["/assets.example.template.js"] = (
     "/* istanbul ignore next */\n" +
     "// run node js\u002denv code - init-test\n" +
     "(function () {\n" +
-    "if (local.isBrowser) {\n" +
+    "if (!local.isEnvNode) {\n" +
     "    return;\n" +
     "}\n" +
     "// init exports\n" +
@@ -1065,11 +1027,11 @@ local.assetsDict["/assets.my_app.template.js"] = (
     "    globalThis.globalLocal\n" +
     ");\n" +
     "// init exports\n" +
-    "if (local.isBrowser) {\n" +
-    "    globalThis.utility2_my_app = local;\n" +
-    "} else {\n" +
+    "if (local.isEnvNode) {\n" +
     "    module.exports = local;\n" +
     "    module.exports.__dirname = __dirname;\n" +
+    "} else {\n" +
+    "    globalThis.utility2_my_app = local;\n" +
     "}\n" +
     "// init lib main\n" +
     "local.my_app = local;\n" +
@@ -1475,7 +1437,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -1552,7 +1514,7 @@ local._testCase_buildApidoc_default = function (opt, onError) {
     // coverage-hack
     require2();
     // save apidoc.html
-    local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", apidocCreate(
+    local.fsWriteFileWithMkdirpSync(".tmp/build/apidoc.html", apidocCreate(
         Object.assign({
             blacklistDict: local,
             modeNoop: (
@@ -1560,14 +1522,15 @@ local._testCase_buildApidoc_default = function (opt, onError) {
             ),
             require: require2
         }, opt)
-    ), onError);
+    ));
+    onError();
 };
 
 local._testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -1580,16 +1543,17 @@ local._testCase_webpage_default = async function (opt, onError) {
  */
     local.domQuerySelectorAllTagName("html");
     local.domStyleValidate();
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
     await local.browserTest({
         url: (
             "http://127.0.0.1:" + PORT +
-            "/?modeTest=1&timeoutDefault=" + local.timeoutDefault +
-            "&modeTestCase=" + local.modeTestCase.replace((
-                /_?testCase_webpage_default/
+            "/?npm_config_mode_test=1&npm_config_timeout=" +
+            npm_config_timeout +
+            "&npm_config_mode_test_case=" + npm_config_mode_test_case.replace((
+                /\b_?testCase_webpage_default\b/
             ), "")
         )
     });
@@ -1615,8 +1579,7 @@ local.browserTest = async function ({
     let testReport;
     let {
         chromeDevtoolsClientCreate,
-        testReportMerge,
-        timeoutDefault
+        testReportMerge
     } = local;
     // node - init
     testId = Math.random().toString(16);
@@ -1632,7 +1595,7 @@ local.browserTest = async function ({
     chromeClient = await chromeDevtoolsClientCreate({
         modeSilent,
         modeWindowSize,
-        timeout: timeoutDefault
+        timeout: npm_config_timeout
     });
     // init page
     chromeClient.rpc("Page.enable");
@@ -1734,6 +1697,7 @@ local.buildApp = function ({
 /*
  * this function will build app
  */
+    let assert;
     let fileDict;
     let packageJson;
     let packageNameLib;
@@ -1741,6 +1705,7 @@ local.buildApp = function ({
     let promiseList;
     let src;
     let tgt;
+    assert = require("assert");
     function tgtReplaceConditional(conditional, replaceList) {
     /*
      * this function will conditionally replace <tgt> with replacements in
@@ -1835,24 +1800,27 @@ local.buildApp = function ({
             }, {
                 url: "/index.html"
             }
-        ].concat(customizeAssetsList).map(function (elem) {
+        ].concat(customizeAssetsList).map(function ({
+            file,
+            url
+        }) {
             return new Promise(function (resolve) {
-                require("http").request((
-                    "http://127.0.0.1:" + PORT + elem.url
+                require("http").get((
+                    "http://127.0.0.1:" + PORT + url
                 ), function (res) {
                     let bufList;
-                    local.assertOrThrow(res.statusCode === 200, elem);
+                    assert.ok(res.statusCode === 200, url);
                     bufList = [];
                     res.on("data", function (chunk) {
                         bufList.push(chunk);
                     }).on("end", function () {
                         writeFile(
-                            ".tmp/build/app/" + (elem.file || elem.url),
+                            ".tmp/build/app/" + (file || url),
                             Buffer.concat(bufList),
                             resolve
                         );
                     });
-                }).end();
+                });
             });
         }));
         // jslint assets
@@ -1902,9 +1870,10 @@ local.buildApp = function ({
                     "ignore", 1, 2
                 ]
             }).on("exit", function (exitCode, signal) {
-                local.assertOrThrow(!exitCode && signal === "SIGTERM", [
-                    exitCode, signal
-                ]);
+                assert.ok(!exitCode && signal === "SIGTERM", JSON.stringify({
+                    exitCode,
+                    signal
+                }));
                 resolve();
             });
             setTimeout(child.kill.bind(child, "SIGTERM"), 4000);
@@ -2091,9 +2060,9 @@ local.buildApp = function ({
         ].indexOf("<script src=\"assets.example.js\"></script>") < 0, [
             {
                 aa: (
-                    /\nif\u0020\(!local.isBrowser\)\u0020\{\n[\S\s]*?\n\}\(\)\);\n/g
+                    /\nif\u0020\(local.isEnvNode\)\u0020\{\n[\S\s]*?\n\}\(\)\);\n/g
                 ),
-                bb: "\nif (!local.isBrowser) {\n    return;\n}\n}());\n"
+                bb: "\nif (local.isEnvNode) {\n    return;\n}\n}());\n"
             }
         ]);
         // customize comment
@@ -2286,7 +2255,7 @@ local.buildApp = function ({
                     resolve();
                     return;
                 }
-                port = Number(
+                port = (
                     "0x" + require("crypto").randomBytes(2).toString("hex")
                 ) | 0x8000;
                 server = require("net").createServer().listen(port);
@@ -2355,6 +2324,7 @@ local.chromeDevtoolsClientCreate = async function ({
     let WS_READ_LENGTH16;
     let WS_READ_LENGTH63;
     let WS_READ_PAYLOAD;
+    let assert;
     let callbackDict;
     let callbackId;
     let chromeClient;
@@ -2373,6 +2343,7 @@ local.chromeDevtoolsClientCreate = async function ({
     WS_READ_LENGTH16 = 1;
     WS_READ_LENGTH63 = 2;
     WS_READ_PAYLOAD = 3;
+    assert = require("assert");
     callbackDict = {};
     callbackId = 0;
     wsBufList = [];
@@ -2426,7 +2397,7 @@ local.chromeDevtoolsClientCreate = async function ({
             returnByValue: false,
             userGesture: true
         });
-        local.assertOrThrow(!exceptionDetails, (
+        assert.ok(!exceptionDetails, (
             "chrome-devtools - evaluate - " +
             JSON.stringify(exceptionDetails)
         ));
@@ -2446,11 +2417,9 @@ local.chromeDevtoolsClientCreate = async function ({
             params,
             result
         } = JSON.parse(payload);
-        local.assertOrThrow(!method || (
+        assert.ok(!method || (
             /^[A-Z]\w*?\.[a-z]\w*?$/
-        ).test(method), new Error(
-            "chrome-devtools - read - invalid method " + method
-        ));
+        ).test(method), "chrome-devtools - read - invalid method " + method);
         // init callback
         callback = callbackDict[id];
         delete callbackDict[id];
@@ -2460,14 +2429,11 @@ local.chromeDevtoolsClientCreate = async function ({
             callback.err.message = (
                 "chrome-devtools - read - " + JSON.stringify(error)
             );
-            local.assertOrThrow(!error, callback.err);
+            assert.ok(!error, callback.err);
             callback.resolve(result);
             return;
         }
-        local.assertOrThrow(
-            !error,
-            "chrome-devtools - read - " + JSON.stringify(error)
-        );
+        assert.ok(!error, "chrome-devtools - read - " + JSON.stringify(error));
         chromeClient.emit(method, params);
     }
     function chromeRead() {
@@ -2530,7 +2496,7 @@ local.chromeDevtoolsClientCreate = async function ({
             header[1] |= payload.length;
         // } else if (payload.length < 65536) {
         } else {
-            local.assertOrThrow(payload.length < 65536, (
+            assert.ok(payload.length < 65536, (
                 "chrome-devtools - write - " +
                 "payload-length must be less than 65536 bytes, not " +
                 payload.length
@@ -2598,7 +2564,7 @@ local.chromeDevtoolsClientCreate = async function ({
             buf = wsBufListRead(2);
             // validate opcode
             opcode = buf[0] & 0x0f;
-            local.assertOrThrow(opcode === 0x01, (
+            assert.ok(opcode === 0x01, (
                 "chrome-devtools - read - opcode must be 0x01, not 0x0" +
                 opcode.toString(16)
             ));
@@ -2626,7 +2592,7 @@ local.chromeDevtoolsClientCreate = async function ({
             break;
         // read frame-payload-data
         case WS_READ_PAYLOAD:
-            local.assertOrThrow((
+            assert.ok((
                 0 <= wsPayloadLength && wsPayloadLength <= 10000000
             ), (
                 "chrome-devtools - read - " +
@@ -2835,7 +2801,7 @@ Application data: y bytes
         }
         stderr = "";
         chromeProcess.stderr.on("data", function onData(chunk) {
-            local.assertOrThrow(
+            assert.ok(
                 stderr.length < 65536,
                 "chrome-devtools - connecting - cannot connect to chrome"
             );
@@ -2849,7 +2815,7 @@ Application data: y bytes
             });
         });
     });
-    //init <websocket>
+    // init websocket
     console.error("chrome-devtools - connecting - " + websocketUrl);
     secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
     await new Promise(function (resolve) {
@@ -2869,7 +2835,7 @@ Application data: y bytes
             protocol: "http:",
             protocolVersion: 13
         }).once("upgrade", function (res, _, head) {
-            local.assertOrThrow((
+            assert.ok((
                 res.headers[
                     "sec-websocket-accept"
                 ] === require("crypto").createHash("sha1").update(
@@ -2878,7 +2844,7 @@ Application data: y bytes
                 ).digest("base64")
             ), (
                 "chrome-devtools - connecting - " +
-                "invalid sec-websocket-accept header"
+                "invalid header sec-websocket-accept"
             ));
             websocket = _;
             websocket.unshift(head);
@@ -3176,7 +3142,7 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
  * this function will sync-read <pathname> with given <type> and <dflt>
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -3195,47 +3161,12 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     }
 };
 
-local.fsWriteFileWithMkdirp = function (pathname, data, onError) {
-/*
- * this function will async write <data> to <pathname> with "mkdir -p"
- */
-    let fs;
-    // do nothing if module not exists
-    try {
-        fs = require("fs");
-        pathname = require("path").resolve(pathname);
-    } catch (ignore) {
-        onError();
-    }
-    // write pathname
-    fs.writeFile(pathname, data, function (err) {
-        if (!err) {
-            console.error("fsWriteFileWithMkdirp - " + pathname);
-            onError(undefined, true);
-            return;
-        }
-        // mkdir -p
-        fs.mkdir(require("path").dirname(pathname), {
-            recursive: true
-        }, function (ignore) {
-            // re-write pathname
-            fs.writeFile(pathname, data, function (err) {
-                if (err) {
-                    throw err;
-                }
-                console.error("fsWriteFileWithMkdirp - " + pathname);
-                onError(undefined, true);
-            });
-        });
-    });
-};
-
 local.fsWriteFileWithMkdirpSync = function (pathname, data) {
 /*
  * this function will sync write <data> to <pathname> with "mkdir -p"
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -3253,7 +3184,7 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
         // re-write pathname
         fs.writeFileSync(pathname, data);
     }
-    console.error("fsWriteFileWithMkdirpSync - " + pathname);
+    console.error("fsWriteFileWithMkdirpSync - wrote - " + pathname);
     return true;
 };
 
@@ -3342,7 +3273,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         });
         return str1;
     }
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         return code;
     }
     // make file relative
@@ -3617,12 +3548,6 @@ local.replStart = function () {
                 case "ll":
                     match2 = "ls -Fal";
                     break;
-                case "npm test":
-                case "shBuildApp":
-                    if (process.platform === "win32") {
-                        match2 = process.env.UTILITY2_BIN + " " + match2;
-                    }
-                    break;
                 }
                 match2 = match2.replace((
                     /^git\u0020/
@@ -3699,52 +3624,54 @@ local.requireReadme = function () {
  */
     let Module;
     let code;
-    let module;
-    let tmp;
-    // library-mode
+    let exports;
+    let file;
+    let {
+        assetsDict,
+        fsReadFileOrDefaultSync,
+        objectAssignDefault,
+        replStart,
+        templateRenderMyApp
+    } = local;
+    // if library-mode, then return local
     if (npm_config_mode_lib) {
         local.testRunDefault = noop;
         return local;
     }
-    // if file is modified, then restart process
+    // if file modified, then restart process
     if (npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
-            fileList.concat(__filename).forEach(function (file) {
-                require("fs").stat(file, function (err, data) {
-                    onErrorThrow(err);
-                    if (!data.isFile()) {
-                        return;
-                    }
-                    require("fs").watchFile(file, {
-                        interval: 1000,
-                        persistent: false
-                    }, function () {
-                        console.error("file modified - " + file);
-                        setTimeout(function () {
-                            process.exit(77);
-                        }, 1000);
-                    });
+            fileList.concat(__filename).forEach(async function (file) {
+                let stats;
+                stats = await require("fs").promises.stat(file);
+                if (!stats.isFile()) {
+                    return;
+                }
+                require("fs").watchFile(file, {
+                    interval: 1000,
+                    persistent: false
+                }, function () {
+                    console.error("watchFile - modified - " + file);
+                    setTimeout(process.exit.bind(undefined, 77), 1000);
                 });
             });
         });
     }
-    // init module.exports
-    module = {};
-    if (local.isBrowser) {
-        module.exports = local.objectAssignDefault(
+    // if browser-env, then return local
+    if (!isEnvNode) {
+        return objectAssignDefault(
             globalThis.utility2_rollup || globalThis.local,
             local
         );
-        return module.exports;
     }
     // start repl-debugger
-    local.replStart();
-    // jslint process.cwd()
+    replStart();
+    // jslint $PWD
     require("child_process").spawn("node", [
         "-e", (
             "require(" + JSON.stringify(__filename) +
             ").jslintAndPrintDir(" + JSON.stringify(process.cwd()) +
-            ", {modeAutofix:" + (!npm_config_mode_test) +
+            ", {modeAutofix:" + !npm_config_mode_test +
             ",modeConditional:true});"
         )
     ], {
@@ -3755,8 +3682,9 @@ local.requireReadme = function () {
             "ignore", 1, 2
         ]
     });
+    // if rollup, then return local
     if (globalThis.utility2_rollup || npm_config_mode_start) {
-        local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
+        assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
         ).replace((
@@ -3764,17 +3692,15 @@ local.requireReadme = function () {
         ), "// ");
         // init exports
         local[npm_package_nameLib] = local;
-        module.exports = local;
-        return module.exports;
+        return local;
     }
-    // init file $npm_package_main
+    // init utility2_moduleExports from $npm_package_main
     globalThis.utility2_moduleExports = require(
         require("path").resolve(npm_package_main)
     );
-    globalThis.utility2_moduleExports.globalThis = globalThis;
-    // read code from README.md
-    code = local.assetsDict["/assets.example.template.js"];
-    local.fsReadFileOrDefaultSync("README.md", "utf8", "").replace((
+    // read example.js from README.md
+    code = assetsDict["/assets.example.template.js"];
+    fsReadFileOrDefaultSync("README.md", "utf8", "").replace((
         /\n```javascript(\n\/\*\nexample\.js\n[\S\s]*?\n)```\n/
     ), function (ignore, match1, ii, input) {
         // preserve lineno
@@ -3791,29 +3717,29 @@ local.requireReadme = function () {
         new RegExp("require\\(." + npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
-    // init example.js
-    tmp = require("path").resolve("example.js");
-    // jslint code
-    jslintAndPrint(code, tmp);
-    // instrument code
-    code = instrumentInPackage(code, tmp);
-    // init module.exports
+    // jslint example.js
+    file = require("path").resolve("example.js");
+    jslintAndPrint(code, file);
+    // instrument example.js
+    code = instrumentInPackage(code, file);
+    // eval example.js
     Module = require("module");
-    module = new Module(tmp);
-    require.cache[tmp] = module;
-    module._compile(code, tmp);
-    // init exports
-    module.exports.utility2 = local;
-    module.exports[npm_package_nameLib] = (
-        globalThis.utility2_moduleExports
-    );
+    exports = new Module(file);
+    require.cache[file] = exports;
+    exports._compile(code, file);
+    // export example.js
+    exports = exports.exports;
+    exports.utility2 = local;
+    exports[npm_package_nameLib] = globalThis.utility2_moduleExports;
+    // cleanup utility2_moduleExports
+    delete globalThis.utility2_moduleExports;
     // init assets lib.xxx.js
     [
         ".css", ".js"
     ].forEach(function (extname) {
-        local.assetsDict[
+        assetsDict[
             "/assets." + npm_package_nameLib + extname
-        ] = local.fsReadFileOrDefaultSync(
+        ] = fsReadFileOrDefaultSync(
             require("path").resolve(npm_package_main).replace((
                 /\.\w+?$/
             ), extname),
@@ -3823,34 +3749,32 @@ local.requireReadme = function () {
             /^#!\//
         ), "// ");
     });
-    Object.assign(local.assetsDict, module.exports.assetsDict);
+    Object.assign(assetsDict, exports.assetsDict);
     // instrument assets lib.xxx.js
-    local.assetsDict["/assets." + npm_package_nameLib + ".js"] = (
+    assetsDict["/assets." + npm_package_nameLib + ".js"] = (
         instrumentInPackage(
-            local.assetsDict[
-                "/assets." + npm_package_nameLib + ".js"
-            ],
+            assetsDict["/assets." + npm_package_nameLib + ".js"],
             npm_package_main
         )
     );
-    module.exports.assetsDict = local.assetsDict;
-    local.assetsDict["/assets.example.js"] = code;
-    local.assetsDict["/assets.test.js"] = instrumentInPackage(
+    exports.assetsDict = assetsDict;
+    assetsDict["/assets.example.js"] = code;
+    assetsDict["/assets.test.js"] = instrumentInPackage(
         require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
-    tmp = local.assetsDict["/"];
+    file = assetsDict["/"];
     // uncomment utility2-comment
-    tmp = tmp.replace((
+    file = file.replace((
         /\n<!--\u0020utility2-comment\n|\nutility2-comment\u0020-->\n/g
     ), "\n\n");
     // interpolate {{...}}
-    tmp = local.templateRenderMyApp(tmp);
-    local.assetsDict["/"] = tmp;
-    local.assetsDict["/index.html"] = tmp;
+    file = templateRenderMyApp(file);
+    assetsDict["/"] = file;
+    assetsDict["/index.html"] = file;
     // init assets.app.js
-    local.assetsDict["/assets.app.js"] = [
+    assetsDict["/assets.app.js"] = [
         "header",
         "/assets.utility2.rollup.js",
         "/assets.utility2.rollup.start.js",
@@ -3862,14 +3786,14 @@ local.requireReadme = function () {
     ].map(function (key) {
         switch (key) {
         case "/assets.my_app.css":
-            tmp = "/assets." + npm_package_nameLib + ".css";
+            file = "/assets." + npm_package_nameLib + ".css";
             // disable $-escape in replacement-string
-            code = local.assetsDict[
+            code = assetsDict[
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
-                    JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + file + "\"] = (\n" +
+                    JSON.stringify(assetsDict[file]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -3881,14 +3805,14 @@ local.requireReadme = function () {
             });
             break;
         case "/assets.my_app.js":
-            tmp = "/assets." + npm_package_nameLib + ".js";
+            file = "/assets." + npm_package_nameLib + ".js";
             // disable $-escape in replacement-string
-            code = local.assetsDict[
+            code = assetsDict[
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
-                    JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + file + "\"] = (\n" +
+                    JSON.stringify(assetsDict[file]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -3896,7 +3820,7 @@ local.requireReadme = function () {
                         /\u0000/g
                     ), "\\\\") +
                     ");\n" +
-                    local.assetsDict[tmp]
+                    assetsDict[file]
                 );
             });
             break;
@@ -3920,12 +3844,12 @@ local.requireReadme = function () {
                 "and play with web-demo\n" +
                 "    4. edit this script to suit your needs\n" +
                 "*/\n" +
-                local.assetsDict["/assets.utility2.rollup.start.js"].replace((
+                assetsDict["/assets.utility2.rollup.start.js"].replace((
                     /utility2_rollup/g
                 ), "utility2_app")
             );
         default:
-            code = local.assetsDict[key];
+            code = assetsDict[key];
         }
         return (
             "/* script-begin " + key + " */\n" +
@@ -3933,19 +3857,19 @@ local.requireReadme = function () {
             "\n/* script-end " + key + " */\n"
         );
     }).join("\n\n\n");
-    local.objectAssignDefault(module.exports, local);
+    objectAssignDefault(exports, local);
     // init testCase_buildXxx
     Object.keys(local).forEach(function (key) {
         if (
             key.indexOf("_testCase_build") === 0 ||
             key === "_testCase_webpage_default"
         ) {
-            module.exports[key.slice(1)] = (
-                module.exports[key.slice(1)] || local[key]
+            exports[key.slice(1)] = (
+                exports[key.slice(1)] || local[key]
             );
         }
     });
-    return module.exports;
+    return exports;
 };
 
 local.serverRequestListener = function (req, res) {
@@ -3961,8 +3885,7 @@ local.serverRequestListener = function (req, res) {
     let urlParsed;
     let {
         assetsDict,
-        middlewareList,
-        timeoutDefault
+        middlewareList
     } = local;
     function onClose() {
     /*
@@ -4010,7 +3933,7 @@ local.serverRequestListener = function (req, res) {
         // init timeStart
         timeStart = Date.now();
         // init timerTimeout
-        timeout = timeout || timeoutDefault;
+        timeout = timeout || npm_config_timeout;
         timerTimeout = setTimeout(onTimeout, timeout);
         // init urlParsed
         urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
@@ -4055,7 +3978,7 @@ local.serverRequestListener = function (req, res) {
     }
     async function middlewareServeAsset(ignore, res, next) {
     /*
-     * this function serve asset from <assetsDict>
+     * this function will serve assets from <assetsDict>
      */
         if (!assetsDict.hasOwnProperty(urlParsed.pathname)) {
             await next();
@@ -4135,23 +4058,6 @@ local.serverRespondEcho = function (req, res) {
         }).join("") + "\r\n"
     );
     req.pipe(res);
-};
-
-local.serverStart = function () {
-/*
- * this function will start http-server on $PORT
- */
-    // init middlewareList
-    local.middlewareList = local.middlewareList || [];
-    // start http-server on $PORT
-    if (!local.isBrowser && !globalThis.utility2_serverHttp1) {
-        globalThis.utility2_serverHttp1 = require("http").createServer(
-            local.serverRequestListener
-        );
-        console.error("http-server listening on port " + PORT);
-        local.onReadyIncrement();
-        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
-    }
 };
 
 local.setTimeoutOnError = function (onError, timeout, err, data) {
@@ -4365,7 +4271,10 @@ local.testReportMerge = function (
     let testCaseNumber;
     let testPlatformDict;
     let testPlatformList;
-    function write(file, data) {
+    function fileWrite(file, data) {
+    /*
+     * this function will write <data> to <file>
+     */
         file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
         require("fs").writeFileSync(file, data);
         console.error("test-report - wrote - " + file);
@@ -4388,9 +4297,9 @@ local.testReportMerge = function (
             date: new Date().toISOString(),
             modeBuild: MODE_BUILD,
             nameBase: (
-                local.isBrowser
-                ? "browser - " + location.pathname + " - " + navigator.userAgent
-                : "node - " + process.platform + " - " + process.version
+                isEnvNode
+                ? "node - " + process.platform + " - " + process.version
+                : "browser - " + location.pathname + " - " + navigator.userAgent
             ),
             status: "pending",
             testCaseList: [],
@@ -4717,9 +4626,9 @@ local.testReportMerge = function (
     // jslint html
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
-    write("test-report.html", html);
+    fileWrite("test-report.html", html);
     // create build.badge.svg
-    write("build.badge.svg", local.svgBadgeCreate({
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -4728,7 +4637,7 @@ local.testReportMerge = function (
         )
     }));
     // create test-report.badge.svg
-    write("test-report.badge.svg", local.svgBadgeCreate({
+    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
         fill: (
             testPlatformList[0].testsFailed
             ? "#d00"
@@ -4737,7 +4646,7 @@ local.testReportMerge = function (
         str1: "tests failed",
         str2: testPlatformList[0].testsFailed
     }));
-    // if any test failed, then exit with non-zero exitCode
+    // if tests failed, then exit with non-zero exitCode
     process.exit(testReport.testsFailed !== 0);
 };
 
@@ -4751,9 +4660,6 @@ local.testRunDefault = async function (testCaseDict = {}) {
     let testPlatform;
     let testReport;
     let timerInterval;
-    let {
-        modeTestCase
-    } = local;
     function timeElapsedPoll(opt) {
     /*
      * this function will poll "Date.now() - <opt>.timeStart"
@@ -4761,16 +4667,93 @@ local.testRunDefault = async function (testCaseDict = {}) {
         opt.timeStart = opt.timeStart || Date.now();
         opt.timeElapsed = Date.now() - opt.timeStart;
     }
+    async function testCaseRun(testCase) {
+        let testCasePromise;
+        let testCaseResolve;
+        testCasePromise = new Promise(function (resolve) {
+            testCaseResolve = resolve;
+        });
+        function onError(err) {
+            // update testPlatform.timeElapsed
+            timeElapsedPoll(testPlatform);
+            // if testCase isDone, then fail testCase
+            if (testCase.isDone) {
+                err = err || new Error(
+                    "callback in testCase " +
+                    testCase.name +
+                    " called multiple times"
+                );
+            }
+            // if err occurred, then fail testCase
+            if (err) {
+                // restore console.log
+                console.error = consoleError;
+                testCase.status = "failed";
+                consoleError(
+                    "\ntestRunDefault - " +
+                    testPlatform.timeElapsed + " ms - testCase failed - " +
+                    testCase.name + "\n" + err.message + "\n" + err.stack
+                );
+                testCase.errStack = (
+                    testCase.errStack || err.message + "\n" + err.stack
+                );
+                // validate errStack is non-empty
+                assertOrThrow(
+                    testCase.errStack,
+                    "invalid errStack " + testCase.errStack
+                );
+            }
+            // if tests isDone, then do nothing
+            if (testCase.isDone) {
+                return;
+            }
+            testCase.isDone = true;
+            if (testCase.status === "pending") {
+                testCase.status = "passed";
+            }
+            // stop testCase timer
+            timeElapsedPoll(testCase);
+            consoleError(
+                "testRunDefault - " +
+                testPlatform.timeElapsed + " ms - [" + (
+                    isEnvNode
+                    ? "node"
+                    : "browser"
+                ) + " test-case " +
+                testPlatform.testCaseList.filter(function (testCase) {
+                    return testCase.isDone;
+                }).length + " of " + testPlatform.testCaseList.length
+                + " " + testCase.status + "] - " + testCase.name
+            );
+            testCaseResolve();
+        }
+        try {
+            timeElapsedPoll(testCase);
+            testCase.onTestCase({}, onError);
+            noop(await testCasePromise);
+        } catch (errCaught) {
+            onError(errCaught);
+        }
+    }
     if (npm_config_mode_lib) {
         return;
     }
-    local.serverStart();
-    globalThis.utility2_modeTest = Number(
+    // init middlewareList
+    local.middlewareList = local.middlewareList || [];
+    // init http-server on $PORT
+    if (isEnvNode && !globalThis.utility2_serverHttp1) {
+        globalThis.utility2_serverHttp1 = require("http").createServer(
+            local.serverRequestListener
+        );
+        console.error("http-server listening on port " + PORT);
+        local.onReadyIncrement();
+        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
+    }
+    globalThis.utility2_modeTest = (
         globalThis.utility2_modeTest ||
         testCaseDict.modeTest ||
-        local.modeTest ||
         npm_config_mode_test
-    );
+    ) | 0;
     if (
         globalThis.utility2_modeTest !== 1 ||
         Object.keys(testCaseDict).length === 0
@@ -4803,7 +4786,7 @@ local.testRunDefault = async function (testCaseDict = {}) {
         }
     };
     // mock proces.exit
-    if (!local.isBrowser) {
+    if (isEnvNode) {
         processExit = process.exit;
         process.exit = function (exitCode) {
             local.eventListenerEmit(
@@ -4812,8 +4795,6 @@ local.testRunDefault = async function (testCaseDict = {}) {
             );
         };
     }
-    // init modeTestCase
-    modeTestCase = modeTestCase || npm_config_mode_test_case || "";
     // init testReport
     testReport = globalThis.utility2_testReport;
     // init testPlatform
@@ -4823,22 +4804,21 @@ local.testRunDefault = async function (testCaseDict = {}) {
     // reset testPlatform.testCaseList
     testPlatform.testCaseList.length = 0;
     // add tests into testPlatform.testCaseList
-    Object.keys(testCaseDict).forEach(function (key) {
+    Object.entries(testCaseDict).forEach(function ([
+        key, val
+    ]) {
         // add testCase testCaseDict[key] to testPlatform.testCaseList
         if (
-            typeof testCaseDict[key] === "function" && (
-                modeTestCase
-                ? modeTestCase.split(
-                    /[,\s]/g
-                ).indexOf(key) >= 0
+            key && typeof val === "function" && (
+                npm_config_mode_test_case
+                ? npm_config_mode_test_case.split(",").indexOf(key) >= 0
                 : key.indexOf("testCase_") === 0
             )
         ) {
             testPlatform.testCaseList.push({
-                isBrowser: local.isBrowser,
                 name: key,
                 status: "pending",
-                onTestCase: testCaseDict[key]
+                onTestCase: val
             });
         }
     });
@@ -4868,92 +4848,24 @@ local.testRunDefault = async function (testCaseDict = {}) {
         }
     }, 2000);
     // run testCaseList
-    await Promise.all(testPlatform.testCaseList.map(function (
-        testCase
-    ) {
-        return new Promise(function (resolve) {
-            function onError(err) {
-                // update testPlatform.timeElapsed
-                timeElapsedPoll(testPlatform);
-                // if testCase isDone, then fail testCase
-                if (testCase.isDone) {
-                    err = err || new Error(
-                        "callback in testCase " +
-                        testCase.name +
-                        " called multiple times"
-                    );
-                }
-                // if err occurred, then fail testCase
-                if (err) {
-                    // restore console.log
-                    console.error = consoleError;
-                    testCase.status = "failed";
-                    consoleError(
-                        "\ntestRunDefault - " +
-                        testPlatform.timeElapsed + " ms - testCase failed - " +
-                        testCase.name + "\n" + err.message + "\n" + err.stack
-                    );
-                    testCase.errStack = (
-                        testCase.errStack || err.message + "\n" + err.stack
-                    );
-                    // validate errStack is non-empty
-                    local.assertOrThrow(
-                        testCase.errStack,
-                        "invalid errStack " + testCase.errStack
-                    );
-                }
-                // if tests isDone, then do nothing
-                if (testCase.isDone) {
-                    return;
-                }
-                testCase.isDone = true;
-                if (testCase.status === "pending") {
-                    testCase.status = "passed";
-                }
-                // stop testCase timer
-                timeElapsedPoll(testCase);
-                consoleError(
-                    "testRunDefault - " +
-                    testPlatform.timeElapsed + " ms - [" + (
-                        local.isBrowser
-                        ? "browser"
-                        : "node"
-                    ) + " test-case " +
-                    testPlatform.testCaseList.filter(function (testCase) {
-                        return testCase.isDone;
-                    }).length + " of " + testPlatform.testCaseList.length
-                    + " " + testCase.status + "] - " + testCase.name
-                );
-                resolve();
-            }
-            try {
-                timeElapsedPoll(testCase);
-                testCase.onTestCase({}, onError);
-                if (typeof testCase.onTestCase.catch === "function") {
-                    testCase.onTestCase.catch(onError);
-                }
-            } catch (errCaught) {
-                onError(errCaught);
-            }
-        });
-    }));
+    await Promise.all(testPlatform.testCaseList.map(testCaseRun));
     clearInterval(timerInterval);
     // update timeElapsed
     timeElapsedPoll(testPlatform);
     // finalize testReport
     local.testReportMerge(testReport);
-    // create test-report.json
-    delete testReport.coverage;
-    local.fsWriteFileWithMkdirpSync(
-        UTILITY2_DIR_BUILD + "/test-report.json",
-        JSON.stringify(testReport, undefined, 4)
-    );
     // restore console.log
     console.error = consoleError;
     // restore process.exit
     if (processExit) {
         process.exit = processExit;
     }
+    // create test-report.json
+    delete testReport.coverage;
+    local.fsWriteFileWithMkdirpSync(
+        UTILITY2_DIR_BUILD + "/test-report.json",
+        JSON.stringify(testReport, undefined, 4)
+    );
     // reset utility2_modeTest
     globalThis.utility2_modeTest = 0;
     // save testReport and coverage
@@ -5120,14 +5032,10 @@ globalThis.utility2_testReport = local.testReportMerge(
     globalThis.utility2_testReport
 );
 local.regexpCharsetEncodeUri = (
-    /\w!#\$%&'\(\)\*\+,-\.\/:;=\?@~/
+    /!#\$%&'\(\)\*\+,-\.\/0123456789:;=\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~/
 );
 local.regexpCharsetEncodeUriComponent = (
-    /\w!%'\(\)\*-\.~/
-);
-// https://github.com/chjj/marked/blob/v0.3.7/lib/marked.js#L499
-local.regexpMatchUrl = (
-    /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/
+    /!%'\(\)\*-\.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~/
 );
 // https://www.w3.org/TR/html5/sec-forms.html#email-state-typeemail
 local.regexpValidateEmail = (
@@ -5149,6 +5057,12 @@ local.stringCharsetAscii = (
     "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" +
     "`abcdefghijklmnopqrstuvwxyz{|}~\u007f"
 );
+assertJsonEqual(
+    local.stringCharsetAscii,
+    Array.from(new Array(128), function (ignore, ii) {
+        return String.fromCharCode(ii);
+    }).join("")
+);
 local.stringCharsetEncodeUri = (
     "!#$%&'()*+,-./" +
     "0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
@@ -5163,15 +5077,13 @@ local.stringHelloEmoji = "hello \ud83d\ude01\n";
 /* istanbul ignore next */
 // run node js-env code - init-after
 (function () {
-if (local.isBrowser) {
+if (!isEnvNode) {
     return;
 }
 // exit after $npm_config_timeout_exit
-setTimeout((
-    (!npm_config_mode_lib && npm_config_timeout_exit)
-    ? process.exit.bind(undefined, 15)
-    : noop
-), npm_config_timeout_exit).unref();
+if (!npm_config_mode_lib && npm_config_timeout_exit) {
+    setTimeout(process.exit.bind(undefined, 15), npm_config_timeout_exit);
+}
 // merge previous test-report
 if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
     local.testReportMerge(
@@ -5196,13 +5108,9 @@ local.cliDict["utility2.browserTest"] = async function () {
  * <urlList> <mode>
  * will browser-test in parallel, comma-separated <urlList> with given <mode>
  */
-    try {
-        await local.browserTest({
-            url: process.argv[3]
-        });
-    } catch (errCaught) {
-        console.error(errCaught);
-    }
+    local.browserTest({
+        url: process.argv[3]
+    });
 };
 
 local.cliDict["utility2.start"] = function () {
