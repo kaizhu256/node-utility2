@@ -55,14 +55,12 @@ this zero-dependency package will provide high-level functions to to build, test
 - remove shell-functions shNpmDeprecateAlias, shNpmPublishAlias
 - merge shell-function shIstanbulCover into shNpmTest
 - update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE
-- cleanup function requireReadme
 - replace var isBrowser with isEnvNode and remove unused var isWebWorker
 - merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, timeoutDefault into npm_config_timeout
 - add functions documentQuerySelectorAll
 - remove functions middlewareXxx, onParallelXxx, streamCleanup
-- migrate from .then() to async/await
 - add file .windows_terminals_settings.json
-- remove whitespace in shell-functions
+- in shell-functions remove whitespace between "shXxx ()"
 - none
 
 #### todo
