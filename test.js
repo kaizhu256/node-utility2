@@ -324,7 +324,7 @@ local.testCase_chromeDevtoolsClient_coverage = async function (opt, onError) {
         return;
     }
     await local.chromeDevtoolsClientCreate({
-        modeTestCaseCoverage: 1
+        modeCoverageHack: 1
     });
     onError(undefined, opt);
 };

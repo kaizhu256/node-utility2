@@ -2311,8 +2311,8 @@ local.buildApp = function ({
 
 local.chromeDevtoolsClientCreate = async function ({
     chromeBin,
+    modeCoverageHack,
     modeSilent,
-    modeTestCaseCoverage,
     modeWindowSize = "800x600",
     processPlatform,
     timeout
@@ -2339,13 +2339,12 @@ local.chromeDevtoolsClientCreate = async function ({
     let wsPayloadLength;
     let wsReadState;
     let wsReader;
-    // run testCase - coverage
-    if (modeTestCaseCoverage === 1) {
+    if (modeCoverageHack === 1) {
         [
             "darwin", "linux", "win32"
         ].forEach(function (processPlatform) {
             local.chromeDevtoolsClientCreate({
-                modeTestCaseCoverage: 2,
+                modeCoverageHack: 2,
                 processPlatform
             }).catch(noop);
         });
@@ -2648,18 +2647,6 @@ local.chromeDevtoolsClientCreate = async function ({
         chromeClient.on("data", chromeOnData);
     }
     chromeClient = new ChromeClient();
-    // init timerTimeout
-    timeout = timeout || 30000;
-    if (modeTestCaseCoverage === 2) {
-        chromeClient.on("error", noop);
-        timeout = 0;
-    }
-    timerTimeout = setTimeout(function () {
-        chromeCleanup();
-        chromeClient.emit("error", new Error(
-            "chrome-devtools - timeout - " + timeout + " ms"
-        ));
-    }, timeout);
 /*
 https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
 +---------------------------------------------------------------+
@@ -2802,11 +2789,19 @@ Application data: y bytes
     process.on("SIGINT", chromeCleanup);
     process.on("SIGTERM", chromeCleanup);
     process.on("SIGHUP", chromeCleanup);
-    // coverage-hack
-    if (modeTestCaseCoverage === 2) {
+    // init timerTimeout
+    timeout = timeout || 30000;
+    if (modeCoverageHack === 2) {
+        chromeClient.on("error", noop);
         chromeProcess.on("error", noop);
-        return;
+        timeout = 0;
     }
+    timerTimeout = setTimeout(function () {
+        chromeCleanup();
+        chromeClient.emit("error", new Error(
+            "chrome-devtools - timeout - " + timeout + " ms"
+        ));
+    }, timeout);
     // init websocketUrl
     websocketUrl = await new Promise(function (resolve) {
         let stderr;
