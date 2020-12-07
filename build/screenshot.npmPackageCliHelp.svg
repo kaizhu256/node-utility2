@@ -20,12 +20,12 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/travis/build/kaizhu256/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">PATH="$PATH:/home/travis/build/kaizhu256/node-utility2:/home/travis/build/kaizhu256/.bin"</tspan>
 <tspan x="10" y="330">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="346">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
-<tspan x="10" y="362">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
-<tspan x="10" y="394">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.build_ci.sh</tspan>
-<tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
-<tspan x="10" y="426">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+<tspan x="10" y="346">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
+<tspan x="10" y="362">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
+<tspan x="10" y="394">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+<tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+<tspan x="10" y="426">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.build_ci.sh</tspan>
 <tspan x="10" y="442">utility2 (2020.12.3)</tspan>
 <tspan x="10" y="458"></tspan>
 <tspan x="10" y="474">usage:</tspan>
