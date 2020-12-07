@@ -35896,7 +35896,7 @@ local.testReportMerge = function (
             "<h4>\n" +
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
-            "    <span>commit-info</span>-\n" +
+            "    <span>commit-info</span>- " +
             CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +
@@ -60432,7 +60432,7 @@ local.testReportMerge = function (\n\
             \"<h4>\\n\" +\n\
             \"    <span>version</span>- \" + npm_package_version + \"<br>\\n\" +\n\
             \"    <span>test-date</span>- \" + testReport.date + \"<br>\\n\" +\n\
-            \"    <span>commit-info</span>-\\n\" +\n\
+            \"    <span>commit-info</span>- \" +\n\
             CI_COMMIT_ID + \" - \" + CI_COMMIT_MESSAGE + \"<br>\\n\" +\n\
             \"</h4>\\n\" +\n\
             \"<table>\\n\" +\n\
@@ -65754,7 +65754,7 @@ local.testReportMerge = function (
             "<h4>\n" +
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
-            "    <span>commit-info</span>-\n" +
+            "    <span>commit-info</span>- " +
             CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +

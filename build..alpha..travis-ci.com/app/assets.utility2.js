@@ -4447,7 +4447,7 @@ local.testReportMerge = function (
             "<h4>\n" +
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
-            "    <span>commit-info</span>-\n" +
+            "    <span>commit-info</span>- " +
             CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +
