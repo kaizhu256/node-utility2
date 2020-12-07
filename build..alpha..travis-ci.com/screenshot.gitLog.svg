@@ -1,238 +1,220 @@
-<svg height="4030px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="4030px" fill="#555" width="720px"></rect>
+<svg height="3726px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="3726px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
-<tspan x="10" y="26">2020-12-07 02:11:53 -0600</tspan>
-<tspan x="10" y="42">- remove shell-functions shBuildInsideDocker, shChromeSocks5, shNpmDeprecateAlias, shNpmPublishA\</tspan><tspan x="10" y="58">lias, shTravisRepoCreate, shTravisRepoTrigger</tspan>
-<tspan x="10" y="74"></tspan>
-<tspan x="10" y="90">2020-12-07 02:02:37 -0600</tspan>
-<tspan x="10" y="106">shEnvSanitize</tspan>
+<tspan x="10" y="26">2020-12-07 02:19:21 -0600</tspan>
+<tspan x="10" y="42">readmeEval</tspan>
+<tspan x="10" y="58"></tspan>
+<tspan x="10" y="74">2020-12-07 02:11:53 -0600</tspan>
+<tspan x="10" y="90">- remove shell-functions shBuildInsideDocker, shChromeSocks5, shNpmDeprecateAlias, shNpmPublishA\</tspan><tspan x="10" y="106">lias, shTravisRepoCreate, shTravisRepoTrigger</tspan>
 <tspan x="10" y="122"></tspan>
-<tspan x="10" y="138">2020-12-07 01:56:10 -0600</tspan>
-<tspan x="10" y="154">fix.build</tspan>
+<tspan x="10" y="138">2020-12-07 02:02:37 -0600</tspan>
+<tspan x="10" y="154">shEnvSanitize</tspan>
 <tspan x="10" y="170"></tspan>
-<tspan x="10" y="186">2020-12-07 01:46:17 -0600</tspan>
+<tspan x="10" y="186">2020-12-07 01:56:10 -0600</tspan>
 <tspan x="10" y="202">fix.build</tspan>
 <tspan x="10" y="218"></tspan>
-<tspan x="10" y="234">2020-12-07 01:36:38 -0600</tspan>
-<tspan x="10" y="250">fix.screenshot</tspan>
+<tspan x="10" y="234">2020-12-07 01:46:17 -0600</tspan>
+<tspan x="10" y="250">fix.build</tspan>
 <tspan x="10" y="266"></tspan>
-<tspan x="10" y="282">2020-12-07 01:35:32 -0600</tspan>
+<tspan x="10" y="282">2020-12-07 01:36:38 -0600</tspan>
 <tspan x="10" y="298">fix.screenshot</tspan>
 <tspan x="10" y="314"></tspan>
-<tspan x="10" y="330">2020-12-07 01:14:54 -0600</tspan>
-<tspan x="10" y="346">cull.env</tspan>
+<tspan x="10" y="330">2020-12-07 01:35:32 -0600</tspan>
+<tspan x="10" y="346">fix.screenshot</tspan>
 <tspan x="10" y="362"></tspan>
-<tspan x="10" y="378">2020-12-07 01:08:11 -0600</tspan>
-<tspan x="10" y="394">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="378">2020-12-07 01:14:54 -0600</tspan>
+<tspan x="10" y="394">cull.env</tspan>
 <tspan x="10" y="410"></tspan>
-<tspan x="10" y="426">2020-12-07 00:41:47 -0600</tspan>
+<tspan x="10" y="426">2020-12-07 01:08:11 -0600</tspan>
 <tspan x="10" y="442">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="458"></tspan>
-<tspan x="10" y="474">2020-12-07 00:40:03 -0600</tspan>
+<tspan x="10" y="474">2020-12-07 00:41:47 -0600</tspan>
 <tspan x="10" y="490">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="506"></tspan>
-<tspan x="10" y="522">2020-12-07 00:28:31 -0600</tspan>
+<tspan x="10" y="522">2020-12-07 00:40:03 -0600</tspan>
 <tspan x="10" y="538">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="554"></tspan>
-<tspan x="10" y="570">2020-12-06 23:57:30 -0600</tspan>
+<tspan x="10" y="570">2020-12-07 00:28:31 -0600</tspan>
 <tspan x="10" y="586">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="602"></tspan>
-<tspan x="10" y="618">2020-12-06 23:53:51 -0600</tspan>
+<tspan x="10" y="618">2020-12-06 23:57:30 -0600</tspan>
 <tspan x="10" y="634">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="650"></tspan>
-<tspan x="10" y="666">2020-12-06 23:51:32 -0600</tspan>
+<tspan x="10" y="666">2020-12-06 23:53:51 -0600</tspan>
 <tspan x="10" y="682">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="698"></tspan>
-<tspan x="10" y="714">2020-12-06 23:47:31 -0600</tspan>
+<tspan x="10" y="714">2020-12-06 23:51:32 -0600</tspan>
 <tspan x="10" y="730">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="746"></tspan>
-<tspan x="10" y="762">2020-12-06 23:46:56 -0600</tspan>
+<tspan x="10" y="762">2020-12-06 23:47:31 -0600</tspan>
 <tspan x="10" y="778">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="794"></tspan>
-<tspan x="10" y="810">2020-12-06 23:00:44 -0600</tspan>
-<tspan x="10" y="826">debug.env</tspan>
+<tspan x="10" y="810">2020-12-06 23:46:56 -0600</tspan>
+<tspan x="10" y="826">- rename shBuildXxx to shCiXxx</tspan>
 <tspan x="10" y="842"></tspan>
-<tspan x="10" y="858">2020-12-06 22:59:17 -0600</tspan>
-<tspan x="10" y="874">revert</tspan>
+<tspan x="10" y="858">2020-12-06 23:00:44 -0600</tspan>
+<tspan x="10" y="874">debug.env</tspan>
 <tspan x="10" y="890"></tspan>
-<tspan x="10" y="906">2020-12-06 22:54:42 -0600</tspan>
-<tspan x="10" y="922">- rename env var \$GITHUB_FULLNAME to \$GITHUB_REPOSITORY</tspan>
+<tspan x="10" y="906">2020-12-06 22:59:17 -0600</tspan>
+<tspan x="10" y="922">revert</tspan>
 <tspan x="10" y="938"></tspan>
-<tspan x="10" y="954">2020-12-06 22:54:07 -0600</tspan>
+<tspan x="10" y="954">2020-12-06 22:54:42 -0600</tspan>
 <tspan x="10" y="970">- rename env var \$GITHUB_FULLNAME to \$GITHUB_REPOSITORY</tspan>
 <tspan x="10" y="986"></tspan>
-<tspan x="10" y="1002">2020-12-06 22:48:20 -0600</tspan>
-<tspan x="10" y="1018">disable.travis</tspan>
+<tspan x="10" y="1002">2020-12-06 22:54:07 -0600</tspan>
+<tspan x="10" y="1018">- rename env var \$GITHUB_FULLNAME to \$GITHUB_REPOSITORY</tspan>
 <tspan x="10" y="1034"></tspan>
-<tspan x="10" y="1050">2020-12-06 22:46:35 -0600</tspan>
-<tspan x="10" y="1066">disable.publish</tspan>
+<tspan x="10" y="1050">2020-12-06 22:48:20 -0600</tspan>
+<tspan x="10" y="1066">disable.travis</tspan>
 <tspan x="10" y="1082"></tspan>
-<tspan x="10" y="1098">2020-12-06 22:43:11 -0600</tspan>
+<tspan x="10" y="1098">2020-12-06 22:46:35 -0600</tspan>
 <tspan x="10" y="1114">disable.publish</tspan>
 <tspan x="10" y="1130"></tspan>
-<tspan x="10" y="1146">2020-12-06 22:42:18 -0600</tspan>
-<tspan x="10" y="1162">disable.comment</tspan>
+<tspan x="10" y="1146">2020-12-06 22:43:11 -0600</tspan>
+<tspan x="10" y="1162">disable.publish</tspan>
 <tspan x="10" y="1178"></tspan>
-<tspan x="10" y="1194">2020-12-06 22:41:24 -0600</tspan>
+<tspan x="10" y="1194">2020-12-06 22:42:18 -0600</tspan>
 <tspan x="10" y="1210">disable.comment</tspan>
 <tspan x="10" y="1226"></tspan>
-<tspan x="10" y="1242">2020-12-06 22:38:45 -0600</tspan>
-<tspan x="10" y="1258">- pre - migrate from travis to github-actions</tspan>
+<tspan x="10" y="1242">2020-12-06 22:41:24 -0600</tspan>
+<tspan x="10" y="1258">disable.comment</tspan>
 <tspan x="10" y="1274"></tspan>
-<tspan x="10" y="1290">2020-12-06 15:56:41 -0600</tspan>
-<tspan x="10" y="1306">- remove shell-functions shNpmDeprecateAlias, shNpmPublishAlias</tspan>
-<tspan x="10" y="1322">- merge shell-function shIstanbulCover into shNpmTest</tspan>
-<tspan x="10" y="1338">- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE</tspan>
-<tspan x="10" y="1354"></tspan>
-<tspan x="10" y="1370">2020-12-05 18:46:41 -0600</tspan>
-<tspan x="10" y="1386">- cleanup function requireReadme</tspan>
-<tspan x="10" y="1402">- replace var isBrowser with isEnvNode and remove unused var isWebWorker</tspan>
-<tspan x="10" y="1418">- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, t\</tspan><tspan x="10" y="1434">imeoutDefault into npm_config_timeout</tspan>
-<tspan x="10" y="1450"></tspan>
-<tspan x="10" y="1466">2020-12-05 05:32:27 -0600</tspan>
-<tspan x="10" y="1482">- add functions documentQuerySelectorAll</tspan>
-<tspan x="10" y="1498">- remove functions middlewareXxx, onParallelXxx, streamCleanup</tspan>
-<tspan x="10" y="1514"></tspan>
-<tspan x="10" y="1530">2020-12-03 14:48:23 -0600</tspan>
-<tspan x="10" y="1546">- migrate from .then() to async/await</tspan>
-<tspan x="10" y="1562">- add file .windows_terminals_settings.json</tspan>
-<tspan x="10" y="1578"></tspan>
-<tspan x="10" y="1594">2020-12-02 19:55:42 -0600</tspan>
-<tspan x="10" y="1610">- remove functions streamCleanup</tspan>
-<tspan x="10" y="1626">- remove whitespace in shell-functions</tspan>
-<tspan x="10" y="1642"></tspan>
-<tspan x="10" y="1658">2020-12-02 18:07:50 -0600</tspan>
-<tspan x="10" y="1674">[npm publish] #### changelog 2020.12.1</tspan>
-<tspan x="10" y="1690">- add persistent repl-history between restart</tspan>
-<tspan x="10" y="1706">- rename var command to cmd</tspan>
-<tspan x="10" y="1722">- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and o\</tspan><tspan x="10" y="1738">nReadyDecrement</tspan>
-<tspan x="10" y="1754">- remove jslint-ignore statements from file lib.utility2.js</tspan>
-<tspan x="10" y="1770">- move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&amp;&amp;\|||\|.==\||\|&amp;\) / \2\r\1/gc -\</tspan><tspan x="10" y="1786"> ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}</tspan>
-<tspan x="10" y="1802">- merge function testReportCreate into testReportMerge</tspan>
-<tspan x="10" y="1818">- add custom env-object processEnv</tspan>
-<tspan x="10" y="1834">- rename default env-var \$npm_package_name from utility2-lite to utility2</tspan>
-<tspan x="10" y="1850">- merge shell-function shDockerCdHostPwd into shDockerSh</tspan>
-<tspan x="10" y="1866">- jslint - add prefix "mode" in front of utility2-options</tspan>
-<tspan x="10" y="1882">- add function svgBadgeCreate</tspan>
-<tspan x="10" y="1898">- merge function testReportCreate into testReportMerge</tspan>
-<tspan x="10" y="1914">- remove functions _http.createServer, _http.request,</tspan>
-<tspan x="10" y="1930">- remove functions ajaxProgressUpdate,</tspan>
-<tspan x="10" y="1946">- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,</tspan>
-<tspan x="10" y="1962">- remove functions coalesce, corsForwardProxyHostIfNeeded,</tspan>
-<tspan x="10" y="1978">- remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate</tspan>
-<tspan x="10" y="1994">- remove functions fsRmrfSync,</tspan>
-<tspan x="10" y="2010">- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,</tspan>
-<tspan x="10" y="2026">- remove functions serverLocalUrlTest, stateInit, stringMerge,</tspan>
-<tspan x="10" y="2042">- remove functions templateRender, throwError, timeElapsedPoll,</tspan>
-<tspan x="10" y="2058">- remove functions urlParse,</tspan>
-<tspan x="10" y="2074">- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_\</tspan><tspan x="10" y="2090">config_unsafe_perm, \$npm_config_mode_winpty</tspan>
-<tspan x="10" y="2106">- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BIN\</tspan><tspan x="10" y="2122">ARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \</tspan><tspan x="10" y="2138">\$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report</tspan>
-<tspan x="10" y="2154">- remove shell-function shXvfbStart</tspan>
-<tspan x="10" y="2170">- merge function testRunServer into testRunDefault</tspan>
-<tspan x="10" y="2186">- remove function and test for function local.ajax</tspan>
-<tspan x="10" y="2202">- remove nodejs.v10 polyfill TextDecoder, TextEncoder</tspan>
-<tspan x="10" y="2218">- rename shell-function shReadmeTest to shReadmeEval</tspan>
-<tspan x="10" y="2234"></tspan>
-<tspan x="10" y="2250">2020-11-12 12:01:16 -0600</tspan>
-<tspan x="10" y="2266">[npm publish] #### changelog 2020.11.12</tspan>
-<tspan x="10" y="2282">- jslint - update to v2020.11.6</tspan>
-<tspan x="10" y="2298">- update function chromeDevtoolsClient with timeout</tspan>
-<tspan x="10" y="2314">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
-<tspan x="10" y="2330">- remove dependency on env-var \$CHROME_BIN</tspan>
-<tspan x="10" y="2346">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="2362">Encrypt, gotoNext, onErrorWithStack</tspan>
-<tspan x="10" y="2378">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
-<tspan x="10" y="2394">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
-<tspan x="10" y="2410">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
-<tspan x="10" y="2426"></tspan>
-<tspan x="10" y="2442">2020-11-10 00:00:33 -0600</tspan>
-<tspan x="10" y="2458">- update jslint to v2020.11.6</tspan>
-<tspan x="10" y="2474">- update function chromeDevtoolsClient with timeout</tspan>
-<tspan x="10" y="2490">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
-<tspan x="10" y="2506"></tspan>
-<tspan x="10" y="2522">2020-11-09 12:46:21 -0600</tspan>
-<tspan x="10" y="2538">- remove file lib.puppeteer.js and replace with function cdpClientCreate</tspan>
+<tspan x="10" y="1290">2020-12-06 22:38:45 -0600</tspan>
+<tspan x="10" y="1306">- pre - migrate from travis to github-actions</tspan>
+<tspan x="10" y="1322"></tspan>
+<tspan x="10" y="1338">2020-12-06 15:56:41 -0600</tspan>
+<tspan x="10" y="1354">- remove shell-functions shNpmDeprecateAlias, shNpmPublishAlias</tspan>
+<tspan x="10" y="1370">- merge shell-function shIstanbulCover into shNpmTest</tspan>
+<tspan x="10" y="1386">- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE</tspan>
+<tspan x="10" y="1402"></tspan>
+<tspan x="10" y="1418">2020-12-05 18:46:41 -0600</tspan>
+<tspan x="10" y="1434">- cleanup function requireReadme</tspan>
+<tspan x="10" y="1450">- replace var isBrowser with isEnvNode and remove unused var isWebWorker</tspan>
+<tspan x="10" y="1466">- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, t\</tspan><tspan x="10" y="1482">imeoutDefault into npm_config_timeout</tspan>
+<tspan x="10" y="1498"></tspan>
+<tspan x="10" y="1514">2020-12-05 05:32:27 -0600</tspan>
+<tspan x="10" y="1530">- add functions documentQuerySelectorAll</tspan>
+<tspan x="10" y="1546">- remove functions middlewareXxx, onParallelXxx, streamCleanup</tspan>
+<tspan x="10" y="1562"></tspan>
+<tspan x="10" y="1578">2020-12-03 14:48:23 -0600</tspan>
+<tspan x="10" y="1594">- migrate from .then() to async/await</tspan>
+<tspan x="10" y="1610">- add file .windows_terminals_settings.json</tspan>
+<tspan x="10" y="1626"></tspan>
+<tspan x="10" y="1642">2020-12-02 19:55:42 -0600</tspan>
+<tspan x="10" y="1658">- remove functions streamCleanup</tspan>
+<tspan x="10" y="1674">- remove whitespace in shell-functions</tspan>
+<tspan x="10" y="1690"></tspan>
+<tspan x="10" y="1706">2020-12-02 18:07:50 -0600</tspan>
+<tspan x="10" y="1722">[npm publish] #### changelog 2020.12.1</tspan>
+<tspan x="10" y="1738">- add persistent repl-history between restart</tspan>
+<tspan x="10" y="1754">- rename var command to cmd</tspan>
+<tspan x="10" y="1770">- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and o\</tspan><tspan x="10" y="1786">nReadyDecrement</tspan>
+<tspan x="10" y="1802">- remove jslint-ignore statements from file lib.utility2.js</tspan>
+<tspan x="10" y="1818">- move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&amp;&amp;\|||\|.==\||\|&amp;\) / \2\r\1/gc -\</tspan><tspan x="10" y="1834"> ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}</tspan>
+<tspan x="10" y="1850">- merge function testReportCreate into testReportMerge</tspan>
+<tspan x="10" y="1866">- add custom env-object processEnv</tspan>
+<tspan x="10" y="1882">- rename default env-var \$npm_package_name from utility2-lite to utility2</tspan>
+<tspan x="10" y="1898">- merge shell-function shDockerCdHostPwd into shDockerSh</tspan>
+<tspan x="10" y="1914">- jslint - add prefix "mode" in front of utility2-options</tspan>
+<tspan x="10" y="1930">- add function svgBadgeCreate</tspan>
+<tspan x="10" y="1946">- merge function testReportCreate into testReportMerge</tspan>
+<tspan x="10" y="1962">- remove functions _http.createServer, _http.request,</tspan>
+<tspan x="10" y="1978">- remove functions ajaxProgressUpdate,</tspan>
+<tspan x="10" y="1994">- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,</tspan>
+<tspan x="10" y="2010">- remove functions coalesce, corsForwardProxyHostIfNeeded,</tspan>
+<tspan x="10" y="2026">- remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate</tspan>
+<tspan x="10" y="2042">- remove functions fsRmrfSync,</tspan>
+<tspan x="10" y="2058">- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,</tspan>
+<tspan x="10" y="2074">- remove functions serverLocalUrlTest, stateInit, stringMerge,</tspan>
+<tspan x="10" y="2090">- remove functions templateRender, throwError, timeElapsedPoll,</tspan>
+<tspan x="10" y="2106">- remove functions urlParse,</tspan>
+<tspan x="10" y="2122">- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_\</tspan><tspan x="10" y="2138">config_unsafe_perm, \$npm_config_mode_winpty</tspan>
+<tspan x="10" y="2154">- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BIN\</tspan><tspan x="10" y="2170">ARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \</tspan><tspan x="10" y="2186">\$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report</tspan>
+<tspan x="10" y="2202">- remove shell-function shXvfbStart</tspan>
+<tspan x="10" y="2218">- merge function testRunServer into testRunDefault</tspan>
+<tspan x="10" y="2234">- remove function and test for function local.ajax</tspan>
+<tspan x="10" y="2250">- remove nodejs.v10 polyfill TextDecoder, TextEncoder</tspan>
+<tspan x="10" y="2266">- rename shell-function shReadmeTest to shReadmeEval</tspan>
+<tspan x="10" y="2282"></tspan>
+<tspan x="10" y="2298">2020-11-12 12:01:16 -0600</tspan>
+<tspan x="10" y="2314">[npm publish] #### changelog 2020.11.12</tspan>
+<tspan x="10" y="2330">- jslint - update to v2020.11.6</tspan>
+<tspan x="10" y="2346">- update function chromeDevtoolsClient with timeout</tspan>
+<tspan x="10" y="2362">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
+<tspan x="10" y="2378">- remove dependency on env-var \$CHROME_BIN</tspan>
+<tspan x="10" y="2394">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="2410">Encrypt, gotoNext, onErrorWithStack</tspan>
+<tspan x="10" y="2426">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
+<tspan x="10" y="2442">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
+<tspan x="10" y="2458">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
+<tspan x="10" y="2474"></tspan>
+<tspan x="10" y="2490">2020-11-10 00:00:33 -0600</tspan>
+<tspan x="10" y="2506">- update jslint to v2020.11.6</tspan>
+<tspan x="10" y="2522">- update function chromeDevtoolsClient with timeout</tspan>
+<tspan x="10" y="2538">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
 <tspan x="10" y="2554"></tspan>
-<tspan x="10" y="2570">2020-11-08 18:43:03 -0600</tspan>
-<tspan x="10" y="2586">- revamp file lib.puppeteer.js part 9 - merge classes Browser, Target into cdpClientCreate and b\</tspan><tspan x="10" y="2602">egin migrating listeners from session to cdpClient</tspan>
-<tspan x="10" y="2618"></tspan>
-<tspan x="10" y="2634">2020-11-07 23:15:06 -0600</tspan>
-<tspan x="10" y="2650">- revamp file lib.puppeteer.js part 8 - inline classes BrowserContext, CDPSession, Connection, T\</tspan><tspan x="10" y="2666">askQueue</tspan>
-<tspan x="10" y="2682"></tspan>
-<tspan x="10" y="2698">2020-11-07 15:15:39 -0600</tspan>
-<tspan x="10" y="2714">- revamp file lib.puppeteer.js part 7 - remove unused code</tspan>
+<tspan x="10" y="2570">2020-11-09 12:46:21 -0600</tspan>
+<tspan x="10" y="2586">- remove file lib.puppeteer.js and replace with function cdpClientCreate</tspan>
+<tspan x="10" y="2602"></tspan>
+<tspan x="10" y="2618">2020-11-08 18:43:03 -0600</tspan>
+<tspan x="10" y="2634">- revamp file lib.puppeteer.js part 9 - merge classes Browser, Target into cdpClientCreate and b\</tspan><tspan x="10" y="2650">egin migrating listeners from session to cdpClient</tspan>
+<tspan x="10" y="2666"></tspan>
+<tspan x="10" y="2682">2020-11-07 23:15:06 -0600</tspan>
+<tspan x="10" y="2698">- revamp file lib.puppeteer.js part 8 - inline classes BrowserContext, CDPSession, Connection, T\</tspan><tspan x="10" y="2714">askQueue</tspan>
 <tspan x="10" y="2730"></tspan>
-<tspan x="10" y="2746">2020-11-07 14:14:40 -0600</tspan>
-<tspan x="10" y="2762">- revamp file lib.puppeteer.js part 6 - create single, source-of-truth callbackDict listing all \</tspan><tspan x="10" y="2778">pending callbacks in rpc-calls to chrome-browser</tspan>
-<tspan x="10" y="2794"></tspan>
-<tspan x="10" y="2810">2020-11-07 00:10:19 -0600</tspan>
-<tspan x="10" y="2826">- update file lib.puppeteer.js with simplified websockets part 5 - update class CdpClient with c\</tspan><tspan x="10" y="2842">allback-ability after sending payload</tspan>
-<tspan x="10" y="2858"></tspan>
-<tspan x="10" y="2874">2020-11-07 00:06:48 -0600</tspan>
-<tspan x="10" y="2890">- update file lib.puppeteer.js with simplified websockets part 4 - replace class WebSocket with \</tspan><tspan x="10" y="2906">CdpClient</tspan>
-<tspan x="10" y="2922"></tspan>
-<tspan x="10" y="2938">2020-11-06 20:24:53 -0600</tspan>
-<tspan x="10" y="2954">- update file lib.puppeteer.js with simplified websockets part 3 - jslint file and replace calle\</tspan><tspan x="10" y="2970">r ws2.send() with sck2.cdpSend()</tspan>
-<tspan x="10" y="2986">- rename function nop to noop</tspan>
-<tspan x="10" y="3002"></tspan>
-<tspan x="10" y="3018">2020-11-06 10:19:42 -0600</tspan>
-<tspan x="10" y="3034">- update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and w\</tspan><tspan x="10" y="3050">ebsocket-non-chrome code and errors</tspan>
-<tspan x="10" y="3066"></tspan>
-<tspan x="10" y="3082">2020-11-06 10:14:22 -0600</tspan>
-<tspan x="10" y="3098">- update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors</tspan>
+<tspan x="10" y="2746">2020-11-07 15:15:39 -0600</tspan>
+<tspan x="10" y="2762">- revamp file lib.puppeteer.js part 7 - remove unused code</tspan>
+<tspan x="10" y="2778"></tspan>
+<tspan x="10" y="2794">2020-11-07 14:14:40 -0600</tspan>
+<tspan x="10" y="2810">- revamp file lib.puppeteer.js part 6 - create single, source-of-truth callbackDict listing all \</tspan><tspan x="10" y="2826">pending callbacks in rpc-calls to chrome-browser</tspan>
+<tspan x="10" y="2842"></tspan>
+<tspan x="10" y="2858">2020-11-07 00:10:19 -0600</tspan>
+<tspan x="10" y="2874">- update file lib.puppeteer.js with simplified websockets part 5 - update class CdpClient with c\</tspan><tspan x="10" y="2890">allback-ability after sending payload</tspan>
+<tspan x="10" y="2906"></tspan>
+<tspan x="10" y="2922">2020-11-07 00:06:48 -0600</tspan>
+<tspan x="10" y="2938">- update file lib.puppeteer.js with simplified websockets part 4 - replace class WebSocket with \</tspan><tspan x="10" y="2954">CdpClient</tspan>
+<tspan x="10" y="2970"></tspan>
+<tspan x="10" y="2986">2020-11-06 20:24:53 -0600</tspan>
+<tspan x="10" y="3002">- update file lib.puppeteer.js with simplified websockets part 3 - jslint file and replace calle\</tspan><tspan x="10" y="3018">r ws2.send() with sck2.cdpSend()</tspan>
+<tspan x="10" y="3034">- rename function nop to noop</tspan>
+<tspan x="10" y="3050"></tspan>
+<tspan x="10" y="3066">2020-11-06 10:19:42 -0600</tspan>
+<tspan x="10" y="3082">- update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and w\</tspan><tspan x="10" y="3098">ebsocket-non-chrome code and errors</tspan>
 <tspan x="10" y="3114"></tspan>
-<tspan x="10" y="3130">2020-11-06 09:56:44 -0600</tspan>
-<tspan x="10" y="3146">- remove dependency on env-var \$CHROME_BIN</tspan>
-<tspan x="10" y="3162">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="3178">Encrypt, gotoNext</tspan>
-<tspan x="10" y="3194">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
-<tspan x="10" y="3210"></tspan>
-<tspan x="10" y="3226">2020-11-03 19:13:32 +0000</tspan>
-<tspan x="10" y="3242">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
-<tspan x="10" y="3258">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
-<tspan x="10" y="3274">- remove functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt</tspan>
-<tspan x="10" y="3290"></tspan>
-<tspan x="10" y="3306">2020-11-03 10:17:02 -0600</tspan>
-<tspan x="10" y="3322">[npm publish] #### changelog 2020.10.27</tspan>
-<tspan x="10" y="3338">- update build to npm v7</tspan>
-<tspan x="10" y="3354">- jslint - update to v2020.10.27</tspan>
-<tspan x="10" y="3370">- jslint - add nullish-coalescing support</tspan>
-<tspan x="10" y="3386">- jslint - add optional-chaining support</tspan>
-<tspan x="10" y="3402">- experiment with github-actions</tspan>
-<tspan x="10" y="3418">- update shell-function shGitInitBase with option dos2unix</tspan>
-<tspan x="10" y="3434">- node v10.x - re-polyfill globalThis</tspan>
-<tspan x="10" y="3450">- node v10.x - re-polyfill TextDecoder and TextEncoder</tspan>
-<tspan x="10" y="3466">- remove blob-polyfill</tspan>
-<tspan x="10" y="3482"></tspan>
-<tspan x="10" y="3498">2020-08-19 18:47:06 -0500</tspan>
-<tspan x="10" y="3514">[npm publish] #### changelog 2020.8.19</tspan>
-<tspan x="10" y="3530">- add file lib.sqlite3.js</tspan>
-<tspan x="10" y="3546">- jslint - require macro jslint-autofix:true to conditionally-autofix .json file</tspan>
-<tspan x="10" y="3562">- add files lib.sqlite3.js</tspan>
-<tspan x="10" y="3578"></tspan>
-<tspan x="10" y="3594">2020-07-13 19:24:17 -0500</tspan>
-<tspan x="10" y="3610">[npm publish] - change build-dir from tmp/build to .tmp/build</tspan>
-<tspan x="10" y="3626">- istanbul - change coverage-directory from coverage.html/ to coverage/</tspan>
-<tspan x="10" y="3642">- istanbul - remove filesUnderRoot subroutine</tspan>
-<tspan x="10" y="3658">- istanbul - upgrade to acorn v6.4.1</tspan>
-<tspan x="10" y="3674"></tspan>
-<tspan x="10" y="3690">2020-07-08 12:24:46 -0500</tspan>
-<tspan x="10" y="3706">[npm publish] #### changelog 2020.7.8</tspan>
-<tspan x="10" y="3722">- jslint - generalize autofix-js-braket - normalize {\s+} to {}</tspan>
-<tspan x="10" y="3738">- jslint - disable autofix-js - normalize prefix-operators to beginning-of-line</tspan>
-<tspan x="10" y="3754">- jslint - disable autofix-js - escape non-ascii</tspan>
-<tspan x="10" y="3770">- jslint - disable autofix-js-whitespace - remove double-whitespace</tspan>
-<tspan x="10" y="3786">- jslint - disable autofix-js-braket - normalize to jslint-open-form (\n...\n)</tspan>
-<tspan x="10" y="3802">- jslint - inline autofix-use_double</tspan>
-<tspan x="10" y="3818">- re-add shell-function shServerPortRandom with port-availibility-check</tspan>
-<tspan x="10" y="3834">- add shell-function shDockerCdHostPwd</tspan>
-<tspan x="10" y="3850">- jslint - untangle goto-logic in function jslintAndPrint</tspan>
-<tspan x="10" y="3866">- istanbul - inline __coverageInclude__ in function instrumentSync</tspan>
-<tspan x="10" y="3882">- add function eventListenerRemove</tspan>
-<tspan x="10" y="3898">- merge function buildLib, buildReadme, buildTest into buildApp</tspan>
-<tspan x="10" y="3914">- split function buildApp into sub-functions buildAppAssets and buildAppStandalone</tspan>
-<tspan x="10" y="3930">- jslint - revert function jslintAndPrintDir from promise to callback</tspan>
-<tspan x="10" y="3946">- inline function onErrorThrow</tspan>
-<tspan x="10" y="3962">- remove function childProcessEval, rmrfSync</tspan>
-<tspan x="10" y="3978">- simplify function fsWriteFileWithMkdirp and fsWriteFileWithMkdirpSync to always console.error \</tspan><tspan x="10" y="3994">write-notification</tspan>
-<tspan x="10" y="4010">- try to replace sync-functions with async-functions</tspan>
+<tspan x="10" y="3130">2020-11-06 10:14:22 -0600</tspan>
+<tspan x="10" y="3146">- update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors</tspan>
+<tspan x="10" y="3162"></tspan>
+<tspan x="10" y="3178">2020-11-06 09:56:44 -0600</tspan>
+<tspan x="10" y="3194">- remove dependency on env-var \$CHROME_BIN</tspan>
+<tspan x="10" y="3210">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="3226">Encrypt, gotoNext</tspan>
+<tspan x="10" y="3242">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
+<tspan x="10" y="3258"></tspan>
+<tspan x="10" y="3274">2020-11-03 19:13:32 +0000</tspan>
+<tspan x="10" y="3290">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
+<tspan x="10" y="3306">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
+<tspan x="10" y="3322">- remove functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt</tspan>
+<tspan x="10" y="3338"></tspan>
+<tspan x="10" y="3354">2020-11-03 10:17:02 -0600</tspan>
+<tspan x="10" y="3370">[npm publish] #### changelog 2020.10.27</tspan>
+<tspan x="10" y="3386">- update build to npm v7</tspan>
+<tspan x="10" y="3402">- jslint - update to v2020.10.27</tspan>
+<tspan x="10" y="3418">- jslint - add nullish-coalescing support</tspan>
+<tspan x="10" y="3434">- jslint - add optional-chaining support</tspan>
+<tspan x="10" y="3450">- experiment with github-actions</tspan>
+<tspan x="10" y="3466">- update shell-function shGitInitBase with option dos2unix</tspan>
+<tspan x="10" y="3482">- node v10.x - re-polyfill globalThis</tspan>
+<tspan x="10" y="3498">- node v10.x - re-polyfill TextDecoder and TextEncoder</tspan>
+<tspan x="10" y="3514">- remove blob-polyfill</tspan>
+<tspan x="10" y="3530"></tspan>
+<tspan x="10" y="3546">2020-08-19 18:47:06 -0500</tspan>
+<tspan x="10" y="3562">[npm publish] #### changelog 2020.8.19</tspan>
+<tspan x="10" y="3578">- add file lib.sqlite3.js</tspan>
+<tspan x="10" y="3594">- jslint - require macro jslint-autofix:true to conditionally-autofix .json file</tspan>
+<tspan x="10" y="3610">- add files lib.sqlite3.js</tspan>
+<tspan x="10" y="3626"></tspan>
+<tspan x="10" y="3642">2020-07-13 19:24:17 -0500</tspan>
+<tspan x="10" y="3658">[npm publish] - change build-dir from tmp/build to .tmp/build</tspan>
+<tspan x="10" y="3674">- istanbul - change coverage-directory from coverage.html/ to coverage/</tspan>
+<tspan x="10" y="3690">- istanbul - remove filesUnderRoot subroutine</tspan>
+<tspan x="10" y="3706">- istanbul - upgrade to acorn v6.4.1</tspan>
 </text>
 </svg>
