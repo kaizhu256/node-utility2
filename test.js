@@ -665,6 +665,13 @@ local.testCase_uuid4Create_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
+local.testCase_webpage_default = async function (opt, onError) {
+/*
+ * this function will test webpage's default handling-behavior
+ */
+    local._testCase_webpage_default(opt, onError);
+};
+
 local.testCase_webpage_err = async function (opt, onError) {
 /*
  * this function will test webpage's err handling-behavior

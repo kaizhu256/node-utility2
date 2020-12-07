@@ -2794,7 +2794,6 @@ Application data: y bytes
         ]
     });
     if (!modeSilent) {
-        chromeProcess.on("error", noop);
         chromeProcess.stderr.pipe(process.stderr, {
             end: false
         });
@@ -2803,14 +2802,14 @@ Application data: y bytes
     process.on("SIGINT", chromeCleanup);
     process.on("SIGTERM", chromeCleanup);
     process.on("SIGHUP", chromeCleanup);
+    // coverage-hack
+    if (modeTestCaseCoverage === 2) {
+        chromeProcess.on("error", noop);
+        return;
+    }
     // init websocketUrl
-    websocketUrl = await new Promise(function (resolve, reject) {
+    websocketUrl = await new Promise(function (resolve) {
         let stderr;
-        // coverage-hack - abort as code below doesn't need coverage
-        if (modeTestCaseCoverage === 2) {
-            reject();
-            return;
-        }
         stderr = "";
         chromeProcess.stderr.on("data", function onData(chunk) {
             assert.ok(
@@ -3876,9 +3875,7 @@ local.requireReadme = function () {
             key.indexOf("_testCase_build") === 0 ||
             key === "_testCase_webpage_default"
         ) {
-            exports[key.slice(1)] = (
-                exports[key.slice(1)] || local[key]
-            );
+            exports[key.slice(1)] = exports[key.slice(1)] || local[key];
         }
     });
     return exports;
