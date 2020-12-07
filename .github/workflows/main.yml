@@ -2,7 +2,7 @@ on:
   push:
     branches:
     # - alpha
-    - alpha2
+    - alphalkfjd
     # - beta
     # - master
   # pull_request:
