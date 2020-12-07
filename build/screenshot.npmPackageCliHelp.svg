@@ -20,8 +20,8 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/travis/build/kaizhu256/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/travis/build/kaizhu256/node-utility2:/home/travis/build/kaizhu256/.bin"</tspan>
 <tspan x="10" y="330">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="346">export CI_COMMIT_ID='c97e0137a6f7aea18c7efae7fd8539ae8c88649d'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_MESSAGE='cull.shciinit'</tspan>
+<tspan x="10" y="346">export CI_COMMIT_ID='a7f84f1828469668f1577375dd6721520b472fcb'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_MESSAGE='restore.shNpmPublishAlias'</tspan>
 <tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
 <tspan x="10" y="394">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
 <tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
