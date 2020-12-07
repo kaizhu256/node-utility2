@@ -6,7 +6,7 @@ name: Node.js CI
 on:
   push:
     branches:
-    - alpha2slkfj
+    - alpha2
     - beta
   # pull_request:
     # branches:
