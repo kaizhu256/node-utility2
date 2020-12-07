@@ -6,12 +6,12 @@ name: Node.js CI
 on:
   push:
     branches:
-    - alpha
+    - alpha2slkfj
     - beta
-  pull_request:
-    branches:
-    - alpha
-    - beta
+  # pull_request:
+    # branches:
+    # - alpha
+    # - beta
 jobs:
   build:
     runs-on: ubuntu-latest
