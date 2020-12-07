@@ -1,7 +1,7 @@
 <svg height="1038px" width="720px" xmlns="http://www.w3.org/2000/svg">
 <rect height="1038px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
-<tspan x="10" y="26">shCiInit - mkdir -p /home/travis/build/kaizhu256/node-utility2/.tmp/build</tspan>
+<tspan x="10" y="26">shCiInit - mkdir - /home/travis/build/kaizhu256/node-utility2/.tmp/build</tspan>
 <tspan x="10" y="42"># shCiInit env</tspan>
 <tspan x="10" y="58"># export PWD='/home/travis/build/kaizhu256/node-utility2'</tspan>
 <tspan x="10" y="74">export npm_package_description='this zero-dependency package will provide high-level functions t\</tspan><tspan x="10" y="90">o to build, test, and deploy webapps'</tspan>
@@ -20,13 +20,13 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/travis/build/kaizhu256/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/travis/build/kaizhu256/node-utility2:/home/travis/build/kaizhu256/.bin"</tspan>
 <tspan x="10" y="330">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="346">export CI_COMMIT_ID='d671b124edae04ed2a55dbb112910c7bde5d23fd'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_MESSAGE='hardlink'</tspan>
-<tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
+<tspan x="10" y="346">export CI_COMMIT_ID='cd6db04eaa58f0810f672508ecf800be76b16a3a'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_MESSAGE='shCiMain'</tspan>
+<tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
 <tspan x="10" y="394">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
-<tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
-<tspan x="10" y="426">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
-<tspan x="10" y="442">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+<tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+<tspan x="10" y="426">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+<tspan x="10" y="442">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
 <tspan x="10" y="458">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.build_ci.sh</tspan>
 <tspan x="10" y="474">utility2 (2020.12.3)</tspan>
 <tspan x="10" y="490"></tspan>
