@@ -1,94 +1,300 @@
-<svg height="1790px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="1790px" fill="#555" width="720px"></rect>
+<svg height="5006px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="5006px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
-<tspan x="10" y="26"></tspan>
-<tspan x="10" y="42">[MODE_CI=gitLog] - 2020-12-07T07:47:43.873Z - shNpmTest - (node test.js)</tspan>
+<tspan x="10" y="26">2020-12-07 01:56:10 -0600</tspan>
+<tspan x="10" y="42">fix.build</tspan>
 <tspan x="10" y="58"></tspan>
-<tspan x="10" y="74"></tspan>
-<tspan x="10" y="90">gitLog - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/build/test\</tspan><tspan x="10" y="106">-report.json</tspan>
-<tspan x="10" y="122">&gt; http-server listening on port 48091</tspan>
-<tspan x="10" y="138">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
-<tspan x="10" y="154">buildApp - replace-skipped - "\\n\\[!\\[NPM\\]\\(https:\\/\\/nodei.co\\/npm\\/.*?\\n"</tspan>
-<tspan x="10" y="170">buildApp - replace-skipped - "$ npm install "</tspan>
-<tspan x="10" y="186">buildApp - replace-skipped - "\\nif\ \\(local.isEnvNode\\)\ \\{\\n[\\S\\s]*?\\n\\}\\(\\)\\);\\n"</tspan>
-<tspan x="10" y="202">buildApp - replace-skipped - "\\n\\/\\*\ jslint\ ignore:start\ \\*\\/\\nlocal.assetsDict\\[\"\\/\</tspan><tspan x="10" y="218">index.html\"\\]\ =\ '\\\\\\n[\\S\\s]*?\\n\\/\\*\ jslint\ ignore:end\ \\*\\/\\n"</tspan>
-<tspan x="10" y="234">buildApp - replace-skipped - "\\n####\ changelog\ [\\S\\s]*?\\n#\ quickstart\ example.js\\n"</tspan>
-<tspan x="10" y="250">buildApp - replace-skipped - "\\n#\ quickstart\ [\\S\\s]*?\\n#\ extra\ screenshots\\n"</tspan>
-<tspan x="10" y="266">buildApp - replace-skipped - "^1\\.\ .*?screenshot\\.(?:npmTest|testExampleJs|testExampleSh).*?\\</tspan><tspan x="10" y="282">\.png[\\S\\s]*?\\n\\n"</tspan>
-<tspan x="10" y="298">buildApp - replace-unmatched - "$ npm install utility2"</tspan>
-<tspan x="10" y="314">buildApp - replace-skipped - "    // || globalThis.utility2_rollup_old"</tspan>
-<tspan x="10" y="330">buildApp - replace-skipped - "    // || require(\"./assets.utility2.rollup.js\")"</tspan>
-<tspan x="10" y="346">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
-<tspan x="10" y="362">jslint - 5ms - /home/travis/build/kaizhu256/node-utility2/.windows_terminals_settings.json</tspan>
-<tspan x="10" y="378">jslint - 10ms - /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
-<tspan x="10" y="394">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
-<tspan x="10" y="410">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
-<tspan x="10" y="426">jslint - 119ms - /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
-<tspan x="10" y="442">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app.standalone/assets.a\</tspan><tspan x="10" y="458">pp.js</tspan>
-<tspan x="10" y="474">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.htm\</tspan><tspan x="10" y="490">l</tspan>
-<tspan x="10" y="506">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.css</tspan>
-<tspan x="10" y="522">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
-<tspan x="10" y="538">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.example.html</tspan>
-<tspan x="10" y="554">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.example.js</tspan>
-<tspan x="10" y="570">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.test.js</tspan>
-<tspan x="10" y="586">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.htm\</tspan><tspan x="10" y="602">l</tspan>
-<tspan x="10" y="618">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib\</tspan><tspan x="10" y="634">.jslint.js</tspan>
-<tspan x="10" y="650">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.rol\</tspan><tspan x="10" y="666">lup.js</tspan>
-<tspan x="10" y="682">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/index.html</tspan>
-<tspan x="10" y="698">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.hello.txt</tspan>
-<tspan x="10" y="714">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.script_only.\</tspan><tspan x="10" y="730">html</tspan>
-<tspan x="10" y="746">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib\</tspan><tspan x="10" y="762">.istanbul.js</tspan>
-<tspan x="10" y="778">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib\</tspan><tspan x="10" y="794">.jslint.js</tspan>
-<tspan x="10" y="810">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib\</tspan><tspan x="10" y="826">.marked.js</tspan>
-<tspan x="10" y="842">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.rol\</tspan><tspan x="10" y="858">lup.js</tspan>
-<tspan x="10" y="874">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.app.js</tspan>
-<tspan x="10" y="890">buildApp - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/LICENSE</tspan>
-<tspan x="10" y="906">jslint - 374ms - /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
-<tspan x="10" y="922">jslint - 386ms - /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
-<tspan x="10" y="938">jslint - 397ms - /home/travis/build/kaizhu256/node-utility2/lib.sqlite3.js</tspan>
-<tspan x="10" y="954">&gt; jslint - 108ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.example.html</tspan>
-<tspan x="10" y="970">http-server listening on port 58034</tspan>
-<tspan x="10" y="986">jslint - 193ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.example.js</tspan>
-<tspan x="10" y="1002">jslint - 193ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.script_only.ht\</tspan><tspan x="10" y="1018">ml</tspan>
-<tspan x="10" y="1034">jslint - 298ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.test.js</tspan>
-<tspan x="10" y="1050">jslint - 300ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.css</tspan>
-<tspan x="10" y="1066">jslint - 340ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.html</tspan>
-<tspan x="10" y="1082">jslint - 832ms - /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
-<tspan x="10" y="1098">jslint - 844ms - /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
-<tspan x="10" y="1114">jslint - 844ms - /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
-<tspan x="10" y="1130">jslint - 851ms - /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
-<tspan x="10" y="1146">jslint - 919ms - /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
-<tspan x="10" y="1162">jslint - 1038ms - /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
-<tspan x="10" y="1178">jslint - 1041ms - /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
-<tspan x="10" y="1194">jslint - 664ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
-<tspan x="10" y="1210">jslint - 765ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib.i\</tspan><tspan x="10" y="1226">stanbul.js</tspan>
-<tspan x="10" y="1242">jslint - 773ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib.m\</tspan><tspan x="10" y="1258">arked.js</tspan>
-<tspan x="10" y="1274">jslint - 801ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/index.html</tspan>
-<tspan x="10" y="1290">jslint - 866ms - /home/travis/build/kaizhu256/node-utility2/.tmp/build/app/assets.utility2.lib.j\</tspan><tspan x="10" y="1306">slint.js</tspan>
-<tspan x="10" y="1322">testRunDefault - 2002 ms - testCase pending - testCase_buildApp_default ...</tspan>
-<tspan x="10" y="1338">testRunDefault - 4241 ms - [node test-case 1 of 1 passed] - testCase_buildApp_default</tspan>
-<tspan x="10" y="1354">fsWriteFileWithMkdirpSync - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-r\</tspan><tspan x="10" y="1370">eport.json</tspan>
-<tspan x="10" y="1386"></tspan>
-<tspan x="10" y="1402">gitLog - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/build/test\</tspan><tspan x="10" y="1418">-report.json</tspan>
-<tspan x="10" y="1434"></tspan>
-<tspan x="10" y="1450">-------------------------------------------------------</tspan>
-<tspan x="10" y="1466">| test-report - gitLog - node - linux - v15.3.0</tspan>
-<tspan x="10" y="1482">|    4242 ms            0 failed        1 passed      |</tspan>
-<tspan x="10" y="1498">-------------------------------------------------------</tspan>
-<tspan x="10" y="1514">| test-report - ci - node - linux - v15.3.0</tspan>
-<tspan x="10" y="1530">|    5729 ms            0 failed        1 passed      |</tspan>
-<tspan x="10" y="1546">-------------------------------------------------------</tspan>
-<tspan x="10" y="1562">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="1578">L, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36</tspan>
-<tspan x="10" y="1594">|     357 ms            0 failed       21 passed      |</tspan>
-<tspan x="10" y="1610">-------------------------------------------------------</tspan>
-<tspan x="10" y="1626">| test-report - npmTest - node - linux - v15.3.0</tspan>
-<tspan x="10" y="1642">|    4847 ms            0 failed       21 passed      |</tspan>
-<tspan x="10" y="1658">-------------------------------------------------------</tspan>
-<tspan x="10" y="1674"></tspan>
-<tspan x="10" y="1690">test-report - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-report.html</tspan>
-<tspan x="10" y="1706">test-report - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/build.badge.svg</tspan>
-<tspan x="10" y="1722">test-report - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-report.badge.sv\</tspan><tspan x="10" y="1738">g</tspan>
-<tspan x="10" y="1754"></tspan>
-<tspan x="10" y="1770">[MODE_CI=gitLog] - 2020-12-07T07:47:48.437Z - shNpmTest - EXIT_CODE=0</tspan>
+<tspan x="10" y="74">2020-12-07 01:46:17 -0600</tspan>
+<tspan x="10" y="90">fix.build</tspan>
+<tspan x="10" y="106"></tspan>
+<tspan x="10" y="122">2020-12-07 01:36:38 -0600</tspan>
+<tspan x="10" y="138">fix.screenshot</tspan>
+<tspan x="10" y="154"></tspan>
+<tspan x="10" y="170">2020-12-07 01:35:32 -0600</tspan>
+<tspan x="10" y="186">fix.screenshot</tspan>
+<tspan x="10" y="202"></tspan>
+<tspan x="10" y="218">2020-12-07 01:14:54 -0600</tspan>
+<tspan x="10" y="234">cull.env</tspan>
+<tspan x="10" y="250"></tspan>
+<tspan x="10" y="266">2020-12-07 01:08:11 -0600</tspan>
+<tspan x="10" y="282">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="298"></tspan>
+<tspan x="10" y="314">2020-12-07 00:41:47 -0600</tspan>
+<tspan x="10" y="330">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="346"></tspan>
+<tspan x="10" y="362">2020-12-07 00:40:03 -0600</tspan>
+<tspan x="10" y="378">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="394"></tspan>
+<tspan x="10" y="410">2020-12-07 00:28:31 -0600</tspan>
+<tspan x="10" y="426">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="442"></tspan>
+<tspan x="10" y="458">2020-12-06 23:57:30 -0600</tspan>
+<tspan x="10" y="474">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="490"></tspan>
+<tspan x="10" y="506">2020-12-06 23:53:51 -0600</tspan>
+<tspan x="10" y="522">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="538"></tspan>
+<tspan x="10" y="554">2020-12-06 23:51:32 -0600</tspan>
+<tspan x="10" y="570">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="586"></tspan>
+<tspan x="10" y="602">2020-12-06 23:47:31 -0600</tspan>
+<tspan x="10" y="618">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="634"></tspan>
+<tspan x="10" y="650">2020-12-06 23:46:56 -0600</tspan>
+<tspan x="10" y="666">- rename shBuildXxx to shCiXxx</tspan>
+<tspan x="10" y="682"></tspan>
+<tspan x="10" y="698">2020-12-06 23:00:44 -0600</tspan>
+<tspan x="10" y="714">debug.env</tspan>
+<tspan x="10" y="730"></tspan>
+<tspan x="10" y="746">2020-12-06 22:59:17 -0600</tspan>
+<tspan x="10" y="762">revert</tspan>
+<tspan x="10" y="778"></tspan>
+<tspan x="10" y="794">2020-12-06 22:54:42 -0600</tspan>
+<tspan x="10" y="810">- rename env var \$GITHUB_FULLNAME to \$GITHUB_REPOSITORY</tspan>
+<tspan x="10" y="826"></tspan>
+<tspan x="10" y="842">2020-12-06 22:54:07 -0600</tspan>
+<tspan x="10" y="858">- rename env var \$GITHUB_FULLNAME to \$GITHUB_REPOSITORY</tspan>
+<tspan x="10" y="874"></tspan>
+<tspan x="10" y="890">2020-12-06 22:48:20 -0600</tspan>
+<tspan x="10" y="906">disable.travis</tspan>
+<tspan x="10" y="922"></tspan>
+<tspan x="10" y="938">2020-12-06 22:46:35 -0600</tspan>
+<tspan x="10" y="954">disable.publish</tspan>
+<tspan x="10" y="970"></tspan>
+<tspan x="10" y="986">2020-12-06 22:43:11 -0600</tspan>
+<tspan x="10" y="1002">disable.publish</tspan>
+<tspan x="10" y="1018"></tspan>
+<tspan x="10" y="1034">2020-12-06 22:42:18 -0600</tspan>
+<tspan x="10" y="1050">disable.comment</tspan>
+<tspan x="10" y="1066"></tspan>
+<tspan x="10" y="1082">2020-12-06 22:41:24 -0600</tspan>
+<tspan x="10" y="1098">disable.comment</tspan>
+<tspan x="10" y="1114"></tspan>
+<tspan x="10" y="1130">2020-12-06 22:38:45 -0600</tspan>
+<tspan x="10" y="1146">- pre - migrate from travis to github-actions</tspan>
+<tspan x="10" y="1162"></tspan>
+<tspan x="10" y="1178">2020-12-06 15:56:41 -0600</tspan>
+<tspan x="10" y="1194">- remove shell-functions shNpmDeprecateAlias, shNpmPublishAlias</tspan>
+<tspan x="10" y="1210">- merge shell-function shIstanbulCover into shNpmTest</tspan>
+<tspan x="10" y="1226">- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE</tspan>
+<tspan x="10" y="1242"></tspan>
+<tspan x="10" y="1258">2020-12-05 18:46:41 -0600</tspan>
+<tspan x="10" y="1274">- cleanup function requireReadme</tspan>
+<tspan x="10" y="1290">- replace var isBrowser with isEnvNode and remove unused var isWebWorker</tspan>
+<tspan x="10" y="1306">- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, t\</tspan><tspan x="10" y="1322">imeoutDefault into npm_config_timeout</tspan>
+<tspan x="10" y="1338"></tspan>
+<tspan x="10" y="1354">2020-12-05 05:32:27 -0600</tspan>
+<tspan x="10" y="1370">- add functions documentQuerySelectorAll</tspan>
+<tspan x="10" y="1386">- remove functions middlewareXxx, onParallelXxx, streamCleanup</tspan>
+<tspan x="10" y="1402"></tspan>
+<tspan x="10" y="1418">2020-12-03 14:48:23 -0600</tspan>
+<tspan x="10" y="1434">- migrate from .then() to async/await</tspan>
+<tspan x="10" y="1450">- add file .windows_terminals_settings.json</tspan>
+<tspan x="10" y="1466"></tspan>
+<tspan x="10" y="1482">2020-12-02 19:55:42 -0600</tspan>
+<tspan x="10" y="1498">- remove functions streamCleanup</tspan>
+<tspan x="10" y="1514">- remove whitespace in shell-functions</tspan>
+<tspan x="10" y="1530"></tspan>
+<tspan x="10" y="1546">2020-12-02 18:07:50 -0600</tspan>
+<tspan x="10" y="1562">[npm publish] #### changelog 2020.12.1</tspan>
+<tspan x="10" y="1578">- add persistent repl-history between restart</tspan>
+<tspan x="10" y="1594">- rename var command to cmd</tspan>
+<tspan x="10" y="1610">- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and o\</tspan><tspan x="10" y="1626">nReadyDecrement</tspan>
+<tspan x="10" y="1642">- remove jslint-ignore statements from file lib.utility2.js</tspan>
+<tspan x="10" y="1658">- move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&amp;&amp;\|||\|.==\||\|&amp;\) / \2\r\1/gc -\</tspan><tspan x="10" y="1674"> ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}</tspan>
+<tspan x="10" y="1690">- merge function testReportCreate into testReportMerge</tspan>
+<tspan x="10" y="1706">- add custom env-object processEnv</tspan>
+<tspan x="10" y="1722">- rename default env-var \$npm_package_name from utility2-lite to utility2</tspan>
+<tspan x="10" y="1738">- merge shell-function shDockerCdHostPwd into shDockerSh</tspan>
+<tspan x="10" y="1754">- jslint - add prefix "mode" in front of utility2-options</tspan>
+<tspan x="10" y="1770">- add function svgBadgeCreate</tspan>
+<tspan x="10" y="1786">- merge function testReportCreate into testReportMerge</tspan>
+<tspan x="10" y="1802">- remove functions _http.createServer, _http.request,</tspan>
+<tspan x="10" y="1818">- remove functions ajaxProgressUpdate,</tspan>
+<tspan x="10" y="1834">- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,</tspan>
+<tspan x="10" y="1850">- remove functions coalesce, corsForwardProxyHostIfNeeded,</tspan>
+<tspan x="10" y="1866">- remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate</tspan>
+<tspan x="10" y="1882">- remove functions fsRmrfSync,</tspan>
+<tspan x="10" y="1898">- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,</tspan>
+<tspan x="10" y="1914">- remove functions serverLocalUrlTest, stateInit, stringMerge,</tspan>
+<tspan x="10" y="1930">- remove functions templateRender, throwError, timeElapsedPoll,</tspan>
+<tspan x="10" y="1946">- remove functions urlParse,</tspan>
+<tspan x="10" y="1962">- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_\</tspan><tspan x="10" y="1978">config_unsafe_perm, \$npm_config_mode_winpty</tspan>
+<tspan x="10" y="1994">- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BIN\</tspan><tspan x="10" y="2010">ARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \</tspan><tspan x="10" y="2026">\$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report</tspan>
+<tspan x="10" y="2042">- remove shell-function shXvfbStart</tspan>
+<tspan x="10" y="2058">- merge function testRunServer into testRunDefault</tspan>
+<tspan x="10" y="2074">- remove function and test for function local.ajax</tspan>
+<tspan x="10" y="2090">- remove nodejs.v10 polyfill TextDecoder, TextEncoder</tspan>
+<tspan x="10" y="2106">- rename shell-function shReadmeTest to shReadmeEval</tspan>
+<tspan x="10" y="2122"></tspan>
+<tspan x="10" y="2138">2020-11-12 12:01:16 -0600</tspan>
+<tspan x="10" y="2154">[npm publish] #### changelog 2020.11.12</tspan>
+<tspan x="10" y="2170">- jslint - update to v2020.11.6</tspan>
+<tspan x="10" y="2186">- update function chromeDevtoolsClient with timeout</tspan>
+<tspan x="10" y="2202">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
+<tspan x="10" y="2218">- remove dependency on env-var \$CHROME_BIN</tspan>
+<tspan x="10" y="2234">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="2250">Encrypt, gotoNext, onErrorWithStack</tspan>
+<tspan x="10" y="2266">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
+<tspan x="10" y="2282">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
+<tspan x="10" y="2298">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
+<tspan x="10" y="2314"></tspan>
+<tspan x="10" y="2330">2020-11-10 00:00:33 -0600</tspan>
+<tspan x="10" y="2346">- update jslint to v2020.11.6</tspan>
+<tspan x="10" y="2362">- update function chromeDevtoolsClient with timeout</tspan>
+<tspan x="10" y="2378">- remove file lib.puppeteer.js and replace with function chromeDevtoolsClientCreate</tspan>
+<tspan x="10" y="2394"></tspan>
+<tspan x="10" y="2410">2020-11-09 12:46:21 -0600</tspan>
+<tspan x="10" y="2426">- remove file lib.puppeteer.js and replace with function cdpClientCreate</tspan>
+<tspan x="10" y="2442"></tspan>
+<tspan x="10" y="2458">2020-11-08 18:43:03 -0600</tspan>
+<tspan x="10" y="2474">- revamp file lib.puppeteer.js part 9 - merge classes Browser, Target into cdpClientCreate and b\</tspan><tspan x="10" y="2490">egin migrating listeners from session to cdpClient</tspan>
+<tspan x="10" y="2506"></tspan>
+<tspan x="10" y="2522">2020-11-07 23:15:06 -0600</tspan>
+<tspan x="10" y="2538">- revamp file lib.puppeteer.js part 8 - inline classes BrowserContext, CDPSession, Connection, T\</tspan><tspan x="10" y="2554">askQueue</tspan>
+<tspan x="10" y="2570"></tspan>
+<tspan x="10" y="2586">2020-11-07 15:15:39 -0600</tspan>
+<tspan x="10" y="2602">- revamp file lib.puppeteer.js part 7 - remove unused code</tspan>
+<tspan x="10" y="2618"></tspan>
+<tspan x="10" y="2634">2020-11-07 14:14:40 -0600</tspan>
+<tspan x="10" y="2650">- revamp file lib.puppeteer.js part 6 - create single, source-of-truth callbackDict listing all \</tspan><tspan x="10" y="2666">pending callbacks in rpc-calls to chrome-browser</tspan>
+<tspan x="10" y="2682"></tspan>
+<tspan x="10" y="2698">2020-11-07 00:10:19 -0600</tspan>
+<tspan x="10" y="2714">- update file lib.puppeteer.js with simplified websockets part 5 - update class CdpClient with c\</tspan><tspan x="10" y="2730">allback-ability after sending payload</tspan>
+<tspan x="10" y="2746"></tspan>
+<tspan x="10" y="2762">2020-11-07 00:06:48 -0600</tspan>
+<tspan x="10" y="2778">- update file lib.puppeteer.js with simplified websockets part 4 - replace class WebSocket with \</tspan><tspan x="10" y="2794">CdpClient</tspan>
+<tspan x="10" y="2810"></tspan>
+<tspan x="10" y="2826">2020-11-06 20:24:53 -0600</tspan>
+<tspan x="10" y="2842">- update file lib.puppeteer.js with simplified websockets part 3 - jslint file and replace calle\</tspan><tspan x="10" y="2858">r ws2.send() with sck2.cdpSend()</tspan>
+<tspan x="10" y="2874">- rename function nop to noop</tspan>
+<tspan x="10" y="2890"></tspan>
+<tspan x="10" y="2906">2020-11-06 10:19:42 -0600</tspan>
+<tspan x="10" y="2922">- update file lib.puppeteer.js with simplified websockets part 2 - remove websocket-server and w\</tspan><tspan x="10" y="2938">ebsocket-non-chrome code and errors</tspan>
+<tspan x="10" y="2954"></tspan>
+<tspan x="10" y="2970">2020-11-06 10:14:22 -0600</tspan>
+<tspan x="10" y="2986">- update file lib.puppeteer.js with simplified websockets part 1 - preserve old errors</tspan>
+<tspan x="10" y="3002"></tspan>
+<tspan x="10" y="3018">2020-11-06 09:56:44 -0600</tspan>
+<tspan x="10" y="3034">- remove dependency on env-var \$CHROME_BIN</tspan>
+<tspan x="10" y="3050">- remove functions base64FromBuffer, base64ToUtf8, cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRaw\</tspan><tspan x="10" y="3066">Encrypt, gotoNext</tspan>
+<tspan x="10" y="3082">- jslint - fix off-by-one column in autofix-expected_a_before_b</tspan>
+<tspan x="10" y="3098"></tspan>
+<tspan x="10" y="3114">2020-11-03 19:13:32 +0000</tspan>
+<tspan x="10" y="3130">- decouple build from npm-env-variables npm_config_xxx and npm_package_xxx</tspan>
+<tspan x="10" y="3146">- update lib.utility2.sh to remove dependency on \$UTILITY2_MACRO_JS</tspan>
+<tspan x="10" y="3162">- remove functions cryptoAesXxxCbcRawDecrypt, cryptoAesXxxCbcRawEncrypt</tspan>
+<tspan x="10" y="3178"></tspan>
+<tspan x="10" y="3194">2020-11-03 10:17:02 -0600</tspan>
+<tspan x="10" y="3210">[npm publish] #### changelog 2020.10.27</tspan>
+<tspan x="10" y="3226">- update build to npm v7</tspan>
+<tspan x="10" y="3242">- jslint - update to v2020.10.27</tspan>
+<tspan x="10" y="3258">- jslint - add nullish-coalescing support</tspan>
+<tspan x="10" y="3274">- jslint - add optional-chaining support</tspan>
+<tspan x="10" y="3290">- experiment with github-actions</tspan>
+<tspan x="10" y="3306">- update shell-function shGitInitBase with option dos2unix</tspan>
+<tspan x="10" y="3322">- node v10.x - re-polyfill globalThis</tspan>
+<tspan x="10" y="3338">- node v10.x - re-polyfill TextDecoder and TextEncoder</tspan>
+<tspan x="10" y="3354">- remove blob-polyfill</tspan>
+<tspan x="10" y="3370"></tspan>
+<tspan x="10" y="3386">2020-08-19 18:47:06 -0500</tspan>
+<tspan x="10" y="3402">[npm publish] #### changelog 2020.8.19</tspan>
+<tspan x="10" y="3418">- add file lib.sqlite3.js</tspan>
+<tspan x="10" y="3434">- jslint - require macro jslint-autofix:true to conditionally-autofix .json file</tspan>
+<tspan x="10" y="3450">- add files lib.sqlite3.js</tspan>
+<tspan x="10" y="3466"></tspan>
+<tspan x="10" y="3482">2020-07-13 19:24:17 -0500</tspan>
+<tspan x="10" y="3498">[npm publish] - change build-dir from tmp/build to .tmp/build</tspan>
+<tspan x="10" y="3514">- istanbul - change coverage-directory from coverage.html/ to coverage/</tspan>
+<tspan x="10" y="3530">- istanbul - remove filesUnderRoot subroutine</tspan>
+<tspan x="10" y="3546">- istanbul - upgrade to acorn v6.4.1</tspan>
+<tspan x="10" y="3562"></tspan>
+<tspan x="10" y="3578">2020-07-08 12:24:46 -0500</tspan>
+<tspan x="10" y="3594">[npm publish] #### changelog 2020.7.8</tspan>
+<tspan x="10" y="3610">- jslint - generalize autofix-js-braket - normalize {\s+} to {}</tspan>
+<tspan x="10" y="3626">- jslint - disable autofix-js - normalize prefix-operators to beginning-of-line</tspan>
+<tspan x="10" y="3642">- jslint - disable autofix-js - escape non-ascii</tspan>
+<tspan x="10" y="3658">- jslint - disable autofix-js-whitespace - remove double-whitespace</tspan>
+<tspan x="10" y="3674">- jslint - disable autofix-js-braket - normalize to jslint-open-form (\n...\n)</tspan>
+<tspan x="10" y="3690">- jslint - inline autofix-use_double</tspan>
+<tspan x="10" y="3706">- re-add shell-function shServerPortRandom with port-availibility-check</tspan>
+<tspan x="10" y="3722">- add shell-function shDockerCdHostPwd</tspan>
+<tspan x="10" y="3738">- jslint - untangle goto-logic in function jslintAndPrint</tspan>
+<tspan x="10" y="3754">- istanbul - inline __coverageInclude__ in function instrumentSync</tspan>
+<tspan x="10" y="3770">- add function eventListenerRemove</tspan>
+<tspan x="10" y="3786">- merge function buildLib, buildReadme, buildTest into buildApp</tspan>
+<tspan x="10" y="3802">- split function buildApp into sub-functions buildAppAssets and buildAppStandalone</tspan>
+<tspan x="10" y="3818">- jslint - revert function jslintAndPrintDir from promise to callback</tspan>
+<tspan x="10" y="3834">- inline function onErrorThrow</tspan>
+<tspan x="10" y="3850">- remove function childProcessEval, rmrfSync</tspan>
+<tspan x="10" y="3866">- simplify function fsWriteFileWithMkdirp and fsWriteFileWithMkdirpSync to always console.error \</tspan><tspan x="10" y="3882">write-notification</tspan>
+<tspan x="10" y="3898">- try to replace sync-functions with async-functions</tspan>
+<tspan x="10" y="3914"></tspan>
+<tspan x="10" y="3930">2020-06-13 14:42:23 -0500</tspan>
+<tspan x="10" y="3946">[npm publish] #### changelog 2020.6.13</tspan>
+<tspan x="10" y="3962">- fix excessive istanbul.ignore in test.js</tspan>
+<tspan x="10" y="3978">- update function shRawLibFetch to inline dataUri assets</tspan>
+<tspan x="10" y="3994">- jslint - add eslint-rule no-multiple-empty-lines</tspan>
+<tspan x="10" y="4010">- bootstrap-lite - re-enable including css-asset in build-process</tspan>
+<tspan x="10" y="4026">- add limited win32-compat</tspan>
+<tspan x="10" y="4042">- rename function middlewareJsonpStateInit to middlewareUtility2StateInit</tspan>
+<tspan x="10" y="4058">- merge shell-function shBuildAppSync and shUtility2DependentsSync into shBuildApp</tspan>
+<tspan x="10" y="4074">- replace shell-function prefix shUtility2 with shUtility2Dependents</tspan>
+<tspan x="10" y="4090">- replace deprecated fs.exists() with fs.access()</tspan>
+<tspan x="10" y="4106">- add shell-function shUtility2DependentsShellEval</tspan>
+<tspan x="10" y="4122">- remove globalThis polyfill</tspan>
+<tspan x="10" y="4138">- remove shell-function shGitAddTee, shGithubRepoBranchId</tspan>
+<tspan x="10" y="4154"></tspan>
+<tspan x="10" y="4170">2020-06-08 20:59:56 -0500</tspan>
+<tspan x="10" y="4186">[npm publish] - npm publish 2020.6.9</tspan>
+<tspan x="10" y="4202">- add shell-function shTravisRepoTrigger</tspan>
+<tspan x="10" y="4218">- remove shell-macro UTILITY2_MACRO_AJAX_JS</tspan>
+<tspan x="10" y="4234">- remove ajax-helper-class FormData</tspan>
+<tspan x="10" y="4250">- minimize dependency to local</tspan>
+<tspan x="10" y="4266">- remove eagerly requiring nodejs-builtins</tspan>
+<tspan x="10" y="4282">- migrate ci from travis-ci.org to travis-ci.com</tspan>
+<tspan x="10" y="4298">- remove "a" from comments</tspan>
+<tspan x="10" y="4314">- remove shell-functions</tspan>
+<tspan x="10" y="4330">    shModuleDirname,</tspan>
+<tspan x="10" y="4346">    shDockerBuildCleanup,</tspan>
+<tspan x="10" y="4362">    shHtpasswdCreate,</tspan>
+<tspan x="10" y="4378">    shGitLsTreeSort, shGithubDateCommitted,</tspan>
+<tspan x="10" y="4394">    shHtpasswdCreate,</tspan>
+<tspan x="10" y="4410">    shMediaHlsEncrypt, shMediaHlsFromMp4,</tspan>
+<tspan x="10" y="4426">    shNpmInstallTarball,</tspan>
+<tspan x="10" y="4442">    shPasswordRandom,</tspan>
+<tspan x="10" y="4458">    shSsh5022F, shSsh5022R, shServerPortRandom,</tspan>
+<tspan x="10" y="4474">    shReadmeLinkValidate, shReplClient,</tspan>
+<tspan x="10" y="4490">    shTravisRepoBuildCancel, shTravisRepoBuildRestart, shTravisSync,</tspan>
+<tspan x="10" y="4506">    shUtility2Dependents,</tspan>
+<tspan x="10" y="4522">- cleanup env-var UTILITY2_MACRO_JS</tspan>
+<tspan x="10" y="4538">- istanbul - fix html-coverage-report bug showing branch-metrics instead of line-metrics</tspan>
+<tspan x="10" y="4554">- inline local._http.STATUS_CODES into function serverRespondDefault</tspan>
+<tspan x="10" y="4570">- remove object local.errorDefault</tspan>
+<tspan x="10" y="4586">- rename errorMessage to errMsg, errorStack to errStack</tspan>
+<tspan x="10" y="4602">- remove polyfills String.prototype.trimStart, String.prototype.trimEnd</tspan>
+<tspan x="10" y="4618">- throw error on unhandled-rejections via process.unhandledRejections=strict</tspan>
+<tspan x="10" y="4634">- add functions</tspan>
+<tspan x="10" y="4650">    objectDeepCopyWithKeysSorted,</tspan>
+<tspan x="10" y="4666">    childProcessEval,</tspan>
+<tspan x="10" y="4682">    fsWriteFileWithMkdirp,</tspan>
+<tspan x="10" y="4698">- remove functions</tspan>
+<tspan x="10" y="4714">    httpFetch,</tspan>
+<tspan x="10" y="4730">    objectAssignRecurse,</tspan>
+<tspan x="10" y="4746">    corsBackendHostInject,</tspan>
+<tspan x="10" y="4762">    stringLineCount,</tspan>
+<tspan x="10" y="4778">    onFileModifiedRestart,</tspan>
+<tspan x="10" y="4794">    jsonStringifyOrdered, jsonCopy,</tspan>
+<tspan x="10" y="4810">    listGetElementRandom,</tspan>
+<tspan x="10" y="4826">    bufferIndexOfSubBuffer, base64urlFromBuffer bufferRandomBytes,</tspan>
+<tspan x="10" y="4842">    assertJsonNotEqual,</tspan>
+<tspan x="10" y="4858">    childProcessSpawnWithTimeout, childProcessSpawnWithUtility2,</tspan>
+<tspan x="10" y="4874">    dateGetWeekOfMonth, dateGetWeekOfYear, dateUtcFromLocal, dateUtcToLocal,</tspan>
+<tspan x="10" y="4890">    isNullOrUndefined,</tspan>
+<tspan x="10" y="4906">    localStorageSetItemOrClear,</tspan>
+<tspan x="10" y="4922">    normalizeJwt, normalizeJwtBase64Url, numberToRomanNumerals,</tspan>
+<tspan x="10" y="4938">    onErrorDefault,</tspan>
+<tspan x="10" y="4954">    promisify,</tspan>
+<tspan x="10" y="4970">    timeElapsedPoll, timeElapsedStart,</tspan>
+<tspan x="10" y="4986">- remove dependency to files lib.github_crud.js, lib.swgg.js</tspan>
 </text>
 </svg>
