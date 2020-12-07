@@ -33551,7 +33551,7 @@ local.buildApp = function ({
             }, {
                 // customize screenshot
                 aa: (
-                    /^1\.\u0020.*?screenshot\.(?:npmTest|testExampleJs|testExampleSh).*?\.png[\S\s]*?\n\n/gm
+                    /^1\.\u0020.*?screenshot\.(?:npmTest|readmeEvalExampleJs|readmeEvalExampleSh).*?\.png[\S\s]*?\n\n/gm
                 ),
                 bb: ""
             }
@@ -33589,11 +33589,11 @@ local.buildApp = function ({
                 )
             ], [
                 "shReadmeEval example.js", (
-                    /.*?\/screenshot\.testExampleJs.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleJs.*?\n/g
                 )
             ], [
                 "shReadmeEval example.sh", (
-                    /.*?\/screenshot\.testExampleSh.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleSh.*?\n/g
                 )
             ], [
                 // coverage-hack
@@ -58087,7 +58087,7 @@ local.buildApp = function ({\n\
             }, {\n\
                 // customize screenshot\n\
                 aa: (\n\
-                    /^1\\.\\u0020.*?screenshot\\.(?:npmTest|testExampleJs|testExampleSh).*?\\.png[\\S\\s]*?\\n\\n/gm\n\
+                    /^1\\.\\u0020.*?screenshot\\.(?:npmTest|readmeEvalExampleJs|readmeEvalExampleSh).*?\\.png[\\S\\s]*?\\n\\n/gm\n\
                 ),\n\
                 bb: \"\"\n\
             }\n\
@@ -58125,11 +58125,11 @@ local.buildApp = function ({\n\
                 )\n\
             ], [\n\
                 \"shReadmeEval example.js\", (\n\
-                    /.*?\\/screenshot\\.testExampleJs.*?\\n/g\n\
+                    /.*?\\/screenshot\\.readmeEvalExampleJs.*?\\n/g\n\
                 )\n\
             ], [\n\
                 \"shReadmeEval example.sh\", (\n\
-                    /.*?\\/screenshot\\.testExampleSh.*?\\n/g\n\
+                    /.*?\\/screenshot\\.readmeEvalExampleSh.*?\\n/g\n\
                 )\n\
             ], [\n\
                 // coverage-hack\n\
@@ -63409,7 +63409,7 @@ local.buildApp = function ({
             }, {
                 // customize screenshot
                 aa: (
-                    /^1\.\u0020.*?screenshot\.(?:npmTest|testExampleJs|testExampleSh).*?\.png[\S\s]*?\n\n/gm
+                    /^1\.\u0020.*?screenshot\.(?:npmTest|readmeEvalExampleJs|readmeEvalExampleSh).*?\.png[\S\s]*?\n\n/gm
                 ),
                 bb: ""
             }
@@ -63447,11 +63447,11 @@ local.buildApp = function ({
                 )
             ], [
                 "shReadmeEval example.js", (
-                    /.*?\/screenshot\.testExampleJs.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleJs.*?\n/g
                 )
             ], [
                 "shReadmeEval example.sh", (
-                    /.*?\/screenshot\.testExampleSh.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleSh.*?\n/g
                 )
             ], [
                 // coverage-hack
