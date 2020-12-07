@@ -8,11 +8,6 @@ instruction
     1. save this script as example.js
     2. run the shell-command:
         $ npm install utility2 &&             PATH="$(pwd)/node_modules/.bin:$PATH"             PORT=8081             UTILITY2_DIR_BUILD=.tmp/build             npm_config_mode_coverage=utility2             node_modules/.bin/utility2 test example.js
-
-
-
-
-
     3. view test-report in .tmp/build/test-report.html
     4. view coverage in .tmp/build/coverage/index.html
 */
