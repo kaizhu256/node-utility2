@@ -1,1 +1,378 @@
-{"date":"2020-12-07T07:18:58.642Z","testPlatformList":[{"date":"2020-12-07T07:18:58.642Z","modeBuild":"deployHerokuTest","nameBase":"node - linux - v15.3.0","status":"passed","testCaseList":[],"testsFailed":0,"testsPassed":0,"testsPending":0,"timeElapsed":0,"timeOnload":false,"timeStart":0,"name":"deployHerokuTest - node - linux - v15.3.0"},{"date":"2020-12-07T07:18:59.306Z","nameBase":"browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","status":"passed","testCaseList":[{"name":"testCase_assertXxx_default","status":"passed","timeStart":1607325539359,"timeElapsed":1,"isDone":true},{"name":"testCase_buildApidoc_default","status":"passed","timeStart":1607325539387,"timeElapsed":0,"isDone":true},{"name":"testCase_buildApp_default","status":"passed","timeStart":1607325539390,"timeElapsed":0,"isDone":true},{"name":"testCase_chromeDevtoolsClient_coverage","status":"passed","timeStart":1607325539391,"timeElapsed":0,"isDone":true},{"name":"testCase_cliRun_default","status":"passed","timeStart":1607325539392,"timeElapsed":0,"isDone":true},{"name":"testCase_eventListenerXxx_default","status":"passed","timeStart":1607325539394,"timeElapsed":0,"isDone":true},{"name":"testCase_httpFetch_200","status":"passed","timeStart":1607325539395,"timeElapsed":53,"isDone":true},{"name":"testCase_httpFetch_404","status":"passed","timeStart":1607325539398,"timeElapsed":48,"isDone":true},{"name":"testCase_libUtility2Js_standalone","status":"passed","timeStart":1607325539399,"timeElapsed":0,"isDone":true},{"name":"testCase_listShuffle_default","status":"passed","timeStart":1607325539401,"timeElapsed":1,"isDone":true},{"name":"testCase_noop_default","status":"passed","timeStart":1607325539403,"timeElapsed":0,"isDone":true},{"name":"testCase_replStart_default","status":"passed","timeStart":1607325539405,"timeElapsed":0,"isDone":true},{"name":"testCase_setTimeoutOnError_default","status":"passed","timeStart":1607325539406,"timeElapsed":36,"isDone":true},{"name":"testCase_stringHtmlSafe_default","status":"passed","timeStart":1607325539407,"timeElapsed":0,"isDone":true},{"name":"testCase_stringXxx_default","status":"passed","timeStart":1607325539409,"timeElapsed":1,"isDone":true},{"name":"testCase_testMock_err","status":"passed","timeStart":1607325539413,"timeElapsed":0,"isDone":true},{"name":"testCase_uiAnimateXxx_default","status":"passed","timeStart":1607325539415,"timeElapsed":1,"isDone":true},{"name":"testCase_urlJoin_default","status":"passed","timeStart":1607325539418,"timeElapsed":0,"isDone":true},{"name":"testCase_uuid4Create_default","status":"passed","timeStart":1607325539419,"timeElapsed":1,"isDone":true},{"name":"testCase_webpage_default","status":"passed","timeStart":1607325539422,"timeElapsed":2,"isDone":true},{"name":"testCase_webpage_err","status":"passed","timeStart":1607325539429,"timeElapsed":1,"isDone":true}],"testsFailed":0,"testsPassed":21,"testsPending":0,"timeElapsed":100,"timeOnload":false,"timeStart":1607325539356,"name":"deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","screenshot":"screenshot.deployHerokuTest.browser.%2F.png","modeBuild":"deployHerokuTest"},{"date":"2020-12-07T07:18:42.446Z","nameBase":"browser - /node-utility2/build..alpha..travis-ci.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","status":"passed","testCaseList":[{"name":"testCase_assertXxx_default","status":"passed","timeStart":1607325522495,"timeElapsed":1,"isDone":true},{"name":"testCase_buildApidoc_default","status":"passed","timeStart":1607325522524,"timeElapsed":0,"isDone":true},{"name":"testCase_buildApp_default","status":"passed","timeStart":1607325522536,"timeElapsed":0,"isDone":true},{"name":"testCase_chromeDevtoolsClient_coverage","status":"passed","timeStart":1607325522542,"timeElapsed":0,"isDone":true},{"name":"testCase_cliRun_default","status":"passed","timeStart":1607325522569,"timeElapsed":2,"isDone":true},{"name":"testCase_eventListenerXxx_default","status":"passed","timeStart":1607325522573,"timeElapsed":7,"isDone":true},{"name":"testCase_httpFetch_200","status":"passed","timeStart":1607325522589,"timeElapsed":158,"isDone":true},{"name":"testCase_httpFetch_404","status":"passed","timeStart":1607325522593,"timeElapsed":129,"isDone":true},{"name":"testCase_libUtility2Js_standalone","status":"passed","timeStart":1607325522594,"timeElapsed":0,"isDone":true},{"name":"testCase_listShuffle_default","status":"passed","timeStart":1607325522601,"timeElapsed":0,"isDone":true},{"name":"testCase_noop_default","status":"passed","timeStart":1607325522612,"timeElapsed":0,"isDone":true},{"name":"testCase_replStart_default","status":"passed","timeStart":1607325522613,"timeElapsed":0,"isDone":true},{"name":"testCase_setTimeoutOnError_default","status":"passed","timeStart":1607325522615,"timeElapsed":109,"isDone":true},{"name":"testCase_stringHtmlSafe_default","status":"passed","timeStart":1607325522616,"timeElapsed":0,"isDone":true},{"name":"testCase_stringXxx_default","status":"passed","timeStart":1607325522631,"timeElapsed":1,"isDone":true},{"name":"testCase_testMock_err","status":"passed","timeStart":1607325522639,"timeElapsed":0,"isDone":true},{"name":"testCase_uiAnimateXxx_default","status":"passed","timeStart":1607325522646,"timeElapsed":1,"isDone":true},{"name":"testCase_urlJoin_default","status":"passed","timeStart":1607325522652,"timeElapsed":0,"isDone":true},{"name":"testCase_uuid4Create_default","status":"passed","timeStart":1607325522657,"timeElapsed":0,"isDone":true},{"name":"testCase_webpage_default","status":"passed","timeStart":1607325522661,"timeElapsed":3,"isDone":true},{"name":"testCase_webpage_err","status":"passed","timeStart":1607325522670,"timeElapsed":0,"isDone":true}],"testsFailed":0,"testsPassed":21,"testsPending":0,"timeElapsed":262,"timeOnload":false,"timeStart":1607325522493,"name":"deployGithubTest - browser - /node-utility2/build..alpha..travis-ci.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","screenshot":"screenshot.deployGithubTest.browser.%2Fnode-utility2%2Fbuild%2Fapp.png","modeBuild":"deployGithubTest"},{"date":"2020-12-07T07:18:41.861Z","modeBuild":"deployGithubTest","nameBase":"node - linux - v15.3.0","status":"passed","testCaseList":[],"testsFailed":0,"testsPassed":0,"testsPending":0,"timeElapsed":0,"timeOnload":false,"timeStart":0,"name":"deployGithubTest - node - linux - v15.3.0"},{"date":"2020-12-07T07:17:53.246Z","modeBuild":"buildApp","nameBase":"node - linux - v15.3.0","status":"passed","testCaseList":[{"name":"testCase_buildApp_default","status":"passed","timeStart":1607325473342,"timeElapsed":4300,"isDone":true}],"testsFailed":0,"testsPassed":1,"testsPending":0,"timeElapsed":4302,"timeOnload":false,"timeStart":1607325473341,"name":"buildApp - node - linux - v15.3.0"},{"date":"2020-12-07T07:17:40.632Z","modeBuild":"buildApidoc","nameBase":"node - linux - v15.3.0","status":"passed","testCaseList":[{"name":"testCase_buildApidoc_default","status":"passed","timeStart":1607325460726,"timeElapsed":5603,"isDone":true}],"testsFailed":0,"testsPassed":1,"testsPending":0,"timeElapsed":5605,"timeOnload":false,"timeStart":1607325460725,"name":"buildApidoc - node - linux - v15.3.0"},{"date":"2020-12-07T07:17:36.214Z","nameBase":"browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","status":"passed","testCaseList":[{"name":"testCase_assertXxx_default","status":"passed","timeStart":1607325456268,"timeElapsed":2,"isDone":true},{"name":"testCase_buildApidoc_default","status":"passed","timeStart":1607325456294,"timeElapsed":1,"isDone":true},{"name":"testCase_buildApp_default","status":"passed","timeStart":1607325456298,"timeElapsed":0,"isDone":true},{"name":"testCase_chromeDevtoolsClient_coverage","status":"passed","timeStart":1607325456303,"timeElapsed":0,"isDone":true},{"name":"testCase_cliRun_default","status":"passed","timeStart":1607325456306,"timeElapsed":0,"isDone":true},{"name":"testCase_eventListenerXxx_default","status":"passed","timeStart":1607325456314,"timeElapsed":0,"isDone":true},{"name":"testCase_httpFetch_200","status":"passed","timeStart":1607325456315,"timeElapsed":176,"isDone":true},{"name":"testCase_httpFetch_404","status":"passed","timeStart":1607325456316,"timeElapsed":112,"isDone":true},{"name":"testCase_libUtility2Js_standalone","status":"passed","timeStart":1607325456316,"timeElapsed":0,"isDone":true},{"name":"testCase_listShuffle_default","status":"passed","timeStart":1607325456317,"timeElapsed":1,"isDone":true},{"name":"testCase_noop_default","status":"passed","timeStart":1607325456319,"timeElapsed":0,"isDone":true},{"name":"testCase_replStart_default","status":"passed","timeStart":1607325456319,"timeElapsed":1,"isDone":true},{"name":"testCase_setTimeoutOnError_default","status":"passed","timeStart":1607325456320,"timeElapsed":114,"isDone":true},{"name":"testCase_stringHtmlSafe_default","status":"passed","timeStart":1607325456321,"timeElapsed":0,"isDone":true},{"name":"testCase_stringXxx_default","status":"passed","timeStart":1607325456338,"timeElapsed":1,"isDone":true},{"name":"testCase_testMock_err","status":"passed","timeStart":1607325456340,"timeElapsed":14,"isDone":true},{"name":"testCase_uiAnimateXxx_default","status":"passed","timeStart":1607325456355,"timeElapsed":1,"isDone":true},{"name":"testCase_urlJoin_default","status":"passed","timeStart":1607325456357,"timeElapsed":1,"isDone":true},{"name":"testCase_uuid4Create_default","status":"passed","timeStart":1607325456359,"timeElapsed":0,"isDone":true},{"name":"testCase_webpage_default","status":"passed","timeStart":1607325456361,"timeElapsed":14,"isDone":true},{"name":"testCase_webpage_err","status":"passed","timeStart":1607325456377,"timeElapsed":0,"isDone":true}],"testsFailed":0,"testsPassed":21,"testsPending":0,"timeElapsed":228,"timeOnload":false,"timeStart":1607325456265,"name":"shCiMain - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36","screenshot":"screenshot.shCiMain.browser.%2F.png","modeBuild":"shCiMain"},{"date":"2020-12-07T07:17:34.307Z","modeBuild":"shCiMain","nameBase":"node - linux - v15.3.0","status":"passed","testCaseList":[{"name":"testCase_assertXxx_default","status":"passed","timeStart":1607325454907,"timeElapsed":2,"isDone":true},{"name":"testCase_buildApidoc_default","status":"passed","timeStart":1607325454912,"timeElapsed":16,"isDone":true},{"name":"testCase_buildApp_default","status":"passed","timeStart":1607325454933,"timeElapsed":4804,"isDone":true},{"name":"testCase_chromeDevtoolsClient_coverage","status":"passed","timeStart":1607325454934,"timeElapsed":73,"isDone":true},{"name":"testCase_cliRun_default","status":"passed","timeStart":1607325454938,"timeElapsed":4,"isDone":true},{"name":"testCase_eventListenerXxx_default","status":"passed","timeStart":1607325454945,"timeElapsed":1,"isDone":true},{"name":"testCase_httpFetch_200","status":"passed","timeStart":1607325454949,"timeElapsed":248,"isDone":true},{"name":"testCase_httpFetch_404","status":"passed","timeStart":1607325454954,"timeElapsed":251,"isDone":true},{"name":"testCase_libUtility2Js_standalone","status":"passed","timeStart":1607325454955,"timeElapsed":252,"isDone":true},{"name":"testCase_listShuffle_default","status":"passed","timeStart":1607325454956,"timeElapsed":0,"isDone":true},{"name":"testCase_noop_default","status":"passed","timeStart":1607325454960,"timeElapsed":0,"isDone":true},{"name":"testCase_replStart_default","status":"passed","timeStart":1607325454963,"timeElapsed":6,"isDone":true},{"name":"testCase_setTimeoutOnError_default","status":"passed","timeStart":1607325454973,"timeElapsed":40,"isDone":true},{"name":"testCase_stringHtmlSafe_default","status":"passed","timeStart":1607325454973,"timeElapsed":1,"isDone":true},{"name":"testCase_stringXxx_default","status":"passed","timeStart":1607325454977,"timeElapsed":1,"isDone":true},{"name":"testCase_testMock_err","status":"passed","timeStart":1607325454980,"timeElapsed":0,"isDone":true},{"name":"testCase_uiAnimateXxx_default","status":"passed","timeStart":1607325454982,"timeElapsed":0,"isDone":true},{"name":"testCase_urlJoin_default","status":"passed","timeStart":1607325454986,"timeElapsed":0,"isDone":true},{"name":"testCase_uuid4Create_default","status":"passed","timeStart":1607325454989,"timeElapsed":0,"isDone":true},{"name":"testCase_webpage_default","status":"passed","timeStart":1607325454992,"timeElapsed":2528,"isDone":true},{"name":"testCase_webpage_err","status":"passed","timeStart":1607325454995,"timeElapsed":3940,"isDone":true}],"testsFailed":0,"testsPassed":21,"testsPending":0,"timeElapsed":4835,"timeOnload":false,"timeStart":1607325454905,"name":"shCiMain - node - linux - v15.3.0"}],"testsFailed":0,"testsPassed":86,"testsPending":0,"html":"<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta\n    content=\"width=device-width, initial-scale=1\"\n    name=\"viewport\"\n>\n<!-- \"\" -->\n<title>test-report</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition:\n        max-height ease-in 250ms,\n        min-height ease-in 250ms,\n        padding-bottom ease-in 250ms,\n        padding-top ease-in 250ms;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.colorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n<style>\n/* jslint utility2:true */\n.test-report-div img {\n    border: 1px solid #999;\n    margin: 5px 0 5px 0;\n    max-height: 256px;\n    max-width: 512px;\n}\n.test-report-div pre {\n    background: #fdd;\n    border-top: 1px solid #999;\n    margin-bottom: 0;\n    padding: 10px;\n}\n.test-report-div span {\n    display: inline-block;\n    width: 120px;\n}\n.test-report-div table {\n    border-top: 1px solid #999;\n    text-align: left;\n    width: 100%;\n}\n.test-report-div table > tbody > tr:nth-child(odd) {\n    background: #bfb;\n}\n.test-report-div .footer {\n    text-align: center;\n}\n.test-report-div .platform {\n    background: #fff;\n    border: 1px solid #999;\n    margin-bottom: 20px;\n    padding: 0 10px 10px 10px;\n    text-align: left;\n}\n.test-report-div .summary {\n    background: #bfb;\n}\n.test-report-div .test-failed {\n    background: #f99;\n}\n.test-report-div .test-pending {\n    background: #99f;\n}\n</style>\n</head>\n<body>\n<div class=\"uiAnimateSpin\" style=\"\n    animation: uiAnimateSpin 2s linear infinite;\n    border-radius: 50%;\n    border-top: 5px solid #7d7;\n    border: 5px solid #999;\n    display: none;\n    height: 25px;\n    vertical-align: middle;\n    width: 25px;\n\"></div>\n<script>\n/* jslint utility2:true */\n(function () {\n    \"use strict\";\n    // polyfill globalThis\n    window.globalThis = window;\n    // measure-and-print time-elapsed for window.onload\n    if (!window.domOnEventWindowOnloadTimeElapsed) {\n        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n        window.addEventListener(\"load\", function () {\n            setTimeout(function () {\n                window.domOnEventWindowOnloadTimeElapsed = (\n                    Date.now() -\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n                console.error(\n                    \"domOnEventWindowOnloadTimeElapsed = \" +\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n            }, 100);\n        });\n    }\n    // limit select-all within <pre tabIndex=\"0\"> elem\n    if (!window.domOnEventSelectAllWithinPre) {\n        window.domOnEventSelectAllWithinPre = function (evt) {\n            let range;\n            let selection;\n            if (\n                (evt.ctrlKey || evt.metaKey) &&\n                evt.key === \"a\" &&\n                evt.target.closest(\"pre\")\n            ) {\n                range = document.createRange();\n                range.selectNodeContents(evt.target.closest(\"pre\"));\n                selection = window.getSelection();\n                selection.removeAllRanges();\n                selection.addRange(range);\n                evt.preventDefault();\n            }\n        };\n        // handle evt\n        document.addEventListener(\n            \"keydown\",\n            window.domOnEventSelectAllWithinPre\n        );\n    }\n}());\n</script>\n<div class=\"test-report-div\">\n<h1>test-report for\n    <a href=\"https://github.com/kaizhu256/node-utility2\">\n    utility2 (2020.12.3)\n    </a>\n</h1>\n\n<div class=\"platform summary\">\n<h2>summary</h2>\n<h4>\n    <span>version</span>- 2020.12.3<br>\n    <span>test-date</span>- 2020-12-07T07:18:58.642Z<br>\n    <span>commit-info</span>-\n7ea62ea13a49a7cd361af0f6e79fe4c0f953c8c5 - <br>\n</h4>\n<table>\n<thead>\n    <tr>\n    <th>total tests-failed</th>\n    <th>total tests-passed</th>\n    <th>total tests-pending</th>\n    </tr>\n</thead>\n<tbody>\n    <tr>\n    <td class=\"testPassed\">0</td>\n    <td>86</td>\n    <td>0</td>\n    </tr>\n</tbody>\n</table>\n</div>\n\n<div class=\"platform\">\n<h4>\n1. deployHerokuTest - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:18:58.642Z<br>\n<span>time-elapsed</span>- 0 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 0<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n2. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36<br>\n<a href=\"screenshot.deployHerokuTest.browser.%252F.png\">\n<img\nalt=\"screenshot.deployHerokuTest.browser.%252F.png\"\nsrc=\"screenshot.deployHerokuTest.browser.%252F.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2020-12-07T07:18:59.306Z<br>\n<span>time-elapsed</span>- 100 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>2</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>3</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>4</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>5</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>6</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>7</td>\n<td>53 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>8</td>\n<td>48 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>9</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>10</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>11</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>12</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>13</td>\n<td>36 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>14</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>15</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>16</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>17</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>18</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>19</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>20</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>21</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n3. deployGithubTest - browser - /node-utility2/build..alpha..travis-ci.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36<br>\n<a href=\"screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png\">\n<img\nalt=\"screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png\"\nsrc=\"screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2020-12-07T07:18:42.446Z<br>\n<span>time-elapsed</span>- 262 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>22</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>23</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>24</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>25</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>26</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>27</td>\n<td>7 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>28</td>\n<td>158 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>29</td>\n<td>129 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>30</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>31</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>32</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>33</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>34</td>\n<td>109 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>35</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>36</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>37</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>38</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>39</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>40</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>41</td>\n<td>3 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>42</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n4. deployGithubTest - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:18:41.861Z<br>\n<span>time-elapsed</span>- 0 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 0<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n5. buildApp - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:17:53.246Z<br>\n<span>time-elapsed</span>- 4302 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>43</td>\n<td>4300 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n6. buildApidoc - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:17:40.632Z<br>\n<span>time-elapsed</span>- 5605 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>44</td>\n<td>5603 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n7. shCiMain - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36<br>\n<a href=\"screenshot.shCiMain.browser.%252F.png\">\n<img\nalt=\"screenshot.shCiMain.browser.%252F.png\"\nsrc=\"screenshot.shCiMain.browser.%252F.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2020-12-07T07:17:36.214Z<br>\n<span>time-elapsed</span>- 228 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>45</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>46</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>47</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>48</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>49</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>50</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>51</td>\n<td>176 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>52</td>\n<td>112 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>53</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>54</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>55</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>56</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>57</td>\n<td>114 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>58</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>59</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>60</td>\n<td>14 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>61</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>62</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>63</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>64</td>\n<td>14 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>65</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n8. shCiMain - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:17:34.307Z<br>\n<span>time-elapsed</span>- 4835 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>66</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>67</td>\n<td>16 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>68</td>\n<td>4804 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>69</td>\n<td>73 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>70</td>\n<td>4 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>71</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>72</td>\n<td>248 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>73</td>\n<td>251 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>74</td>\n<td>252 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>75</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>76</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>77</td>\n<td>6 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>78</td>\n<td>40 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>79</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>80</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>81</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>82</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>83</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>84</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>85</td>\n<td>2528 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>86</td>\n<td>3940 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n\n<div class=\"footer\">\n[ this document was created with <a\n    href=\"https://github.com/kaizhu256/node-utility2\"\n    target=\"_blank\"\n>utility2</a> ]\n</div>\n\n</div>\n</body>\n</html>\n"}
+{
+    "date": "2020-12-07T07:38:14.037Z",
+    "testPlatformList": [
+        {
+            "date": "2020-12-07T07:38:14.037Z",
+            "modeBuild": "gitLog",
+            "nameBase": "node - linux - v15.3.0",
+            "status": "passed",
+            "testCaseList": [
+                {
+                    "name": "testCase_buildApp_default",
+                    "status": "passed",
+                    "timeStart": 1607326694129,
+                    "timeElapsed": 4235,
+                    "isDone": true
+                }
+            ],
+            "testsFailed": 0,
+            "testsPassed": 1,
+            "testsPending": 0,
+            "timeElapsed": 4238,
+            "timeOnload": false,
+            "timeStart": 1607326694127,
+            "name": "gitLog - node - linux - v15.3.0"
+        },
+        {
+            "date": "2020-12-07T07:38:01.585Z",
+            "modeBuild": "ci",
+            "nameBase": "node - linux - v15.3.0",
+            "status": "passed",
+            "testCaseList": [
+                {
+                    "name": "testCase_buildApidoc_default",
+                    "status": "passed",
+                    "timeStart": 1607326681684,
+                    "timeElapsed": 5526,
+                    "isDone": true
+                }
+            ],
+            "testsFailed": 0,
+            "testsPassed": 1,
+            "testsPending": 0,
+            "timeElapsed": 5529,
+            "timeOnload": false,
+            "timeStart": 1607326681682,
+            "name": "ci - node - linux - v15.3.0"
+        },
+        {
+            "date": "2020-12-07T07:37:57.290Z",
+            "nameBase": "browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36",
+            "status": "passed",
+            "testCaseList": [
+                {
+                    "name": "testCase_assertXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326677393,
+                    "timeElapsed": 7,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_buildApidoc_default",
+                    "status": "passed",
+                    "timeStart": 1607326677470,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_buildApp_default",
+                    "status": "passed",
+                    "timeStart": 1607326677479,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_chromeDevtoolsClient_coverage",
+                    "status": "passed",
+                    "timeStart": 1607326677493,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_cliRun_default",
+                    "status": "passed",
+                    "timeStart": 1607326677499,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_eventListenerXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326677500,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_httpFetch_200",
+                    "status": "passed",
+                    "timeStart": 1607326677512,
+                    "timeElapsed": 203,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_httpFetch_404",
+                    "status": "passed",
+                    "timeStart": 1607326677517,
+                    "timeElapsed": 183,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_libUtility2Js_standalone",
+                    "status": "passed",
+                    "timeStart": 1607326677521,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_listShuffle_default",
+                    "status": "passed",
+                    "timeStart": 1607326677528,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_noop_default",
+                    "status": "passed",
+                    "timeStart": 1607326677541,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_replStart_default",
+                    "status": "passed",
+                    "timeStart": 1607326677548,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_setTimeoutOnError_default",
+                    "status": "passed",
+                    "timeStart": 1607326677554,
+                    "timeElapsed": 120,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_stringHtmlSafe_default",
+                    "status": "passed",
+                    "timeStart": 1607326677554,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_stringXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326677563,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_testMock_err",
+                    "status": "passed",
+                    "timeStart": 1607326677587,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_uiAnimateXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326677595,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_urlJoin_default",
+                    "status": "passed",
+                    "timeStart": 1607326677612,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_uuid4Create_default",
+                    "status": "passed",
+                    "timeStart": 1607326677622,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_webpage_default",
+                    "status": "passed",
+                    "timeStart": 1607326677629,
+                    "timeElapsed": 3,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_webpage_err",
+                    "status": "passed",
+                    "timeStart": 1607326677642,
+                    "timeElapsed": 0,
+                    "isDone": true
+                }
+            ],
+            "testsFailed": 0,
+            "testsPassed": 21,
+            "testsPending": 0,
+            "timeElapsed": 332,
+            "timeOnload": false,
+            "timeStart": 1607326677390,
+            "name": "npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36",
+            "screenshot": "screenshot.npmTest.browser.%2F.png",
+            "modeBuild": "npmTest"
+        },
+        {
+            "date": "2020-12-07T07:37:55.451Z",
+            "modeBuild": "npmTest",
+            "nameBase": "node - linux - v15.3.0",
+            "status": "passed",
+            "testCaseList": [
+                {
+                    "name": "testCase_assertXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326676033,
+                    "timeElapsed": 2,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_buildApidoc_default",
+                    "status": "passed",
+                    "timeStart": 1607326676035,
+                    "timeElapsed": 16,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_buildApp_default",
+                    "status": "passed",
+                    "timeStart": 1607326676051,
+                    "timeElapsed": 4718,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_chromeDevtoolsClient_coverage",
+                    "status": "passed",
+                    "timeStart": 1607326676052,
+                    "timeElapsed": 44,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_cliRun_default",
+                    "status": "passed",
+                    "timeStart": 1607326676056,
+                    "timeElapsed": 4,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_eventListenerXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326676061,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_httpFetch_200",
+                    "status": "passed",
+                    "timeStart": 1607326676061,
+                    "timeElapsed": 139,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_httpFetch_404",
+                    "status": "passed",
+                    "timeStart": 1607326676067,
+                    "timeElapsed": 133,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_libUtility2Js_standalone",
+                    "status": "passed",
+                    "timeStart": 1607326676067,
+                    "timeElapsed": 143,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_listShuffle_default",
+                    "status": "passed",
+                    "timeStart": 1607326676068,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_noop_default",
+                    "status": "passed",
+                    "timeStart": 1607326676069,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_replStart_default",
+                    "status": "passed",
+                    "timeStart": 1607326676069,
+                    "timeElapsed": 7,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_setTimeoutOnError_default",
+                    "status": "passed",
+                    "timeStart": 1607326676077,
+                    "timeElapsed": 21,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_stringHtmlSafe_default",
+                    "status": "passed",
+                    "timeStart": 1607326676077,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_stringXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326676077,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_testMock_err",
+                    "status": "passed",
+                    "timeStart": 1607326676078,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_uiAnimateXxx_default",
+                    "status": "passed",
+                    "timeStart": 1607326676078,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_urlJoin_default",
+                    "status": "passed",
+                    "timeStart": 1607326676078,
+                    "timeElapsed": 1,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_uuid4Create_default",
+                    "status": "passed",
+                    "timeStart": 1607326676079,
+                    "timeElapsed": 0,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_webpage_default",
+                    "status": "passed",
+                    "timeStart": 1607326676079,
+                    "timeElapsed": 2483,
+                    "isDone": true
+                },
+                {
+                    "name": "testCase_webpage_err",
+                    "status": "passed",
+                    "timeStart": 1607326676082,
+                    "timeElapsed": 3878,
+                    "isDone": true
+                }
+            ],
+            "testsFailed": 0,
+            "testsPassed": 21,
+            "testsPending": 0,
+            "timeElapsed": 4739,
+            "timeOnload": false,
+            "timeStart": 1607326676031,
+            "name": "npmTest - node - linux - v15.3.0"
+        }
+    ],
+    "testsFailed": 0,
+    "testsPassed": 44,
+    "testsPending": 0,
+    "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta\n    content=\"width=device-width, initial-scale=1\"\n    name=\"viewport\"\n>\n<!-- \"\" -->\n<title>test-report</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition:\n        max-height ease-in 250ms,\n        min-height ease-in 250ms,\n        padding-bottom ease-in 250ms,\n        padding-top ease-in 250ms;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.colorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n<style>\n/* jslint utility2:true */\n.test-report-div img {\n    border: 1px solid #999;\n    margin: 5px 0 5px 0;\n    max-height: 256px;\n    max-width: 512px;\n}\n.test-report-div pre {\n    background: #fdd;\n    border-top: 1px solid #999;\n    margin-bottom: 0;\n    padding: 10px;\n}\n.test-report-div span {\n    display: inline-block;\n    width: 120px;\n}\n.test-report-div table {\n    border-top: 1px solid #999;\n    text-align: left;\n    width: 100%;\n}\n.test-report-div table > tbody > tr:nth-child(odd) {\n    background: #bfb;\n}\n.test-report-div .footer {\n    text-align: center;\n}\n.test-report-div .platform {\n    background: #fff;\n    border: 1px solid #999;\n    margin-bottom: 20px;\n    padding: 0 10px 10px 10px;\n    text-align: left;\n}\n.test-report-div .summary {\n    background: #bfb;\n}\n.test-report-div .test-failed {\n    background: #f99;\n}\n.test-report-div .test-pending {\n    background: #99f;\n}\n</style>\n</head>\n<body>\n<div class=\"uiAnimateSpin\" style=\"\n    animation: uiAnimateSpin 2s linear infinite;\n    border-radius: 50%;\n    border-top: 5px solid #7d7;\n    border: 5px solid #999;\n    display: none;\n    height: 25px;\n    vertical-align: middle;\n    width: 25px;\n\"></div>\n<script>\n/* jslint utility2:true */\n(function () {\n    \"use strict\";\n    // polyfill globalThis\n    window.globalThis = window;\n    // measure-and-print time-elapsed for window.onload\n    if (!window.domOnEventWindowOnloadTimeElapsed) {\n        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n        window.addEventListener(\"load\", function () {\n            setTimeout(function () {\n                window.domOnEventWindowOnloadTimeElapsed = (\n                    Date.now() -\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n                console.error(\n                    \"domOnEventWindowOnloadTimeElapsed = \" +\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n            }, 100);\n        });\n    }\n    // limit select-all within <pre tabIndex=\"0\"> elem\n    if (!window.domOnEventSelectAllWithinPre) {\n        window.domOnEventSelectAllWithinPre = function (evt) {\n            let range;\n            let selection;\n            if (\n                (evt.ctrlKey || evt.metaKey) &&\n                evt.key === \"a\" &&\n                evt.target.closest(\"pre\")\n            ) {\n                range = document.createRange();\n                range.selectNodeContents(evt.target.closest(\"pre\"));\n                selection = window.getSelection();\n                selection.removeAllRanges();\n                selection.addRange(range);\n                evt.preventDefault();\n            }\n        };\n        // handle evt\n        document.addEventListener(\n            \"keydown\",\n            window.domOnEventSelectAllWithinPre\n        );\n    }\n}());\n</script>\n<div class=\"test-report-div\">\n<h1>test-report for\n    <a href=\"https://github.com/kaizhu256/node-utility2\">\n    utility2 (2020.12.3)\n    </a>\n</h1>\n\n<div class=\"platform summary\">\n<h2>summary</h2>\n<h4>\n    <span>version</span>- 2020.12.3<br>\n    <span>test-date</span>- 2020-12-07T07:38:14.037Z<br>\n    <span>commit-info</span>-\n0426e1f7e4946b6f62184787b8d44a8fe77d343c - <br>\n</h4>\n<table>\n<thead>\n    <tr>\n    <th>total tests-failed</th>\n    <th>total tests-passed</th>\n    <th>total tests-pending</th>\n    </tr>\n</thead>\n<tbody>\n    <tr>\n    <td class=\"testPassed\">0</td>\n    <td>44</td>\n    <td>0</td>\n    </tr>\n</tbody>\n</table>\n</div>\n\n<div class=\"platform\">\n<h4>\n1. gitLog - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:38:14.037Z<br>\n<span>time-elapsed</span>- 4238 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>4235 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n2. ci - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:38:01.585Z<br>\n<span>time-elapsed</span>- 5529 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>2</td>\n<td>5526 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n3. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36<br>\n<a href=\"screenshot.npmTest.browser.%252F.png\">\n<img\nalt=\"screenshot.npmTest.browser.%252F.png\"\nsrc=\"screenshot.npmTest.browser.%252F.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2020-12-07T07:37:57.290Z<br>\n<span>time-elapsed</span>- 332 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>3</td>\n<td>7 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>4</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>5</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>6</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>7</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>8</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>9</td>\n<td>203 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>10</td>\n<td>183 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>11</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>12</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>13</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>14</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>15</td>\n<td>120 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>16</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>17</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>18</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>19</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>20</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>21</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>22</td>\n<td>3 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>23</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n4. npmTest - node - linux - v15.3.0<br>\n<span>test-date</span>- 2020-12-07T07:37:55.451Z<br>\n<span>time-elapsed</span>- 4739 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>24</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>25</td>\n<td>16 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>26</td>\n<td>4718 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>27</td>\n<td>44 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>28</td>\n<td>4 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>29</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>30</td>\n<td>139 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>31</td>\n<td>133 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>32</td>\n<td>143 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>33</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>34</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>35</td>\n<td>7 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>36</td>\n<td>21 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>37</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>38</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>39</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>40</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>41</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>42</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>43</td>\n<td>2483 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>44</td>\n<td>3878 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n\n<div class=\"footer\">\n[ this document was created with <a\n    href=\"https://github.com/kaizhu256/node-utility2\"\n    target=\"_blank\"\n>utility2</a> ]\n</div>\n\n</div>\n</body>\n</html>\n"
+}

@@ -32611,7 +32611,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     /\{\{app.png\}\}/g
 ), "browser.%252Fnode-my-app%252Fbuild%252Fapp.png").replace((
     /\{\{screenshot\}\}/g
-), "screenshot.buildCi.browser.%252F.tmp%252Fbuild%252F");
+), "screenshot.ci.browser.%252F.tmp%252Fbuild%252F");
 local.assetsDict["/assets.test.template.js"] = (
     "/* istanbul instrument in package my_app */\n" +
     local.assetsDict["/assets.utility2.header.js"] +
