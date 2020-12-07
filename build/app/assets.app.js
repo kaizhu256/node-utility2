@@ -31758,7 +31758,7 @@ globalThis.utility2 = local;
         "jslintAndPrintDir",
         "CI_BRANCH",
         "CI_COMMIT_ID",
-        "CI_COMMIT_INFO",
+        "CI_COMMIT_MESSAGE",
         "CI_HOST",
         "GITHUB_FULLNAME",
         "GITHUB_OWNER",
@@ -31802,7 +31802,7 @@ let {
     onErrorThrow,
     CI_BRANCH,
     CI_COMMIT_ID,
-    CI_COMMIT_INFO,
+    CI_COMMIT_MESSAGE,
     CI_HOST,
     GITHUB_FULLNAME,
     GITHUB_OWNER,
@@ -32634,17 +32634,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.svg)\n" +
     "\n" +
     "\n" +
     "# quickstart example.js\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
@@ -32656,12 +32656,12 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.svg)\n" +
     "\n" +
     "\n" +
     "# extra screenshots\n" +
@@ -32713,17 +32713,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)]" +
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleJs.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleSh.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "\n" +
     "\n" +
     "# package.json\n" +
@@ -35897,7 +35897,7 @@ local.testReportMerge = function (
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
             "    <span>commit-info</span>-\n" +
-            (CI_COMMIT_INFO || "undefined") + "<br>\n" +
+            CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +
             "<thead>\n" +
@@ -56294,7 +56294,7 @@ globalThis.utility2 = local;\n\
         \"jslintAndPrintDir\",\n\
         \"CI_BRANCH\",\n\
         \"CI_COMMIT_ID\",\n\
-        \"CI_COMMIT_INFO\",\n\
+        \"CI_COMMIT_MESSAGE\",\n\
         \"CI_HOST\",\n\
         \"GITHUB_FULLNAME\",\n\
         \"GITHUB_OWNER\",\n\
@@ -56338,7 +56338,7 @@ let {\n\
     onErrorThrow,\n\
     CI_BRANCH,\n\
     CI_COMMIT_ID,\n\
-    CI_COMMIT_INFO,\n\
+    CI_COMMIT_MESSAGE,\n\
     CI_HOST,\n\
     GITHUB_FULLNAME,\n\
     GITHUB_OWNER,\n\
@@ -57170,17 +57170,17 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"\\n\" +\n\
     \"#### output from browser\\n\" +\n\
     \"[![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]\" +\n\
     \"({{app.io}}/build/app/assets.example.html)\\n\" +\n\
     \"\\n\" +\n\
     \"#### output from shell\\n\" +\n\
     \"![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleSh.svg)\\n\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleSh.svg)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
     \"# quickstart example.js\\n\" +\n\
     \"[![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]\" +\n\
     \"({{app.io}}/build/app/assets.example.html)\\n\" +\n\
     \"\\n\" +\n\
     \"#### to run this example, follow instruction in script below\\n\" +\n\
@@ -57192,12 +57192,12 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"\\n\" +\n\
     \"#### output from browser\\n\" +\n\
     \"[![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]\" +\n\
     \"({{app.io}}/build/app/assets.example.html)\\n\" +\n\
     \"\\n\" +\n\
     \"#### output from shell\\n\" +\n\
     \"![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.svg)\\n\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.svg)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
     \"# extra screenshots\\n\" +\n\
@@ -57249,17 +57249,17 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"({{app.io}}/build/screenshot.npmTest.browser.%252F.png)]\" +\n\
     \"({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\\n\" +\n\
     \"\\n\" +\n\
-    \"1. [{{app.io}}/build/screenshot.testExampleJs.browser.%252F.png]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\\n\" +\n\
+    \"1. [{{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\\n\" +\n\
     \"[![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\\n\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\\n\" +\n\
     \"\\n\" +\n\
-    \"1. [{{app.io}}/build/screenshot.testExampleSh.browser.%252F.png]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\\n\" +\n\
+    \"1. [{{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\\n\" +\n\
     \"[![screenshot]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]\" +\n\
-    \"({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\\n\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]\" +\n\
+    \"({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
     \"# package.json\\n\" +\n\
@@ -60433,7 +60433,7 @@ local.testReportMerge = function (\n\
             \"    <span>version</span>- \" + npm_package_version + \"<br>\\n\" +\n\
             \"    <span>test-date</span>- \" + testReport.date + \"<br>\\n\" +\n\
             \"    <span>commit-info</span>-\\n\" +\n\
-            (CI_COMMIT_INFO || \"undefined\") + \"<br>\\n\" +\n\
+            CI_COMMIT_ID + \" - \" + CI_COMMIT_MESSAGE + \"<br>\\n\" +\n\
             \"</h4>\\n\" +\n\
             \"<table>\\n\" +\n\
             \"<thead>\\n\" +\n\
@@ -61616,7 +61616,7 @@ globalThis.utility2 = local;
         "jslintAndPrintDir",
         "CI_BRANCH",
         "CI_COMMIT_ID",
-        "CI_COMMIT_INFO",
+        "CI_COMMIT_MESSAGE",
         "CI_HOST",
         "GITHUB_FULLNAME",
         "GITHUB_OWNER",
@@ -61660,7 +61660,7 @@ let {
     onErrorThrow,
     CI_BRANCH,
     CI_COMMIT_ID,
-    CI_COMMIT_INFO,
+    CI_COMMIT_MESSAGE,
     CI_HOST,
     GITHUB_FULLNAME,
     GITHUB_OWNER,
@@ -62492,17 +62492,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.svg)\n" +
     "\n" +
     "\n" +
     "# quickstart example.js\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
@@ -62514,12 +62514,12 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.svg)\n" +
     "\n" +
     "\n" +
     "# extra screenshots\n" +
@@ -62571,17 +62571,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)]" +
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleJs.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleSh.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "\n" +
     "\n" +
     "# package.json\n" +
@@ -65755,7 +65755,7 @@ local.testReportMerge = function (
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
             "    <span>commit-info</span>-\n" +
-            (CI_COMMIT_INFO || "undefined") + "<br>\n" +
+            CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +
             "<thead>\n" +
