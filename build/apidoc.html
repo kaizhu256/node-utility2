@@ -2981,21 +2981,21 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     );
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-           }
-           return val;
-       } catch (errCaught) {
-           errCaught.message = (
-               &quot;templateRender could not render expression &quot;
-               + JSON.stringify(match0) + &quot;\n&quot;
-           ) + errCaught.message;
-           local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(undefined, errCaught);
-       }
-   });
-};
-
-local.tryCatchOnError = function (fnc, onError) {
+testCaseDict.testCase_passed_http_fetch_demo = function (opt, onError) {
 /*
-* this function will run &lt;fnc&gt; in tryCatch block,
+ * this function will demo a passed http-fetch test
+ */
+    // fetch main-page &quot;/&quot;
+    window.fetch(&quot;/&quot;).then(function (res) {
+        // validate &quot;200 ok&quot; status
+        local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(res.status === 200, res.status);
+        return res.text();
+    }).then(function (data) {
+        // validate non-empty data
+        local.assertOrThrow(data &amp;&amp; data.length &gt; 0, data);
+        onError(undefined, opt);
+    // handle err
+    }).catch(onError);
 ...</pre></li>
     </ul>
 
@@ -3124,21 +3124,21 @@ local.tryCatchOnError = function (fnc, onError) {
         require(&quot;path&quot;).resolve(UTILITY2_DIR_BUILD + &quot;/test-report.json&quot;),
         JSON.stringi...</pre></li>
     <li>example use<pre class="apidocCodePre">...
+/*
+ * this function will test webpage&apos;s default handling-behavior
  */
-local.domQuerySelectorAllTagName(&quot;html&quot;);
-local.domStyleValidate();
-if (!isEnvNode) {
+    if (!local.isEnvNode) {
+        onError(undefined, opt);
+        return;
+    }
+    await local.<span class="apidocCodeKeywordSpan">browserTest</span>({
+        url: &quot;http://127.0.0.1:&quot; + process.env.PORT + &quot;/?npm_config_mode_test=1&quot;
+    });
     onError(undefined, opt);
-    return;
-}
-await local.<span class="apidocCodeKeywordSpan">browserTest</span>({
-    url: (
-        &quot;http://127.0.0.1:&quot; + PORT +
-        &quot;/?npm_config_mode_test=1&amp;npm_config_timeout=&quot; +
-        npm_config_timeout +
-        &quot;&amp;npm_config_mode_test_case=&quot; + npm_config_mode_test_case.replace((
-            /\b_?testCase_webpage_default\b/
-        ), &quot;&quot;)
+};
+
+// run tests
+if (local.isEnvNode &amp;&amp; process.env.npm_config_mode_test) {
 ...</pre></li>
     </ul>
 
@@ -3936,22 +3936,21 @@ local._testCase_webpage_default = async function (opt, onError) {
     };
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-&quot;    }\n&quot; +
-&quot;    local = window.utility2;\n&quot; +
-&quot;    document.querySelectorAll(\n&quot; +
-&quot;        \&quot;#buttonTestRun1\&quot;\n&quot; +
-&quot;    ).forEach(function (elem) {\n&quot; +
-&quot;        elem.addEventListener(\&quot;click\&quot;, onTestRun);\n&quot; +
-&quot;    });\n&quot; +
-&quot;    local.<span class="apidocCodeKeywordSpan">eventListenerAdd</span>(\&quot;utility2.testRunEnd\&quot;, {}, onTestRun);\n
-&quot; +
-&quot;    local.eventListenerAdd(\&quot;utility2.testRunUpdate\&quot;, {}, onTestRun);\n&quot; +
-&quot;    local.eventListenerAdd(\&quot;utility2.testRunStart\&quot;, {}, onTestRun);\n&quot; +
-&quot;    local.onReadyDecrement();\n&quot; +
-&quot;});\n&quot; +
-&quot;&lt;/script&gt;\n&quot; +
-&quot;utility2-comment --&gt;\n&quot; +
-&quot;&lt;script src=\&quot;assets.{{npm_package_nameLib}}.js\&quot;&gt;&lt;/script&gt;\n&quot; +
+        local.assertOrThrow(data &amp;&amp; data.length &gt; 0, data);
+        onError(undefined, opt);
+    // handle err
+    }).catch(onError);
+};
+
+// create coverage-report
+local.<span class="apidocCodeKeywordSpan">eventListenerAdd</span>(&quot;utility2.testRunEnd&quot;, {}, function () {
+    document.querySelector(
+        &quot;#htmlCoverageReport1&quot;
+    ).innerHTML = local.coverageReportCreate({});
+});
+
+// run tests
+if (!(
 ...</pre></li>
     </ul>
 
@@ -4924,21 +4923,21 @@ tgt = local.templateRenderMyApp(
     return localOnReadyCnt;
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-&quot;        \&quot;#buttonTestRun1\&quot;\n&quot; +
-&quot;    ).forEach(function (elem) {\n&quot; +
-&quot;        elem.addEventListener(\&quot;click\&quot;, onTestRun);\n&quot; +
-&quot;    });\n&quot; +
-&quot;    local.eventListenerAdd(\&quot;utility2.testRunEnd\&quot;, {}, onTestRun);\n&quot; +
-&quot;    local.eventListenerAdd(\&quot;utility2.testRunUpdate\&quot;, {}, onTestRun);\n&quot; +
-&quot;    local.eventListenerAdd(\&quot;utility2.testRunStart\&quot;, {}, onTestRun);\n&quot; +
-&quot;    local.<span class="apidocCodeKeywordSpan">onReadyDecrement</span>();\n&quot; +
-&quot;});\n&quot; +
-&quot;&lt;/script&gt;\n&quot; +
-&quot;utility2-comment --&gt;\n&quot; +
-&quot;&lt;script src=\&quot;assets.{{npm_package_nameLib}}.js\&quot;&gt;&lt;/script&gt;\n&quot; +
-&quot;&lt;script src=\&quot;assets.example.js\&quot;&gt;&lt;/script&gt;\n&quot; +
-&quot;&lt;script src=\&quot;assets.test.js\&quot;&gt;&lt;/script&gt;\n&quot; +
-&quot;&lt;div style=\&quot;text-align: center;\&quot;&gt;\n&quot; +
+    &quot;#buttonTestRun1&quot;
+).forEach(function (elem) {
+    elem.addEventListener(&quot;click&quot;, onTestRun);
+});
+local.eventListenerAdd(&quot;utility2.testRunEnd&quot;, {}, onTestRun);
+local.eventListenerAdd(&quot;utility2.testRunUpdate&quot;, {}, onTestRun);
+local.eventListenerAdd(&quot;utility2.testRunStart&quot;, {}, onTestRun);
+local.<span class="apidocCodeKeywordSpan">onReadyDecrement</span>();
+});
+&lt;/script&gt;
+
+&lt;script src=&quot;assets.example.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;assets.test.js&quot;&gt;&lt;/script&gt;
+&lt;div style=&quot;text-align: center;&quot;&gt;
+[
 ...</pre></li>
     </ul>
 
@@ -4959,21 +4958,21 @@ tgt = local.templateRenderMyApp(
     return localOnReadyCnt;
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-&quot;npm_package_nameLib: {{npm_package_nameLib jsonStringify}},\n&quot; +
-&quot;npm_package_version: {{npm_package_version jsonStringify}}\n&quot; +
-&quot;}\n&quot; +
-&quot;&lt;/script&gt;\n&quot; +
-&quot;&lt;script src=\&quot;assets.utility2.rollup.js\&quot;&gt;&lt;/script&gt;\n&quot; +
-&quot;&lt;script&gt;\n&quot; +
-&quot;/* jslint utility2:true */\n&quot; +
-&quot;window.utility2.<span class="apidocCodeKeywordSpan">onReadyIncrement</span>();\n&quot; +
-&quot;window.addEventListener(\&quot;load\&quot;, function () {\n&quot; +
-&quot;    \&quot;use strict\&quot;;\n&quot; +
-&quot;    let local;\n&quot; +
-&quot;    function onTestRun({\n&quot; +
-&quot;        msg,\n&quot; +
-&quot;        target,\n&quot; +
-&quot;        type\n&quot; +
+&lt;/script&gt;
+&lt;script src=&quot;assets.utility2.lib.istanbul.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;assets.utility2.lib.jslint.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;assets.utility2.lib.marked.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;assets.utility2.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+/* jslint utility2:true */
+window.utility2.<span class="apidocCodeKeywordSpan">onReadyIncrement</span>();
+window.addEventListener(&quot;load&quot;, function () {
+&quot;use strict&quot;;
+let local;
+function onTestRun({
+    msg,
+    target,
+    type
 ...</pre></li>
     </ul>
 
@@ -5984,21 +5983,21 @@ timerInterval = setInterval(function () {
     }
     if (localOnReadyCnt !== 0)...</pre></li>
     <li>example use<pre class="apidocCodePre">...
-&quot;        msg,\n&quot; +
-&quot;        target,\n&quot; +
-&quot;        type\n&quot; +
-&quot;    }) {\n&quot; +
-&quot;        switch ((target &amp;&amp; target.id) || type) {\n&quot; +
-&quot;        case \&quot;buttonTestRun1\&quot;:\n&quot; +
-&quot;            window.utility2_modeTest = 1;\n&quot; +
-&quot;            local.<span class="apidocCodeKeywordSpan">testRunDefault</span>(window.local);\n&quot; +
-&quot;            return;\n&quot; +
-&quot;        case \&quot;utility2.testRunEnd\&quot;:\n&quot; +
-&quot;            document.querySelectorAll(\n&quot; +
-&quot;                \&quot;#buttonTestRun1\&quot;\n&quot; +
-&quot;            ).forEach(function (elem) {\n&quot; +
-&quot;                elem.textContent = \&quot;run tests\&quot;;\n&quot; +
-&quot;            });\n&quot; +
+        url: &quot;http://127.0.0.1:&quot; + process.env.PORT + &quot;/?npm_config_mode_test=1&quot;
+    });
+    onError(undefined, opt);
+};
+
+// run tests
+if (local.isEnvNode &amp;&amp; process.env.npm_config_mode_test) {
+    local.<span class="apidocCodeKeywordSpan">testRunDefault</span>(local);
+}
+}());
+
+
+/* istanbul ignore next */
+// run browser js-env code - init-test
+(function () {
 ...</pre></li>
     </ul>
 
@@ -6126,21 +6125,21 @@ readExample = function (file) {
     }, 250);
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-&quot;                \&quot;#buttonTestRun1\&quot;\n&quot; +
-&quot;            ).forEach(function (elem) {\n&quot; +
-&quot;                elem.textContent = \&quot;running tests\&quot;;\n&quot; +
-&quot;            });\n&quot; +
-&quot;            document.querySelectorAll(\n&quot; +
-&quot;                \&quot;#htmlTestReport1\&quot;\n&quot; +
-&quot;            ).forEach(function (elem) {\n&quot; +
-&quot;                local.<span class="apidocCodeKeywordSpan">uiAnimateSlideDown</span>(elem);\n&quot; +
-&quot;                elem.innerHTML = msg.html;\n&quot; +
-&quot;            });\n&quot; +
-&quot;            return;\n&quot; +
-&quot;        case \&quot;utility2.testRunUpdate\&quot;:\n&quot; +
-&quot;            document.querySelectorAll(\n&quot; +
-&quot;                \&quot;#htmlTestReport1\&quot;\n&quot; +
-&quot;            ).forEach(function (elem) {\n&quot; +
+        &quot;#buttonTestRun1&quot;
+    ).forEach(function (elem) {
+        elem.textContent = &quot;running tests&quot;;
+    });
+    document.querySelectorAll(
+        &quot;#htmlTestReport1&quot;
+    ).forEach(function (elem) {
+        local.<span class="apidocCodeKeywordSpan">uiAnimateSlideDown</span>(elem);
+        elem.innerHTML = msg.html;
+    });
+    return;
+case &quot;utility2.testRunUpdate&quot;:
+    document.querySelectorAll(
+        &quot;#htmlTestReport1&quot;
+    ).forEach(function (elem) {
 ...</pre></li>
     </ul>
 
@@ -6727,21 +6726,21 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     );
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-           }
-           return val;
-       } catch (errCaught) {
-           errCaught.message = (
-               &quot;templateRender could not render expression &quot;
-               + JSON.stringify(match0) + &quot;\n&quot;
-           ) + errCaught.message;
-           local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(undefined, errCaught);
-       }
-   });
-};
-
-local.tryCatchOnError = function (fnc, onError) {
+testCaseDict.testCase_passed_http_fetch_demo = function (opt, onError) {
 /*
-* this function will run &lt;fnc&gt; in tryCatch block,
+ * this function will demo a passed http-fetch test
+ */
+    // fetch main-page &quot;/&quot;
+    window.fetch(&quot;/&quot;).then(function (res) {
+        // validate &quot;200 ok&quot; status
+        local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(res.status === 200, res.status);
+        return res.text();
+    }).then(function (data) {
+        // validate non-empty data
+        local.assertOrThrow(data &amp;&amp; data.length &gt; 0, data);
+        onError(undefined, opt);
+    // handle err
+    }).catch(onError);
 ...</pre></li>
     </ul>
 
@@ -7658,21 +7657,21 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     );
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-           }
-           return val;
-       } catch (errCaught) {
-           errCaught.message = (
-               &quot;templateRender could not render expression &quot;
-               + JSON.stringify(match0) + &quot;\n&quot;
-           ) + errCaught.message;
-           local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(undefined, errCaught);
-       }
-   });
-};
-
-local.tryCatchOnError = function (fnc, onError) {
+testCaseDict.testCase_passed_http_fetch_demo = function (opt, onError) {
 /*
-* this function will run &lt;fnc&gt; in tryCatch block,
+ * this function will demo a passed http-fetch test
+ */
+    // fetch main-page &quot;/&quot;
+    window.fetch(&quot;/&quot;).then(function (res) {
+        // validate &quot;200 ok&quot; status
+        local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(res.status === 200, res.status);
+        return res.text();
+    }).then(function (data) {
+        // validate non-empty data
+        local.assertOrThrow(data &amp;&amp; data.length &gt; 0, data);
+        onError(undefined, opt);
+    // handle err
+    }).catch(onError);
 ...</pre></li>
     </ul>
 
@@ -9956,21 +9955,21 @@ Reference.prototype.remove = function remove() {
     require(&quot;module&quot;).runMain();
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-        return {
-elemList: Object.keys(module).filter(function (key) {
-    return local.tryCatchOnError(function () {
-        return (
-            key
-            &amp;&amp; (
-                /^\w[\w\-.]*?$/
-            ).<span class="apidocCodeKeywordSpan">test</span>(key)
-            &amp;&amp; key.indexOf(&quot;testCase_&quot;) !== 0
-            &amp;&amp; (
-                module[key] !== opt.blacklistDict[key]
-                || opt.whitelistDict[key]
-            )
-        );
-    }, console.error);
+        &quot;#htmlCoverageReport1&quot;
+    ).innerHTML = local.coverageReportCreate({});
+});
+
+// run tests
+if (!(
+    /\bnpm_config_mode_test=1\b/
+).<span class="apidocCodeKeywordSpan">test</span>(location.search)) {
+    local.testRunDefault(testCaseDict);
+}
+}());
+&lt;/textarea&gt;
+&lt;button
+class=&quot;button&quot;
+id=&quot;buttonJslintAutofix1&quot;
 ...</pre></li>
     </ul>
 
@@ -10053,21 +10052,21 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     );
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-           }
-           return val;
-       } catch (errCaught) {
-           errCaught.message = (
-               &quot;templateRender could not render expression &quot;
-               + JSON.stringify(match0) + &quot;\n&quot;
-           ) + errCaught.message;
-           local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(undefined, errCaught);
-       }
-   });
-};
-
-local.tryCatchOnError = function (fnc, onError) {
+testCaseDict.testCase_passed_http_fetch_demo = function (opt, onError) {
 /*
-* this function will run &lt;fnc&gt; in tryCatch block,
+ * this function will demo a passed http-fetch test
+ */
+    // fetch main-page &quot;/&quot;
+    window.fetch(&quot;/&quot;).then(function (res) {
+        // validate &quot;200 ok&quot; status
+        local.<span class="apidocCodeKeywordSpan">assertOrThrow</span>(res.status === 200, res.status);
+        return res.text();
+    }).then(function (data) {
+        // validate non-empty data
+        local.assertOrThrow(data &amp;&amp; data.length &gt; 0, data);
+        onError(undefined, opt);
+    // handle err
+    }).catch(onError);
 ...</pre></li>
     </ul>
 
@@ -11132,21 +11131,21 @@ tgt = local.templateRenderMyApp(
     });
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-readExample = function (file) {
-/*
- * this function will read the example from given file
- */
-    let result;
-    local.tryCatchOnError(function () {
-        file = require(&quot;path&quot;).resolve(opt.dir, file);
-        console.<span class="apidocCodeKeywordSpan">error</span>(&quot;apidocCreate - readExample &quot; + file);
-        result = &quot;&quot;;
-        result = local.identity(
-            &quot;\n\n\n\n\n\n\n\n&quot;
-            // bug-workaround - truncate example to manageable size
-            + require(&quot;fs&quot;).readFileSync(file, &quot;utf8&quot;).slice(0, 262144)
-            + &quot;\n\n\n\n\n\n\n\n&quot;
-        ).replace((
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener(&quot;load&quot;, function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now() -
+                window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.<span class="apidocCodeKeywordSpan">error</span>(
+                &quot;domOnEventWindowOnloadTimeElapsed = &quot; +
+                window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}
+// limit select-all within &lt;pre tabIndex=&quot;0&quot;&gt; elem
 ...</pre></li>
     </ul>
 
@@ -11529,21 +11528,21 @@ e.text,e.lang,function(t,n){if(t)return p(t);if(n==null||n===e.text)return--a||p
 ;if((n||c.defaults).silent)return&quot;&lt;p&gt;An error occured:&lt;/p&gt;&lt;pre&gt;&quot;+o(h.message+&quot;&quot;,!0
 )+&quot;&lt;/pre&gt;&quot;;throw h}}</pre></li>
     <li>example use<pre class="apidocCodePre">...
-    opt.dir,
-    opt.modulePathList || require(&quot;module&quot;).paths
-);
-local.objectAssignDefault(opt, {
-    env: {
-        npm_package_description: &quot;&quot;
-    },
-    packageJson: JSON.<span class="apidocCodeKeywordSpan">parse</span>(readExample(&quot;package.json&quot;)),
-    require: function (file) {
-        return local.tryCatchOnError(function () {
-            return require(file);
-        }, console.error);
+if (globalThis.utility2_serverHttp1) {
+    return;
+}
+process.env.PORT = process.env.PORT || &quot;8081&quot;;
+console.error(&quot;http-server listening on port &quot; + process.env.PORT);
+require(&quot;http&quot;).createServer(function (req, res) {
+    let data;
+    data = local.assetsDict[require(&quot;url&quot;).<span class="apidocCodeKeywordSpan">parse</span>(req.url).pathname];
+    if (data !== undefined) {
+        res.end(data);
+        return;
     }
-});
-Object.keys(opt.packageJson).forEach(function (key) {
+    res.statusCode = 404;
+    res.end();
+}).listen(process.env.PORT);
 ...</pre></li>
     </ul>
 
@@ -11969,21 +11968,21 @@ this.options}</pre></li>
     <li>description and source-code<pre class="apidocCodePre">function(e, t, n){var r=new s(t,n);return r.parse
 (e)}</pre></li>
     <li>example use<pre class="apidocCodePre">...
-    opt.dir,
-    opt.modulePathList || require(&quot;module&quot;).paths
-);
-local.objectAssignDefault(opt, {
-    env: {
-        npm_package_description: &quot;&quot;
-    },
-    packageJson: JSON.<span class="apidocCodeKeywordSpan">parse</span>(readExample(&quot;package.json&quot;)),
-    require: function (file) {
-        return local.tryCatchOnError(function () {
-            return require(file);
-        }, console.error);
+if (globalThis.utility2_serverHttp1) {
+    return;
+}
+process.env.PORT = process.env.PORT || &quot;8081&quot;;
+console.error(&quot;http-server listening on port &quot; + process.env.PORT);
+require(&quot;http&quot;).createServer(function (req, res) {
+    let data;
+    data = local.assetsDict[require(&quot;url&quot;).<span class="apidocCodeKeywordSpan">parse</span>(req.url).pathname];
+    if (data !== undefined) {
+        res.end(data);
+        return;
     }
-});
-Object.keys(opt.packageJson).forEach(function (key) {
+    res.statusCode = 404;
+    res.end();
+}).listen(process.env.PORT);
 ...</pre></li>
     </ul>
 
@@ -12033,21 +12032,21 @@ pp.eat = function(type) {
     <li>description and source-code<pre class="apidocCodePre">function(e){this.inline=new r(e.links,this.options,this.renderer
 ),this.tokens=e.reverse();var t=&quot;&quot;;while(this.next())t+=this.tok();return t}</pre></li>
     <li>example use<pre class="apidocCodePre">...
-    opt.dir,
-    opt.modulePathList || require(&quot;module&quot;).paths
-);
-local.objectAssignDefault(opt, {
-    env: {
-        npm_package_description: &quot;&quot;
-    },
-    packageJson: JSON.<span class="apidocCodeKeywordSpan">parse</span>(readExample(&quot;package.json&quot;)),
-    require: function (file) {
-        return local.tryCatchOnError(function () {
-            return require(file);
-        }, console.error);
+if (globalThis.utility2_serverHttp1) {
+    return;
+}
+process.env.PORT = process.env.PORT || &quot;8081&quot;;
+console.error(&quot;http-server listening on port &quot; + process.env.PORT);
+require(&quot;http&quot;).createServer(function (req, res) {
+    let data;
+    data = local.assetsDict[require(&quot;url&quot;).<span class="apidocCodeKeywordSpan">parse</span>(req.url).pathname];
+    if (data !== undefined) {
+        res.end(data);
+        return;
     }
-});
-Object.keys(opt.packageJson).forEach(function (key) {
+    res.statusCode = 404;
+    res.end();
+}).listen(process.env.PORT);
 ...</pre></li>
     </ul>
 
@@ -12728,21 +12727,21 @@ type!==&quot;list_end&quot;)t+=this.tok();return this.renderer.list(t,u);case&qu
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function(e){return e}</pre></li>
     <li>example use<pre class="apidocCodePre">...
-;continue}if(s=this.rules.strong.exec(e)){e=e.substring(s[0].length),t+=this.renderer
-.strong(this.output(s[2]||s[1]));continue}if(s=this.rules.em.exec(e)){e=e.substring
-(s[0].length),t+=this.renderer.em(this.output(s[2]||s[1]));continue}if(s=this.rules
-.code.exec(e)){e=e.substring(s[0].length),t+=this.renderer.codespan(o(s[2],!0));
-continue}if(s=this.rules.br.exec(e)){e=e.substring(s[0].length),t+=this.renderer
-.br();continue}if(s=this.rules.del.exec(e)){e=e.substring(s[0].length),t+=this.renderer
-.del(this.output(s[1]));continue}if(s=this.rules.text.exec(e)){e=e.substring(s[0
-].length),t+=this.renderer.<span class="apidocCodeKeywordSpan">text</span>(o(this.smartypants(s[0])));continue}if(e)throw new
-Error(&quot;Infinite loop on byte: &quot;+e.charCodeAt(0))}return t},r.prototype.outputLink=
-function(e,t){var n=o(t.href),r=t.title?o(t.title):null;return e[0].charAt(0)!==&quot;!&quot;?
-this.renderer.link(n,r,this.output(e[1])):this.renderer.image(n,r,o(e[1]))},r.prototype
-.smartypants=function(e){return this.options.smartypants?e.replace(/---/g,&quot;\u2014&quot;
-).replace(/--/g,&quot;\u2013&quot;).replace(/(^|[-\u2014/(\[{&quot;\s])&apos;/g,&quot;$1\u2018&quot;).replace(/&apos;/g
-,&quot;\u2019&quot;).replace(/(^|[-\u2014/(\[{\u2018\s])&quot;/g,&quot;$1\u201c&quot;).replace(/&quot;/g,&quot;\u201d&quot;
-).replace(/\.{3}/g,&quot;\u2026&quot;):e},r.prototype.mangle=function(e){if(!this.options.
+* this function will test httpFetch&apos;s &quot;200 ok&quot; handling-behavior
+*/
+   // test httpFetch-path &quot;assets.hello.txt&quot;
+   opt = await local.httpFetch(&quot;assets.hello.txt&quot;);
+   // validate status is 200
+   local.assertJsonEqual(opt.status, 200);
+   // validate responseText
+   local.assertJsonEqual(await opt.<span class="apidocCodeKeywordSpan">text</span>(), &quot;hello \ud83d\ude01\n&quot;);
+   onError(undefined, opt);
+};
+
+local.testCase_httpFetch_404 = async function (opt, onError) {
+/*
+* this function will test httpFetch&apos;s &quot;404 not found&quot; handling-behavior
+*/
 ...</pre></li>
     </ul>
 
