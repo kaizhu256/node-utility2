@@ -280,33 +280,43 @@ shBrowserScreenshot() {(set -e
     ].forEach(function (extname) {
         let argList;
         let child;
-        argList = [].concat([
+        argList = Array.from([
             "--headless",
             "--ignore-certificate-errors",
             "--incognito",
             "--timeout=30000",
-            "--user-data-dir=/dev/null",
-            "--window-size=800x600"
-        ], (
-            extname === ".html"
-            ? [
-                "--dump-dom"
-            ]
-            : [
-                "--screenshot",
-                "-screenshot=" + file + ".png"
-            ]
-        ), (
-            process.platform === "linux"
-            ? "--no-sandbox"
-            : ""
-        )).filter(function (elem) {
-            return elem;
-        }).concat([
+            "--window-size=800x600",
+            (
+                process.platform !== "win32"
+                ? "--user-data-dir=/dev/null"
+                : ""
+            ),
+            (
+                (process.getuid && process.getuid() === 0)
+                ? "--no-sandbox"
+                : ""
+            ),
+            (
+                extname === ".html"
+                ? "--dump-dom"
+                : ""
+            ),
+            (
+                extname === ".png"
+                ? "--screenshot"
+                : ""
+            ),
+            (
+                extname === ".png"
+                ? "-screenshot=" + file + ".png"
+                : ""
+            ),
             url
-        ]);
+        ]).filter(function (elem) {
+            return elem;
+        });
         // debug argList
-        // console.error(argList);
+        console.error(argList);
         child = require("child_process").spawn((
             process.platform === "darwin"
             ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
