@@ -2,11 +2,11 @@
 <rect height="1902px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
 <tspan x="10" y="26"></tspan>
-<tspan x="10" y="42">[MODE_CI=buildApp] - 2020-12-08T05:31:38.949Z - shNpmTest - (node test.js)</tspan>
+<tspan x="10" y="42">[MODE_CI=buildApp] - 2020-12-08T05:43:10.246Z - shNpmTest - (node test.js)</tspan>
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74"></tspan>
 <tspan x="10" y="90">buildApp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/build\</tspan><tspan x="10" y="106">/test-report.json</tspan>
-<tspan x="10" y="122">&gt; http-server listening on port 60387</tspan>
+<tspan x="10" y="122">&gt; http-server listening on port 52273</tspan>
 <tspan x="10" y="138">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
 <tspan x="10" y="154">buildApp - replace-skipped - "\\n\\[!\\[NPM\\]\\(https:\\/\\/nodei.co\\/npm\\/.*?\\n"</tspan>
 <tspan x="10" y="170">buildApp - replace-skipped - "$ npm install "</tspan>
@@ -22,7 +22,7 @@
 <tspan x="10" y="362">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
 <tspan x="10" y="378">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
 <tspan x="10" y="394">jslint - 4ms - /home/runner/work/node-utility2/node-utility2/.windows_terminals_settings.json</tspan>
-<tspan x="10" y="410">jslint - 10ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
+<tspan x="10" y="410">jslint - 8ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
 <tspan x="10" y="426">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app.standalone/asset\</tspan><tspan x="10" y="442">s.app.js</tspan>
 <tspan x="10" y="458">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.\</tspan><tspan x="10" y="474">html</tspan>
 <tspan x="10" y="490">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.\</tspan><tspan x="10" y="506">css</tspan>
@@ -42,53 +42,53 @@
 <tspan x="10" y="890">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.\</tspan><tspan x="10" y="906">rollup.js</tspan>
 <tspan x="10" y="922">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.app.js</tspan>
 <tspan x="10" y="938">buildApp - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/LICENSE</tspan>
-<tspan x="10" y="954">jslint - 100ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
-<tspan x="10" y="970">&gt; http-server listening on port 57751</tspan>
-<tspan x="10" y="986">jslint - 361ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
-<tspan x="10" y="1002">jslint - 371ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
-<tspan x="10" y="1018">jslint - 180ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.htm\</tspan><tspan x="10" y="1034">l</tspan>
-<tspan x="10" y="1050">jslint - 391ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
-<tspan x="10" y="1066">jslint - 190ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.script_only\</tspan><tspan x="10" y="1082">.html</tspan>
-<tspan x="10" y="1098">jslint - 276ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.test.js</tspan>
-<tspan x="10" y="1114">jslint - 274ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.cs\</tspan><tspan x="10" y="1130">s</tspan>
-<tspan x="10" y="1146">jslint - 329ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.js</tspan>
-<tspan x="10" y="1162">jslint - 404ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.ht\</tspan><tspan x="10" y="1178">ml</tspan>
-<tspan x="10" y="1194">jslint - 641ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
-<tspan x="10" y="1210">jslint - 646ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
-<tspan x="10" y="1226">jslint - 646ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
-<tspan x="10" y="1242">jslint - 666ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
-<tspan x="10" y="1258">jslint - 598ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1274">b.istanbul.js</tspan>
-<tspan x="10" y="1290">jslint - 831ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
-<tspan x="10" y="1306">jslint - 942ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
-<tspan x="10" y="1322">jslint - 946ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
-<tspan x="10" y="1338">jslint - 816ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
-<tspan x="10" y="1354">jslint - 820ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1370">b.marked.js</tspan>
-<tspan x="10" y="1386">jslint - 840ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/index.html</tspan>
-<tspan x="10" y="1402">jslint - 895ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1418">b.jslint.js</tspan>
+<tspan x="10" y="954">jslint - 104ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
+<tspan x="10" y="970">jslint - 307ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
+<tspan x="10" y="986">jslint - 312ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
+<tspan x="10" y="1002">jslint - 322ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
+<tspan x="10" y="1018">&gt; jslint - 105ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.h\</tspan><tspan x="10" y="1034">tml</tspan>
+<tspan x="10" y="1050">jslint - 150ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.js</tspan>
+<tspan x="10" y="1066">http-server listening on port 46848</tspan>
+<tspan x="10" y="1082">jslint - 162ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.script_only\</tspan><tspan x="10" y="1098">.html</tspan>
+<tspan x="10" y="1114">jslint - 252ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.test.js</tspan>
+<tspan x="10" y="1130">jslint - 252ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.cs\</tspan><tspan x="10" y="1146">s</tspan>
+<tspan x="10" y="1162">jslint - 325ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.ht\</tspan><tspan x="10" y="1178">ml</tspan>
+<tspan x="10" y="1194">jslint - 620ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
+<tspan x="10" y="1210">jslint - 623ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
+<tspan x="10" y="1226">jslint - 627ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
+<tspan x="10" y="1242">jslint - 629ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
+<tspan x="10" y="1258">jslint - 724ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
+<tspan x="10" y="1274">jslint - 838ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
+<tspan x="10" y="1290">jslint - 842ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
+<tspan x="10" y="1306">jslint - 611ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
+<tspan x="10" y="1322">jslint - 708ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1338">b.istanbul.js</tspan>
+<tspan x="10" y="1354">jslint - 717ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1370">b.marked.js</tspan>
+<tspan x="10" y="1386">jslint - 739ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/index.html</tspan>
+<tspan x="10" y="1402">jslint - 799ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="1418">b.jslint.js</tspan>
 <tspan x="10" y="1434">testRunDefault - 2002 ms - testCase pending - testCase_buildApp_default ...</tspan>
-<tspan x="10" y="1450">testRunDefault - 4156 ms - [node test-case 1 of 1 passed] - testCase_buildApp_default</tspan>
+<tspan x="10" y="1450">testRunDefault - 4155 ms - [node test-case 1 of 1 passed] - testCase_buildApp_default</tspan>
 <tspan x="10" y="1466">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/tes\</tspan><tspan x="10" y="1482">t-report.json</tspan>
 <tspan x="10" y="1498"></tspan>
 <tspan x="10" y="1514">buildApp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/build\</tspan><tspan x="10" y="1530">/test-report.json</tspan>
 <tspan x="10" y="1546"></tspan>
 <tspan x="10" y="1562">-------------------------------------------------------</tspan>
 <tspan x="10" y="1578">| test-report - buildApp - node - linux - v14.15.1</tspan>
-<tspan x="10" y="1594">|    4156 ms            0 failed        1 passed      |</tspan>
+<tspan x="10" y="1594">|    4155 ms            0 failed        1 passed      |</tspan>
 <tspan x="10" y="1610">-------------------------------------------------------</tspan>
 <tspan x="10" y="1626">| test-report - buildApidoc - node - linux - v14.15.1</tspan>
-<tspan x="10" y="1642">|    4945 ms            0 failed        1 passed      |</tspan>
+<tspan x="10" y="1642">|    5983 ms            0 failed        1 passed      |</tspan>
 <tspan x="10" y="1658">-------------------------------------------------------</tspan>
 <tspan x="10" y="1674">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="1690">L, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
-<tspan x="10" y="1706">|     220 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="1706">|     193 ms            0 failed       21 passed      |</tspan>
 <tspan x="10" y="1722">-------------------------------------------------------</tspan>
 <tspan x="10" y="1738">| test-report - npmTest - node - linux - v14.15.1</tspan>
-<tspan x="10" y="1754">|    4736 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="1754">|    4674 ms            0 failed       21 passed      |</tspan>
 <tspan x="10" y="1770">-------------------------------------------------------</tspan>
 <tspan x="10" y="1786"></tspan>
 <tspan x="10" y="1802">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.html</tspan>
 <tspan x="10" y="1818">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/build.badge.svg</tspan>
 <tspan x="10" y="1834">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.badge\</tspan><tspan x="10" y="1850">.svg</tspan>
 <tspan x="10" y="1866"></tspan>
-<tspan x="10" y="1882">[MODE_CI=buildApp] - 2020-12-08T05:31:43.510Z - shNpmTest - EXIT_CODE=0</tspan>
+<tspan x="10" y="1882">[MODE_CI=buildApp] - 2020-12-08T05:43:14.750Z - shNpmTest - EXIT_CODE=0</tspan>
 </text>
 </svg>
