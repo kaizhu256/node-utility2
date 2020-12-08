@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * lib.utility2.js (2020.12.1)
+ * lib.utility2.js (2020.12.3)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -14,26 +14,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -41,15 +31,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -105,6 +90,20 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -119,11 +118,10 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +139,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -153,24 +151,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -197,81 +184,102 @@ local = (
     globalThis.globalLocal
 );
 // init exports
-if (local.isBrowser) {
-    globalThis.utility2_utility2 = local;
-} else {
+if (local.isEnvNode) {
     module.exports = local;
     module.exports.__dirname = __dirname;
+} else {
+    globalThis.utility2_utility2 = local;
 }
 // init lib main
 local.utility2 = local;
 
 
 /* validateLineSortedReset */
+// bug-workaround - throw unhandledRejections in node-process
+if (
+    typeof process === "object" && process &&
+    typeof process.on === "function" &&
+    process.unhandledRejections !== "throw"
+) {
+    process.unhandledRejections = "throw";
+    process.on("unhandledRejection", function (err) {
+        throw err;
+    });
+}
 }());
 
 
-// run shared js-env code - function
 (function () {
-let localEventListenerDict;
-let localEventListenerId;
-let localOnReadyCnt;
-localEventListenerDict = {};
-localEventListenerId = 0;
-localOnReadyCnt = 0;
-
-
 // init lib utility2
 globalThis.utility2 = local;
 
 
-// update local
+// run shared js-env code - state
 (function () {
-    let dict;
     let packageJson;
-    // update dict - default
-    dict = {
+    let state;
+    // init state - default
+    state = {
         apidocCreate: local.identity,
         coverageMerge: local.identity,
         coverageReportCreate: local.identity,
         instrumentInPackage: local.identity,
         jslintAndPrint: local.identity,
         jslintAndPrintDir: local.identity,
+        npm_config_timeout: 30000,
         npm_package_description: "the greatest app in the world!",
         npm_package_name: "my-app",
         npm_package_version: "0.0.1"
     };
-    // update dict - globalThis
-    dict = Object.assign(dict, globalThis.utility2_state);
-    // update dict - package.json
+    // init state - utility2_state
+    state = Object.assign(state, globalThis.utility2_state);
+    // init state - package.json
     try {
         packageJson = JSON.parse(require("fs").readFileSync("package.json"));
         Object.entries(packageJson).forEach(function ([
             key, val
         ]) {
-            dict["npm_package_" + key] = String(val);
+            state["npm_package_" + key] = String(val);
         });
         packageJson.repository.url.replace((
             /https:\/\/github\.com\/([^\/]+?\/[^.]+)/
         ), function (ignore, match1) {
-            dict.GITHUB_FULLNAME = match1;
+            state.GITHUB_FULLNAME = match1;
             return "";
         });
     } catch (ignore) {}
-    // update dict - process.env
-    dict = Object.assign(
-        dict,
+    // init state - process.env
+    state = Object.assign(
+        state,
         (typeof process === "object" && process && process.env)
     );
-    // update dict - misc
-    dict = Object.assign({
-        GITHUB_OWNER: String(dict.GITHUB_FULLNAME).split("/")[0],
-        GITHUB_REPO: String(dict.GITHUB_FULLNAME).split("/")[1],
-        UTILITY2_DIR_BUILD: ".tmp/build",
-        npm_package_nameLib: String(dict.npm_package_name).replace((
+    // init state - location.search
+    if (
+        typeof location === "object" && location &&
+        typeof location.search === "string"
+    ) {
+        location.search.replace((
+            /\b(npm_config_mode_test|npm_config_mode_test_case|npm_config_timeout)=([^&#]+)/g
+        ), function (ignore, key, val) {
+            state[key] = decodeURIComponent(val);
+            return "";
+        });
+    }
+    // init state - misc
+    state = Object.assign({
+        GITHUB_OWNER: String(state.GITHUB_FULLNAME).split("/")[0],
+        GITHUB_REPO: String(state.GITHUB_FULLNAME).split("/")[1],
+        UTILITY2_DIR_BUILD: (
+            local.isEnvNode
+            ? require("path").resolve(".tmp/build")
+            : "/"
+        ),
+        npm_config_mode_test_case: "",
+        npm_package_nameLib: String(state.npm_package_name).replace((
             /\W/g
         ), "_")
-    }, dict);
+    }, state);
+    state.npm_config_timeout |= 0;
     // init lib extra
     [
         "apidoc",
@@ -283,9 +291,9 @@ globalThis.utility2 = local;
     ].forEach(function (key) {
         try {
             local[key] = (
-                local.isBrowser
-                ? globalThis["utility2_" + key]
-                : require("./lib." + key + ".js")
+                local.isEnvNode
+                ? require("./lib." + key + ".js")
+                : globalThis["utility2_" + key]
             );
         } catch (errCaught) {
             local.assertOrThrow(
@@ -294,20 +302,20 @@ globalThis.utility2 = local;
             );
         }
         local[key] = local[key] || {};
-        Object.assign(dict, local[key]);
+        Object.assign(state, local[key]);
     });
     [
-        "jslintAndPrintDir",
         "coverageReportCreate",
+        "jslintAndPrintDir",
         "CI_BRANCH",
         "CI_COMMIT_ID",
-        "CI_COMMIT_INFO",
+        "CI_COMMIT_MESSAGE",
         "CI_HOST",
         "GITHUB_FULLNAME",
         "GITHUB_OWNER",
         "GITHUB_REPO",
         "HOME",
-        "MODE_BUILD",
+        "MODE_CI",
         "PATH",
         "PORT",
         "UTILITY2_DIR_BUILD",
@@ -322,7 +330,7 @@ globalThis.utility2 = local;
         "npm_config_mode_test_case",
         "npm_config_mode_test_report_merge",
         "npm_config_runme",
-        "npm_config_timeout_default",
+        "npm_config_timeout",
         "npm_config_timeout_exit",
         "npm_package_description",
         "npm_package_homepage",
@@ -333,19 +341,25 @@ globalThis.utility2 = local;
         "npm_package_nameOriginal",
         "npm_package_version"
     ].forEach(function (key) {
-        local[key] = dict[key];
+        local[key] = state[key];
     });
 }());
 let {
+    assertJsonEqual,
+    assertOrThrow,
+    documentQuerySelectorAll,
+    isEnvNode,
+    noop,
+    onErrorThrow,
     CI_BRANCH,
     CI_COMMIT_ID,
-    CI_COMMIT_INFO,
+    CI_COMMIT_MESSAGE,
     CI_HOST,
     GITHUB_FULLNAME,
     GITHUB_OWNER,
     GITHUB_REPO,
     HOME,
-    MODE_BUILD,
+    MODE_CI,
     PATH,
     PORT,
     UTILITY2_DIR_BUILD,
@@ -360,7 +374,7 @@ let {
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
     npm_config_runme,
-    npm_config_timeout_default,
+    npm_config_timeout,
     npm_config_timeout_exit,
     npm_package_description,
     npm_package_homepage,
@@ -371,19 +385,10 @@ let {
     npm_package_nameOriginal,
     npm_package_version
 } = local;
-// init timeoutDefault, modeTest, modeTestCase
-local.timeoutDefault = npm_config_timeout_default || 30000;
-String(typeof location === "object" && location && location.search).replace((
-    /\b(modeTest|modeTestCase|timeoutDefault)=([^&#]+)/g
-), function (ignore, key, val) {
-    local[key] = decodeURIComponent(val);
-    return "";
-});
-local.timeoutDefault |= 0;
 
 
 /* validateLineSortedReset */
-// run shared js-env code - assets
+// run shared js-env code - assetsDict
 local.assetsDict = local.assetsDict || {};
 local.assetsDict["/assets.utility2.header.js"] = (
     "// assets.utility2.header.js - start\n" +
@@ -392,28 +397,16 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "// run shared js\u002denv code - init-local\n" +
     "(function () {\n" +
     "    \"use strict\";\n" +
-    "    let isBrowser;\n" +
-    "    let isWebWorker;\n" +
+    "    let isEnvNode;\n" +
     "    let local;\n" +
-    "    // polyfill globalThis\n" +
-    "    if (!(typeof globalThis === \"object\" && globalThis)) {\n" +
-    "        if (typeof window === \"object\" && window && " +
-    "window.window === window) {\n" +
-    "            window.globalThis = window;\n" +
-    "        }\n" +
-    "        if (typeof global === \"object\" && global && " +
-    "global.global === global) {\n" +
-    "            global.globalThis = global;\n" +
-    "        }\n" +
-    "    }\n" +
     "    // init debugInline\n" +
     "    if (!globalThis.debugInline) {\n" +
     "        let consoleError;\n" +
     "        consoleError = console.error;\n" +
     "        globalThis.debugInline = function (...argList) {\n" +
     "        /*\n" +
-    "         * this function will both print <argList> to stderr\n" +
-    "         * and return <argList>[0]\n" +
+    "         * this function will both print <argList> to stderr and\n" +
+    "         * return <argList>[0]\n" +
     "         */\n" +
     "            consoleError(\"\\n\\ndebugInline\");\n" +
     "            consoleError(...argList);\n" +
@@ -421,15 +414,11 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            return argList[0];\n" +
     "        };\n" +
     "    }\n" +
-    "    // init isBrowser\n" +
-    "    isBrowser = (\n" +
-    "        typeof globalThis.XMLHttpRequest === \"function\" &&\n" +
-    "        globalThis.navigator &&\n" +
-    "        typeof globalThis.navigator.userAgent === \"string\"\n" +
-    "    );\n" +
-    "    // init isWebWorker\n" +
-    "    isWebWorker = (\n" +
-    "        isBrowser && typeof globalThis.importScripts === \"function\"\n" +
+    "    // init isEnvNode\n" +
+    "    isEnvNode = (\n" +
+    "        typeof process === \"object\" && process &&\n" +
+    "        process.versions && typeof process.versions.node === " +
+    "\"string\"\n" +
     "    );\n" +
     "    // init function\n" +
     "    function objectDeepCopyWithKeysSorted(obj) {\n" +
@@ -453,14 +442,14 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function assertJsonEqual(aa, bb) {\n" +
     "    /*\n" +
-    "     * this function will assert " +
-    "JSON.stringify(<aa>) === JSON.stringify(<bb>)\n" +
+    "     * this function will assert JSON.stringify(<aa>) === " +
+    "JSON.stringify(<bb>)\n" +
     "     */\n" +
     "        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));\n" +
     "        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));\n" +
     "        if (aa !== bb) {\n" +
-    "            throw new " +
-    "Error(JSON.stringify(aa) + \" !== \" + JSON.stringify(bb));\n" +
+    "            throw new Error(JSON.stringify(aa) + \" !== \" + " +
+    "JSON.stringify(bb));\n" +
     "        }\n" +
     "    }\n" +
     "    function assertOrThrow(passed, msg) {\n" +
@@ -487,6 +476,20 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            )\n" +
     "        );\n" +
     "    }\n" +
+    "    function documentQuerySelectorAll(selector) {\n" +
+    "    /*\n" +
+    "     * this function will return document.querySelectorAll(<selector>)\n" +
+    "     * or empty list if function is not available\n" +
+    "     */\n" +
+    "        return Array.from(\n" +
+    "            (\n" +
+    "                typeof document === \"object\" && document &&\n" +
+    "                typeof document.querySelectorAll === \"function\"\n" +
+    "            )\n" +
+    "            ? document.querySelectorAll(selector)\n" +
+    "            : []\n" +
+    "        );\n" +
+    "    }\n" +
     "    function identity(val) {\n" +
     "    /*\n" +
     "     * this function will return <val>\n" +
@@ -501,12 +504,10 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
     "    /*\n" +
-    "     * this function will if items from <tgt> are null, undefined, " +
-    "or \"\",\n" +
-    "     * then overwrite them with items from <src>\n" +
+    "     * this function will if items from <tgt> are null, undefined,\n" +
+    "     * or \"\", then overwrite them with items from <src>\n" +
     "     */\n" +
-    "        let recurse;\n" +
-    "        recurse = function (tgt, src, depth) {\n" +
+    "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
     "                key, bb\n" +
     "            ]) {\n" +
@@ -526,7 +527,7 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "                    recurse(aa, bb, depth - 1);\n" +
     "                }\n" +
     "            });\n" +
-    "        };\n" +
+    "        }\n" +
     "        recurse(tgt, src, depth | 0);\n" +
     "        return tgt;\n" +
     "    }\n" +
@@ -538,24 +539,13 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "            throw err;\n" +
     "        }\n" +
     "    }\n" +
-    "    // bug-workaround - throw unhandledRejections in node-process\n" +
-    "    if (\n" +
-    "        typeof process === \"object\" && process &&\n" +
-    "        typeof process.on === \"function\" &&\n" +
-    "        process.unhandledRejections !== \"strict\"\n" +
-    "    ) {\n" +
-    "        process.unhandledRejections = \"strict\";\n" +
-    "        process.on(\"unhandledRejection\", function (err) {\n" +
-    "            throw err;\n" +
-    "        });\n" +
-    "    }\n" +
     "    // init local\n" +
     "    local = {\n" +
     "        assertJsonEqual,\n" +
     "        assertOrThrow,\n" +
+    "        documentQuerySelectorAll,\n" +
     "        identity,\n" +
-    "        isBrowser,\n" +
-    "        isWebWorker,\n" +
+    "        isEnvNode,\n" +
     "        local,\n" +
     "        noop,\n" +
     "        objectAssignDefault,\n" +
@@ -747,7 +737,6 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ">download standalone app</a><br>\n" +
     "<button\n" +
     "    class=\"button\"\n" +
-    "    data-onevent=\"testRunBrowser\"\n" +
     "    id=\"buttonTestRun1\"\n" +
     ">run browser-tests</button><br>\n" +
     "<div class=\"uiAnimateSlide\" id=\"htmlTestReport1\" style=\"\n" +
@@ -765,7 +754,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "<!-- custom-html-start -->\n" +
     "<label>stderr and stdout</label>\n" +
     "<textarea\n" +
-    "    class=\"onevent-reset-output readonly textarea\"\n" +
+    "    class=\"onevent-output-reset readonly textarea\"\n" +
     "    id=\"outputStdout1\"\n" +
     "    readonly\n" +
     "></textarea>\n" +
@@ -785,8 +774,72 @@ local.assetsDict["/assets.utility2.template.html"] = (
     "</script>\n" +
     "<script src=\"assets.utility2.rollup.js\"></script>\n" +
     "<script>\n" +
+    "/* jslint utility2:true */\n" +
     "window.utility2.onReadyIncrement();\n" +
-    "window.addEventListener(\"load\", window.utility2.onReadyDecrement);\n" +
+    "window.addEventListener(\"load\", function () {\n" +
+    "    \"use strict\";\n" +
+    "    let local;\n" +
+    "    function onTestRun({\n" +
+    "        msg,\n" +
+    "        target,\n" +
+    "        type\n" +
+    "    }) {\n" +
+    "        switch ((target && target.id) || type) {\n" +
+    "        case \"buttonTestRun1\":\n" +
+    "            window.utility2_modeTest = 1;\n" +
+    "            local.testRunDefault(window.local);\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunEnd\":\n" +
+    "            document.querySelectorAll(\n" +
+    "                \"#buttonTestRun1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"run tests\";\n" +
+    "            });\n" +
+    "            document.querySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunStart\":\n" +
+    "            document.querySelectorAll(\n" +
+    "                \".onevent-output-reset\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"\";\n" +
+    "            });\n" +
+    "            document.querySelectorAll(\n" +
+    "                \"#buttonTestRun1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                elem.textContent = \"running tests\";\n" +
+    "            });\n" +
+    "            document.querySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                local.uiAnimateSlideDown(elem);\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        case \"utility2.testRunUpdate\":\n" +
+    "            document.querySelectorAll(\n" +
+    "                \"#htmlTestReport1\"\n" +
+    "            ).forEach(function (elem) {\n" +
+    "                local.uiAnimateSlideDown(elem);\n" +
+    "                elem.innerHTML = msg.html;\n" +
+    "            });\n" +
+    "            return;\n" +
+    "        }\n" +
+    "    }\n" +
+    "    local = window.utility2;\n" +
+    "    document.querySelectorAll(\n" +
+    "        \"#buttonTestRun1\"\n" +
+    "    ).forEach(function (elem) {\n" +
+    "        elem.addEventListener(\"click\", onTestRun);\n" +
+    "    });\n" +
+    "    local.eventListenerAdd(\"utility2.testRunEnd\", {}, onTestRun);\n" +
+    "    local.eventListenerAdd(\"utility2.testRunUpdate\", {}, onTestRun);\n" +
+    "    local.eventListenerAdd(\"utility2.testRunStart\", {}, onTestRun);\n" +
+    "    local.onReadyDecrement();\n" +
+    "});\n" +
     "</script>\n" +
     "utility2-comment -->\n" +
     "<script src=\"assets.{{npm_package_nameLib}}.js\"></script>\n" +
@@ -847,7 +900,7 @@ local.assetsDict["/assets.example.template.js"] = (
     "/* istanbul ignore next */\n" +
     "// run browser js\u002denv code - init-test\n" +
     "(function () {\n" +
-    "if (!local.isBrowser) {\n" +
+    "if (local.isEnvNode) {\n" +
     "    return;\n" +
     "}\n" +
     "// log stderr and stdout to #outputStdout1\n" +
@@ -881,7 +934,7 @@ local.assetsDict["/assets.example.template.js"] = (
     "/* istanbul ignore next */\n" +
     "// run node js\u002denv code - init-test\n" +
     "(function () {\n" +
-    "if (local.isBrowser) {\n" +
+    "if (!local.isEnvNode) {\n" +
     "    return;\n" +
     "}\n" +
     "// init exports\n" +
@@ -974,11 +1027,11 @@ local.assetsDict["/assets.my_app.template.js"] = (
     "    globalThis.globalLocal\n" +
     ");\n" +
     "// init exports\n" +
-    "if (local.isBrowser) {\n" +
-    "    globalThis.utility2_my_app = local;\n" +
-    "} else {\n" +
+    "if (local.isEnvNode) {\n" +
     "    module.exports = local;\n" +
     "    module.exports.__dirname = __dirname;\n" +
+    "} else {\n" +
+    "    globalThis.utility2_my_app = local;\n" +
     "}\n" +
     "// init lib main\n" +
     "local.my_app = local;\n" +
@@ -1132,17 +1185,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.svg)\n" +
     "\n" +
     "\n" +
     "# quickstart example.js\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
@@ -1154,12 +1207,12 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### output from browser\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
     "({{app.io}}/build/app/assets.example.html)\n" +
     "\n" +
     "#### output from shell\n" +
     "![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.svg)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.svg)\n" +
     "\n" +
     "\n" +
     "# extra screenshots\n" +
@@ -1211,17 +1264,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)]" +
     "({{app.io}}/build/screenshot.npmTest.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleJs.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleJs.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleJs.browser.%252F.png)\n" +
     "\n" +
-    "1. [{{app.io}}/build/screenshot.testExampleSh.browser.%252F.png]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "1. [{{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "[![screenshot]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)]" +
-    "({{app.io}}/build/screenshot.testExampleSh.browser.%252F.png)\n" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)]" +
+    "({{app.io}}/build/screenshot.readmeEvalExampleSh.browser.%252F.png)\n" +
     "\n" +
     "\n" +
     "# package.json\n" +
@@ -1275,21 +1328,21 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "# this shell script will run build-ci for this package\n" +
     "\n" +
-    "shBuildCiAfter () {(set -e\n" +
+    "shCiAfter () {(set -e\n" +
     "    # shDeployCustom\n" +
     "    shDeployGithub\n" +
     "    # shDeployHeroku\n" +
     "    shReadmeEval example.sh\n" +
     ")}\n" +
     "\n" +
-    "shBuildCiBefore () {(set -e\n" +
+    "shCiBefore () {(set -e\n" +
     "    # shNpmTestPublished\n" +
     "    shReadmeEval example.js\n" +
     ")}\n" +
     "\n" +
-    "# run shBuildCi\n" +
+    "# run shCiMain\n" +
     "eval \"$(utility2 source)\"\n" +
-    "shBuildCi\n" +
+    "shCiMain\n" +
     "```\n" +
     "\n" +
     "\n" +
@@ -1304,7 +1357,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     /\{\{app.png\}\}/g
 ), "browser.%252Fnode-my-app%252Fbuild%252Fapp.png").replace((
     /\{\{screenshot\}\}/g
-), "screenshot.buildCi.browser.%252F.tmp%252Fbuild%252F");
+), "screenshot.ci.browser.%252F.tmp%252Fbuild%252F");
 local.assetsDict["/assets.test.template.js"] = (
     "/* istanbul instrument in package my_app */\n" +
     local.assetsDict["/assets.utility2.header.js"] +
@@ -1371,78 +1424,30 @@ local.assetsDict["/assets.utility2.rollup.start.js"] = (
 local.assetsDict["/favicon.ico"] = "";
 
 
-// run shared js-env code - cli
-local.cliDict = {};
-
-local.cliDict["utility2.browserTest"] = function () {
-/*
- * <urlList> <mode>
- * will browser-test in parallel, comma-separated <urlList> with given <mode>
- */
-    local.browserTest({
-        url: process.argv[3]
-    }, function (err) {
-        if (err) {
-            console.log(err);
-        }
-    });
-};
-
-local.cliDict["utility2.start"] = function () {
-/*
- * <port>
- * will start utility2 http-server on given <port> (default 8081)
- */
-    globalThis.local = local;
-    local.replStart();
-    local.testRunDefault({});
-    if (npm_config_runme) {
-        require(require("path").resolve(npm_config_runme));
-    }
-};
-
-local.cliDict["utility2.testReportCreate"] = function () {
-/*
- *
- * will create test-report
- */
-    let testReport;
-    try {
-        testReport = JSON.parse(require("fs").readFileSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            "utf8"
-        ));
-    } catch (ignore) {}
-    local.testReportMerge(testReport, {}, "modeWrite");
-};
-
 /* validateLineSortedReset */
 // run shared js-env code - function
+let localEventListenerDict;
+let localEventListenerId;
+let localOnReadyCnt;
+localEventListenerDict = {};
+localEventListenerId = 0;
+localOnReadyCnt = 0;
+
 local._testCase_buildApidoc_default = function (opt, onError) {
 /*
  * this function will test buildApidoc's default handling-behavior
  */
-    let require2;
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
-    require2 = function (file) {
+    function require2(file) {
     /*
      * this function will require <file> in sandbox-env
      */
         let exports;
         let mockDict;
         let mockList;
-        let noop;
-        noop = function () {
-        /*
-         * this function will do nothing
-         */
-            return;
-        };
-        // coverage-hack
-        noop();
         mockList = [
             [
                 globalThis, {
@@ -1503,174 +1508,196 @@ local._testCase_buildApidoc_default = function (opt, onError) {
                 console.error(errCaught);
             }
             onError();
-        }, local.onErrorThrow);
+        }, onErrorThrow);
         return exports;
-    };
+    }
     // coverage-hack
     require2();
     // save apidoc.html
-    local.fsWriteFileWithMkdirp(".tmp/build/apidoc.html", apidocCreate(
+    local.fsWriteFileWithMkdirpSync(".tmp/build/apidoc.html", apidocCreate(
         Object.assign({
             blacklistDict: local,
             modeNoop: (
-                npm_config_mode_test_case !==
-                "testCase_buildApidoc_default"
+                npm_config_mode_test_case !== "testCase_buildApidoc_default"
             ),
             require: require2
         }, opt)
-    ), onError);
+    ));
+    onError();
 };
 
 local._testCase_buildApp_default = function (opt, onError) {
 /*
  * this function will test buildApp's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
     local.buildApp(opt, onError);
 };
 
-local._testCase_webpage_default = function (opt, onError) {
+local._testCase_webpage_default = async function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
     local.domQuerySelectorAllTagName("html");
     local.domStyleValidate();
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
-    local.browserTest({
+    await local.browserTest({
         url: (
             "http://127.0.0.1:" + PORT +
-            "/?modeTest=1&timeoutDefault=" + local.timeoutDefault +
-            "&modeTestCase=" + local.modeTestCase.replace((
-                /_?testCase_webpage_default/
+            "/?npm_config_mode_test=1&npm_config_timeout=" +
+            npm_config_timeout +
+            "&npm_config_mode_test_case=" + npm_config_mode_test_case.replace((
+                /\b_?testCase_webpage_default\b/
             ), "")
         )
-    }, onError);
+    });
+    onError(undefined, opt);
 };
 
-local.browserTest = function ({
+local.browserTest = async function ({
     modeSilent,
+    modeWindowSize,
     url
-}, onError) {
+}) {
 /*
  * this function will spawn google-chrome-process to test <url>
  */
     let chromeClient;
+    let chromeFrameId;
     let fileScreenshot;
     let isDone;
-    let promiseList;
+    let promiseScreenshot;
     let testErr;
     let testId;
     let testName;
-    function onError2(err) {
-        // cleanup chromeClient
-        chromeClient.destroy();
-        onError(err);
-    }
-    Promise.resolve().then(function () {
-        // node - init
-        testId = Math.random().toString(16);
-        testName = MODE_BUILD + ".browser." + encodeURIComponent(
-            require("url").parse(url).pathname.replace(
-                "/build.." + CI_BRANCH + ".." + CI_HOST,
-                "/build"
-            )
-        );
-        fileScreenshot = (
-            UTILITY2_DIR_BUILD + "/screenshot." + testName + ".png"
-        );
-        return local.chromeDevtoolsClientCreate({
-            modeSilent,
-            timeout: local.timeoutDefault,
-            url
-        });
-    }).then(function (data) {
-        chromeClient = data;
-        return chromeClient.navigate({
-            url
-        });
-    }).then(function () {
-        promiseList = [];
-        promiseList.push(chromeClient.screenshot({
-            delay: 100,
-            file: fileScreenshot
-        }));
-        chromeClient.evaluate(
-            // coverage-hack
-            "console.timeStamp();\n" +
-            "window.utility2_testId=\"" + testId + "\";\n" +
-            "if(!window.utility2_modeTest){\n" +
-            "console.timeStamp(window.utility2_testId);\n" +
-            "}\n"
-        );
-        return new Promise(function (resolve) {
-            chromeClient.on("Performance.metrics", function ({
-                title
-            }) {
-                if (isDone || title !== testId) {
-                    return;
-                }
-                isDone = true;
-                resolve(chromeClient.evaluate(
-                    "JSON.stringify(\n" +
-                    "window.utility2_testReport\n" +
-                    "||{testPlatformList:[{}]}\n" +
-                    ");\n"
-                ));
-            });
-        });
-    }).then(function (data) {
-        data = JSON.parse(data);
-        // init testErr
-        testErr = data.testPlatformList[0].testsFailed && new Error(
-            data.testPlatformList[0].testsFailed
-        );
-        // merge browser-screenshot
-        data.testPlatformList[0].screenshot = fileScreenshot.replace((
-            /.*\//
-        ), "");
-        // merge browser-coverage
-        coverageMerge(globalThis.__coverage__, data.coverage);
-        // merge browser-test-report
-        local.testReportMerge(globalThis.utility2_testReport, data);
-        // save test-report.json
-        promiseList.push(new Promise(function (resolve) {
-            require("fs").writeFile(
-                require("path").resolve(
-                    UTILITY2_DIR_BUILD + "/test-report.json"
-                ),
-                JSON.stringify(globalThis.utility2_testReport),
-                function (err) {
-                    local.onErrorThrow(err);
-                    console.error(
-                        "\nbrowserTest - merged test-report " +
-                        UTILITY2_DIR_BUILD + "/test-report.json" +
-                        "\n"
-                    );
-                    resolve();
-                }
-            );
-        }));
-        return Promise.all(promiseList);
-    }).then(function () {
-        // cleanup chromeClient
-        chromeClient.destroy();
-        onError2(testErr);
+    let testReport;
+    let {
+        chromeDevtoolsClientCreate,
+        testReportMerge
+    } = local;
+    // node - init
+    testId = Math.random().toString(16);
+    testName = MODE_CI + ".browser." + encodeURIComponent(
+        require("url").parse(url).pathname.replace(
+            "/build.." + CI_BRANCH + ".." + CI_HOST,
+            "/build"
+        )
+    );
+    fileScreenshot = (
+        UTILITY2_DIR_BUILD + "/screenshot." + testName + ".png"
+    );
+    chromeClient = await chromeDevtoolsClientCreate({
+        modeSilent,
+        modeWindowSize,
+        timeout: npm_config_timeout
     });
+    // init page
+    chromeClient.rpc("Page.enable");
+    chromeClient.rpc("Page.setLifecycleEventsEnabled", {
+        enabled: true
+    });
+    chromeClient.rpc("Performance.enable");
+    // load url
+    chromeClient.rpc("Page.navigate", {
+        url
+    });
+    chromeFrameId = (
+        await chromeClient.rpc("Page.getFrameTree")
+    ).frameTree.frame.id;
+    await new Promise(function (resolve) {
+        chromeClient.on("Page.lifecycleEvent", function onLoad({
+            frameId,
+            name
+        }) {
+            if (frameId === chromeFrameId && name === "load") {
+                chromeClient.removeListener("Page.lifecycleEvent", onLoad);
+                resolve();
+            }
+        });
+    });
+    console.error("chrome-devtools - loaded - page " + url);
+    // screenshot
+    promiseScreenshot = new Promise(async function (resolve) {
+        let data;
+        await new Promise(function (resolve) {
+            setTimeout(resolve, 100);
+        });
+        data = await chromeClient.rpc("Page.captureScreenshot", {
+            format: "png"
+        });
+        await require("fs").promises.writeFile(
+            fileScreenshot,
+            Buffer.from(data.data, "base64")
+        );
+        console.error("chrome-devtools - wrote - screenshot " + fileScreenshot);
+        resolve();
+    });
+    chromeClient.evaluate(
+        // coverage-hack
+        "console.timeStamp();\n" +
+        "window.utility2_testId=\"" + testId + "\";\n" +
+        "if(!window.utility2_modeTest){\n" +
+        "console.timeStamp(window.utility2_testId);\n" +
+        "}\n"
+    );
+    testReport = await new Promise(function (resolve) {
+        chromeClient.on("Performance.metrics", function ({
+            title
+        }) {
+            if (isDone || title !== testId) {
+                return;
+            }
+            isDone = true;
+            resolve(chromeClient.evaluate(
+                "JSON.stringify(\n" +
+                "window.utility2_testReport\n" +
+                "||{testPlatformList:[{}]}\n" +
+                ");\n"
+            ));
+        });
+    });
+    testReport = JSON.parse(testReport);
+    // init testErr
+    testErr = testReport.testPlatformList[0].testsFailed && new Error(
+        testReport.testPlatformList[0].testsFailed
+    );
+    // merge browser-screenshot
+    testReport.testPlatformList[0].screenshot = fileScreenshot.replace((
+        /.*\//
+    ), "");
+    // merge browser-coverage
+    coverageMerge(globalThis.__coverage__, testReport.coverage);
+    // merge browser-test-report
+    testReportMerge(globalThis.utility2_testReport, testReport);
+    // save test-report.json
+    await require("fs").promises.writeFile(
+        require("path").resolve(UTILITY2_DIR_BUILD + "/test-report.json"),
+        JSON.stringify(globalThis.utility2_testReport)
+    );
+    console.error(
+        "\nbrowserTest - merged test-report " +
+        UTILITY2_DIR_BUILD + "/test-report.json" + "\n"
+    );
+    noop(await promiseScreenshot);
+    // cleanup chromeClient
+    chromeClient.destroy();
+    onErrorThrow(testErr);
 };
 
 local.buildApp = function ({
-    assetsList = [],
+    customizeAssetsList = [],
     customizeReadmeList = []
 }, onError) {
 /*
  * this function will build app
  */
+    let assert;
     let fileDict;
     let packageJson;
     let packageNameLib;
@@ -1678,7 +1705,8 @@ local.buildApp = function ({
     let promiseList;
     let src;
     let tgt;
-    function tgtReplaceConditional(condition, replaceList) {
+    assert = require("assert");
+    function tgtReplaceConditional(conditional, replaceList) {
     /*
      * this function will conditionally replace <tgt> with replacements in
      * <replaceList>
@@ -1689,7 +1717,7 @@ local.buildApp = function ({
             merge
         }) {
             let isMatch;
-            if (!condition) {
+            if (!conditional) {
                 aa = aa || merge;
                 console.error(
                     "buildApp - replace-skipped - " +
@@ -1738,7 +1766,7 @@ local.buildApp = function ({
      * this function will write <data> to <file> with notification
      */
         require("fs").writeFile(file, data, function (err) {
-            local.onErrorThrow(err);
+            onErrorThrow(err);
             writeFileLog(file);
             resolve();
         });
@@ -1772,24 +1800,27 @@ local.buildApp = function ({
             }, {
                 url: "/index.html"
             }
-        ].concat(assetsList).map(function (elem) {
+        ].concat(customizeAssetsList).map(function ({
+            file,
+            url
+        }) {
             return new Promise(function (resolve) {
-                require("http").request((
-                    "http://127.0.0.1:" + PORT + elem.url
+                require("http").get((
+                    "http://127.0.0.1:" + PORT + url
                 ), function (res) {
                     let bufList;
-                    local.assertOrThrow(res.statusCode === 200, elem);
+                    assert.ok(res.statusCode === 200, url);
                     bufList = [];
                     res.on("data", function (chunk) {
                         bufList.push(chunk);
                     }).on("end", function () {
                         writeFile(
-                            ".tmp/build/app/" + (elem.file || elem.url),
+                            ".tmp/build/app/" + (file || url),
                             Buffer.concat(bufList),
                             resolve
                         );
                     });
-                }).end();
+                });
             });
         }));
         // jslint assets
@@ -1815,7 +1846,7 @@ local.buildApp = function ({
                 require("fs").copyFile(file, (
                     ".tmp/build/app.standalone/" + file
                 ), function (err) {
-                    local.onErrorThrow(err);
+                    onErrorThrow(err);
                     resolve();
                 });
             });
@@ -1839,9 +1870,10 @@ local.buildApp = function ({
                     "ignore", 1, 2
                 ]
             }).on("exit", function (exitCode, signal) {
-                local.assertOrThrow(!exitCode && signal === "SIGTERM", [
-                    exitCode, signal
-                ]);
+                assert.ok(!exitCode && signal === "SIGTERM", JSON.stringify({
+                    exitCode,
+                    signal
+                }));
                 resolve();
             });
             setTimeout(child.kill.bind(child, "SIGTERM"), 4000);
@@ -1982,15 +2014,15 @@ local.buildApp = function ({
                 merge: (
                     /\n<!--\u0020custom-html-start\u0020-->\n[\S\s]*?\n<!--\u0020custom-html-end\u0020-->\n/
                 )
-            // customize build_ci - shBuildCiAfter
+            // customize build_ci - shCiAfter
             }, {
                 merge: (
-                    /\nshBuildCiAfter\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/
+                    /\nshCiAfter\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/
                 )
-            // customize build_ci - shBuildCiBefore
+            // customize build_ci - shCiBefore
             }, {
                 merge: (
-                    /\nshBuildCiBefore\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/
+                    /\nshCiBefore\u0020\(\)\u0020\{\(set\u0020-e\n[\S\s]*?\n\)\}\n/
                 )
             }
         ]);
@@ -2028,9 +2060,9 @@ local.buildApp = function ({
         ].indexOf("<script src=\"assets.example.js\"></script>") < 0, [
             {
                 aa: (
-                    /\nif\u0020\(!local.isBrowser\)\u0020\{\n[\S\s]*?\n\}\(\)\);\n/g
+                    /\nif\u0020\(local.isEnvNode\)\u0020\{\n[\S\s]*?\n\}\(\)\);\n/g
                 ),
-                bb: "\nif (!local.isBrowser) {\n    return;\n}\n}());\n"
+                bb: "\nif (local.isEnvNode) {\n    return;\n}\n}());\n"
             }
         ]);
         // customize comment
@@ -2070,7 +2102,7 @@ local.buildApp = function ({
             }, {
                 // customize screenshot
                 aa: (
-                    /^1\.\u0020.*?screenshot\.(?:npmTest|testExampleJs|testExampleSh).*?\.png[\S\s]*?\n\n/gm
+                    /^1\.\u0020.*?screenshot\.(?:npmTest|readmeEvalExampleJs|readmeEvalExampleSh).*?\.png[\S\s]*?\n\n/gm
                 ),
                 bb: ""
             }
@@ -2096,7 +2128,7 @@ local.buildApp = function ({
                 bb: ""
             }
         ]);
-        // customize shBuildCiAfter and shBuildCiBefore
+        // customize shCiAfter and shCiBefore
         [
             [
                 "shDeployGithub", (
@@ -2108,27 +2140,27 @@ local.buildApp = function ({
                 )
             ], [
                 "shReadmeEval example.js", (
-                    /.*?\/screenshot\.testExampleJs.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleJs.*?\n/g
                 )
             ], [
                 "shReadmeEval example.sh", (
-                    /.*?\/screenshot\.testExampleSh.*?\n/g
+                    /.*?\/screenshot\.readmeEvalExampleSh.*?\n/g
                 )
             ], [
                 // coverage-hack
                 "__zjqx1234__" + Math.random(), "__zjqx1234__" + Math.random()
             ]
         ].forEach(function ([
-            condition, rgxScreenshot
+            conditional, rgxScreenshot
         ]) {
-            if (src.indexOf("    " + condition + "\n") >= 0) {
+            if (src.indexOf("    " + conditional + "\n") >= 0) {
                 return;
             }
             // customize test-server
             tgt = tgt.replace(
                 new RegExp(
                     "\\n\\| test-server-" +
-                    condition.replace("shDeploy", "").toLowerCase() +
+                    conditional.replace("shDeploy", "").toLowerCase() +
                     " : \\|.*?\\n"
                 ),
                 "\n"
@@ -2214,9 +2246,8 @@ local.buildApp = function ({
         }));
         // init port
         promiseList.push(new Promise(function (resolve) {
-            let recurse;
             let server;
-            recurse = function (err) {
+            function recurse(err) {
                 if (server) {
                     server.close();
                 }
@@ -2224,12 +2255,12 @@ local.buildApp = function ({
                     resolve();
                     return;
                 }
-                port = Number(
+                port = (
                     "0x" + require("crypto").randomBytes(2).toString("hex")
                 ) | 0x8000;
                 server = require("net").createServer().listen(port);
                 server.on("error", recurse).on("listening", recurse);
-            };
+            }
             recurse(true);
         }));
         // read file
@@ -2260,317 +2291,362 @@ local.buildApp = function ({
         });
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         promiseList = [];
         promiseList.push(new Promise(buildReadme));
         promiseList.push(new Promise(buildLib));
         promiseList.push(new Promise(buildTest));
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         promiseList = [];
         promiseList.push(new Promise(buildAppAssets));
         promiseList.push(new Promise(buildAppStandalone));
         return Promise.all(promiseList);
     }).then(function (errList) {
-        errList.forEach(local.onErrorThrow);
+        errList.forEach(onErrorThrow);
         onError();
     });
 };
 
-local.chromeDevtoolsClientCreate = function ({
+local.chromeDevtoolsClientCreate = async function ({
     chromeBin,
-    modeMockProcessPlatform,
+    modeCoverageHack,
     modeSilent,
+    modeWindowSize = "800x600",
     processPlatform,
     timeout
 }) {
 /*
  * this function with create chrome-devtools-client from <chromeBin>
  */
-    let chromeCleanup;
+    let WS_READ_HEADER;
+    let WS_READ_LENGTH16;
+    let WS_READ_LENGTH63;
+    let WS_READ_PAYLOAD;
+    let assert;
+    let callbackDict;
+    let callbackId;
     let chromeClient;
     let chromeProcess;
     let chromeSessionId;
     let chromeUserDataDir;
+    let secWebsocketKey;
+    let timerTimeout;
     let websocket;
+    let websocketUrl;
+    let wsBufList;
+    let wsPayloadLength;
+    let wsReadState;
     let wsReader;
-    return Promise.resolve().then(function () {
+    if (modeCoverageHack === 1) {
+        [
+            "darwin", "linux", "win32"
+        ].forEach(function (processPlatform) {
+            local.chromeDevtoolsClientCreate({
+                modeCoverageHack: 2,
+                processPlatform
+            }).catch(noop);
+        });
+        return;
+    }
+    WS_READ_HEADER = 0;
+    WS_READ_LENGTH16 = 1;
+    WS_READ_LENGTH63 = 2;
+    WS_READ_PAYLOAD = 3;
+    assert = require("assert");
+    callbackDict = {};
+    callbackId = 0;
+    wsBufList = [];
+    wsPayloadLength = 0;
+    wsReadState = WS_READ_HEADER;
+    function chromeCleanup() {
     /*
-     * this function will init <chromeCleanup> and <chromeClient>
+     * this function will
+     * 1. kill <chromeProcess>
+     * 2. rm -rf <chromeUserDataDir>
+     * 3. destroy <chromeClient>, <websocket>, <wsReader>
      */
-        let callbackDict;
-        let callbackId;
-        let timerTimeout;
-        callbackDict = {};
-        callbackId = 0;
-        chromeCleanup = function () {
-        /*
-         * this function will
-         * kill <chromeProcess>
-         * rm -rf <chromeUserDataDir>
-         * destroy <chromeClient>, <websocket>, <wsReader>
-         */
-            // cleanup timerTimeout
-            clearTimeout(timerTimeout);
-            // kill <chromeProcess>
-            try {
-                if (processPlatform === "win32") {
-                    require("child_process").spawnSync("taskkill", [
-                        "/pid", chromeProcess.pid, "/T", "/F"
-                    ], {
-                        stdio: "ignore"
-                    });
-                } else {
-                    // kill child process tree with ".kill(-pid)" cmd.
-                    process.kill(-chromeProcess.pid, "SIGKILL");
-                }
-            } catch (ignore) {}
-            // rm -rf <chromeUserDataDir>
+        // cleanup timerTimeout
+        clearTimeout(timerTimeout);
+        // 1. kill <chromeProcess>
+        try {
+            if (processPlatform === "win32") {
+                require("child_process").spawnSync("taskkill", [
+                    "/pid", chromeProcess.pid, "/T", "/F"
+                ], {
+                    stdio: "ignore"
+                });
+            } else {
+                // kill child process tree with ".kill(-pid)" cmd.
+                process.kill(-chromeProcess.pid, "SIGKILL");
+            }
+        } catch (ignore) {}
+        // 2. rm -rf <chromeUserDataDir>
+        if (chromeUserDataDir) {
             require("fs").rmdirSync(chromeUserDataDir, {
                 recursive: true
             });
-            // destroy <chromeClient>, <websocket>, <wsReader>
-            chromeClient.destroy();
-            try {
-                websocket.destroy();
-            } catch (ignore) {}
-            wsReader.destroy();
-        };
-        // init timerTimeout
-        timeout = timeout || 30000;
-        timerTimeout = setTimeout(function () {
-            chromeCleanup();
-            chromeClient.emit("error", new Error(
-                "chrome-devtools - timeout " + timeout + " ms"
-            ));
-        }, timeout);
-        function ChromeClient() {
-        /*
-         * this function will construct <chromeClient>
-         */
-            require("stream").Duplex.call(this);
         }
-        require("util").inherits(ChromeClient, require("stream").Duplex);
-        chromeClient = new ChromeClient();
-        chromeClient.__proto__._destroy = chromeCleanup;
-        chromeClient.__proto__._read = function () {
-        /*
-         * this function will implement stream.Duplex.prototype._read
-         */
-            if (websocket && websocket.readable) {
-                websocket.resume();
-            }
-        };
-        chromeClient.__proto__._write = function (payload, ignore, callback) {
-        /*
-         * this function will implement stream.Duplex.prototype._write
-         */
-            // console.error("SEND \u25ba " + payload.slice(0, 256).toString());
-            let header;
-            let maskKey;
-            let result;
-            // init header
-            header = Buffer.alloc(2 + 8 + 4);
-            // init fin = true
-            header[0] |= 0x80;
-            // init opcode = text-frame
-            header[0] |= 1;
-            // init mask = true
-            header[1] |= 0x80;
-            // init payload.length
-            if (payload.length < 126) {
-                header = header.slice(0, 2 + 0 + 4);
-                header[1] |= payload.length;
-            // } else if (payload.length < 65536) {
-            } else {
-                local.assertOrThrow(
-                    payload.length < 65536,
-                    "chrome-devtools - " +
-                    "payload-length must be less than 65536 bytes, not " +
-                    payload.length
-                );
-                header = header.slice(0, 2 + 2 + 4);
-                header[1] |= 126;
-                header.writeUInt16BE(payload.length, 2);
-            /*
-            } else {
-                header[1] |= 127;
-                header.writeUInt32BE(payload.length, 6);
-            */
-            }
-            // init maskKey
-            maskKey = require("crypto").randomBytes(4);
-            maskKey.copy(header, header.length - 4);
-            // send header
-            websocket.cork();
-            websocket.write(header);
-            // send payload ^ maskKey
-            payload.forEach(function (ignore, ii) {
-                payload[ii] ^= maskKey[ii & 3];
-            });
-            // return write-result
-            result = websocket.write(payload, callback);
-            websocket.uncork();
-            return result;
-        };
-        chromeClient.evaluate = function (expression) {
-            return chromeClient.rpc("Runtime.evaluate", {
-                awaitPromise: true,
-                expression,
-                returnByValue: false,
-                userGesture: true
-            }).then(function ({
-                exceptionDetails,
-                result
-            }) {
-                local.assertOrThrow(
-                    !exceptionDetails,
-                    "chrome-devtools - " + JSON.stringify(exceptionDetails)
-                );
-                return result.value;
-            });
-        };
-        chromeClient.on("data", function (payload) {
-        /*
-         * this function will handle callback for <payload>
-         * received from chrome-browser using chrome-devtools-protocol
-         */
-            // console.error("\u25c0 RECV " + payload.slice(0, 256).toString());
-            let callback;
-            let {
-                method,
-                id,
-                error,
-                params,
-                result
-            } = JSON.parse(payload);
-            local.assertOrThrow(!method || (
-                /^[A-Z]\w*?\.[a-z]\w*?$/
-            ).test(method), new Error(
-                "chrome-devtools - invalid method " + method
-            ));
-            // init callback
-            callback = callbackDict[id];
-            delete callbackDict[id];
-            // callback.resolve
-            if (callback) {
-                // preserve stack-trace
-                callback.err.message = "chrome-devtools - " +
-                JSON.stringify(error);
-                local.assertOrThrow(!error, callback.err);
-                callback.resolve(result);
-                return;
-            }
-            local.assertOrThrow(!error, "chrome-devtools - " + error);
-            chromeClient.emit(method, params);
-        });
-        chromeClient.navigate = function ({
-            url
-        }) {
-        /*
-         * this function will navigate to webpage <url>
-         */
-            let chromeFrameId;
-            console.error("chrome-devtools - Page.navigate " + url);
-            chromeClient.rpc("Page.navigate", {
-                url
-            });
-            // wait for page to load
-            chromeClient.rpc("Page.getFrameTree").then(function ({
-                frameTree
-            }) {
-                chromeFrameId = frameTree.frame.id;
-            });
-            return new Promise(function (resolve) {
-                chromeClient.on("Page.lifecycleEvent", function onLoad({
-                    frameId,
-                    name
-                }) {
-                    if (frameId === chromeFrameId && name === "load") {
-                        chromeClient.removeListener(
-                            "Page.lifecycleEvent",
-                            onLoad
-                        );
-                        resolve();
-                    }
-                });
-            });
-        };
-        chromeClient.rpc = function (method, params) {
-        /*
-         * this function will message-pass
-         * JSON.stringify({
-         *     id: <callbackId>,
-         *     method: <method>,
-         *     params: <params>,
-         *     sessionId: <chromeSessionId>
-         * })
-         * to chrome-browser using chrome-devtools-protocol
-         */
-            callbackId = (callbackId % 256) + 1;
-            chromeClient.write(Buffer.from(JSON.stringify({
-                id: callbackId,
-                method,
-                params,
-                sessionId: chromeSessionId
-            })));
-            return new Promise(function (resolve) {
-                callbackDict[callbackId] = {
-                    err: new Error(),
-                    method,
-                    resolve
-                };
-            });
-        };
-        chromeClient.screenshot = function ({
-            delay,
-            file
-        }) {
-        /*
-         * this function will screenshot browser to <file> given <delay> ms
-         */
-            local.assertOrThrow(file, "chrome-devtools - file required");
-            return new Promise(function (resolve) {
-                setTimeout(function () {
-                    chromeClient.rpc("Page.captureScreenshot", {
-                        format: "png"
-                    }).then(function ({
-                        data
-                    }) {
-                        require("fs").writeFile((
-                            file
-                        ), Buffer.from(data, "base64"), function (err) {
-                            local.onErrorThrow(err);
-                            console.error(
-                                "chrome-devtools - Page.captureScreenshot " +
-                                file
-                            );
-                            resolve();
-                        });
-                    });
-                }, delay);
-            });
-        };
-    }).then(function () {
+        // 3. destroy <chromeClient>, <websocket>, <wsReader>
+        chromeClient.destroy();
+        if (websocket) {
+            websocket.destroy();
+        }
+        wsReader.destroy();
+    }
+    async function chromeEvaluate(expression) {
     /*
-     * this function will init <wsReader>
-     * that can read websocket-frames from <websocket>
+     * this function will eval <expression> in chrome-browser
      */
-        let WS_READ_HEADER;
-        let WS_READ_LENGTH16;
-        let WS_READ_LENGTH63;
-        let WS_READ_PAYLOAD;
-        let wsBufList;
-        let wsPayloadLength;
-        let wsReadState;
-        WS_READ_HEADER = 0;
-        WS_READ_LENGTH16 = 1;
-        WS_READ_LENGTH63 = 2;
-        WS_READ_PAYLOAD = 3;
-        wsBufList = [];
-        wsPayloadLength = 0;
-        wsReadState = WS_READ_HEADER;
+        let {
+            exceptionDetails,
+            result
+        } = await chromeClient.rpc("Runtime.evaluate", {
+            awaitPromise: true,
+            expression,
+            returnByValue: false,
+            userGesture: true
+        });
+        assert.ok(!exceptionDetails, (
+            "chrome-devtools - evaluate - " +
+            JSON.stringify(exceptionDetails)
+        ));
+        return result.value;
+    }
+    function chromeOnData(payload) {
+    /*
+     * this function will handle callback for <payload>
+     * received from chrome-browser using chrome-devtools-protocol
+     */
+        // console.error("\u25c0 RECV " + payload.slice(0, 256).toString());
+        let callback;
+        let {
+            error,
+            id,
+            method,
+            params,
+            result
+        } = JSON.parse(payload);
+        assert.ok(!method || (
+            /^[A-Z]\w*?\.[a-z]\w*?$/
+        ).test(method), "chrome-devtools - read - invalid method " + method);
+        // init callback
+        callback = callbackDict[id];
+        delete callbackDict[id];
+        // callback.resolve
+        if (callback) {
+            // preserve stack-trace
+            callback.err.message = (
+                "chrome-devtools - read - " + JSON.stringify(error)
+            );
+            assert.ok(!error, callback.err);
+            callback.resolve(result);
+            return;
+        }
+        assert.ok(!error, "chrome-devtools - read - " + JSON.stringify(error));
+        chromeClient.emit(method, params);
+    }
+    function chromeRead() {
+    /*
+     * this function will implement stream.Duplex.prototype._read
+     */
+        if (websocket && websocket.readable) {
+            websocket.resume();
+        }
+    }
+    function chromeRpc(method, params) {
+    /*
+     * this function will message-pass
+     * JSON.stringify({
+     *     id: <callbackId>,
+     *     method: <method>,
+     *     params: <params>,
+     *     sessionId: <chromeSessionId>
+     * })
+     * to chrome-browser using chrome-devtools-protocol
+     */
+        callbackId = (callbackId % 256) + 1;
+        chromeClient.write(Buffer.from(JSON.stringify({
+            id: callbackId,
+            method,
+            params,
+            sessionId: (
+                typeof chromeSessionId === "string"
+                ? chromeSessionId
+                : undefined
+            )
+        })));
+        return new Promise(function (resolve) {
+            callbackDict[callbackId] = {
+                err: new Error(),
+                method,
+                resolve
+            };
+        });
+    }
+    function chromeWrite(payload, ignore, callback) {
+    /*
+     * this function will implement stream.Duplex.prototype._write
+     */
+        // console.error("SEND \u25ba " + payload.slice(0, 256).toString());
+        let header;
+        let maskKey;
+        let result;
+        // init header
+        header = Buffer.alloc(2 + 8 + 4);
+        // init fin = true
+        header[0] |= 0x80;
+        // init opcode = text-frame
+        header[0] |= 1;
+        // init mask = true
+        header[1] |= 0x80;
+        // init payload.length
+        if (payload.length < 126) {
+            header = header.slice(0, 2 + 0 + 4);
+            header[1] |= payload.length;
+        // } else if (payload.length < 65536) {
+        } else {
+            assert.ok(payload.length < 65536, (
+                "chrome-devtools - write - " +
+                "payload-length must be less than 65536 bytes, not " +
+                payload.length
+            ));
+            header = header.slice(0, 2 + 2 + 4);
+            header[1] |= 126;
+            header.writeUInt16BE(payload.length, 2);
+        /*
+        } else {
+            header[1] |= 127;
+            header.writeUInt32BE(payload.length, 6);
+        */
+        }
+        // init maskKey
+        maskKey = require("crypto").randomBytes(4);
+        maskKey.copy(header, header.length - 4);
+        // send header
+        websocket.cork();
+        websocket.write(header);
+        // send payload ^ maskKey
+        payload.forEach(function (ignore, ii) {
+            payload[ii] ^= maskKey[ii & 3];
+        });
+        // return write-result
+        result = websocket.write(payload, callback);
+        websocket.uncork();
+        return result;
+    }
+    function wsBufListRead(nn) {
+    /*
+     * this function will read <nn> bytes from <wsBufList>
+     */
+        let buf;
+        wsBufList = (
+            wsBufList.length === 1
+            ? wsBufList[0]
+            : Buffer.concat(wsBufList)
+        );
+        buf = wsBufList.slice(0, nn);
+        wsBufList = [
+            wsBufList.slice(nn)
+        ];
+        return buf;
+    }
+    function wsFrameRead() {
+    /*
+     * this function will read websocket-data-frame
+     */
+        let buf;
+        let opcode;
+        if (wsBufList.reduce(function (aa, bb) {
+            return aa + bb.length;
+        }, 0) < (
+            wsReadState === WS_READ_PAYLOAD
+            ? Math.max(wsPayloadLength, 1)
+            : wsReadState === WS_READ_LENGTH63
+            ? 8
+            : 2
+        )) {
+            return;
+        }
+        switch (wsReadState) {
+        // read frame-header
+        case WS_READ_HEADER:
+            buf = wsBufListRead(2);
+            // validate opcode
+            opcode = buf[0] & 0x0f;
+            assert.ok(opcode === 0x01, (
+                "chrome-devtools - read - opcode must be 0x01, not 0x0" +
+                opcode.toString(16)
+            ));
+            wsPayloadLength = buf[1] & 0x7f;
+            wsReadState = (
+                wsPayloadLength === 126
+                ? WS_READ_LENGTH16
+                : wsPayloadLength === 127
+                ? WS_READ_LENGTH63
+                : WS_READ_PAYLOAD
+            );
+            break;
+        // read frame-payload-length-16
+        case WS_READ_LENGTH16:
+            wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-length-63
+        case WS_READ_LENGTH63:
+            buf = wsBufListRead(8);
+            wsPayloadLength = (
+                buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
+            );
+            wsReadState = WS_READ_PAYLOAD;
+            break;
+        // read frame-payload-data
+        case WS_READ_PAYLOAD:
+            assert.ok((
+                0 <= wsPayloadLength && wsPayloadLength <= 10000000
+            ), (
+                "chrome-devtools - read - " +
+                "payload-length must be between 0 and 256 MiB, not " +
+                wsPayloadLength
+            ));
+            buf = wsBufListRead(wsPayloadLength);
+            wsReadState = WS_READ_HEADER;
+            chromeClient.push(buf);
+            break;
+        }
+        return true;
+    }
+    function wsReaderTransform(chunk, ignore, callback) {
+    /*
+     * this function will implement Transform.prototype._transform
+     */
+        wsBufList.push(chunk);
+        while (true) {
+            if (!wsFrameRead()) {
+                break;
+            }
+        }
+        callback();
+    }
+    // init chromeClient
+    function ChromeClient() {
+    /*
+     * this function will construct <chromeClient>
+     */
+        chromeClient = this;
+        require("util").inherits(ChromeClient, require("stream").Duplex);
+        require("stream").Duplex.call(chromeClient);
+        Object.assign(chromeClient.__proto__, {
+            _destroy: chromeCleanup,
+            _read: chromeRead,
+            _write: chromeWrite,
+            evaluate: chromeEvaluate,
+            rpc: chromeRpc
+        });
+        chromeClient.on("data", chromeOnData);
+    }
+    chromeClient = new ChromeClient();
 /*
 https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-13#section-5.2
 +---------------------------------------------------------------+
@@ -2651,277 +2727,154 @@ Application data: y bytes
     equal to the payload length minus the length of the extension
     data.
 */
-        function wsBufListRead(nn) {
-        /*
-         * this function will read <nn> bytes from <wsBufList>
-         */
-            let buf;
-            wsBufList = (
-                wsBufList.length === 1
-                ? wsBufList[0]
-                : Buffer.concat(wsBufList)
-            );
-            buf = wsBufList.slice(0, nn);
-            wsBufList = [
-                wsBufList.slice(nn)
-            ];
-            return buf;
-        }
-        function wsFrameRead() {
-        /*
-         * this function will read websocket-data-frame
-         */
-            let buf;
-            let opcode;
-            if (wsBufList.reduce(function (aa, bb) {
-                return aa + bb.length;
-            }, 0) < (
-                wsReadState === WS_READ_PAYLOAD
-                ? Math.max(wsPayloadLength, 1)
-                : wsReadState === WS_READ_LENGTH63
-                ? 8
-                : 2
-            )) {
-                return;
-            }
-            switch (wsReadState) {
-            // read frame-header
-            case WS_READ_HEADER:
-                buf = wsBufListRead(2);
-                // validate opcode
-                opcode = buf[0] & 0x0f;
-                local.assertOrThrow(
-                    opcode === 0x01,
-                    "chrome-devtools - opcode must be 0x01, not 0x0" +
-                    opcode.toString(16)
-                );
-                wsPayloadLength = buf[1] & 0x7f;
-                wsReadState = (
-                    wsPayloadLength === 126
-                    ? WS_READ_LENGTH16
-                    : wsPayloadLength === 127
-                    ? WS_READ_LENGTH63
-                    : WS_READ_PAYLOAD
-                );
-                break;
-            // read frame-payload-length-16
-            case WS_READ_LENGTH16:
-                wsPayloadLength = wsBufListRead(2).readUInt16BE(0);
-                wsReadState = WS_READ_PAYLOAD;
-                break;
-            // read frame-payload-length-63
-            case WS_READ_LENGTH63:
-                buf = wsBufListRead(8);
-                wsPayloadLength = (
-                    buf.readUInt32BE(0) * 0x100000000 + buf.readUInt32BE(4)
-                );
-                wsReadState = WS_READ_PAYLOAD;
-                break;
-            // read frame-payload-data
-            case WS_READ_PAYLOAD:
-                local.assertOrThrow(
-                    0 <= wsPayloadLength && wsPayloadLength <= 10000000,
-                    "chrome-devtools - " +
-                    "payload-length must be between 0 and 256 MiB, not " +
-                    wsPayloadLength
-                );
-                buf = wsBufListRead(wsPayloadLength);
-                wsReadState = WS_READ_HEADER;
-                chromeClient.push(buf);
-                break;
-            }
-            return true;
-        }
-        function WsReader() {
-        /*
-         * this function will construct <wsReader>
-         */
-            require("stream").Transform.call(this);
-        }
+    // init wsReader that can read websocket-frames from websocket
+    function WsReader() {
+    /*
+     * this function will construct <wsReader>
+     */
+        wsReader = this;
         require("util").inherits(WsReader, require("stream").Transform);
-        wsReader = new WsReader();
-        wsReader.__proto__._transform = function (chunk, ignore, callback) {
-        /*
-         * this function will implement Transform.prototype._transform
-         */
-            wsBufList.push(chunk);
-            while (true) {
-                if (!wsFrameRead()) {
-                    break;
-                }
-            }
-            callback();
-        };
-    }).then(function () {
-    /*
-     * this function will init <chromeProcess>
-     */
-        processPlatform = processPlatform || process.platform;
-        chromeUserDataDir = require("fs").mkdtempSync(require("path").join(
-            require("os").tmpdir(),
-            "puppeteer_dev_profile-"
-        ));
-        chromeBin = chromeBin || (
-            processPlatform === "darwin"
-            ? "/Applications/Google Chrome.app/Contents/MacOS/" +
-            "Google Chrome"
-            : processPlatform === "win32"
-            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\" +
-            "chrome.exe"
-            : "/usr/bin/google-chrome-stable"
-        );
-        console.error("chrome-devtools - spawn " + chromeBin);
-        chromeProcess = require("child_process").spawn((
-            chromeBin
-        ), [
-            "--headless",
-            "--incognito",
-            "--remote-debugging-port=0",
-            "--user-data-dir=" + chromeUserDataDir,
-            Array.from([
-                "", "--no-sandbox"
-            ])[(process.getuid && process.getuid() === 0) | 0]
-        ], {
-            // On non-windows platforms, `detached: false` makes child process
-            // a leader of a new process group, making it possible to kill
-            // child process tree with `.kill(-pid)` cmd.
-            // https://nodejs.org/api/child_process.html#child_process_options_detached
-            detached: process.platform !== "win32",
-            stdio: [
-                "ignore", (
-                    !modeSilent
-                    ? 1
-                    : "ignore"
-                ), "pipe"
-            ]
+        require("stream").Transform.call(wsReader);
+        Object.assign(wsReader.__proto__, {
+            _transform: wsReaderTransform
         });
-        if (!modeSilent) {
-            chromeProcess.on("error", local.noop);
-            chromeProcess.stderr.pipe(process.stderr, {
-                end: false
-            });
-        }
-        process.on("exit", chromeCleanup);
-        process.on("SIGINT", chromeCleanup);
-        process.on("SIGTERM", chromeCleanup);
-        process.on("SIGHUP", chromeCleanup);
-        return new Promise(function (resolve, reject) {
-            let stderr;
-            // coverage-hack
-            if (modeMockProcessPlatform) {
-                chromeCleanup();
-                reject();
-                return;
-            }
-            stderr = "";
-            chromeProcess.stderr.on("data", function onData(chunk) {
-                local.assertOrThrow(
-                    stderr.length < 65536,
-                    "chrome-devtools - cannot connect to chrome"
-                );
-                stderr += chunk;
-                stderr.replace((
-                    /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
-                ), function (ignore, url) {
-                    chromeProcess.stderr.removeListener("data", onData);
-                    resolve(url);
-                    return "";
-                });
-            });
-        });
-    }).then(function (websocketUrl) {
-    /*
-     * this function will init <websocket>
-     */
-        let secWebsocketKey;
-        console.error(
-            "chrome-devtools - connect websocket " + websocketUrl
-        );
-        secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
-        return new Promise(function (resolve) {
-            require("http").get(Object.assign(require("url").parse(
-                websocketUrl
-            ), {
-                "createConnection": function (opt) {
-                    opt.path = opt.socketPath;
-                    return require("net").connect(opt);
-                },
-                "headers": {
-                    "Connection": "Upgrade",
-                    "Sec-WebSocket-Key": secWebsocketKey,
-                    "Sec-WebSocket-Version": 13,
-                    "Upgrade": "websocket"
-                },
-                "protocol": "http:",
-                "protocolVersion": 13
-            })).once("upgrade", function (res, _websocket, head) {
-                local.assertOrThrow(
-                    (
-                        res.headers[
-                            "sec-websocket-accept"
-                        ] === require("crypto").createHash("sha1").update(
-                            secWebsocketKey +
-                            "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-                        ).digest("base64")
-                    ),
-                    "chrome-devtools - invalid sec-websocket-accept header"
-                );
-                websocket = _websocket;
-                websocket.unshift(head);
-                // websocket - disable timeout
-                websocket.setTimeout(0);
-                // websocket - disable nagle's algorithm
-                websocket.setNoDelay();
-                websocket.on("end", websocket.end.bind(websocket));
-                // pipe websocket to wsReader
-                websocket.pipe(wsReader);
-                resolve();
-            });
-        });
-    }).then(function () {
-    /*
-     * this function will init <chromeSessionId>
-     */
-        console.error("chrome-devtools - Target.createTarget about:blank");
-        return chromeClient.rpc("Target.createTarget", {
-            url: "about:blank"
-        }).then(function (data) {
-            return chromeClient.rpc("Target.attachToTarget", {
-                targetId: data.targetId,
-                flatten: true
-            });
-        }).then(function ({
-            sessionId
-        }) {
-            chromeSessionId = sessionId;
-        });
-    }).then(function () {
-    /*
-     * this function will navigate chrome to <url>
-     */
-        // init screensize
-        chromeClient.rpc("Emulation.setDeviceMetricsOverride", {
-            deviceScaleFactor: 1,
-            height: 600,
-            mobile: false,
-            screenOrientation: {
-                angle: 0,
-                type: "portraitPrimary"
-            },
-            width: 800
-        });
-        // init page
-        chromeClient.rpc("Page.enable", undefined);
-        chromeClient.rpc("Page.setLifecycleEventsEnabled", {
-            enabled: true
-        });
-        chromeClient.rpc("Performance.enable", undefined);
-    }).then(function () {
-    /*
-     * this function will resolve <chromeClient>
-     */
-        return chromeClient;
+    }
+    wsReader = new WsReader();
+    // init chromeProcess
+    processPlatform = processPlatform || process.platform;
+    chromeUserDataDir = await require("fs").promises.mkdtemp(
+        require("path").join(require("os").tmpdir(), "puppeteer_dev_profile-")
+    );
+    chromeBin = chromeBin || (
+        processPlatform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/" +
+        "Google Chrome"
+        : processPlatform === "win32"
+        ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\" +
+        "chrome.exe"
+        : "/usr/bin/google-chrome-stable"
+    );
+    console.error("chrome-devtools - spawning - " + chromeBin);
+    chromeProcess = require("child_process").spawn((
+        chromeBin
+    ), [
+        "--headless",
+        "--incognito",
+        "--remote-debugging-port=0",
+        "--user-data-dir=" + chromeUserDataDir,
+        "--window-size=" + modeWindowSize,
+        Array.from([
+            "", "--no-sandbox"
+        ])[(process.getuid && process.getuid() === 0) | 0]
+    ], {
+        // On non-windows platforms, `detached: false` makes child process
+        // a leader of a new process group, making it possible to kill
+        // child process tree with `.kill(-pid)` cmd.
+        // https://nodejs.org/api/child_process.html#child_process_options_detached
+        detached: process.platform !== "win32",
+        stdio: [
+            "ignore", (
+                !modeSilent
+                ? 1
+                : "ignore"
+            ), "pipe"
+        ]
     });
+    if (!modeSilent) {
+        chromeProcess.stderr.pipe(process.stderr, {
+            end: false
+        });
+    }
+    process.on("exit", chromeCleanup);
+    process.on("SIGINT", chromeCleanup);
+    process.on("SIGTERM", chromeCleanup);
+    process.on("SIGHUP", chromeCleanup);
+    // init timerTimeout
+    timeout = timeout || 30000;
+    if (modeCoverageHack === 2) {
+        chromeClient.on("error", noop);
+        chromeProcess.on("error", noop);
+        timeout = 0;
+    }
+    timerTimeout = setTimeout(function () {
+        chromeCleanup();
+        chromeClient.emit("error", new Error(
+            "chrome-devtools - timeout - " + timeout + " ms"
+        ));
+    }, timeout);
+    // init websocketUrl
+    websocketUrl = await new Promise(function (resolve) {
+        let stderr;
+        stderr = "";
+        chromeProcess.stderr.on("data", function onData(chunk) {
+            assert.ok(
+                stderr.length < 65536,
+                "chrome-devtools - connecting - cannot connect to chrome"
+            );
+            stderr += chunk;
+            stderr.replace((
+                /^DevTools\u0020listening\u0020on\u0020(ws:\/\/.*)$/m
+            ), function (ignore, url) {
+                chromeProcess.stderr.removeListener("data", onData);
+                resolve(url);
+                return "";
+            });
+        });
+    });
+    // init websocket
+    console.error("chrome-devtools - connecting - " + websocketUrl);
+    secWebsocketKey = require("crypto").randomBytes(16).toString("base64");
+    await new Promise(function (resolve) {
+        require("http").get((
+            websocketUrl
+        ), {
+            createConnection: function (opt) {
+                delete opt.path;
+                return require("net").connect(opt);
+            },
+            headers: {
+                Connection: "Upgrade",
+                "Sec-WebSocket-Key": secWebsocketKey,
+                "Sec-WebSocket-Version": 13,
+                Upgrade: "websocket"
+            },
+            protocol: "http:",
+            protocolVersion: 13
+        }).once("upgrade", function (res, _, head) {
+            assert.ok((
+                res.headers[
+                    "sec-websocket-accept"
+                ] === require("crypto").createHash("sha1").update(
+                    secWebsocketKey +
+                    "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+                ).digest("base64")
+            ), (
+                "chrome-devtools - connecting - " +
+                "invalid header sec-websocket-accept"
+            ));
+            websocket = _;
+            websocket.unshift(head);
+            // websocket - disable timeout
+            websocket.setTimeout(0);
+            // websocket - disable nagle's algorithm
+            websocket.setNoDelay();
+            websocket.on("end", websocket.end.bind(websocket));
+            // pipe websocket to wsReader
+            websocket.pipe(wsReader);
+            resolve();
+        });
+    });
+    // init chromeSessionId
+    chromeSessionId = await chromeClient.rpc("Target.createTarget", {
+        url: "about:blank"
+    });
+    chromeSessionId = await chromeClient.rpc("Target.attachToTarget", {
+        targetId: chromeSessionId.targetId,
+        flatten: true
+    });
+    chromeSessionId = chromeSessionId.sessionId;
+    console.error("chrome-devtools - created - blank-page with sessionId");
+    return chromeClient;
 };
 
 local.cliRun = function ({
@@ -2931,16 +2884,14 @@ local.cliRun = function ({
  * this function will run cli
  */
     let {
-        cliDict,
-        replStart
-    } = local;
-    let {
         _default,
         _eval,
         _help,
         _interactive,
-        _version
-    } = cliDict;
+        _version,
+        cliDict,
+        replStart
+    } = Object.assign({}, local, local.cliDict);
     _eval = _eval || function () {
     /*
      * <code>
@@ -3103,37 +3054,25 @@ local.domQuerySelectorAllTagName = function (selector) {
 /*
  * this function will return list of tagName matching <selector>
  */
-    let set;
-    try {
-        document.getElementById("undefined");
-    } catch (ignore) {
-        return [];
-    }
-    set = new Set();
-    document.querySelectorAll(selector).forEach(function (elem) {
-        set.add(elem.tagName);
+    let dict;
+    dict = {};
+    documentQuerySelectorAll(selector).forEach(function (elem) {
+        dict[elem.tagName] = true;
     });
-    return Array.from(set).sort();
+    return Object.keys(dict).sort();
 };
 
 local.domStyleValidate = function () {
 /*
  * this function will validate <style> tags
  */
+    let list;
     let rgx;
-    let tmp;
-    try {
-        document.getElementById("undefined");
-    } catch (ignore) {
-        return;
-    }
     rgx = (
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
-    tmp = [];
-    Array.from(
-        document.querySelectorAll("style")
-    ).map(function (elem, ii) {
+    list = [];
+    documentQuerySelectorAll("style").forEach(function (elem, ii) {
         elem.innerHTML.replace((
             /\/\*[\S\s]*?\*\/|;|\}/g
         ), "\n").replace((
@@ -3144,12 +3083,12 @@ local.domStyleValidate = function () {
             } catch (errCaught) {
                 console.error(errCaught);
             }
-            if (!(ii > 1)) {
-                tmp.push(ii + " " + match0);
+            if (!(ii > 1) && !rgx.test(elem)) {
+                list.push(ii + " " + match0);
             }
         });
     });
-    tmp.filter(function (elem) {
+    list.filter(function (elem) {
         return !rgx.test(elem);
     }).sort().reverse().forEach(function (elem, ii, list) {
         console.error(
@@ -3158,14 +3097,16 @@ local.domStyleValidate = function () {
     });
 };
 
-local.eventListenerAdd = function (type, listener, opt = {}) {
+local.eventListenerAdd = function (type, {
+    once
+}, listener) {
 /*
  * this function will listen evt <type> with <listener>
  */
     localEventListenerId = (localEventListenerId + 1) | 0;
     localEventListenerDict[localEventListenerId] = {
         listener,
-        once: opt.once,
+        once,
         type
     };
 };
@@ -3181,7 +3122,10 @@ local.eventListenerEmit = function (type, msg) {
             if (elem.once) {
                 delete localEventListenerDict[id];
             }
-            elem.listener(msg);
+            elem.listener({
+                msg,
+                type
+            });
         }
     });
 };
@@ -3204,7 +3148,7 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
  * this function will sync-read <pathname> with given <type> and <dflt>
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -3223,47 +3167,12 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
     }
 };
 
-local.fsWriteFileWithMkdirp = function (pathname, data, onError) {
-/*
- * this function will async write <data> to <pathname> with "mkdir -p"
- */
-    let fs;
-    // do nothing if module not exists
-    try {
-        fs = require("fs");
-        pathname = require("path").resolve(pathname);
-    } catch (ignore) {
-        onError();
-    }
-    // write pathname
-    fs.writeFile(pathname, data, function (err) {
-        if (!err) {
-            console.error("fsWriteFileWithMkdirp - " + pathname);
-            onError(undefined, true);
-            return;
-        }
-        // mkdir -p
-        fs.mkdir(require("path").dirname(pathname), {
-            recursive: true
-        }, function (ignore) {
-            // re-write pathname
-            fs.writeFile(pathname, data, function (err) {
-                if (err) {
-                    throw err;
-                }
-                console.error("fsWriteFileWithMkdirp - " + pathname);
-                onError(undefined, true);
-            });
-        });
-    });
-};
-
 local.fsWriteFileWithMkdirpSync = function (pathname, data) {
 /*
  * this function will sync write <data> to <pathname> with "mkdir -p"
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -3281,7 +3190,7 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
         // re-write pathname
         fs.writeFileSync(pathname, data);
     }
-    console.error("fsWriteFileWithMkdirpSync - " + pathname);
+    console.error("fsWriteFileWithMkdirpSync - wrote - " + pathname);
     return true;
 };
 
@@ -3370,7 +3279,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         });
         return str1;
     }
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         return code;
     }
     // make file relative
@@ -3584,236 +3493,12 @@ local.listShuffle = function (list) {
     return list;
 };
 
-local.middlewareAssetsCached = function (req, res, next) {
-/*
- * this function will run middleware to serve cached-assets
- */
-    if (!local.assetsDict.hasOwnProperty(req.urlParsed.pathname)) {
-        next();
-        return;
-    }
-    // do not cache if headers already sent or url has '?' search indicator
-    if (!(res.headersSent || req.url.indexOf("?") >= 0)) {
-        // init serverResponseHeaderLastModified
-        local.serverResponseHeaderLastModified = (
-            local.serverResponseHeaderLastModified ||
-            // resolve to 1000 ms
-            new Date()
-        );
-        // respond with 304 If-Modified-Since serverResponseHeaderLastModified
-        if (
-            new Date(req.headers["if-modified-since"]) >=
-            local.serverResponseHeaderLastModified
-        ) {
-            res.statusCode = 304;
-            res.end();
-            return;
-        }
-        res.setHeader("Cache-Control", "no-cache");
-        res.setHeader(
-            "Last-Modified",
-            local.serverResponseHeaderLastModified.toUTCString()
-        );
-    }
-    res.end(local.assetsDict[req.urlParsed.pathname]);
-};
-
-local.middlewareError = function (err, req, res) {
-/*
- * this function will run middleware to handle <err>
- */
-    // default - 404 Not Found
-    if (!err) {
-        local.serverRespondDefault(req, res, 404);
-        return;
-    }
-    // statusCode [400, 600)
-    local.serverRespondDefault(req, res, (
-        (err.statusCode >= 400 && err.statusCode < 600)
-        ? err.statusCode
-        : 500
-    ), err);
-};
-
-local.middlewareFileServer = function (req, res, next) {
-/*
- * this function will run middleware to serve files
- */
-    let file;
-    if (req.method !== "GET" || local.isBrowser) {
-        next();
-        return;
-    }
-    // resolve file
-    file = require("path").resolve(
-        // replace trailing "/" with "/index.html"
-        require("url").parse(req.url).pathname.slice(1).replace((
-            /\/$/
-        ), "/index.html")
-    );
-    // security - disable parent-directory lookup
-    if (file.indexOf(process.cwd() + require("path").sep) !== 0) {
-        next();
-        return;
-    }
-    require("fs").readFile(file, function (err, data) {
-        // default to next
-        if (err) {
-            next();
-            return;
-        }
-        // respond with data
-        res.end(data);
-    });
-};
-
-local.middlewareInit = function (req, res, next) {
-/*
- * this function will run middleware to init <req> and <res>
- */
-    let contentType;
-    // init timerTimeout
-    local.serverRespondTimeoutDefault(req, res, local.timeoutDefault);
-    // init req.urlParsed
-    req.urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
-    // set reponse-header "content-type"
-    contentType = {
-        // application
-        ".js": "application/javascript; charset=utf-8",
-        ".json": "application/json; charset=utf-8",
-        ".mjs": "application/javascript; charset=utf-8",
-        ".pdf": "application/pdf",
-        ".wasm": "application/wasm",
-        ".xml": "application/xml; charset=utf-8",
-        // image
-        ".bmp": "image/bmp",
-        ".gif": "image/gif",
-        ".jpe": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".jpg": "image/jpeg",
-        ".png": "image/png",
-        ".svg": "image/svg+xml; charset=utf-8",
-        // text
-        "/": "text/html; charset=utf-8",
-        ".css": "text/css; charset=utf-8",
-        ".htm": "text/html; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".md": "text/markdown; charset=utf-8",
-        ".txt": "text/plain; charset=utf-8"
-    };
-    contentType = contentType[(
-        /^\/$|\.[^.]*?$|$/m
-    ).exec(req.urlParsed.pathname)[0]];
-    if (contentType) {
-        res.setHeader("content-type", contentType);
-    }
-    // default to next
-    next();
-};
-
-local.onParallel = function (onError, onEach, onRetry) {
-/*
- * this function will create function that will
- * 1. run async tasks in parallel
- * 2. if cnt === 0 or err occurred, then call onError(err)
- */
-    let onParallel;
-    onEach = onEach || local.noop;
-    onRetry = onRetry || local.noop;
-    onParallel = function (err, data) {
-        if (onRetry(err, data)) {
-            return;
-        }
-        // decrement cnt
-        onParallel.cnt -= 1;
-        // validate cnt
-        if (!(onParallel.cnt >= 0 || err || onParallel.err)) {
-            err = new Error(
-                "invalid onParallel.cnt = " + onParallel.cnt
-            );
-        // ensure onError is run only once
-        } else if (onParallel.cnt < 0) {
-            return;
-        }
-        // handle err
-        if (err) {
-            onParallel.err = err;
-            // ensure cnt <= 0
-            onParallel.cnt = -Math.abs(onParallel.cnt);
-        }
-        // call onError when isDone
-        if (onParallel.cnt <= 0) {
-            onError(err, data);
-            return;
-        }
-        onEach();
-    };
-    // init cnt
-    onParallel.cnt = 0;
-    // return callback
-    return onParallel;
-};
-
-local.onParallelList = function (opt, onEach, onError) {
-/*
- * this function will
- * 1. async-run onEach in parallel,
- *    with given <opt>.rateLimit and <opt>.retryLimit
- * 2. call <onError> when onParallel.ii + 1 === <opt>.list.length
- */
-    let isListEnd;
-    let onEach2;
-    let onParallel;
-    opt.list = opt.list || [];
-    onEach2 = function () {
-        while (true) {
-            if (!(onParallel.ii + 1 < opt.list.length)) {
-                isListEnd = true;
-                return;
-            }
-            if (!(onParallel.cnt < opt.rateLimit + 1)) {
-                return;
-            }
-            onParallel.ii += 1;
-            onEach({
-                elem: opt.list[onParallel.ii],
-                ii: onParallel.ii,
-                list: opt.list,
-                retry: 0
-            }, onParallel);
-        }
-    };
-    onParallel = local.onParallel(onError, onEach2, function (err, data) {
-        if (err && data && data.retry < opt.retryLimit) {
-            console.error(err);
-            data.retry += 1;
-            setTimeout(function () {
-                onParallel.cnt -= 1;
-                onEach(data, onParallel);
-            }, 1000);
-            return true;
-        }
-        // restart if opt.list has grown
-        if (isListEnd && (onParallel.ii + 1 < opt.list.length)) {
-            isListEnd = undefined;
-            onEach2();
-        }
-    });
-    onParallel.ii = -1;
-    opt.rateLimit = Number(opt.rateLimit) || 6;
-    opt.rateLimit = Math.max(opt.rateLimit, 1);
-    opt.retryLimit = Number(opt.retryLimit) || 2;
-    onParallel.cnt += 1;
-    onEach2();
-    onParallel();
-};
-
 local.onReadyDecrement = function (err) {
 /*
  * this function will decrement <onReadyCnt>
  */
     localOnReadyCnt -= 1;
-    if (!localOnReadyCnt) {
+    if (localOnReadyCnt === 0) {
         local.eventListenerEmit("utility2.onReady", err);
     }
     return localOnReadyCnt;
@@ -3869,12 +3554,6 @@ local.replStart = function () {
                 case "ll":
                     match2 = "ls -Fal";
                     break;
-                case "npm test":
-                case "shBuildApp":
-                    if (process.platform === "win32") {
-                        match2 = process.env.UTILITY2_BIN + " " + match2;
-                    }
-                    break;
                 }
                 match2 = match2.replace((
                     /^git\u0020/
@@ -3885,7 +3564,7 @@ local.replStart = function () {
                         process.platform !== "win32" &&
                         process.env.UTILITY2_BIN && (match2 !== ":")
                     )
-                    ? ". " + process.env.UTILITY2_BIN + ";" + match2
+                    ? ". " + process.env.UTILITY2_BIN + "; " + match2
                     : match2
                 );
                 // run shell-cmd
@@ -3951,52 +3630,54 @@ local.requireReadme = function () {
  */
     let Module;
     let code;
-    let module;
-    let tmp;
-    // library-mode
+    let exports;
+    let file;
+    let {
+        assetsDict,
+        fsReadFileOrDefaultSync,
+        objectAssignDefault,
+        replStart,
+        templateRenderMyApp
+    } = local;
+    // if library-mode, then return local
     if (npm_config_mode_lib) {
-        local.testRunDefault = local.noop;
+        local.testRunDefault = noop;
         return local;
     }
-    // if file is modified, then restart process
+    // if file modified, then restart process
     if (npm_config_mode_auto_restart) {
         require("fs").readdir(".", function (ignore, fileList) {
-            fileList.concat(__filename).forEach(function (file) {
-                require("fs").stat(file, function (err, data) {
-                    local.onErrorThrow(err);
-                    if (!data.isFile()) {
-                        return;
-                    }
-                    require("fs").watchFile(file, {
-                        interval: 1000,
-                        persistent: false
-                    }, function () {
-                        console.error("file modified - " + file);
-                        setTimeout(function () {
-                            process.exit(77);
-                        }, 1000);
-                    });
+            fileList.concat(__filename).forEach(async function (file) {
+                let stats;
+                stats = await require("fs").promises.stat(file);
+                if (!stats.isFile()) {
+                    return;
+                }
+                require("fs").watchFile(file, {
+                    interval: 1000,
+                    persistent: false
+                }, function () {
+                    console.error("watchFile - modified - " + file);
+                    setTimeout(process.exit.bind(undefined, 77), 1000);
                 });
             });
         });
     }
-    // init module.exports
-    module = {};
-    if (local.isBrowser) {
-        module.exports = local.objectAssignDefault(
+    // if browser-env, then return local
+    if (!isEnvNode) {
+        return objectAssignDefault(
             globalThis.utility2_rollup || globalThis.local,
             local
         );
-        return module.exports;
     }
     // start repl-debugger
-    local.replStart();
-    // jslint process.cwd()
+    replStart();
+    // jslint $PWD
     require("child_process").spawn("node", [
         "-e", (
             "require(" + JSON.stringify(__filename) +
             ").jslintAndPrintDir(" + JSON.stringify(process.cwd()) +
-            ", {modeAutofix:" + (!npm_config_mode_test) +
+            ", {modeAutofix:" + !npm_config_mode_test +
             ",modeConditional:true});"
         )
     ], {
@@ -4007,8 +3688,9 @@ local.requireReadme = function () {
             "ignore", 1, 2
         ]
     });
+    // if rollup, then return local
     if (globalThis.utility2_rollup || npm_config_mode_start) {
-        local.assetsDict["/assets.app.js"] = require("fs").readFileSync(
+        assetsDict["/assets.app.js"] = require("fs").readFileSync(
             __filename,
             "utf8"
         ).replace((
@@ -4016,17 +3698,15 @@ local.requireReadme = function () {
         ), "// ");
         // init exports
         local[npm_package_nameLib] = local;
-        module.exports = local;
-        return module.exports;
+        return local;
     }
-    // init file $npm_package_main
+    // init utility2_moduleExports from $npm_package_main
     globalThis.utility2_moduleExports = require(
         require("path").resolve(npm_package_main)
     );
-    globalThis.utility2_moduleExports.globalThis = globalThis;
-    // read code from README.md
-    code = local.assetsDict["/assets.example.template.js"];
-    local.fsReadFileOrDefaultSync("README.md", "utf8", "").replace((
+    // read example.js from README.md
+    code = assetsDict["/assets.example.template.js"];
+    fsReadFileOrDefaultSync("README.md", "utf8", "").replace((
         /\n```javascript(\n\/\*\nexample\.js\n[\S\s]*?\n)```\n/
     ), function (ignore, match1, ii, input) {
         // preserve lineno
@@ -4043,29 +3723,29 @@ local.requireReadme = function () {
         new RegExp("require\\(." + npm_package_nameOriginal + ".\\)"),
         "globalThis.utility2_moduleExports"
     );
-    // init example.js
-    tmp = require("path").resolve("example.js");
-    // jslint code
-    jslintAndPrint(code, tmp);
-    // instrument code
-    code = instrumentInPackage(code, tmp);
-    // init module.exports
+    // jslint example.js
+    file = require("path").resolve("example.js");
+    jslintAndPrint(code, file);
+    // instrument example.js
+    code = instrumentInPackage(code, file);
+    // eval example.js
     Module = require("module");
-    module = new Module(tmp);
-    require.cache[tmp] = module;
-    module._compile(code, tmp);
-    // init exports
-    module.exports.utility2 = local;
-    module.exports[npm_package_nameLib] = (
-        globalThis.utility2_moduleExports
-    );
+    exports = new Module(file);
+    require.cache[file] = exports;
+    exports._compile(code, file);
+    // export example.js
+    exports = exports.exports;
+    exports.utility2 = local;
+    exports[npm_package_nameLib] = globalThis.utility2_moduleExports;
+    // cleanup utility2_moduleExports
+    delete globalThis.utility2_moduleExports;
     // init assets lib.xxx.js
     [
         ".css", ".js"
     ].forEach(function (extname) {
-        local.assetsDict[
+        assetsDict[
             "/assets." + npm_package_nameLib + extname
-        ] = local.fsReadFileOrDefaultSync(
+        ] = fsReadFileOrDefaultSync(
             require("path").resolve(npm_package_main).replace((
                 /\.\w+?$/
             ), extname),
@@ -4075,34 +3755,32 @@ local.requireReadme = function () {
             /^#!\//
         ), "// ");
     });
-    Object.assign(local.assetsDict, module.exports.assetsDict);
+    Object.assign(assetsDict, exports.assetsDict);
     // instrument assets lib.xxx.js
-    local.assetsDict["/assets." + npm_package_nameLib + ".js"] = (
+    assetsDict["/assets." + npm_package_nameLib + ".js"] = (
         instrumentInPackage(
-            local.assetsDict[
-                "/assets." + npm_package_nameLib + ".js"
-            ],
+            assetsDict["/assets." + npm_package_nameLib + ".js"],
             npm_package_main
         )
     );
-    module.exports.assetsDict = local.assetsDict;
-    local.assetsDict["/assets.example.js"] = code;
-    local.assetsDict["/assets.test.js"] = instrumentInPackage(
+    exports.assetsDict = assetsDict;
+    assetsDict["/assets.example.js"] = code;
+    assetsDict["/assets.test.js"] = instrumentInPackage(
         require("fs").readFileSync("test.js", "utf8"),
         "test.js"
     );
     // init assets index.html
-    tmp = local.assetsDict["/"];
+    file = assetsDict["/"];
     // uncomment utility2-comment
-    tmp = tmp.replace((
+    file = file.replace((
         /\n<!--\u0020utility2-comment\n|\nutility2-comment\u0020-->\n/g
     ), "\n\n");
     // interpolate {{...}}
-    tmp = local.templateRenderMyApp(tmp);
-    local.assetsDict["/"] = tmp;
-    local.assetsDict["/index.html"] = tmp;
+    file = templateRenderMyApp(file);
+    assetsDict["/"] = file;
+    assetsDict["/index.html"] = file;
     // init assets.app.js
-    local.assetsDict["/assets.app.js"] = [
+    assetsDict["/assets.app.js"] = [
         "header",
         "/assets.utility2.rollup.js",
         "/assets.utility2.rollup.start.js",
@@ -4114,14 +3792,14 @@ local.requireReadme = function () {
     ].map(function (key) {
         switch (key) {
         case "/assets.my_app.css":
-            tmp = "/assets." + npm_package_nameLib + ".css";
+            file = "/assets." + npm_package_nameLib + ".css";
             // disable $-escape in replacement-string
-            code = local.assetsDict[
+            code = assetsDict[
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
-                    JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + file + "\"] = (\n" +
+                    JSON.stringify(assetsDict[file]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -4133,14 +3811,14 @@ local.requireReadme = function () {
             });
             break;
         case "/assets.my_app.js":
-            tmp = "/assets." + npm_package_nameLib + ".js";
+            file = "/assets." + npm_package_nameLib + ".js";
             // disable $-escape in replacement-string
-            code = local.assetsDict[
+            code = assetsDict[
                 "/assets.utility2.rollup.content.js"
             ].replace("/* utility2.rollup.js content */", function () {
                 return (
-                    "local.assetsDict[\"" + tmp + "\"] = (\n" +
-                    JSON.stringify(local.assetsDict[tmp]).replace((
+                    "local.assetsDict[\"" + file + "\"] = (\n" +
+                    JSON.stringify(assetsDict[file]).replace((
                         /\\\\/g
                     ), "\u0000").replace((
                         /\\n/g
@@ -4148,7 +3826,7 @@ local.requireReadme = function () {
                         /\u0000/g
                     ), "\\\\") +
                     ");\n" +
-                    local.assetsDict[tmp]
+                    assetsDict[file]
                 );
             });
             break;
@@ -4172,12 +3850,12 @@ local.requireReadme = function () {
                 "and play with web-demo\n" +
                 "    4. edit this script to suit your needs\n" +
                 "*/\n" +
-                local.assetsDict["/assets.utility2.rollup.start.js"].replace((
+                assetsDict["/assets.utility2.rollup.start.js"].replace((
                     /utility2_rollup/g
                 ), "utility2_app")
             );
         default:
-            code = local.assetsDict[key];
+            code = assetsDict[key];
         }
         return (
             "/* script-begin " + key + " */\n" +
@@ -4185,44 +3863,191 @@ local.requireReadme = function () {
             "\n/* script-end " + key + " */\n"
         );
     }).join("\n\n\n");
-    local.objectAssignDefault(module.exports, local);
+    objectAssignDefault(exports, local);
     // init testCase_buildXxx
     Object.keys(local).forEach(function (key) {
         if (
             key.indexOf("_testCase_build") === 0 ||
             key === "_testCase_webpage_default"
         ) {
-            module.exports[key.slice(1)] = (
-                module.exports[key.slice(1)] || local[key]
-            );
+            exports[key.slice(1)] = exports[key.slice(1)] || local[key];
         }
     });
-    return module.exports;
+    return exports;
 };
 
-local.serverRespondDefault = function (req, res, statusCode, err) {
+local.serverRequestListener = function (req, res) {
 /*
- * this function will respond with default http <statusCode> and message,
- * or <err>.stack for given statusCode
+ * this function will handle server-<req> and server-<res> using
+ * express-like middleware-chaining
  */
-    // init statusCode and contentType
-    local.serverRespondHeadSet(req, res, statusCode, {
-        "Content-Type": "text/plain; charset=utf-8"
-    });
-    if (err) {
-        // debug statusCode / method / url
-        err.message = (
-            res.statusCode + " " + req.method + " " + req.url + "\n" +
-            err.message
-        );
-        // print err.stack to stderr
-        console.error(err);
-        // end res with err.stack
-        res.end(err.stack);
-        return;
+    let isDone;
+    let list;
+    let timeStart;
+    let timeout;
+    let timerTimeout;
+    let urlParsed;
+    let {
+        assetsDict,
+        middlewareList
+    } = local;
+    function onClose() {
+    /*
+     * this function will hand "close" evt
+     */
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "serverResponse",
+            method: req.method,
+            url: urlParsed.pathname,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - timeStart
+        }) + "\n");
+        isDone = true;
+        clearTimeout(timerTimeout);
+        req.destroy();
+        res.destroy();
     }
-    // end res with default statusCode and http-message
-    res.end(statusCode + " " + require("http").STATUS_CODES[statusCode]);
+    function onError(err) {
+    /*
+     * this function will end server-request
+     */
+        if (!isDone && !err) {
+            isDone = true;
+            res.statusCode = 404;
+            res.end("404 Not Found");
+            return;
+        }
+        console.error(err || new Error("onError called more than once"));
+        if (isDone) {
+            req.destroy();
+            res.destroy();
+            return;
+        }
+        isDone = true;
+        res.statusCode = 500;
+        res.end("500 Internal Server Error");
+    }
+    function onTimeout() {
+        isDone = true;
+        onError(new Error("timeout - " + timeout + " ms"));
+    }
+    async function middlewareInit(req, ignore, next) {
+        let contentType;
+        // init timeStart
+        timeStart = Date.now();
+        // init timerTimeout
+        timeout = timeout || npm_config_timeout;
+        timerTimeout = setTimeout(onTimeout, timeout);
+        // init urlParsed
+        urlParsed = new URL("http://127.0.0.1:" + PORT + req.url);
+        // init evt-handling
+        req.on("abort", onError);
+        req.on("close", onClose);
+        req.on("error", onError);
+        res.on("error", onError);
+        res.on("close", onClose);
+        // set reponse-header "content-type"
+        contentType = {
+            // application
+            ".js": "application/javascript; charset=utf-8",
+            ".json": "application/json; charset=utf-8",
+            ".mjs": "application/javascript; charset=utf-8",
+            ".pdf": "application/pdf",
+            ".wasm": "application/wasm",
+            ".xml": "application/xml; charset=utf-8",
+            // image
+            ".bmp": "image/bmp",
+            ".gif": "image/gif",
+            ".jpe": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".jpg": "image/jpeg",
+            ".png": "image/png",
+            ".svg": "image/svg+xml; charset=utf-8",
+            // text
+            ".css": "text/css; charset=utf-8",
+            ".htm": "text/html; charset=utf-8",
+            ".html": "text/html; charset=utf-8",
+            ".md": "text/markdown; charset=utf-8",
+            ".txt": "text/plain; charset=utf-8",
+            "/": "text/html; charset=utf-8"
+        };
+        contentType = contentType[(
+            /^\/$|\.[^.]*?$|$/m
+        ).exec(urlParsed.pathname)[0]];
+        if (contentType) {
+            res.setHeader("content-type", contentType);
+        }
+        await next();
+    }
+    async function middlewareServeAsset(ignore, res, next) {
+    /*
+     * this function will serve assets from <assetsDict>
+     */
+        if (!assetsDict.hasOwnProperty(urlParsed.pathname)) {
+            await next();
+            return;
+        }
+        res.statusCode = 200;
+        res.end(assetsDict[urlParsed.pathname]);
+    }
+    async function middlewareServeFile(req, res, next) {
+    /*
+     * this function will serve <file> from fs
+     */
+        let file;
+        if (req.method !== "GET") {
+            await next();
+            return;
+        }
+        file = urlParsed.pathname.slice(1);
+        // replace trailing "/" with "/index.html"
+        file = file.replace((
+            /\/$/
+        ), "/index.html");
+        // resolve file
+        file = require("path").resolve(file);
+        if (
+            // security - disable parent-directory lookup
+            file.indexOf(process.cwd() + require("path").sep) !== 0 ||
+            // security - ignore file with non-alphanumeric-first-character
+            !(
+                /[0-9A-Za-z]/
+            ).test(require("path").basename(file)[0])
+        ) {
+            await next();
+            return;
+        }
+        try {
+            file = await require("fs").promises.readFile(file);
+        } catch (ignore) {
+            await next();
+            return;
+        }
+        res.end(file);
+    }
+    async function next() {
+        let middleware;
+        try {
+            middleware = list.shift();
+            if (isDone || !middleware) {
+                onError();
+                return;
+            }
+            // recurse
+            await middleware(req, res, next);
+        } catch (errCaught) {
+            onError(errCaught);
+        }
+    }
+    // init list
+    list = [].concat(
+        middlewareInit,
+        middlewareList,
+        middlewareServeAsset,
+        middlewareServeFile
+    );
+    next();
 };
 
 local.serverRespondEcho = function (req, res) {
@@ -4239,82 +4064,6 @@ local.serverRespondEcho = function (req, res) {
     req.pipe(res);
 };
 
-local.serverRespondHeadSet = function (ignore, res, statusCode, headers) {
-/*
- * this function will set <res> object's <statusCode> and <headers>
- */
-    if (res.headersSent) {
-        return;
-    }
-    // init res.statusCode
-    if (Number(statusCode)) {
-        res.statusCode = Number(statusCode);
-    }
-    Object.keys(headers).forEach(function (key) {
-        res.setHeader(key, headers[key]);
-    });
-    return true;
-};
-
-local.serverRespondTimeoutDefault = function (req, res, timeout) {
-/*
- * this function will create <timeout>-handler for server-<req>
- */
-    let isDone;
-    let onError;
-    onError = function () {
-        if (isDone) {
-            return;
-        }
-        isDone = true;
-        // cleanup timerTimeout
-        clearTimeout(req.timerTimeout);
-        // debug res
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(req.timeStart).toISOString(),
-            type: "serverResponse",
-            method: req.method,
-            url: req.url,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - req.timeStart,
-            // extra
-            reqContentLength: req.dataLength || 0,
-            resContentLength: res.contentLength,
-            reqHeaderXForwardedFor: req.headers["x-forwarded-for"] || "",
-            reqHeaderOrigin: req.headers.origin || "",
-            reqHeaderReferer: req.headers.referer || "",
-            reqHeaderUserAgent: req.headers["user-agent"]
-        }) + "\n");
-    };
-    req.timeStart = Date.now();
-    req.onTimeout = req.onTimeout || function (err) {
-        local.serverRespondDefault(req, res, 500, err);
-        setTimeout(function () {
-            // cleanup req and res
-            req.destroy();
-            res.destroy();
-        }, 1000);
-    };
-    // init timerTimeout
-    timeout = timeout || local.timeoutDefault;
-    req.timerTimeout = setTimeout(
-        req.onTimeout,
-        timeout,
-        new Error(
-            "timeout - " + timeout + " ms - " +
-            "server " + req.method + " " + req.url
-        )
-    );
-    res.contentLength = 0;
-    res.writeContentLength = res.writeContentLength || res.write;
-    res.write = function (buf, encoding, callback) {
-        res.contentLength += Buffer.byteLength(buf);
-        res.writeContentLength(buf, encoding, callback);
-    };
-    res.on("error", onError);
-    res.on("finish", onError);
-};
-
 local.setTimeoutOnError = function (onError, timeout, err, data) {
 /*
  * this function will after timeout has passed,
@@ -4326,25 +4075,6 @@ local.setTimeoutOnError = function (onError, timeout, err, data) {
         }, timeout);
     }
     return data;
-};
-
-local.streamCleanup = function (stream) {
-/*
- * this function will try to end or destroy <stream>
- */
-    let err;
-    // try to end stream
-    try {
-        stream.end();
-    } catch (errCaught) {
-        err = errCaught;
-    }
-    // if err, then try to destroy stream
-    if (err) {
-        try {
-            stream.destroy();
-        } catch (ignore) {}
-    }
 };
 
 local.stringHtmlSafe = function (str) {
@@ -4365,22 +4095,6 @@ local.stringHtmlSafe = function (str) {
     ), "&gt;").replace((
         /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
     ), "&$1");
-};
-
-local.stringQuotedToAscii = function (str) {
-/*
- * this function will replace non-ascii-chr to unicode-escaped-ascii-chr
- * in quoted-<str>
- */
-    return str.replace((
-        /\r/g
-    ), "\\r").replace((
-        /\t/g
-    ), "\\t").replace((
-        /[^\n\u0020-\u007e]/g
-    ), function (chr) {
-        return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).slice(-4);
-    });
 };
 
 local.stringRegexpEscape = function (str) {
@@ -4475,7 +4189,7 @@ local.testCase_noop_default = function (opt, onError) {
 /*
  * this function will test noop's default handling-behavior
  */
-    local.noop();
+    noop();
     onError(undefined, opt);
 };
 
@@ -4502,8 +4216,8 @@ local.testMock = function (mockList, onTestCase, onError) {
         console, {}
     ]);
     local.objectAssignDefault(mockList[0][1], {
-        error: local.noop,
-        log: local.noop
+        error: noop,
+        log: noop
     });
     // mock mock[0]
     mockList.forEach(function (mock) {
@@ -4545,10 +4259,13 @@ local.testReportMerge = function (
     let testCaseNumber;
     let testPlatformDict;
     let testPlatformList;
-    function write(file, data) {
+    function fileWrite(file, data) {
+    /*
+     * this function will write <data> to <file>
+     */
         file = require("path").resolve(UTILITY2_DIR_BUILD + "/" + file);
         require("fs").writeFileSync(file, data);
-        console.error("test-report - write - " + file);
+        console.error("test-report - wrote - " + file);
     }
     // 1. merge <testReport2> into <testReport>
     testReport = local.objectAssignDefault(testReport, {
@@ -4566,11 +4283,11 @@ local.testReportMerge = function (
     ).reverse().map(function (testPlatform) {
         local.objectAssignDefault(testPlatform, {
             date: new Date().toISOString(),
-            modeBuild: MODE_BUILD,
+            modeBuild: MODE_CI,
             nameBase: (
-                local.isBrowser
-                ? "browser - " + location.pathname + " - " + navigator.userAgent
-                : "node - " + process.platform + " - " + process.version
+                isEnvNode
+                ? "node - " + process.platform + " - " + process.version
+                : "browser - " + location.pathname + " - " + navigator.userAgent
             ),
             status: "pending",
             testCaseList: [],
@@ -4730,8 +4447,8 @@ local.testReportMerge = function (
             "<h4>\n" +
             "    <span>version</span>- " + npm_package_version + "<br>\n" +
             "    <span>test-date</span>- " + testReport.date + "<br>\n" +
-            "    <span>commit-info</span>-\n" +
-            (CI_COMMIT_INFO || "undefined") + "<br>\n" +
+            "    <span>commit-info</span>- " +
+            CI_COMMIT_ID + " - " + CI_COMMIT_MESSAGE + "<br>\n" +
             "</h4>\n" +
             "<table>\n" +
             "<thead>\n" +
@@ -4897,9 +4614,9 @@ local.testReportMerge = function (
     // jslint html
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
-    write("test-report.html", html);
+    fileWrite("test-report.html", html);
     // create build.badge.svg
-    write("build.badge.svg", local.svgBadgeCreate({
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -4908,7 +4625,7 @@ local.testReportMerge = function (
         )
     }));
     // create test-report.badge.svg
-    write("test-report.badge.svg", local.svgBadgeCreate({
+    fileWrite("test-report.badge.svg", local.svgBadgeCreate({
         fill: (
             testPlatformList[0].testsFailed
             ? "#d00"
@@ -4917,36 +4634,11 @@ local.testReportMerge = function (
         str1: "tests failed",
         str2: testPlatformList[0].testsFailed
     }));
-    // if any test failed, then exit with non-zero exitCode
+    // if tests failed, then exit with non-zero exitCode
     process.exit(testReport.testsFailed !== 0);
 };
 
-local.testRunBrowser = function () {
-/*
- * this function will handle evt to run tests in browser
- */
-    // end tests and show test-button
-    if (document.querySelector("#htmlTestReport1").style.maxHeight !== "0px") {
-        local.uiAnimateSlideUp(document.querySelector("#htmlTestReport1"));
-        document.querySelector(
-            "#buttonTestRun1"
-        ).textContent = "run browser-tests";
-        return;
-    }
-    // start tests and hide test-button
-    local.uiAnimateSlideDown(document.querySelector("#htmlTestReport1"));
-    document.querySelector(
-        "#buttonTestRun1"
-    ).textContent = "hide browser-tests";
-    local.modeTest = 1;
-    local.testRunDefault(globalThis.local);
-    // reset output
-    document.querySelectorAll(".onevent-reset-output").forEach(function (elem) {
-        elem.textContent = "";
-    });
-};
-
-local.testRunDefault = function (testCaseDict = {}) {
+local.testRunDefault = async function (testCaseDict = {}) {
 /*
  * this function will run tests in <testCaseDict>
  */
@@ -4958,200 +4650,20 @@ local.testRunDefault = function (testCaseDict = {}) {
     let timerInterval;
     function timeElapsedPoll(opt) {
     /*
-     * this function will poll (Date.now() - <opt>.timeStart)
+     * this function will poll "Date.now() - <opt>.timeStart"
      */
         opt.timeStart = opt.timeStart || Date.now();
         opt.timeElapsed = Date.now() - opt.timeStart;
     }
-    (function () {
-        // run-server
-        // 1. create server from local.middlewareList
-        // 2. start server on env.PORT
-        // 3. run tests
-        if (local.isBrowser) {
-            return;
-        }
-        // 1. create server from local.middlewareList
-        local.middlewareList = local.middlewareList || [
-            local.middlewareInit,
-            local.middlewareAssetsCached,
-            local.middlewareFileServer
-        ];
-        if (globalThis.utility2_serverHttp1 || npm_config_mode_lib) {
-            return;
-        }
-        local.onReadyIncrement();
-        local.serverLocalReqHandler = function (req, res) {
-        /*
-         * this function will emulate express-like middleware-chaining
-         */
-            let gotoState;
-            let isDone;
-            gotoState = -1;
-            (function gotoNext(err) {
-                try {
-                    gotoState += 1;
-                    if (err || gotoState >= local.middlewareList.length) {
-                        local.middlewareError(err, req, res);
-                        return;
-                    }
-                    // recurse with next middleware in middlewareList
-                    local.middlewareList[gotoState](req, res, gotoNext);
-                } catch (errCaught) {
-                    // throw errCaught to break infinite recursion-loop
-                    local.assertOrThrow(!isDone, errCaught);
-                    isDone = true;
-                    gotoNext(errCaught);
-                }
-            }());
-        };
-        globalThis.utility2_serverHttp1 = require("http").createServer(
-            local.serverLocalReqHandler
-        );
-        // 2. start server on env.PORT
-        console.error("http-server listening on port " + PORT);
-        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
-        // 3. run tests
-        local.testRunDefault(testCaseDict);
-    }());
-    globalThis.utility2_modeTest = Number(
-        globalThis.utility2_modeTest ||
-        testCaseDict.modeTest ||
-        local.modeTest ||
-        npm_config_mode_test
-    );
-    switch (globalThis.utility2_modeTest) {
-    // init
-    case 1:
-        globalThis.utility2_modeTest += 1;
-        local.eventListenerAdd(
-            "utility2.onReady",
-            local.testRunDefault.bind(undefined, testCaseDict),
-            {
-                once: true
-            }
-        );
-        local.onReadyIncrement();
-        setTimeout(local.onReadyDecrement);
-        return;
-    // test-run
-    default:
-        // test-ignore
-        if (
-            localOnReadyCnt ||
-            !globalThis.utility2_modeTest ||
-            globalThis.utility2_modeTest > 2
-        ) {
-            return;
-        }
-        // test-run
-        globalThis.utility2_modeTest += 1;
-    }
-    // visual notification - testRun
-    // mock console.error
-    consoleError = console.error;
-    isCoverage = (
-        typeof globalThis.__coverage__ === "object" &&
-        globalThis.__coverage__ &&
-        Object.keys(globalThis.__coverage__).length
-    );
-    console.error = function (...argList) {
-    /*
-     * this function will ignore serverLog-msg during test-run
-     */
-        if (!isCoverage && !(
-            /^serverLog\u0020-\u0020\{/
-        ).test(argList[0])) {
-            consoleError(...argList);
-        }
-    };
-    // mock proces.exit
-    if (!local.isBrowser) {
-        processExit = process.exit;
-        process.exit = function (exitCode) {
-            local.eventListenerEmit(
-                "utility2.testRunMock.process.exit",
-                exitCode | 0
-            );
-        };
-    }
-    // init modeTestCase
-    local.modeTestCase = local.modeTestCase || npm_config_mode_test_case || "";
-    // init testReport
-    testReport = globalThis.utility2_testReport;
-    // init testPlatform
-    testPlatform = testReport.testPlatformList[0];
-    // init testPlatform timer
-    timeElapsedPoll(testPlatform);
-    // reset testPlatform.testCaseList
-    testPlatform.testCaseList.length = 0;
-    // add tests into testPlatform.testCaseList
-    Object.keys(testCaseDict).forEach(function (key) {
-        // add testCase testCaseDict[key] to testPlatform.testCaseList
-        if (
-            typeof testCaseDict[key] === "function" && (
-                local.modeTestCase
-                ? local.modeTestCase.split(
-                    /[,\s]/g
-                ).indexOf(key) >= 0
-                : key.indexOf("testCase_") === 0
-            )
-        ) {
-            testPlatform.testCaseList.push({
-                isBrowser: local.isBrowser,
-                name: key,
-                status: "pending",
-                onTestCase: testCaseDict[key]
-            });
-        }
-    });
-    local.testReportMerge(testReport);
-    if (local.isBrowser) {
-        document.querySelectorAll("#htmlTestReport1").forEach(function (elem) {
-            local.uiAnimateSlideDown(elem);
-            elem.innerHTML = testReport.html;
+    async function testCaseRun(testCase) {
+        let testCasePromise;
+        let testCaseResolve;
+        testCasePromise = new Promise(function (resolve) {
+            testCaseResolve = resolve;
         });
-    }
-    local.eventListenerEmit("utility2.testRunStart", testReport);
-    // testRunProgressUpdate every 2000 ms until isDone
-    timerInterval = setInterval(function () {
-        // update testPlatform.timeElapsed
-        timeElapsedPoll(testPlatform);
-        if (local.isBrowser) {
-            document.querySelector(
-                "#htmlTestReport1"
-            ).innerHTML = local.testReportMerge(testReport).html;
-        }
-        local.eventListenerEmit("utility2.testRunProgressUpdate", testReport);
-        // cleanup timerInterval
-        if (!testReport.testsPending) {
-            clearInterval(timerInterval);
-        }
-        // list pending testCase every 5000 ms
-        if (testPlatform.timeElapsed % 5000 < 3000) {
-            consoleError(
-                "testRunDefault - " +
-                testPlatform.timeElapsed + " ms - testCase pending - " +
-                testPlatform.testCaseList.filter(function (testCase) {
-                    return testCase.status === "pending";
-                }).slice(0, 4).map(function (testCase) {
-                    return testCase.name;
-                }).join(", ") + " ..."
-            );
-        }
-    }, 2000);
-    // shallow-copy testPlatform.testCaseList to prevent side-effects
-    // from in-place sort from testReportMerge
-    local.onParallelList({
-        list: testPlatform.testCaseList.slice()
-    }, function (testCase, onParallel) {
-        let onError;
-        let timerTimeout;
-        onError = function (err) {
+        function onError(err) {
             // update testPlatform.timeElapsed
             timeElapsedPoll(testPlatform);
-            // cleanup timerTimeout
-            clearTimeout(timerTimeout);
             // if testCase isDone, then fail testCase
             if (testCase.isDone) {
                 err = err || new Error(
@@ -5174,7 +4686,7 @@ local.testRunDefault = function (testCaseDict = {}) {
                     testCase.errStack || err.message + "\n" + err.stack
                 );
                 // validate errStack is non-empty
-                local.assertOrThrow(
+                assertOrThrow(
                     testCase.errStack,
                     "invalid errStack " + testCase.errStack
                 );
@@ -5192,71 +4704,166 @@ local.testRunDefault = function (testCaseDict = {}) {
             consoleError(
                 "testRunDefault - " +
                 testPlatform.timeElapsed + " ms - [" + (
-                    local.isBrowser
-                    ? "browser"
-                    : "node"
+                    isEnvNode
+                    ? "node"
+                    : "browser"
                 ) + " test-case " +
                 testPlatform.testCaseList.filter(function (testCase) {
                     return testCase.isDone;
-                }).length + " of " + testPlatform.testCaseList.length + " " +
-                testCase.status + "] - " + testCase.name
+                }).length + " of " + testPlatform.testCaseList.length
+                + " " + testCase.status + "] - " + testCase.name
             );
-            // if all testCase.isDone, then create test-report
-            onParallel();
-        };
-        testCase = testCase.elem;
-        // init timerTimeout
-        timerTimeout = setTimeout(
-            onError,
-            local.timeoutDefault,
-            new Error(
-                "timeout - " + local.timeoutDefault + " ms - " +
-                testCase.name
-            )
-        );
-        // increment number of tests remaining
-        onParallel.cnt += 1;
-        // try to run testCase
-        local.tryCatchOnError(function () {
-            // init timeElapsed
+            testCaseResolve();
+        }
+        try {
             timeElapsedPoll(testCase);
             testCase.onTestCase({}, onError);
-            if (typeof testCase.onTestCase.catch === "function") {
-                testCase.onTestCase.catch(onError);
-            }
-        }, onError);
-    }, function () {
-    /*
-     * this function will create test-report after all tests isDone
-     */
-        // update timeElapsed
-        timeElapsedPoll(testPlatform);
-        globalThis.utility2_modeTest = 1;
-        // finalize testReport
-        local.testReportMerge(testReport);
-        // create test-report.json
-        delete testReport.coverage;
-        local.fsWriteFileWithMkdirpSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            JSON.stringify(testReport, undefined, 4)
-        );
-        // restore console.log
-        console.error = consoleError;
-        // restore process.exit
-        if (processExit) {
-            process.exit = processExit;
+            noop(await testCasePromise);
+        } catch (errCaught) {
+            onError(errCaught);
         }
-        // reset utility2_modeTest
-        globalThis.utility2_modeTest = 0;
-        // save testReport and coverage
-        testReport.coverage = globalThis.__coverage__;
-        console.timeStamp(globalThis.utility2_testId);
-        local.eventListenerEmit("utility2.testRunEnd", testReport);
-        // exit with number of tests failed
-        if (processExit) {
-            process.exit(testReport.testsFailed, testReport);
+    }
+    if (npm_config_mode_lib) {
+        return;
+    }
+    // init middlewareList
+    local.middlewareList = local.middlewareList || [];
+    // init http-server on $PORT
+    if (isEnvNode && !globalThis.utility2_serverHttp1) {
+        globalThis.utility2_serverHttp1 = require("http").createServer(
+            local.serverRequestListener
+        );
+        console.error("http-server listening on port " + PORT);
+        local.onReadyIncrement();
+        globalThis.utility2_serverHttp1.listen(PORT, local.onReadyDecrement);
+    }
+    globalThis.utility2_modeTest = (
+        globalThis.utility2_modeTest ||
+        testCaseDict.modeTest ||
+        npm_config_mode_test
+    ) | 0;
+    if (
+        globalThis.utility2_modeTest !== 1 ||
+        Object.keys(testCaseDict).length === 0
+    ) {
+        return;
+    }
+    if (localOnReadyCnt !== 0) {
+        local.eventListenerAdd("utility2.onReady", {
+            once: true
+        }, local.testRunDefault.bind(undefined, testCaseDict));
+        return;
+    }
+    globalThis.utility2_modeTest += 1;
+    // visual notification - testRun
+    // mock console.error
+    consoleError = console.error;
+    isCoverage = (
+        typeof globalThis.__coverage__ === "object" &&
+        globalThis.__coverage__ &&
+        Object.keys(globalThis.__coverage__).length
+    );
+    console.error = function (...argList) {
+    /*
+     * this function will ignore serverLog-msg during test-run
+     */
+        if (!isCoverage && !(
+            /^serverLog\u0020-\u0020\{/
+        ).test(argList[0])) {
+            consoleError(...argList);
+        }
+    };
+    // mock proces.exit
+    if (isEnvNode) {
+        processExit = process.exit;
+        process.exit = function (exitCode) {
+            local.eventListenerEmit(
+                "utility2.testRunMock.process.exit",
+                exitCode | 0
+            );
+        };
+    }
+    // init testReport
+    testReport = globalThis.utility2_testReport;
+    // init testPlatform
+    testPlatform = testReport.testPlatformList[0];
+    // init testPlatform timer
+    timeElapsedPoll(testPlatform);
+    // reset testPlatform.testCaseList
+    testPlatform.testCaseList.length = 0;
+    // add tests into testPlatform.testCaseList
+    Object.entries(testCaseDict).forEach(function ([
+        key, val
+    ]) {
+        // add testCase testCaseDict[key] to testPlatform.testCaseList
+        if (
+            key && typeof val === "function" && (
+                npm_config_mode_test_case
+                ? npm_config_mode_test_case.split(",").indexOf(key) >= 0
+                : key.indexOf("testCase_") === 0
+            )
+        ) {
+            testPlatform.testCaseList.push({
+                name: key,
+                status: "pending",
+                onTestCase: val
+            });
         }
     });
+    local.testReportMerge(testReport);
+    local.eventListenerEmit("utility2.testRunStart", testReport);
+    // testRunUpdate every 2000 ms until isDone
+    timerInterval = setInterval(function () {
+        // update testPlatform.timeElapsed
+        timeElapsedPoll(testPlatform);
+        local.testReportMerge(testReport);
+        local.eventListenerEmit("utility2.testRunUpdate", testReport);
+        // cleanup timerInterval
+        if (!testReport.testsPending) {
+            clearInterval(timerInterval);
+        }
+        // list pending testCase every 5000 ms
+        if (testPlatform.timeElapsed % 5000 < 3000) {
+            consoleError(
+                "testRunDefault - " +
+                testPlatform.timeElapsed + " ms - testCase pending - " +
+                testPlatform.testCaseList.filter(function (testCase) {
+                    return testCase.status === "pending";
+                }).slice(0, 4).map(function (testCase) {
+                    return testCase.name;
+                }).join(", ") + " ..."
+            );
+        }
+    }, 2000);
+    // run testCaseList
+    await Promise.all(testPlatform.testCaseList.map(testCaseRun));
+    clearInterval(timerInterval);
+    // update timeElapsed
+    timeElapsedPoll(testPlatform);
+    // finalize testReport
+    local.testReportMerge(testReport);
+    // restore console.log
+    console.error = consoleError;
+    // restore process.exit
+    if (processExit) {
+        process.exit = processExit;
+    }
+    // create test-report.json
+    delete testReport.coverage;
+    local.fsWriteFileWithMkdirpSync(
+        UTILITY2_DIR_BUILD + "/test-report.json",
+        JSON.stringify(testReport, undefined, 4)
+    );
+    // reset utility2_modeTest
+    globalThis.utility2_modeTest = 0;
+    // save testReport and coverage
+    testReport.coverage = globalThis.__coverage__;
+    console.timeStamp(globalThis.utility2_testId);
+    local.eventListenerEmit("utility2.testRunEnd", testReport);
+    // exit with number of tests failed
+    if (processExit) {
+        process.exit(testReport.testsFailed, testReport);
+    }
 };
 
 local.tryCatchOnError = function (fnc, onError) {
@@ -5298,7 +4905,7 @@ local.uiAnimateSlideDown = function (elem, onError) {
 /*
  * this function will slideDown dom-<elem>
  */
-    onError = onError || local.noop;
+    onError = onError || noop;
     if (!(
         elem &&
         elem.style && elem.style.maxHeight !== "100%" &&
@@ -5413,14 +5020,10 @@ globalThis.utility2_testReport = local.testReportMerge(
     globalThis.utility2_testReport
 );
 local.regexpCharsetEncodeUri = (
-    /\w!#\$%&'\(\)\*\+,-\.\/:;=\?@~/
+    /!#\$%&'\(\)\*\+,-\.\/0123456789:;=\?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~/
 );
 local.regexpCharsetEncodeUriComponent = (
-    /\w!%'\(\)\*-\.~/
-);
-// https://github.com/chjj/marked/blob/v0.3.7/lib/marked.js#L499
-local.regexpMatchUrl = (
-    /\bhttps?:\/\/[^\s<]+[^<.,:;"')\]\s]/
+    /!%'\(\)\*-\.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~/
 );
 // https://www.w3.org/TR/html5/sec-forms.html#email-state-typeemail
 local.regexpValidateEmail = (
@@ -5442,6 +5045,12 @@ local.stringCharsetAscii = (
     "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_" +
     "`abcdefghijklmnopqrstuvwxyz{|}~\u007f"
 );
+assertJsonEqual(
+    local.stringCharsetAscii,
+    Array.from(new Array(128), function (ignore, ii) {
+        return String.fromCharCode(ii);
+    }).join("")
+);
 local.stringCharsetEncodeUri = (
     "!#$%&'()*+,-./" +
     "0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~"
@@ -5456,15 +5065,13 @@ local.stringHelloEmoji = "hello \ud83d\ude01\n";
 /* istanbul ignore next */
 // run node js-env code - init-after
 (function () {
-if (local.isBrowser) {
+if (!isEnvNode) {
     return;
 }
 // exit after $npm_config_timeout_exit
-setTimeout((
-    (!npm_config_mode_lib && npm_config_timeout_exit)
-    ? process.exit.bind(undefined, 15)
-    : local.noop
-), npm_config_timeout_exit).unref();
+if (!npm_config_mode_lib && npm_config_timeout_exit) {
+    setTimeout(process.exit.bind(undefined, 15), npm_config_timeout_exit);
+}
 // merge previous test-report
 if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
     local.testReportMerge(
@@ -5477,12 +5084,51 @@ if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
     );
     if (process.argv[2] !== "--help") {
         console.error(
-            "\n" + MODE_BUILD + " - merged test-report from file " +
+            "\n" + MODE_CI + " - merged test-report from file " +
             UTILITY2_DIR_BUILD + "/test-report.json"
         );
     }
 }
 // init cli
+local.cliDict = {};
+local.cliDict["utility2.browserTest"] = async function () {
+/*
+ * <urlList> <mode>
+ * will browser-test in parallel, comma-separated <urlList> with given <mode>
+ */
+    local.browserTest({
+        url: process.argv[3]
+    });
+};
+
+local.cliDict["utility2.start"] = function () {
+/*
+ * <port>
+ * will start utility2 http-server on given <port> (default 8081)
+ */
+    globalThis.local = local;
+    local.replStart();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require("path").resolve(npm_config_runme));
+    }
+};
+
+local.cliDict["utility2.testReportCreate"] = function () {
+/*
+ *
+ * will create test-report
+ */
+    let testReport;
+    try {
+        testReport = JSON.parse(require("fs").readFileSync(
+            UTILITY2_DIR_BUILD + "/test-report.json",
+            "utf8"
+        ));
+    } catch (ignore) {}
+    local.testReportMerge(testReport, {}, "modeWrite");
+};
+
 if (module === require.main && (!globalThis.utility2_rollup || (
     process.argv[2] &&
     local.cliDict[process.argv[2]] &&

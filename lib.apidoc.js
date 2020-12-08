@@ -14,26 +14,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -41,15 +31,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -105,6 +90,20 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -119,11 +118,10 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +139,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -153,24 +151,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -197,11 +184,11 @@ local = (
     globalThis.globalLocal
 );
 // init exports
-if (local.isBrowser) {
-    globalThis.utility2_apidoc = local;
-} else {
+if (local.isEnvNode) {
     module.exports = local;
     module.exports.__dirname = __dirname;
+} else {
+    globalThis.utility2_apidoc = local;
 }
 // init lib main
 local.apidoc = local;
@@ -215,16 +202,14 @@ local.cliRun = function ({
  * this function will run cli
  */
     let {
-        cliDict,
-        replStart
-    } = local;
-    let {
         _default,
         _eval,
         _help,
         _interactive,
-        _version
-    } = cliDict;
+        _version,
+        cliDict,
+        replStart
+    } = Object.assign({}, local, local.cliDict);
     _eval = _eval || function () {
     /*
      * <code>
@@ -1299,7 +1284,7 @@ local.apidocModuleDictAdd = function (opt, moduleDict) {
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
-if (local.isBrowser) {
+if (!local.isEnvNode) {
     return;
 }
 

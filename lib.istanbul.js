@@ -14,26 +14,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -41,15 +31,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -105,6 +90,20 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -119,11 +118,10 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -141,7 +139,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -153,24 +151,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -197,11 +184,11 @@ local = (
     globalThis.globalLocal
 );
 // init exports
-if (local.isBrowser) {
-    globalThis.utility2_istanbul = local;
-} else {
+if (local.isEnvNode) {
     module.exports = local;
     module.exports.__dirname = __dirname;
+} else {
+    globalThis.utility2_istanbul = local;
 }
 // init lib main
 local.istanbul = local;
@@ -215,16 +202,14 @@ local.cliRun = function ({
  * this function will run cli
  */
     let {
-        cliDict,
-        replStart
-    } = local;
-    let {
         _default,
         _eval,
         _help,
         _interactive,
-        _version
-    } = cliDict;
+        _version,
+        cliDict,
+        replStart
+    } = Object.assign({}, local, local.cliDict);
     _eval = _eval || function () {
     /*
      * <code>
@@ -388,7 +373,7 @@ local.fsReadFileOrDefaultSync = function (pathname, type, dflt) {
  * this function will sync-read <pathname> with given <type> and <dflt>
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -412,7 +397,7 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
  * this function will sync write <data> to <pathname> with "mkdir -p"
  */
     let fs;
-    // do nothing if module not exists
+    // do nothing if module does not exist
     try {
         fs = require("fs");
         pathname = require("path").resolve(pathname);
@@ -430,7 +415,7 @@ local.fsWriteFileWithMkdirpSync = function (pathname, data) {
         // re-write pathname
         fs.writeFileSync(pathname, data);
     }
-    console.error("fsWriteFileWithMkdirpSync - " + pathname);
+    console.error("fsWriteFileWithMkdirpSync - wrote - " + pathname);
     return true;
 };
 
@@ -699,7 +684,7 @@ esprima = {};
 estraverse = {};
 esutils = {};
 process = (
-    local.isBrowser
+    !local.isEnvNode
     ? {
         env: {},
         stdout: {}
@@ -11020,7 +11005,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                     datetime,
                     env: process.env,
                     htmlPath,
-                    isBrowser: local.isBrowser
+                    isBrowser: !local.isEnvNode
                 }, node)
             );
             htmlAll += htmlData + "\n\n";
@@ -11245,7 +11230,7 @@ reportHtmlWrite = function (node, dirCoverage, coverage) {
                 htmlLineCnt,
                 htmlLineIi,
                 htmlPath,
-                isBrowser: local.isBrowser,
+                isBrowser: !local.isEnvNode,
                 lineList
             }, node)
         );
@@ -11418,22 +11403,19 @@ local.coverageReportCreate = function ({
     let dirCoverage;
     let filePrefix;
     let htmlAll;
-    let nodeChildAdd;
-    let nodeCreate;
     let nodeDict;
-    let nodeNormalize;
     let nodeRoot;
     let summaryDict;
     let tmp;
     // init function
-    nodeChildAdd = function (node, child) {
+    function nodeChildAdd(node, child) {
     /*
      * this function will add <child> to <node>
      */
         node.children.push(child);
         child.parent = node;
-    };
-    nodeCreate = function (pathname) {
+    }
+    function nodeCreate(pathname) {
     /*
      * this function will create a tree-node
      */
@@ -11468,8 +11450,8 @@ local.coverageReportCreate = function ({
             },
             name: pathname
         };
-    };
-    nodeNormalize = function (node, level, filePrefix, parent) {
+    }
+    function nodeNormalize(node, level, filePrefix, parent) {
     /*
      * this function will recursively normalize <node> and its children
      */
@@ -11549,12 +11531,12 @@ local.coverageReportCreate = function ({
                 : "low"
             );
         });
-    };
+    }
     // 1. merge previous <dirCoverage>/coverage.json into <coverage>
     coverage = coverage || globalThis.__coverage__;
     coverageInclude = coverageInclude || globalThis.__coverageInclude__;
     dirCoverage = path.resolve(".tmp/build/coverage");
-    if (!local.isBrowser && process.env.npm_config_mode_coverage_merge) {
+    if (local.isEnvNode && process.env.npm_config_mode_coverage_merge) {
         console.error(
             "istanbul - merging file "
             + dirCoverage + "/coverage.json to coverage"
@@ -11811,7 +11793,7 @@ local.instrumentSync = function (code, file) {
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
-if (local.isBrowser) {
+if (!local.isEnvNode) {
     return;
 }
 
@@ -11866,9 +11848,7 @@ local.cliDict.cover = function () {
     console.error("\nistanbul - covering $ " + process.argv.join(" "));
     // create coverage on exit
     process.on("exit", function () {
-        local.coverageReportCreate({
-            coverage: globalThis.__coverage__
-        });
+        local.coverageReportCreate({});
     });
     // re-init cli
     tmp.runMain();
@@ -11899,9 +11879,7 @@ local.cliDict.report = function () {
     Object.keys(globalThis.__coverage__).forEach(function (file) {
         globalThis.__coverageInclude__[file] = 1;
     });
-    local.coverageReportCreate({
-        coverage: globalThis.__coverage__
-    });
+    local.coverageReportCreate({});
 };
 
 local.cliDict.test = function () {

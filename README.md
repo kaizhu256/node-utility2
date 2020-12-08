@@ -9,8 +9,6 @@ this zero-dependency package will provide high-level functions to to build, test
 
 [![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
 
-[![NPM](https://nodei.co/npm/utility2.png?downloads=true)](https://www.npmjs.com/package/utility2)
-
 [![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-utility2)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
@@ -22,8 +20,6 @@ this zero-dependency package will provide high-level functions to to build, test
 | build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.com)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
-
-![npmPackageDependencyTree](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageDependencyTree.svg)
 
 
 # table of contents
@@ -46,56 +42,35 @@ this zero-dependency package will provide high-level functions to to build, test
 #### api doc
 - [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
 
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.12.1
-- add persistent repl-history between restart
-- rename var command to cmd
-- replace functions utility2_onReadyBefore and utility2_onReadyAfter with onReadyIncrement and onReadyDecrement
-- remove jslint-ignore statements from file lib.utility2.js
-- move binary-operators from bol to eol - ,$s/\n\(  *\)\(+\|-\|&&\|||\|.==\||\|&\) / \2\r\1/gc - ^  *[^ *"(){}\[\]?:0-9\/a-z]\{1,3\}
-- merge function testReportCreate into testReportMerge
-- add custom env-object processEnv
-- rename default env-var \$npm_package_name from utility2-lite to utility2
-- merge shell-function shDockerCdHostPwd into shDockerSh
-- jslint - add prefix "mode" in front of utility2-options
-- add function svgBadgeCreate
-- merge function testReportCreate into testReportMerge
-- remove functions _http.createServer, _http.request,
-- remove functions ajaxProgressUpdate,
-- remove functions bufferConcat, bufferToUtf8, bufferValidateAndCoerce,
-- remove functions coalesce, corsForwardProxyHostIfNeeded,
-- remove functions domOnEventAjaxProgressUpdate, domOnEventDelegate
-- remove functions fsRmrfSync,
-- remove functions middlewareBodyRead, middlewareFowardProxy, middlewareUtility2StateInit,
-- remove functions serverLocalUrlTest, stateInit, stringMerge,
-- remove functions templateRender, throwError, timeElapsedPoll,
-- remove functions urlParse,
-- remove env-vars \$npm_config_dir_tmp, \$npm_config_file_tmp, \$npm_config_timeout_exit, \$npm_config_unsafe_perm, \$npm_config_mode_winpty
-- rename env-vars \$GITHUB_ORG to \$GITHUB_OWNER, \$GITHUB_REPO to \$GITHUB_FULLNAME, \$NODE_BINARY to \$NODE_BIN, \$npm_config_dir_build to \$UTILITY2_DIR_BUILD, \$npm_config_dir_utility2 to \$UTILITY2_DIR_BIN \$npm_config_file_test_report to \$npm_config_mode_test_report
-- remove shell-function shXvfbStart
-- merge function testRunServer into testRunDefault
-- remove function and test for function local.ajax
-- remove nodejs.v10 polyfill TextDecoder, TextEncoder
-- rename shell-function shReadmeTest to shReadmeEval
+#### changelog 2020.12.3
+- init shell-var \$CI_xxx in shell-function shCiInit instead of shCiMain
+- remove shell-functions shBuildInsideDocker, shChromeSocks5, shNpmDeprecateAlias, shNpmPublishAlias, shTravisRepoCreate, shTravisRepoTrigger
+- rename shBuildXxx to shCiXxx
+- merge shell-function shIstanbulCover into shNpmTest
+- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE
+- replace var isBrowser with isEnvNode and remove unused var isWebWorker
+- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, timeoutDefault into npm_config_timeout
+- add functions documentQuerySelectorAll
+- remove functions middlewareXxx, onParallelXxx, streamCleanup
+- add file .windows_terminals_settings.json
+- in shell-functions remove whitespace between "shXxx ()"
 - none
 
 #### todo
-- migrate from promise to async/await
+- reimplement timerTimeout in function testRunDefault
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
 - migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
-- update function shRawLibFetch to minify assets
-- remove dependency to req.urlParsed
 - istanbul - inline class Instrumenter into function instrumentSync
-- replace db-lite with sql_lite.js
 - add default testCase _testCase_cliRun_help
-- add server stress-test using puppeteer
+- add server stress-test using chromeDevtoolsClientCreate
 - none
 
 
@@ -116,14 +91,14 @@ PORT=8081 node ./assets.app.js
 ```
 
 #### output from browser
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/app/assets.example.html)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/app/assets.example.html)
 
 #### output from shell
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.svg)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.svg)
 
 
 # quickstart example.js
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 #### to run this example, follow the instruction in the script below
 - [example.js](https://kaizhu256.github.io/node-utility2/build/example.js)
@@ -155,26 +130,16 @@ instruction
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -182,15 +147,10 @@ instruction
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -246,6 +206,20 @@ instruction
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -260,11 +234,10 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -282,7 +255,7 @@ instruction
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -294,24 +267,13 @@ instruction
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -371,21 +333,22 @@ local.testCase_httpFetch_404 = async function (opt, onError) {
     onError();
 };
 
-local.testCase_webpage_default = function (opt, onError) {
+local.testCase_webpage_default = async function (opt, onError) {
 /*
  * this function will test webpage's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!local.isEnvNode) {
         onError(undefined, opt);
         return;
     }
-    local.browserTest({
-        url: "http://127.0.0.1:" + process.env.PORT + "/?modeTest=1"
-    }, onError);
+    await local.browserTest({
+        url: "http://127.0.0.1:" + process.env.PORT + "/?npm_config_mode_test=1"
+    });
+    onError(undefined, opt);
 };
 
 // run tests
-if (!local.isBrowser && process.env.npm_config_mode_test) {
+if (local.isEnvNode && process.env.npm_config_mode_test) {
     local.testRunDefault(local);
 }
 }());
@@ -394,7 +357,7 @@ if (!local.isBrowser && process.env.npm_config_mode_test) {
 /* istanbul ignore next */
 // run browser js-env code - init-test
 (function () {
-if (!local.isBrowser) {
+if (local.isEnvNode) {
     return;
 }
 // log stderr and stdout to #outputStdout1
@@ -428,7 +391,7 @@ if (!local.isBrowser) {
 /* istanbul ignore next */
 // run node js-env code - init-test
 (function () {
-if (local.isBrowser) {
+if (!local.isEnvNode) {
     return;
 }
 // init exports
@@ -455,7 +418,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2020.12.1)</title>
+<title>utility2 (2020.12.3)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -616,7 +579,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2020.12.1)
+    utility2 (2020.12.3)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -625,7 +588,6 @@ pre {
 >download standalone app</a><br>
 <button
     class="button"
-    data-onevent="testRunBrowser"
     id="buttonTestRun1"
 >run browser-tests</button><br>
 <div class="uiAnimateSlide" id="htmlTestReport1" style="
@@ -649,11 +611,10 @@ pre {
 /*global window*/
 (function () {
     "use strict";
-    let local;
-    let testCaseDict;
-    local = window.utility2;
-    testCaseDict = {};
-    testCaseDict.modeTest = 1;
+    let local = window.utility2;
+    let testCaseDict = {
+        modeTest: 1
+    };
 
     // comment this testCase to disable failed error demo
     testCaseDict.testCase_failed_error_demo = function (opt, onError) {
@@ -680,13 +641,19 @@ pre {
         }).catch(onError);
     };
 
-    local.eventListenerAdd("utility2.testRunEnd", function () {
+    // create coverage-report
+    local.eventListenerAdd("utility2.testRunEnd", {}, function () {
         document.querySelector(
             "#htmlCoverageReport1"
         ).innerHTML = local.coverageReportCreate({});
     });
 
-    local.testRunDefault(testCaseDict);
+    // run tests
+    if (!(
+        /\bnpm_config_mode_test=1\b/
+    ).test(location.search)) {
+        local.testRunDefault(testCaseDict);
+    }
 }());
 </textarea>
 <button
@@ -703,7 +670,7 @@ pre {
 ></textarea>
 <label>stderr and stdout</label>
 <textarea
-    class="onevent-reset-output readonly textarea"
+    class="onevent-output-reset readonly textarea"
     id="outputStdout1"
     readonly
 ></textarea>
@@ -777,7 +744,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2020.12.1"
+npm_package_version: "2020.12.3"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>
@@ -785,9 +752,74 @@ npm_package_version: "2020.12.1"
 <script src="assets.utility2.lib.marked.js"></script>
 <script src="assets.utility2.js"></script>
 <script>
+/* jslint utility2:true */
 window.utility2.onReadyIncrement();
-window.addEventListener("load", window.utility2.onReadyDecrement);
+window.addEventListener("load", function () {
+    "use strict";
+    let local;
+    function onTestRun({
+        msg,
+        target,
+        type
+    }) {
+        switch ((target && target.id) || type) {
+        case "buttonTestRun1":
+            window.utility2_modeTest = 1;
+            local.testRunDefault(window.local);
+            return;
+        case "utility2.testRunEnd":
+            document.querySelectorAll(
+                "#buttonTestRun1"
+            ).forEach(function (elem) {
+                elem.textContent = "run tests";
+            });
+            document.querySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                elem.innerHTML = msg.html;
+            });
+            return;
+        case "utility2.testRunStart":
+            document.querySelectorAll(
+                ".onevent-output-reset"
+            ).forEach(function (elem) {
+                elem.textContent = "";
+            });
+            document.querySelectorAll(
+                "#buttonTestRun1"
+            ).forEach(function (elem) {
+                elem.textContent = "running tests";
+            });
+            document.querySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                local.uiAnimateSlideDown(elem);
+                elem.innerHTML = msg.html;
+            });
+            return;
+        case "utility2.testRunUpdate":
+            document.querySelectorAll(
+                "#htmlTestReport1"
+            ).forEach(function (elem) {
+                local.uiAnimateSlideDown(elem);
+                elem.innerHTML = msg.html;
+            });
+            return;
+        }
+    }
+    local = window.utility2;
+    document.querySelectorAll(
+        "#buttonTestRun1"
+    ).forEach(function (elem) {
+        elem.addEventListener("click", onTestRun);
+    });
+    local.eventListenerAdd("utility2.testRunEnd", {}, onTestRun);
+    local.eventListenerAdd("utility2.testRunUpdate", {}, onTestRun);
+    local.eventListenerAdd("utility2.testRunStart", {}, onTestRun);
+    local.onReadyDecrement();
+});
 </script>
+
 <script src="assets.example.js"></script>
 <script src="assets.test.js"></script>
 <div style="text-align: center;">
@@ -843,21 +875,21 @@ require("http").createServer(function (req, res) {
 ```
 
 #### output from browser
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252Ftmp%252Fapp%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 #### output from shell
-![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.svg)
+![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.svg)
 
 
 # extra screenshots
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fcoverage.lib.html.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.buildCi.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Ftest-report.html.png)
 
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)
@@ -874,11 +906,11 @@ require("http").createServer(function (req, res) {
 1. [https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.npmTest.browser.%252F.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleJs.browser.%252F.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252F.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleJs.browser.%252F.png)
 
-1. [https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.testExampleSh.browser.%252F.png)
+1. [https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.browser.%252F.png](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.browser.%252F.png)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.browser.%252F.png)](https://kaizhu256.github.io/node-utility2/build/screenshot.readmeEvalExampleSh.browser.%252F.png)
 
 
 # package.json
@@ -897,7 +929,7 @@ require("http").createServer(function (req, res) {
     "engines": {
         "node": ">=12.0"
     },
-    "fileCount": 27,
+    "fileCount": 28,
     "homepage": "https://github.com/kaizhu256/node-utility2",
     "keywords": [
         "continuous-integration",
@@ -935,7 +967,7 @@ require("http").createServer(function (req, res) {
         "2020.11.12 istanbul-lite",
         "2020.12.01 utility2"
     ],
-    "version": "2020.12.1"
+    "version": "2020.12.3"
 }
 ```
 
@@ -1045,8 +1077,8 @@ RUN (set -e; \
 
 # this shell script will run build-ci for this package
 
-shBuildCiAfter () {(set -e
-    #// hack-coverage - test comment handling-behavior
+shCiAfter () {(set -e
+    #// coverage-hack - test comment handling-behavior
     # shDeployCustom
     shDeployGithub
     shDeployHeroku
@@ -1071,13 +1103,28 @@ shBuildCiAfter () {(set -e
         # npm test utility2
         for PACKAGE in utility2 "kaizhu256/node-utility2#alpha"
         do
-            docker run "$GITHUB_FULLNAME:$DOCKER_TAG" /bin/sh -c "set -e
-                curl -Lf https://raw.githubusercontent.com\
+            docker run "$GITHUB_FULLNAME:$DOCKER_TAG" /bin/sh -c "
+set -e
+curl -Lf https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/alpha/lib.utility2.sh > /tmp/lib.utility2.sh
-                . /tmp/lib.utility2.sh
-                npm install '$PACKAGE'
-                cd node_modules/utility2
-                shBuildInsideDocker
+. /tmp/lib.utility2.sh
+npm install '$PACKAGE'
+cd node_modules/utility2
+shEnvSanitize
+npm install
+npm test --mode-coverage
+rm -rf .tmp
+rm -rf \
+    /root/.npm \
+    /tmp/.* \
+    /tmp/* \
+    /var/cache/apt \
+    /var/lib/apt/lists \
+    /var/log/.* \
+    /var/log/* \
+    /var/tmp/.* \
+    /var/tmp/* \
+    2>/dev/null || true
 "
         done
         ;;
@@ -1091,19 +1138,19 @@ shBuildCiAfter () {(set -e
     fi
 )}
 
-shBuildCiBefore () {(set -e
-    shNpmTestPublished
+shCiBefore () {(set -e
+    #!! shNpmTestPublished
     shReadmeEval example.js
     # screenshot
-    MODE_BUILD=testExampleJs shBrowserScreenshot \
+    MODE_CI=readmeEvalExampleJs shBrowserScreenshot \
         file:///tmp/app/.tmp/build/coverage/app/example.js.html
-    MODE_BUILD=testExampleJs shBrowserScreenshot \
+    MODE_CI=readmeEvalExampleJs shBrowserScreenshot \
         file:///tmp/app/.tmp/build/test-report.html
 )}
 
-# run shBuildCi
+# run shCiMain
 . lib.utility2.sh
-shBuildCi
+shCiMain
 ```
 
 

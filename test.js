@@ -5,26 +5,16 @@
 // run shared js-env code - init-local
 (function () {
     "use strict";
-    let isBrowser;
-    let isWebWorker;
+    let isEnvNode;
     let local;
-    // polyfill globalThis
-    if (!(typeof globalThis === "object" && globalThis)) {
-        if (typeof window === "object" && window && window.window === window) {
-            window.globalThis = window;
-        }
-        if (typeof global === "object" && global && global.global === global) {
-            global.globalThis = global;
-        }
-    }
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
         consoleError = console.error;
         globalThis.debugInline = function (...argList) {
         /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
          */
             consoleError("\n\ndebugInline");
             consoleError(...argList);
@@ -32,15 +22,10 @@
             return argList[0];
         };
     }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
+    // init isEnvNode
+    isEnvNode = (
+        typeof process === "object" && process &&
+        process.versions && typeof process.versions.node === "string"
     );
     // init function
     function objectDeepCopyWithKeysSorted(obj) {
@@ -96,6 +81,20 @@
             )
         );
     }
+    function documentQuerySelectorAll(selector) {
+    /*
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
+     */
+        return Array.from(
+            (
+                typeof document === "object" && document &&
+                typeof document.querySelectorAll === "function"
+            )
+            ? document.querySelectorAll(selector)
+            : []
+        );
+    }
     function identity(val) {
     /*
      * this function will return <val>
@@ -110,11 +109,10 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
-        let recurse;
-        recurse = function (tgt, src, depth) {
+        function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
                 key, bb
             ]) {
@@ -132,7 +130,7 @@
                     recurse(aa, bb, depth - 1);
                 }
             });
-        };
+        }
         recurse(tgt, src, depth | 0);
         return tgt;
     }
@@ -144,24 +142,13 @@
             throw err;
         }
     }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
     // init local
     local = {
         assertJsonEqual,
         assertOrThrow,
+        documentQuerySelectorAll,
         identity,
-        isBrowser,
-        isWebWorker,
+        isEnvNode,
         local,
         noop,
         objectAssignDefault,
@@ -195,6 +182,8 @@ local.testRunDefault(local);
 let {
     assertJsonEqual,
     assertOrThrow,
+    isEnvNode,
+    noop,
     onErrorThrow,
     tryCatchOnError
 } = local;
@@ -252,7 +241,7 @@ local.testCase_buildApp_default = function (opt, onError) {
  * this function will test buildApp's default handling-behavior
  */
     local._testCase_buildApp_default({
-        assetsList: [
+        customizeAssetsList: [
             {
                 file: "/assets.hello.txt",
                 url: "/assets.hello.txt"
@@ -291,15 +280,26 @@ local.testCase_buildApp_default = function (opt, onError) {
             }, {
                 aa: "\n<!-- utility2-comment\n",
                 bb: "\n"
+            // customize quickstart-example-js-script-1
+            }, {
+                aa: "<script src=\"assets.utility2.js\"></script>\n",
+                bb: "\n"
+            // customize quickstart-example-js-script-2
+            }, {
+                aa: "<script src=\"assets.utility2.rollup.js\"></script>\n",
+                bb: (
+                    "<script src=\"assets.utility2.lib.istanbul.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.lib.jslint.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.lib.marked.js\">" +
+                    "</script>\n" +
+                    "<script src=\"assets.utility2.js\"></script>\n"
+                )
             // customize quickstart-example-js-comment
             }, {
                 aa: "\nutility2-comment -->\n",
                 bb: "\n"
-            // customize quickstart-example-js-script
-            }, {
-                merge: (
-                    /\n<script\u0020src=[^`]*?\n<script\u0020src="assets\.example\.js"><\/script>\n/
-                )
             // customize quickstart-example-js-screenshot
             }, {
                 merge: (
@@ -308,29 +308,23 @@ local.testCase_buildApp_default = function (opt, onError) {
             // customize build-script
             }, {
                 merge: (
-                    /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshBuildCi\n/
+                    /\n#\u0020internal\u0020build\u0020script\n[\S\s]*?\nshCiMain\n/
                 )
             }
         ]
     }, onError, opt);
 };
 
-local.testCase_chromeDevtoolsClient_processPlatform = function (opt, onError) {
+local.testCase_chromeDevtoolsClient_coverage = async function (opt, onError) {
 /*
- * this function will test chromeDevtoolsClient's processPlatform
- * handling-behavior
+ * this function will test chromeDevtoolsClient's coverage handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
-    [
-        "darwin", "linux", "win32"
-    ].forEach(function (processPlatform) {
-        local.chromeDevtoolsClientCreate({
-            modeMockProcessPlatform: true,
-            processPlatform
-        }).catch(local.noop);
+    await local.chromeDevtoolsClientCreate({
+        modeCoverageHack: 1
     });
     onError(undefined, opt);
 };
@@ -339,14 +333,14 @@ local.testCase_cliRun_default = function (opt, onError) {
 /*
  * this function will test cliRun's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
     local.testMock([
         [
             local, {
-                replStart: local.noop
+                replStart: noop
             }
         ], [
             local.cliDict, {}
@@ -356,17 +350,17 @@ local.testCase_cliRun_default = function (opt, onError) {
             }
         ], [
             require("repl"), {
-                start: local.noop
+                start: noop
             }
         ], [
             require("vm"), {
-                runInThisContext: local.noop
+                runInThisContext: noop
             }
         ]
     ], function (onError) {
         // test default handling-behavior
         local.cliDict = {
-            _default: local.noop
+            _default: noop
         };
         local.cliRun({
             rgxComment: (
@@ -401,13 +395,17 @@ local.testCase_eventListenerXxx_default = function (opt, onError) {
  * this function will test eventListenerXxx's default handling-behavior
  */
     let listener;
-    listener = function (msg) {
+    listener = function ({
+        msg,
+        type
+    }) {
         assertJsonEqual(msg, "bb");
+        assertJsonEqual(type, "aa");
     };
-    local.eventListenerAdd("aa", listener);
-    local.eventListenerAdd("aa", listener, {
+    local.eventListenerAdd("aa", {}, listener);
+    local.eventListenerAdd("aa", {
         once: true
-    });
+    }, listener);
     local.eventListenerEmit("aa", "bb");
     local.eventListenerEmit("aa", "bb");
     local.eventListenerRemove(listener);
@@ -418,7 +416,7 @@ local.testCase_libUtility2Js_standalone = function (opt, onError) {
 /*
  * this function will test lib.utility2.js's standalone handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -462,7 +460,7 @@ local.testCase_replStart_default = function (opt, onError) {
 /*
  * this function will test replStart's default handling-behavior
  */
-    if (local.isBrowser) {
+    if (!isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -484,7 +482,7 @@ local.testCase_replStart_default = function (opt, onError) {
         // suppress process.stdout
         [
             process.stdout, {
-                write: local.noop
+                write: noop
             }
         ]
     ], function (onError) {
@@ -510,39 +508,7 @@ local.testCase_replStart_default = function (opt, onError) {
             // test err handling-behavior
             "undefined()\n"
         ].forEach(function (script) {
-            globalThis.utility2_repl1.eval(script, null, "repl", local.noop);
-        });
-        onError(undefined, opt);
-    }, onError);
-};
-
-local.testCase_serverRespondTimeoutDefault_timeout = function (opt, onError) {
-/*
- * this function will test
- * serverRespondTimeoutDefault's timeout handling-behavior
- */
-    opt = function (fnc1, fnc2) {
-        [
-            fnc1, fnc2
-        ].forEach(function (fnc) {
-            if (typeof fnc === "function") {
-                fnc();
-            }
-        });
-    };
-    local.testMock([
-        [
-            local, {
-                onTimeout: opt,
-                serverRespondDefault: local.noop,
-                setTimeout: opt
-            }
-        ]
-    ], function (onError) {
-        local.serverRespondTimeoutDefault({
-            headers: {}
-        }, {
-            on: opt
+            globalThis.utility2_repl1.eval(script, null, "repl", noop);
         });
         onError(undefined, opt);
     }, onError);
@@ -577,21 +543,34 @@ local.testCase_stringHtmlSafe_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_stringQuotedToAscii_default = function (opt, onError) {
+local.testCase_stringXxx_default = function (opt, onError) {
 /*
- * this function will test stringQuotedToAscii's default handling-behavior
+ * this function will test stringXxx's default handling-behavior
  */
     assertJsonEqual(
-        local.stringQuotedToAscii(local.stringHelloEmoji),
-        "hello \\ud83d\\ude01\n"
+        local.regexpCharsetEncodeUri.source,
+        local.stringRegexpEscape(
+            local.stringCharsetEncodeUri
+        ).replace("\\-", "-")
     );
-    onError(undefined, opt);
-};
-
-local.testCase_stringRegexpEscape_default = function (opt, onError) {
-/*
- * this function will test stringRegexpEscape's default handling-behavior
- */
+    assertJsonEqual(
+        local.regexpCharsetEncodeUriComponent.source,
+        local.stringRegexpEscape(
+            local.stringCharsetEncodeUriComponent
+        ).replace("\\-", "-")
+    );
+    assertJsonEqual(
+        local.stringCharsetEncodeUri,
+        Array.from(
+            new Set(encodeURI(local.stringCharsetAscii).split(""))
+        ).sort().join("")
+    );
+    assertJsonEqual(
+        local.stringCharsetEncodeUriComponent,
+        Array.from(
+            new Set(encodeURIComponent(local.stringCharsetAscii).split(""))
+        ).sort().join("")
+    );
     assertJsonEqual(
         local.stringRegexpEscape(local.stringCharsetAscii),
         (
@@ -627,7 +606,7 @@ local.testCase_uiAnimateXxx_default = function (opt, onError) {
 /*
  * this function will test uiAnimateXxx's default handling-behavior
  */
-    if (!local.isBrowser) {
+    if (isEnvNode) {
         onError(undefined, opt);
         return;
     }
@@ -686,24 +665,30 @@ local.testCase_uuid4Create_default = function (opt, onError) {
     onError(undefined, opt);
 };
 
-local.testCase_webpage_err = function (opt, onError) {
+local.testCase_webpage_default = async function (opt, onError) {
+/*
+ * this function will test webpage's default handling-behavior
+ */
+    local._testCase_webpage_default(opt, onError);
+};
+
+local.testCase_webpage_err = async function (opt, onError) {
 /*
  * this function will test webpage's err handling-behavior
  */
-    if (!local.isBrowser) {
-        local.browserTest({
+    if (isEnvNode) {
+        await local.browserTest({
             modeSilent: true,
             url: (
                 "http://127.0.0.1:" + process.env.PORT +
-                "/?modeTest=1" +
-                "&modeTestCase=testCase_webpage_err"
+                "/?npm_config_mode_test=1" +
+                "&npm_config_mode_test_case=testCase_webpage_err"
             )
-        }, function (err) {
-            onError(undefined, err);
         });
+        onError(undefined, opt);
         return;
     }
-    if (local.modeTestCase !== "testCase_webpage_err") {
+    if (local.npm_config_mode_test_case !== "testCase_webpage_err") {
         onError(undefined, opt);
         return;
     }
@@ -719,13 +704,12 @@ local.testCase_webpage_err = function (opt, onError) {
     // test uncaught-err handling-behavior
     setTimeout(assertOrThrow.bind(undefined, undefined));
 };
-}());
 
 
 // run node js-env code - init-after
 /* istanbul ignore next */
 (function () {
-if (local.isBrowser) {
+if (!isEnvNode) {
     return;
 }
 // init cli
@@ -758,5 +742,6 @@ if (process.argv[2]) {
 if (process.env.npm_config_runme) {
     require(require("path").resolve(process.env.npm_config_runme));
 }
+}());
 }());
 }());

@@ -4,6 +4,7 @@
 # POSIX reference
 # http://pubs.opengroup.org/onlinepubs/9699919799/utilities/test.html
 # http://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+
 # curl with custom CA certificates
 # openssl x509 -in a00.pem -text
 # openssl verify --verbose -CAfile ca.pem a00.pem
@@ -11,7 +12,7 @@
 # cp a00.crt /usr/local/share/ca-certificates/
 # update-ca-certificates
 
-# useful sh one-liners
+# sh one-liner
 # http://sed.sourceforge.net/sed1line.txt
 # apt list --installed
 # export NODE_TLS_REJECT_UNAUTHORIZED=0 # use with caution
@@ -38,7 +39,7 @@
 # utility2 shReadmeEval example.js
 # vim rgx-lowercase \L\1\e
 
-shBaseInit () {
+shBaseInit() {
 # this function will init bash-login base-env, and is intended for aws-ec2 setup
     local FILE || return "$?"
     # PATH=/usr/local/bin:/usr/bin:/bin
@@ -81,7 +82,7 @@ shBaseInit () {
     alias lld="ls -adlF" || return "$?"
 }
 
-shBaseInstall () {
+shBaseInstall() {
 # this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
 # and is intended for aws-ec2 setup
 # example use:
@@ -110,7 +111,7 @@ shBaseInstall () {
     . "$HOME/.bashrc" || return "$?"
 }
 
-shBashrcDebianInit () {
+shBashrcDebianInit() {
 # this function will init debian:stable /etc/skel/.bashrc
 # https://sources.debian.org/src/bash/4.4-5/debian/skel.bashrc/
     # ~/.bashrc: executed by bash(1) for non-login shells.
@@ -228,7 +229,7 @@ shBashrcDebianInit () {
     fi
 }
 
-shBrowserScreenshot () {(set -e
+shBrowserScreenshot() {(set -e
 # this function will run headless-chromium to screenshot url "$1"
     node -e '
 /* jslint utility2:true */
@@ -253,7 +254,7 @@ shBrowserScreenshot () {(set -e
     file = require("path").resolve(
         process.env.UTILITY2_DIR_BUILD +
         "/screenshot." +
-        process.env.MODE_BUILD + ".browser." +
+        process.env.MODE_CI + ".browser." +
         encodeURIComponent(file.replace(
             "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
             "/build"
@@ -287,6 +288,7 @@ shBrowserScreenshot () {(set -e
         "--incognito",
         "--screenshot",
         "--timeout=30000",
+        "--window-size=800x600",
         "-screenshot=" + file,
         (
             process.platform === "linux"
@@ -303,28 +305,25 @@ shBrowserScreenshot () {(set -e
 ' "$1" "$2" # '
 )}
 
-shBrowserTest () {(set -e
+shBrowserTest() {(set -e
 # this function will spawn google-chrome-process to test url $1,
 # and merge test-report into existing test-report
-    export MODE_BUILD="${MODE_BUILD:-browserTest}"
-    shBuildPrint "shBrowserTest $*"
+    shCiPrint "shBrowserTest - $1"
     # run browser-test
     lib.utility2.js utility2.browserTest "$1"
     # create test-report artifacts
     lib.utility2.js utility2.testReportCreate
 )}
 
-shBuildApidoc () {(set -e
+shBuildApidoc() {(set -e
 # this function will build apidoc
     shEnvSanitize
-    export MODE_BUILD=buildApidoc
     npm test --mode-coverage="" --mode-test-case=testCase_buildApidoc_default
 )}
 
-shBuildApp () {(set -e
+shBuildApp() {(set -e
 # this function will build app in "$PWD" with name "$1"
     shEnvSanitize
-    export MODE_BUILD=buildApp
     # cleanup empty-file
     find . -maxdepth 1 -empty | xargs rm -f
     # update app-name to "$1"
@@ -338,7 +337,7 @@ shBuildApp () {(set -e
         sed -in -e "s/\"name\": *\".*\"\(,*\)/\"name\":\"$1\"\1/" package.json
         rm -f package.jsonn
     fi
-    shBuildInit
+    shCiInit
     # hardlink file .gitignore, lib.xxx, assets.utility2.rollup.js
     # hardlink file ~/lib.utility2.sh, bin/utility2
     # bin/utility2-apidoc, bin/utility2-istanbul, bin/utility2-jslint
@@ -549,27 +548,258 @@ shBuildApp () {(set -e
     fi
 )}
 
-shBuildCi () {(set -e
-# this function will run main-build
-    shBuildInit
-    export MODE_BUILD=buildCi
-    # init travis-ci.com env
+shCiInit() {
+# this function will init env
+    export CI_BRANCH="${CI_BRANCH:-$(
+        git rev-parse --abbrev-ref HEAD 2>/dev/null
+    )}"
+    if [ "$CI_BRANCH" ]
+    then
+        export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
+        export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
+        export CI_HOST=127.0.0.1
+    fi
+    # init env - $GITHUB_ACTIONS
+    if [ "$GITHUB_ACTIONS" ]
+    then
+        export CI_BRANCH="(printf "$GITHUB_REF" | grep -Eo "[^/]*$")"
+        export CI_HOST=github.com
+    fi
+    # init env - $TRAVIS
     if [ "$TRAVIS" ]
     then
-        export CI_HOST="${CI_HOST:-travis-ci.com}"
+        export CI_BRANCH="$TRAVIS_BRANCH"
+        export CI_HOST=travis-ci.com
+    fi
+    eval "$(node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let cmd;
+    let dataReadme;
+    let fs;
+    let packageJson;
+    let path;
+    function exportVar(key, val) {
+    /*
+     * this function will export "key=val" to shell-env
+     */
+        cmd += "export " + key + "=\u0027" + String(val || "").replace((
+            /\u0027/g
+        ), "\u0027\"\u0027\"\u0027") + "\u0027\n";
+    }
+    fs = require("fs");
+    path = require("path");
+    cmd = "";
+    cmd += "# shCiInit env\n";
+    cmd += "# ";
+    exportVar("PWD", process.cwd());
+    // init packageJson
+    packageJson = (
+        fs.existsSync("package.json")
+        ? JSON.parse(fs.readFileSync("package.json"))
+        : {
+            name: "my-app",
+            version: "0.0.1"
+        }
+    );
+    // init $npm_package_*
+    [
+        "description",
+        "homepage",
+        "main",
+        "name",
+        "nameLib",
+        "nameOriginal",
+        "private",
+        "version"
+    ].forEach(function (key) {
+        switch (key) {
+        case "nameLib":
+            exportVar("npm_package_nameLib", String(
+                packageJson.nameLib || packageJson.name
+            ).replace((
+                /\W/g
+            ), "_"));
+            break;
+        default:
+            exportVar("npm_package_" + key, packageJson[key]);
+        }
+    });
+    // init $GITHUB_FULLNAME, $GITHUB_OWNER, $GITHUB_REPO
+    String(
+        (packageJson.repository && packageJson.repository.url) ||
+        packageJson.repository ||
+        ""
+    ).replace((
+        /([^\/]+?)\/([^\/]+?)(?:\.git)?$/
+    ), function (ignore, owner, repo) {
+        exportVar("GITHUB_FULLNAME", owner + "/" + repo);
+        exportVar("GITHUB_OWNER", owner);
+        exportVar("GITHUB_REPO", repo);
+    });
+    // init $UTILITY2_BIN, $UTILITY2_DIR_*
+    Array.from([
+        process.cwd(),
+        path.resolve(process.env.HOME + "/Documents/utility2"),
+        (function () {
+            try {
+                return path.dirname(require.resolve("utility2"));
+            } catch (ignore) {}
+        }()),
+        path.resolve(process.env.HOME + "/node_modules/utility2")
+    ]).some(function (dir) {
+        if (!dir || !fs.existsSync(dir + "/lib.utility2.js")) {
+            return;
+        }
+        exportVar("UTILITY2_BIN", path.resolve(dir + "/lib.utility2.sh"));
+        exportVar("UTILITY2_DIR_BIN", dir);
+        exportVar(
+            "UTILITY2_DIR_BUILD",
+            path.resolve(process.env.UTILITY2_DIR_BUILD || ".tmp/build")
+        );
+        // interpolate $PATH
+        cmd += (
+            "export PATH=\"$PATH:" +
+            dir + ":" + path.resolve(dir + "/../.bin") + "\"\n"
+        );
+        // mkdir $UTILITY2_DIR_BUILD
+        dir = path.resolve(".tmp/build");
+        console.error("shCiInit - mkdir -p " + dir);
+        fs.mkdirSync(dir, {
+            recursive: true
+        });
+        return true;
+    });
+    // init $CI_*
+    exportVar("CI_BRANCH", process.env.CI_BRANCH);
+    exportVar("CI_COMMIT_ID", process.env.CI_COMMIT_ID);
+    exportVar("CI_COMMIT_MESSAGE", process.env.CI_COMMIT_MESSAGE);
+    process.stderr.write(cmd);
+    process.stdout.write(cmd);
+    // extract embedded-scripts from README.md to .tmp/README.xxx
+    dataReadme = "";
+    try {
+        dataReadme = require("fs").readFileSync("README.md", "utf8");
+    } catch (ignore) {}
+    dataReadme.replace((
+        /\n```\w*?(\n[#*\/\s]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?\n)```\n/g
+    ), function (ignore, dataEmbedded, file, ii, dataReadme) {
+        dataEmbedded = (
+            // preserve lineno
+            dataReadme.slice(0, ii).replace((
+                /.*/g
+            ), "") + "\n" +
+            dataEmbedded.replace((
+                // parse "\" line-continuation
+                /\\\n/g
+            ), "")
+        );
+        file = require("path").resolve(".tmp/README." + file);
+        require("fs").writeFile(file, dataEmbedded.trimEnd() + "\n", function (
+            err
+        ) {
+            if (err) {
+                throw err;
+            }
+            console.error("shCiInit - wrote - " + file);
+        });
+        return "";
+    });
+}());
+')" || return "$?" # '
+}
+
+shCiInternal() {(set -e
+# this function will run internal-ci
+    (
+    shEnvSanitize
+    # run shCiBefore
+    if (type shCiBefore > /dev/null 2>&1)
+    then
+        shCiBefore
+    fi
+    export npm_config_mode_test_report_merge=1
+
+
+    # npm-test
+    MODE_CI=npmTest npm test --mode-coverage
+    # create apidoc
+    shBuildApidoc
+    # create npmPackageListing
+    shNpmPackageListingCreate
+    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_FULLNAME#alpha"
+    # create npmPackageCliHelp
+    shNpmPackageCliHelpCreate
+    # create recent changelog of last 50 commits
+    (MODE_CI=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B")
+
+
+    # screenshot coverage
+    FILE="$(
+        find "$UTILITY2_DIR_BUILD" -name *.js.html 2>/dev/null | tail -n 1
+    )"
+    if [ -f "$FILE" ]
+    then
+        cp "$FILE" "$UTILITY2_DIR_BUILD/coverage.lib.html"
+    fi
+    for FILE in apidoc.html coverage.lib.html test-report.html
+    do
+        FILE="$UTILITY2_DIR_BUILD/$FILE"
+        if [ -f "$FILE" ]
+        then
+            shBrowserScreenshot "file://$FILE" &
+        fi
+    done
+    )
+
+
+    if [ ! "$GITHUB_TOKEN" ]
+    then
+        shCiPrint "no GITHUB_TOKEN"
+        return
+    fi
+    export npm_config_mode_test_report_merge=1
+    # build and deploy app to github
+    shBuildApp && shCiUpload && shSleep 15
+    # run shCiAfter
+    if (type shCiAfter > /dev/null 2>&1)
+    then
+        shCiAfter
+    fi
+    # list $UTILITY2_DIR_BUILD
+    find "$UTILITY2_DIR_BUILD" | sort
+    # upload ci-artifacts to github
+    # and if number of commits > $COMMIT_LIMIT
+    # then squash older commits
+    if [ "$CI_BRANCH" = alpha ] ||
+        [ "$CI_BRANCH" = beta ] ||
+        [ "$CI_BRANCH" = master ]
+    then
+        COMMIT_LIMIT=100 shCiUpload
+    fi
+    shGitInfo | head -n 4096 || true
+    # validate http-links embedded in README.md
+    shSleep 60
+    shReadmeLinkValidate
+)}
+
+shCiMain() {(set -e
+# this function will run main-ci
+    shCiInit
+    export MODE_CI=ci
+    # init env - $TRAVIS
+    if [ "$TRAVIS" ]
+    then
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_FULLNAME"
     fi
-    # init default env
-    export CI_COMMIT_ID="${CI_COMMIT_ID:-$(git rev-parse --verify HEAD)}"
-    export CI_HOST="${CI_HOST:-127.0.0.1}"
-    # save $CI_BRANCH
-    export CI_BRANCH_OLD="${CI_BRANCH_OLD:-$CI_BRANCH}"
-    # init $CI_COMMIT_*
-    export CI_COMMIT_INFO="$CI_COMMIT_ID - $CI_COMMIT_MESSAGE"
-    export CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)"
-    export CI_COMMIT_MESSAGE_META=\
-"$(git log -1 --pretty=%s | grep  -E "\[.*\]" | sed -e "s/\].*//" -e "s/\[//")"
+    # init env - $GITHUB_ACTIONS
+    if [ "$GITHUB_ACTIONS" ]
+    then
+        git remote remove origin 2>/dev/null || true
+        git remote add origin "https://github.com/$GITHUB_FULLNAME"
+    fi
     # decrypt and exec encrypted data
     if [ "$CRYPTO_AES_KEY" ]
     then
@@ -581,8 +811,6 @@ shBuildCi () {(set -e
         git config --global user.email nobody
         git config --global user.name nobody
     fi
-    shBuildPrint \
-"shBuildCi CI_BRANCH=$CI_BRANCH CI_COMMIT_MESSAGE_META=\"$CI_COMMIT_MESSAGE\""
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE" in
@@ -602,23 +830,11 @@ shBuildCi () {(set -e
             shBuildApp
             ;;
         # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc alpha "[git squashPop HEAD~1] [npm publishAfterCommitAfterBuild]"
-        "[git squashPop "*)
-            shGitSquashPop \
-                "$(shGithubRepoBranchId $(
-                    printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/.* //"
-                ))" \
-                "$(printf "$CI_COMMIT_MESSAGE" | sed -e "s/\[[^]]*\] //")"
-            shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
-                -f HEAD:alpha
-            return
-            ;;
-        # example use:
         # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" alpha "[npm publishAfterCommitAfterBuild]"
         "[npm publishAfterCommitAfterBuild]"*)
             if [ ! "$GITHUB_TOKEN" ]
             then
-                shBuildPrint "no GITHUB_TOKEN"
+                shCiPrint "no GITHUB_TOKEN"
                 return 1
             fi
             shBuildApp
@@ -634,26 +850,23 @@ https://raw.githubusercontent.com\
 /assets.utility2.rollup.js
             ;;
         esac
-        shBuildCiInternal
+        shCiInternal
         ;;
     beta)
         case "$CI_COMMIT_MESSAGE" in
         "[npm publishAfterCommitAfterBuild]"*)
             ;;
         *)
-            shBuildCiInternal
+            shCiInternal
             ;;
         esac
         ;;
-    cron)
-        [ ! -f .task.sh ] || /bin/sh .task.sh
-        ;;
     docker.*)
         export CI_BRANCH=alpha
-        shBuildCiInternal
+        shCiInternal
         ;;
     master)
-        shBuildCiInternal
+        shCiInternal
         ;;
     publish)
         export CI_BRANCH=alpha
@@ -664,60 +877,14 @@ https://raw.githubusercontent.com\
             # npm publish
             shNpmPublishAlias || true
         else
-            shBuildPrint "skip npm-publish"
+            shCiPrint "skip npm-publish"
         fi
         # security - cleanup .npmrc
         rm -f "$HOME/.npmrc"
         shSleep 5
-        shBuildCiInternal
-        ;;
-    task)
-        case "$CI_COMMIT_MESSAGE" in
-        "[\$ "*)
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/^..//")"
-            ;;
-        # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-sandbox2 task "[debug travis@proxy.com root]"
-        "[debug "*)
-            if [ ! "$SSH_KEY" ]
-            then
-                shBuildPrint "no SSH_KEY"
-                return 1
-            fi
-            # init id_rsa
-            (
-            cd "$HOME/.ssh"
-            printf "$SSH_KEY" | base64 --decode > id_rsa && chmod 600 id_rsa
-            ssh-keygen -y -f id_rsa > authorized_keys
-            )
-            # ssh reverse-tunnel local-machine to middleman
-            eval "$(
-                printf "$CI_COMMIT_MESSAGE_META" | sed -e "s/debug/shSsh5022R/"
-            )"
-            PID="$(pgrep -n -f ssh)"
-            while (kill -0 "$PID" 2>/dev/null)
-            do
-                shSleep 60
-            done
-            ;;
-        # example use:
-        # shCryptoWithGithubOrg kaizhu256 shGithubRepoTouch kaizhu256/node-swgg-github-misc task "[git push origin beta:master]"
-        "[git push origin "*)
-            git fetch --depth=50 origin "$(
-                printf "$CI_COMMIT_MESSAGE_META" |
-                sed -e "s/:.*//" -e "s/.* //"
-            )"
-            eval "$(printf "$CI_COMMIT_MESSAGE_META" | sed \
-                -e "s/git/shGitCmdWithGithubToken/" \
-                -e "s/\([^ ]*:\)/origin\/\1/")"
-            return;
-            ;;
-        esac
-        return
+        shCiInternal
         ;;
     esac
-    # restore $CI_BRANCH
-    export CI_BRANCH="$CI_BRANCH_OLD"
     if [ ! "$GITHUB_TOKEN" ]
     then
         return
@@ -744,7 +911,6 @@ https://raw.githubusercontent.com\
             ;;
         "[npm publishAfterCommit]"*)
             export CI_BRANCH=publish
-            export CI_BRANCH_OLD=publish
             find node_modules -name .git -print0 | xargs -0 rm -rf
             npm run build-ci
             ;;
@@ -787,7 +953,7 @@ https://raw.githubusercontent.com\
                 shNpmTestPublished "$NAME"
             done
         else
-            shBuildPrint "skip npm-publish"
+            shCiPrint "skip npm-publish"
         fi
         # security - cleanup .npmrc
         rm -f "$HOME/.npmrc"
@@ -806,118 +972,31 @@ $(node -e 'process.stdout.write(require("./package.json").version)')]"
         esac
         ;;
     esac
-    # sync with $npm_package_githubRepoAlias
-    if [ "$CI_BRANCH" = alpha ] ||
-        [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ]
-    then
-        for GITHUB_FULLNAME_ALIAS in $npm_package_githubRepoAlias
-        do
-            shGithubRepoCreate "$GITHUB_FULLNAME_ALIAS"
-            shGitCmdWithGithubToken push \
-                "https://github.com/$GITHUB_FULLNAME_ALIAS" --tags \
-                -f "$CI_BRANCH"
-            if [ "$CI_BRANCH" = alpha ] && [ "$npm_package_description" ]
-            then
-                shGithubRepoDescriptionUpdate "$GITHUB_FULLNAME_ALIAS" \
-                "$npm_package_description" || true
-            fi
-        done
-    fi
 )}
 
-shBuildCiInternal () {(set -e
-# this function will run internal-build
-    # run build-ci-before
-    if (type shBuildCiBefore > /dev/null 2>&1)
-    then
-        shBuildCiBefore
-    fi
-    export npm_config_mode_test_report_merge=1
-
-
-    # npm-test
-    (
-    shEnvSanitize
-    export MODE_BUILD=npmTest
-    shBuildPrint "$(
-        du -ms node_modules | awk '{print "npm install - " $1 " megabytes"}'
-    )"
-    npm test --mode-coverage
-    )
-    # create apidoc
-    shBuildApidoc
-    # create npmPackageListing
-    shNpmPackageListingCreate
-    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_FULLNAME#alpha"
-    # create npmPackageCliHelp
-    shNpmPackageCliHelpCreate
-    # create recent changelog of last 50 commits
-    MODE_BUILD=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B"
-
-
-    # screenshot coverage
-    FILE="$(
-        find "$UTILITY2_DIR_BUILD" -name *.js.html 2>/dev/null | tail -n 1
-    )"
-    if [ -f "$FILE" ]
-    then
-        cp "$FILE" "$UTILITY2_DIR_BUILD/coverage.lib.html"
-    fi
-    for FILE in apidoc.html coverage.lib.html test-report.html
-    do
-        FILE="$UTILITY2_DIR_BUILD/$FILE"
-        if [ -f "$FILE" ]
-        then
-            MODE_BUILD=buildCi shBrowserScreenshot "file://$FILE" &
-        fi
-    done
-
-
-    if [ ! "$GITHUB_TOKEN" ]
-    then
-        shBuildPrint "no GITHUB_TOKEN"
-        return
-    fi
-    # build and deploy app to github
-    shBuildApp && shBuildGithubUpload && shSleep 15
-    # run build-ci-after
-    if (type shBuildCiAfter > /dev/null 2>&1)
-    then
-        shBuildCiAfter
-    fi
-    # list $UTILITY2_DIR_BUILD
-    find "$UTILITY2_DIR_BUILD" | sort
-    # upload build-artifacts to github
-    # and if number of commits > $COMMIT_LIMIT
-    # then squash older commits
-    if [ "$CI_BRANCH" = alpha ] ||
-        [ "$CI_BRANCH" = beta ] ||
-        [ "$CI_BRANCH" = master ]
-    then
-        COMMIT_LIMIT=100 shBuildGithubUpload
-    fi
-    shGitInfo | head -n 4096 || true
-    # validate http-links embedded in README.md
-    if [ ! "$npm_package_private" ] && ! (
-        printf "$CI_COMMIT_MESSAGE_META" |
-        grep -q -E "^build app|^npm publishAfterCommitAfterBuild"
-    )
-    then
-        shSleep 60
-        shReadmeLinkValidate
-    fi
+shCiPrint() {(set -e
+# this function will print debug-info about current ci-state
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    process.stderr.write(
+        "\n\u001b[35m[MODE_CI=" + process.env.MODE_CI + "]\u001b[0m - " +
+        new Date().toISOString() + " - " + process.argv[1] + "\n\n"
+    );
+}());
+' "$1" # '
 )}
 
-shBuildGithubUpload () {(set -e
-# this function will upload build-artifacts to github
+shCiUpload() {(set -e
+# this function will upload ci-artifacts to github
     local DIR
     local URL
-    export MODE_BUILD="${MODE_BUILD:-shBuildGithubUpload}"
-    shBuildPrint "uploading artifacts to https://github.com/$GITHUB_FULLNAME"
+    shCiPrint "shCiUpload - uploading artifacts to \
+https://github.com/$GITHUB_FULLNAME"
     URL="https://github.com/$GITHUB_FULLNAME"
     # init $DIR
-    DIR=/tmp/shBuildGithubUpload
+    DIR=/tmp/shCiUpload
     rm -rf "$DIR"
     shGitCmdWithGithubToken clone "$URL" --single-branch -b gh-pages "$DIR"
     cd "$DIR"
@@ -925,11 +1004,11 @@ shBuildGithubUpload () {(set -e
     rm -f build/*127.0.0.1*
     case "$CI_COMMIT_MESSAGE" in
     "[build clean]"*)
-        shBuildPrint "[build clean]"
+        shCiPrint "[build clean]"
         rm -rf build
         ;;
     esac
-    # copy build-artifacts
+    # copy ci-artifacts
     cp -a "$UTILITY2_DIR_BUILD" .
     rm -rf "build..$CI_BRANCH..$CI_HOST"
     cp -a "$UTILITY2_DIR_BUILD" "build..$CI_BRANCH..$CI_HOST"
@@ -956,218 +1035,7 @@ shBuildGithubUpload () {(set -e
     fi
 )}
 
-shBuildInit () {
-# this function will init env
-    eval "$(node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let cmd;
-    let fs;
-    let packageJson;
-    let path;
-    function export2(key, val) {
-    /*
-     * this function will export "key=val" to shell-env
-     */
-        cmd += "export " + key + "=\u0027" + String(val || "").replace((
-            /\u0027/g
-        ), "\u0027\"\u0027\"\u0027") + "\u0027\n";
-    }
-    fs = require("fs");
-    path = require("path");
-    cmd = "";
-    cmd += "# shBuildInit env\n";
-    cmd += "# ";
-    export2("PWD", process.cwd());
-    // init packageJson
-    packageJson = (
-        fs.existsSync("package.json")
-        ? JSON.parse(fs.readFileSync("package.json"))
-        : {
-            name: "my-app",
-            version: "0.0.1"
-        }
-    );
-    // init $npm_package_*
-    [
-        "description",
-        "homepage",
-        "main",
-        "name",
-        "nameLib",
-        "nameOriginal",
-        "private",
-        "version"
-    ].forEach(function (key) {
-        switch (key) {
-        case "nameLib":
-            export2("npm_package_nameLib", String(
-                packageJson.nameLib || packageJson.name
-            ).replace((
-                /\W/g
-            ), "_"));
-            break;
-        default:
-            export2("npm_package_" + key, packageJson[key]);
-        }
-    });
-    // init $GITHUB_FULLNAME, $GITHUB_OWNER, $GITHUB_REPO
-    String(
-        (packageJson.repository && packageJson.repository.url) ||
-        packageJson.repository ||
-        ""
-    ).replace((
-        /([^\/]+?)\/([^\/]+?)(?:\.git)?$/
-    ), function (ignore, owner, repo) {
-        export2("GITHUB_FULLNAME", owner + "/" + repo);
-        export2("GITHUB_OWNER", owner);
-        export2("GITHUB_REPO", repo);
-    });
-    // init $UTILITY2_BIN, $UTILITY2_DIR_*
-    Array.from([
-        process.cwd(),
-        path.resolve(process.env.HOME + "/Documents/utility2"),
-        (function () {
-            try {
-                return path.dirname(require.resolve("utility2"));
-            } catch (ignore) {}
-        }()),
-        path.resolve(process.env.HOME + "/node_modules/utility2")
-    ]).some(function (dir) {
-        if (!dir || !fs.existsSync(dir + "/lib.utility2.js")) {
-            return;
-        }
-        export2("UTILITY2_BIN", path.resolve(dir + "/lib.utility2.sh"));
-        export2("UTILITY2_DIR_BIN", dir);
-        export2(
-            "UTILITY2_DIR_BUILD",
-            path.resolve(process.env.UTILITY2_DIR_BUILD || ".tmp/build")
-        );
-        // interpolate $PATH
-        cmd += (
-            "PATH=\"$PATH:" + dir + ":" + path.resolve(dir + "/../.bin") +
-            "\"\n"
-        );
-        // mkdir $UTILITY2_DIR_BUILD
-        dir = path.resolve(".tmp/build");
-        console.error("shBuildInit - mkdir -p " + dir);
-        fs.mkdirSync(dir, {
-            recursive: true
-        });
-        return true;
-    });
-    // init $CI_*
-    export2("CI_BRANCH", (
-        process.env.CI_BRANCH ||
-        process.env.GITHUB_REF ||
-        "alpha"
-    ));
-    process.stderr.write(cmd);
-    process.stdout.write(cmd);
-}());
-')" || return "$?" # '
-    # extract and save scripts embedded in README.md to .tmp/
-    if [ -f README.md ]
-    then
-        node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    require("fs").readFileSync("README.md", "utf8").replace((
-        /```\w*?(\n[\s#*\/]*?(\w[\w\-]*?\.\w*?)[\n"][\S\s]*?)\n```/g
-    ), function (match0, match1, match2, ii, text) {
-        let file;
-        // preserve lineno
-        match0 = text.slice(0, ii).replace((
-            /.+/g
-        ), "") + match1.replace((
-            // parse "\" line-continuation
-            /(?:.*\\\n)+.*/g
-        ), function (match0) {
-            return match0.replace((
-                /\\\n/g
-            ), "") + match0.replace((
-                /.+/g
-            ), "");
-        });
-        // trim json-file
-        if (match2.slice(-5) === ".json") {
-            match0 = match0.trim();
-        }
-        file = require("path").resolve(".tmp/README." + match2);
-        require("fs").writeFile(file, match0.trimEnd() + "\n", function (
-            err
-        ) {
-            if (err) {
-                throw err;
-            }
-            console.error("shBuildInit - write - " + file);
-        }
-);
-    });
-}());
-' # '
-    fi
-}
-
-shBuildInsideDocker () {(set -e
-# this function will run build inside docker
-    shEnvSanitize
-    # npm-install
-    npm install
-    # npm-test
-    npm test --mode-coverage
-    # cleanup .tmp
-    rm -rf .tmp
-    # cleanup build
-    rm -rf \
-        /root/.npm \
-        /tmp/.* \
-        /tmp/* \
-        /var/cache/apt \
-        /var/lib/apt/lists \
-        /var/log/.* \
-        /var/log/* \
-        /var/tmp/.* \
-        /var/tmp/* \
-        2>/dev/null || true
-)}
-
-shBuildPrint () {(set -e
-# this function will print debug-info about current build-state
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    process.stderr.write(
-        "\n\u001b[35m[MODE_BUILD=" + process.env.MODE_BUILD + "]\u001b[0m - " +
-        new Date().toISOString() + " - " + process.argv[1] + "\n\n"
-    );
-}());
-' "$1" # '
-)}
-
-shChromeSocks5 () {(set -e
-# this function will run chrome with socks5 proxy
-# https://sites.google.com/a/chromium.org/dev/developers/design-documents/network-stack/socks-proxy
-    if [ "$1" = "canary" ]
-    then
-"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary" \
-        --proxy-bypass-list="127.*;192.*;localhost"\
-        --proxy-server="socks5://localhost:5080"\
-        --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" ||
-        return "$?"
-    else
-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
-        --proxy-bypass-list="127.*;192.*;localhost"\
-        --proxy-server="socks5://localhost:5080"\
-        --host-resolver-rules="MAP * 0.0.0.0, EXCLUDE localhost" "$@" ||
-        return "$?"
-    fi
-)}
-
-shCryptoAesXxxCbcRawDecrypt () {(set -e
+shCryptoAesXxxCbcRawDecrypt() {(set -e
 # this function will inplace aes-xxx-cbc decrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
@@ -1276,7 +1144,7 @@ shCryptoAesXxxCbcRawDecrypt () {(set -e
 ' "$@" # '
 )}
 
-shCryptoAesXxxCbcRawEncrypt () {(set -e
+shCryptoAesXxxCbcRawEncrypt() {(set -e
 # this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
 # example use:
 # printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
@@ -1387,17 +1255,17 @@ shCryptoAesXxxCbcRawEncrypt () {(set -e
 ' "$@" # '
 )}
 
-shCryptoTravisDecrypt () {(set -e
+shCryptoTravisDecrypt() {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
-    shBuildInit
-    export MODE_BUILD=cryptoTravisDecrypt
+    shCiInit
+    export MODE_CI=cryptoTravisDecrypt
     if [ ! "$CRYPTO_AES_KEY" ]
     then
         eval "CRYPTO_AES_KEY=$(printf "\$CRYPTO_AES_KEY_$GITHUB_OWNER")"
     fi
     if [ ! "$CRYPTO_AES_KEY" ]
     then
-        shBuildPrint "no CRYPTO_AES_KEY"
+        shCiPrint "no CRYPTO_AES_KEY"
         return 1
     fi
     local FILE="$1"
@@ -1409,18 +1277,18 @@ shCryptoTravisDecrypt () {(set -e
     # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER
     URL="https://raw.githubusercontent.com\
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER"
-    shBuildPrint "decrypting $URL ..."
+    shCiPrint "decrypting $URL ..."
     curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
 )}
 
-shCryptoTravisEncrypt () {(set -e
+shCryptoTravisEncrypt() {(set -e
 # this function will encrypt $CRYPTO_AES_SH_ENCRYPTED to .travis.yml,
 # and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
-    shBuildInit
-    export MODE_BUILD=cryptoTravisEncrypt
+    shCiInit
+    export MODE_CI=cryptoTravisEncrypt
     if [ ! "$CRYPTO_AES_KEY" ]
     then
-        shBuildPrint "no CRYPTO_AES_KEY"
+        shCiPrint "no CRYPTO_AES_KEY"
         return 1
     fi
     local FILE="$1"
@@ -1433,7 +1301,7 @@ shCryptoTravisEncrypt () {(set -e
     then
         TMPFILE="$(mktemp)"
         URL="https://api.travis-ci.com/repos/$GITHUB_FULLNAME/key"
-        shBuildPrint "fetch $URL"
+        shCiPrint "fetch $URL"
         curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
             sed -n -e \
 "s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
@@ -1449,18 +1317,18 @@ shCryptoTravisEncrypt () {(set -e
         rm "$TMPFILE"
         if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
         then
-            shBuildPrint "no CRYPTO_AES_KEY_ENCRYPTED"
+            shCiPrint "no CRYPTO_AES_KEY_ENCRYPTED"
         else
             sed -in -e \
 "s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
                 .travis.yml
             rm -f .travis.ymln
-            shBuildPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
+            shCiPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
         fi
     fi
 )}
 
-shCryptoWithGithubOrg () {(set -e
+shCryptoWithGithubOrg() {(set -e
 # this function will run "$@" with private $GITHUB_OWNER-env
     export GITHUB_OWNER="$1"
     shift
@@ -1468,38 +1336,38 @@ shCryptoWithGithubOrg () {(set -e
     "$@"
 )}
 
-shDeployCustom () {
+shDeployCustom() {
 # this function will do nothing
     return
 }
 
-shDeployGithub () {(set -e
+shDeployGithub() {(set -e
 # this function will deploy app to $GITHUB_FULLNAME
 # and run simple curl-check for $TEST_URL
 # and test $TEST_URL
-    export MODE_BUILD=deployGithub
+    export MODE_CI=deployGithub
     export TEST_URL="https://$(
         printf "$GITHUB_FULLNAME" | sed -e "s/\//.github.io\//"
     )/build..$CI_BRANCH..travis-ci.com/app"
-    shBuildPrint "deployed to $TEST_URL"
+    shCiPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
         curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL"
+        shCiPrint "curl test passed for $TEST_URL"
     else
-        shBuildPrint "curl test failed for $TEST_URL"
+        shCiPrint "curl test failed for $TEST_URL"
         return 1
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
+    MODE_CI="${MODE_CI}Test" shBrowserTest "$TEST_URL?npm_config_mode_test=1"
 )}
 
-shDeployHeroku () {(set -e
+shDeployHeroku() {(set -e
 # this function will deploy app to heroku
 # and run simple curl-check for $TEST_URL
 # and test $TEST_URL
@@ -1508,7 +1376,7 @@ shDeployHeroku () {(set -e
     # build app inside heroku
     if [ "$npm_lifecycle_event" = heroku-postbuild ]
     then
-        shBuildInit
+        shCiInit
         shBuildApp
         cp "$UTILITY2_DIR_BUILD"/app/*.js .
         printf "web: npm_config_mode_backend=1 node assets.app.js\n" > Procfile
@@ -1516,27 +1384,27 @@ shDeployHeroku () {(set -e
         rm -rf .tmp
         return
     fi
-    export MODE_BUILD=deployHeroku
+    export MODE_CI=deployHeroku
     export TEST_URL="https://$npm_package_nameHeroku-$CI_BRANCH.herokuapp.com"
-    shBuildPrint "deployed to $TEST_URL"
+    shCiPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
     if [ "$(
         curl -L --connect-timeout 60 -o /dev/null -w "%{http_code}" "$TEST_URL"
     )" -lt 400 ]
     then
-        shBuildPrint "curl test passed for $TEST_URL"
+        shCiPrint "curl test passed for $TEST_URL"
     else
-        shBuildPrint "curl test failed for $TEST_URL"
+        shCiPrint "curl test failed for $TEST_URL"
         return 1
     fi
     # screenshot deployed app
     shBrowserScreenshot "$TEST_URL" &
     # test deployed app
-    MODE_BUILD="${MODE_BUILD}Test" shBrowserTest "$TEST_URL?modeTest=1"
+    MODE_CI="${MODE_CI}Test" shBrowserTest "$TEST_URL?npm_config_mode_test=1"
 )}
 
-shDockerRestartNginx () {(set -e
+shDockerRestartNginx() {(set -e
 # this function will restart docker-container nginx
     # init htpasswd
     # printf "aa:$(openssl passwd -crypt bb)\n" > \
@@ -1636,7 +1504,7 @@ server {
 "
 )}
 
-shDockerRestartTransmission () {(set -e
+shDockerRestartTransmission() {(set -e
 # this function will restart docker-container transmission
 # http://transmission:transmission@127.0.0.1:9091
     case "$(uname)" in
@@ -1666,7 +1534,7 @@ shDockerRestartTransmission () {(set -e
 "
 )}
 
-shDockerRestartUtility2 () {(set -e
+shDockerRestartUtility2() {(set -e
 # this function will restart docker-container $1 $2 with utility2 env
     local DOCKER_V_GAME
     docker rm -fv "$1" || true
@@ -1675,6 +1543,9 @@ shDockerRestartUtility2 () {(set -e
         LOCALHOST="${LOCALHOST:-192.168.99.100}"
         ;;
     MINGW*)
+        HOME="$USERPROFILE"
+        ;;
+    MSYS*)
         HOME="$USERPROFILE"
         ;;
     *)
@@ -1694,27 +1565,27 @@ shDockerRestartUtility2 () {(set -e
         "$2"
 )}
 
-shDockerRm () {(set -e
+shDockerRm() {(set -e
 # this function will rm docker-containers "$@"
     docker rm -fv "$@" || true
 )}
 
-shDockerRmAll () {(set -e
+shDockerRmAll() {(set -e
 # this function will rm all docker-containers
     docker rm -fv $(docker ps -aq) || true
 )}
 
-shDockerRmExited () {(set -e
+shDockerRmExited() {(set -e
 # this function will rm all docker-containers that have exited
     docker rm -fv $(docker ps -aqf status=exited) || true
 )}
 
-shDockerRmiUntagged () {(set -e
+shDockerRmiUntagged() {(set -e
 # this function will rm all untagged docker images
     docker rmi $(docker images -aqf dangling=true) 2>/dev/null || true
 )}
 
-shDockerSh () {
+shDockerSh() {
 # this function will run /bin/bash in docker-container $1
     # run outside vm
     if [ "$1" != init ]
@@ -1777,12 +1648,12 @@ shDockerSh () {
     fi
 }
 
-shDuList () {(set -e
+shDuList() {(set -e
 # this function will du $1 and sort its subdir by size
     du -md1 "$1" | sort -nr
 )}
 
-shEnvSanitize () {
+shEnvSanitize() {
 # this function will unset password-env, e.g.
 # (export CRYPTO_AES_SH=abcd1234; shEnvSanitize; printf "$CRYPTO_AES_SH\n")
 # undefined
@@ -1807,14 +1678,13 @@ shEnvSanitize () {
 ')" # '
 }
 
-shGitCmdWithGithubToken () {(set -e
+shGitCmdWithGithubToken() {(set -e
 # this function will run git $CMD with $GITHUB_TOKEN
 # http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     local CMD
     local URL
-    export MODE_BUILD="${MODE_BUILD:-shGitCmdWithGithubToken}"
     # security - filter basic-auth
-    shBuildPrint "$(
+    shCiPrint "$(
         printf "shGitCmdWithGithubToken $*" |
         sed -e "s/:\/\/[^@]*@/:\/\/...@/"
     )"
@@ -1843,14 +1713,14 @@ shGitCmdWithGithubToken () {(set -e
     git "$CMD" "$URL" "$@" 2>/dev/null
 )}
 
-shGitDirCommitAndPush () {(set -e
+shGitDirCommitAndPush() {(set -e
 # this function will git-commit and git-push dir $1 with msg $2
     cd "$1"
     git commit -am "$2" || true
     git push
 )}
 
-shGitGc () {(set -e
+shGitGc() {(set -e
 # this function will gc unreachable .git objects
 # http://stackoverflow.com/questions/3797907/how-to-remove-unused-objects-from-a-git-repository
     git \
@@ -1862,7 +1732,7 @@ shGitGc () {(set -e
         gc
 )}
 
-shGitInfo () {(set -e
+shGitInfo() {(set -e
 # this function will run checks before npm-publish
     git diff HEAD
     printf "\n"
@@ -1881,7 +1751,7 @@ shGitInfo () {(set -e
     git grep -E '\bset -\w*x\b' *.sh || true
 )}
 
-shGitInitBase () {(set -e
+shGitInitBase() {(set -e
 # this function will git init && git fetch utility2 base
     git init
     if [ "$DOS2UNIX" ]
@@ -1898,7 +1768,7 @@ shGitInitBase () {(set -e
 https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig
 )}
 
-shGitLsTree () {(set -e
+shGitLsTree() {(set -e
 # this function will "git ls-tree" all files committed in HEAD
 # example use:
 # shGitLsTree | sort -rk3 # sort by date
@@ -1964,7 +1834,7 @@ shGitLsTree () {(set -e
 ' # '
 )}
 
-shGitSquashPop () {(set -e
+shGitSquashPop() {(set -e
 # this function will squash HEAD to given $COMMIT
 # http://stackoverflow.com/questions/5189560
 # /how-can-i-squash-my-last-x-commits-together-using-git
@@ -1977,7 +1847,7 @@ shGitSquashPop () {(set -e
     git commit -am "$MESSAGE" || true
 )}
 
-shGitSquashShift () {(set -e
+shGitSquashShift() {(set -e
 # this function will squash $RANGE to first commit
     BRANCH="$(git rev-parse --abbrev-ref HEAD)"
     RANGE="$1"
@@ -1991,15 +1861,15 @@ shGitSquashShift () {(set -e
     git checkout "$BRANCH"
 )}
 
-shGithubApiRateLimitGet () {(set -e
+shGithubApiRateLimitGet() {(set -e
 # this function will fetch current rate-limit with given $GITHUB_TOKEN
     curl -Lf -H "Authorization: token $GITHUB_TOKEN" -I https://api.github.com
 )}
 
-shGithubRepoCreate () {(set -e
+shGithubRepoCreate() {(set -e
 # this function will create base github-repo https://github.com/$GITHUB_FULLNAME
     local GITHUB_FULLNAME="$1"
-    export MODE_BUILD="${MODE_BUILD:-shGithubRepoCreate}"
+    export MODE_CI="${MODE_CI:-shGithubRepoCreate}"
     # init /tmp/githubRepo/kaizhu256/base
     if [ ! -d /tmp/githubRepo/kaizhu256/base ]
     then
@@ -2053,12 +1923,12 @@ https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/.gitconfig |
         true
 )}
 
-shGithubRepoDescriptionUpdate () {(set -e
+shGithubRepoDescriptionUpdate() {(set -e
 # this function will update github-repo description
     shSleep 5
     GITHUB_FULLNAME="$1"
     DESCRIPTION="$2"
-    shBuildPrint "update $GITHUB_FULLNAME description"
+    shCiPrint "update $GITHUB_FULLNAME description"
     curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
@@ -2073,7 +1943,7 @@ shGithubRepoDescriptionUpdate () {(set -e
     "https://api.github.com/repos/$GITHUB_FULLNAME"
 )}
 
-shGithubRepoTouch () {(set -e
+shGithubRepoTouch() {(set -e
 # this function will touch github-repo $1, branch $2, with commit-message $2
     node -e '
 /* jslint utility2:true */
@@ -2129,7 +1999,7 @@ shGithubRepoTouch () {(set -e
 ' "$@" # '
 )}
 
-shGrep () {(set -e
+shGrep() {(set -e
 # this function will recursively grep $DIR for $REGEXP
     DIR="$1"
     shift
@@ -2163,7 +2033,7 @@ vendor)s{0,1}(\\b|_)\
         xargs -0 grep -HIn -E "$REGEXP" "$@" || true
 )}
 
-shGrepReplace () {(set -e
+shGrepReplace() {(set -e
 # this function will inline grep-and-replace files in $1
     node -e '
 /* jslint utility2:true */
@@ -2194,7 +2064,7 @@ shGrepReplace () {(set -e
 ' "$@" # '
 )}
 
-shHttpFileServer () {(set -e
+shHttpFileServer() {(set -e
 # this function will run simple node http-file-server on port $PORT
     node -e '
 /* jslint utility2:true */
@@ -2242,7 +2112,7 @@ shHttpFileServer () {(set -e
 ' # '
 )}
 
-shImageToDataUri () {(set -e
+shImageToDataUri() {(set -e
 # this function will convert image $FILE to data-uri string
     case "$1" in
     http://*)
@@ -2271,23 +2141,7 @@ shImageToDataUri () {(set -e
 ' "$FILE" # '
 )}
 
-shIstanbulCover () {(set -e
-# this function will run cmd "$NODE_BIN" "$@" with istanbul-coverage
-    export NODE_BIN="${NODE_BIN:-node}"
-    if [ "$npm_config_mode_coverage" ]
-    then
-        "$NODE_BIN" "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@"
-        return "$?"
-    fi
-    if [ "$npm_config_mode_inspect" ]
-    then
-        "$NODE_BIN" --inspect-brk=0.0.0.0 "$@"
-        return "$?"
-    fi
-    "$NODE_BIN" "$@"
-)}
-
-shJsonNormalize () {(set -e
+shJsonNormalize() {(set -e
 # this function will
 # 1. read json-data from file $1
 # 2. normalize json-data
@@ -2326,7 +2180,7 @@ shJsonNormalize () {(set -e
 ' "$1" # '
 )}
 
-shMacAddressSpoof () {(set -e
+shMacAddressSpoof() {(set -e
 # this function will spoof mac-address $1
     MAC_ADDRESS="${1-$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')}"
     printf "spoofing mac address $MAC_ADDRESS\n"
@@ -2335,56 +2189,11 @@ shMacAddressSpoof () {(set -e
     ifconfig en0
 )}
 
-shNpmDeprecateAlias () {(set -e
-# this function will deprecate npm-package $NAME with given $MESSAGE
-# example use:
-# shNpmDeprecateAlias deprecated-package
-    shEnvSanitize
-    NAME="$1"
-    MESSAGE="$2"
-    shBuildInit
-    if [ ! "$MESSAGE" ]
-    then
-        MESSAGE="this package is deprecated and superseded by \
-[$npm_package_name](https://www.npmjs.com/package/$npm_package_name)"
-    fi
-    export MODE_BUILD=npmDeprecate
-    shBuildPrint "npm-deprecate $NAME"
-    DIR=/tmp/npmDeprecate
-    rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
-    npm install "$NAME" --prefix .
-    cd "node_modules/$NAME"
-    # update README.md
-    printf "$MESSAGE\n" > README.md
-    # update package.json
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let packageJson;
-    packageJson = require("./package.json");
-    packageJson.description = process.argv[1];
-    Object.keys(packageJson).forEach(function (key) {
-        if (key[0] === "_") {
-            delete packageJson[key];
-        }
-    });
-    require("fs").writeFileSync(
-        "package.json",
-        JSON.stringify(packageJson, undefined, 4) + "\n"
-    );
-}());
-' "$MESSAGE" # '
-    shPackageJsonVersionIncrement
-    npm publish
-    npm deprecate "$NAME" "$MESSAGE"
-)}
-
-shNpmPackageCliHelpCreate () {(set -e
+shNpmPackageCliHelpCreate() {(set -e
 # this function will create svg of cli-help in current npm-package
     local FILE
-    export MODE_BUILD=npmPackageCliHelp
-    shBuildPrint "start"
+    export MODE_CI=npmPackageCliHelp
+    shCiPrint "start"
     FILE="$(
 node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
 ')" # '
@@ -2393,18 +2202,18 @@ node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
     then
         shRunWithScreenshotTxt "./$FILE" --help
     fi
-    shBuildPrint "end"
+    shCiPrint "end"
 )}
 
-shNpmPackageDependencyTreeCreate () {(set -e
+shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create svg-dependency-tree of npm-package
     local DIR
     if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
     then
         return
     fi
-    export MODE_BUILD=npmPackageDependencyTree
-    shBuildPrint "start"
+    export MODE_CI=npmPackageDependencyTree
+    shCiPrint "start"
     shEnvSanitize
     # cleanup /tmp/node_modules
     rm -rf /tmp/node_modules
@@ -2439,13 +2248,13 @@ shNpmPackageDependencyTreeCreate () {(set -e
 ' "$(du -ks "$DIR/node_modules")" # '
     )}
     shRunWithScreenshotTxt npm ls || true
-    shBuildPrint "end"
+    shCiPrint "end"
 )}
 
-shNpmPackageListingCreate () {(set -e
+shNpmPackageListingCreate() {(set -e
 # this function will create svg-listing of npm-package
-    export MODE_BUILD=npmPackageListing
-    shBuildPrint "start"
+    export MODE_CI=npmPackageListing
+    shCiPrint "start"
     # init .git
     if [ ! -d .git ]
     then
@@ -2459,44 +2268,10 @@ node_modules
         git commit -m 'initial commit' | head -n 1024
     fi
     shRunWithScreenshotTxt eval "printf \"package files\n\n\" && shGitLsTree"
-    shBuildPrint "end"
+    shCiPrint "end"
 )}
 
-shNpmPublishAlias () {(set -e
-# this function will npm-publish $DIR as $NAME@$VERSION
-    cd "$1"
-    NAME="$2"
-    VERSION="$3"
-    export MODE_BUILD=npmPublishAlias
-    shBuildPrint "npm-publish alias $NAME"
-    DIR=/tmp/npmPublishAlias
-    rm -rf "$DIR" && mkdir -p "$DIR"
-    # clean-copy . to $DIR
-    git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C "$DIR" -xvzf -
-    cd "$DIR"
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let name;
-    let packageJson;
-    let version;
-    name = process.argv[1];
-    version = process.argv[2];
-    packageJson = require("./package.json");
-    packageJson.nameOriginal = packageJson.name;
-    packageJson.name = name || packageJson.name;
-    packageJson.version = version || packageJson.version;
-    require("fs").writeFileSync(
-        "package.json",
-        JSON.stringify(packageJson, undefined, 4) + "\n"
-    );
-}());
-' "$NAME" "$VERSION" # '
-    npm publish
-)}
-
-shNpmPublishV0 () {(set -e
+shNpmPublishV0() {(set -e
 # this function will npm-publish name $1 with bare package.json
     DIR=/tmp/npmPublishV0
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
@@ -2504,47 +2279,55 @@ shNpmPublishV0 () {(set -e
     npm publish
 )}
 
-shNpmTest () {(set -e
+shNpmTest() {(set -e
 # this function will npm-test with coverage and create test-report
-    shBuildInit
+    local EXIT_CODE
     EXIT_CODE=0
-    export MODE_BUILD="${MODE_BUILD:-npmTest}"
-    export NODE_BIN="${NODE_BIN:-node}"
-    shBuildPrint "npm-testing $PWD"
-    # init npm-test-mode
-    export NODE_ENV="${NODE_ENV:-test}"
-    export npm_config_mode_test=1
+    shCiPrint "shNpmTest - (node "$*")"
+    # run node normally
+    if [ ! "$npm_config_mode_test" ]
+    then
+        if [ "$npm_config_mode_coverage" ]
+        then
+            node "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@" ||
+                EXIT_CODE="$?"
+        else
+            node "$@" || EXIT_CODE="$?"
+        fi
+        shCiPrint "shNpmTest - EXIT_CODE=$EXIT_CODE"
+        return "$EXIT_CODE"
+    fi
     # npm-test without coverage
     if [ ! "$npm_config_mode_coverage" ]
     then
-        ("$NODE_BIN" "$@") || EXIT_CODE="$?"
+        node "$@" || EXIT_CODE="$?"
     # npm-test with coverage
     else
         # cleanup old coverage
         rm -f "$UTILITY2_DIR_BUILD/coverage/"coverage.*.json
         # npm-test with coverage
-        (shIstanbulCover "$@") || EXIT_CODE="$?"
+        node "$UTILITY2_DIR_BIN/lib.istanbul.js" cover "$@" || EXIT_CODE="$?"
         # if $EXIT_CODE != 0, then debug covered-test by re-running it uncovered
         if [ "$EXIT_CODE" != 0 ] && [ "$EXIT_CODE" != 130 ]
         then
-            npm_config_mode_coverage="" "$NODE_BIN" "$@" || true
+            npm_config_mode_coverage="" node "$@" || true
         fi
     fi
     # create test-report artifacts
     (lib.utility2.js utility2.testReportCreate) || EXIT_CODE="$?"
-    shBuildPrint "EXIT_CODE - $EXIT_CODE"
+    shCiPrint "shNpmTest - EXIT_CODE=$EXIT_CODE"
     return "$EXIT_CODE"
 )}
 
-shNpmTestPublished () {(set -e
+shNpmTestPublished() {(set -e
 # this function will npm-test published npm-package $npm_package_name
-    export MODE_BUILD=npmTestPublished
+    export MODE_CI=npmTestPublished
     if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
         [ "$CI_BRANCH" = alpha ] &&
         (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
     ))
     then
-        shBuildPrint "skip npm-testing published-package $npm_package_name"
+        shCiPrint "skip npm-testing published-package $npm_package_name"
         return
     fi
     shEnvSanitize
@@ -2552,7 +2335,7 @@ shNpmTestPublished () {(set -e
     then
         export npm_package_name="$1"
     fi
-    shBuildPrint "npm-testing published-package $npm_package_name"
+    shCiPrint "npm-testing published-package $npm_package_name"
     DIR=/tmp/npmTestPublished
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
@@ -2568,7 +2351,7 @@ shNpmTestPublished () {(set -e
     npm test --mode-coverage
 )}
 
-shPackageJsonVersionIncrement () {(set -e
+shPackageJsonVersionIncrement() {(set -e
 # this function will increment package.json version
     node -e '
 /* jslint utility2:true */
@@ -2697,7 +2480,7 @@ shPackageJsonVersionIncrement () {(set -e
 ' "$1" # '
 )}
 
-shRawLibDiff () {(set -e
+shRawLibDiff() {(set -e
 # this function will diff-compare raw.xxx.js to lib.xxx.js
     diff -u "$(
         printf "$1" | sed -e "s/[^\\.]*\\./raw./"
@@ -2705,7 +2488,7 @@ shRawLibDiff () {(set -e
     vim -R /tmp/shRawLibDiff.diff
 )}
 
-shRawLibFetch () {(set -e
+shRawLibFetch() {(set -e
 # this function will fetch raw-lib from $1
     export DIR=".tmp/raw.lib"
     rm -rf "$DIR" && mkdir -p "$DIR"
@@ -3099,11 +2882,11 @@ shRawLibFetch () {(set -e
 ' "$@" # '
 )}
 
-shReadmeEval () {(set -e
+shReadmeEval() {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
-    shBuildInit
-    export MODE_BUILD=readmeTest
-    shBuildPrint "running cmd 'shReadmeEval $*' ..."
+    shCiInit
+    export MODE_CI=readmeEval
+    shCiPrint "running cmd 'shReadmeEval $*' ..."
     FILE="$1"
     if [ ! -f ".tmp/README.$FILE" ]
     then
@@ -3114,10 +2897,10 @@ shReadmeEval () {(set -e
         FILE=.tmp/README.build_ci.sh
         ;;
     example.js)
-        export MODE_BUILD=testExampleJs
+        export MODE_CI=readmeEvalExampleJs
         ;;
     example.sh)
-        export MODE_BUILD=testExampleSh
+        export MODE_CI=readmeEvalExampleSh
         ;;
     esac
     if [ "$FILE" = example.js ] || [ "$FILE" = example.sh ]
@@ -3150,7 +2933,7 @@ shReadmeEval () {(set -e
     export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
     (shSleep 15 && shBrowserScreenshot "http://127.0.0.1:$PORT") &
-    shBuildPrint "testing $FILE ..."
+    shCiPrint "testing $FILE ..."
     case "$FILE" in
     .tmp/README.build_ci.sh)
         # delete all leading blank lines at top of file
@@ -3181,10 +2964,10 @@ shReadmeEval () {(set -e
         shRunWithScreenshotTxt /bin/sh "$FILE" || [ "$?" = 15 ]
         ;;
     esac
-    shBuildPrint "... finished running cmd 'shReadmeEval $*'"
+    shCiPrint "... finished running cmd 'shReadmeEval $*'"
 )}
 
-shReadmeLinkValidate () {(set -e
+shReadmeLinkValidate() {(set -e
 # this function will validate http-links embedded in README.md
     node -e '
 /* jslint utility2:true */
@@ -3236,7 +3019,7 @@ shReadmeLinkValidate () {(set -e
 ' # '
 )}
 
-shRmDsStore () {(set -e
+shRmDsStore() {(set -e
 # this function will recursively rm .DS_Store from current-dir
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
     for NAME in "._*" ".DS_Store" "desktop.ini" "npm-debug.log" "*~"
@@ -3245,7 +3028,7 @@ shRmDsStore () {(set -e
     done
 )}
 
-shRun () {(set -e
+shRun() {(set -e
 # this function will run cmd "$@" with auto-restart
     local EXIT_CODE
     EXIT_CODE=0
@@ -3274,25 +3057,26 @@ shRun () {(set -e
         # else restart process after 1 second
         sleep 1
     done
-    printf "EXIT_CODE - $EXIT_CODE\n"
+    printf "shRun - EXIT_CODE=$EXIT_CODE\n"
     return "$EXIT_CODE"
 )}
 
-shRunWithScreenshotTxt () {(set -e
+shRunWithScreenshotTxt() {(set -e
 # this function will run cmd "$@" and screenshot text-output
 # http://www.cnx-software.com/2011/09/22/how-to-convert-a-command-line-result-into-an-image-in-linux/
     local EXIT_CODE
     local SCREENSHOT_SVG
     EXIT_CODE=0
     SCREENSHOT_SVG=\
-"${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}/screenshot.${MODE_BUILD:-undefined}.svg"
+"${UTILITY2_DIR_BUILD:-$PWD/.tmp/build}/screenshot.${MODE_CI:-undefined}.svg"
     rm -f "$SCREENSHOT_SVG"
-    shBuildPrint "shRunWithScreenshotTxt - (shRun $* 2>&1)"
+    printf "0\n" > "$SCREENSHOT_SVG.exit_code"
+    shCiPrint "shRunWithScreenshotTxt - (shRun $* 2>&1)"
     (
-        (shRun "$@" 2>&1) && printf "\n0\n" || printf "\n$?\n"
+        (shRun "$@" 2>&1) || printf "$?\n" > "$SCREENSHOT_SVG.exit_code"
     ) | tee /tmp/shRunWithScreenshotTxt.txt
-    EXIT_CODE="$(tail -n 1 /tmp/shRunWithScreenshotTxt.txt)"
-    shBuildPrint "shRunWithScreenshotTxt - EXIT_CODE - $EXIT_CODE"
+    EXIT_CODE="$(cat "$SCREENSHOT_SVG.exit_code")"
+    shCiPrint "shRunWithScreenshotTxt - EXIT_CODE=$EXIT_CODE"
     # run shRunWithScreenshotTxtAfter
     if (type shRunWithScreenshotTxtAfter > /dev/null 2>&1)
     then
@@ -3310,10 +3094,7 @@ shRunWithScreenshotTxt () {(set -e
     result = require("fs").readFileSync(
         require("os").tmpdir() + "/shRunWithScreenshotTxt.txt",
         "utf8"
-    // remove $EXIT_CODE
-    ).replace((
-        /\n.*?\n$/
-    ), "\n");
+    );
     // remove ansi escape-code
     result = result.replace((
         /\u001b.*?m/g
@@ -3363,12 +3144,11 @@ shRunWithScreenshotTxt () {(set -e
     require("fs").writeFileSync(process.argv[1], result);
 }());
 ' "$SCREENSHOT_SVG" # '
-    shBuildPrint \
-"created screenshot file $SCREENSHOT_SVG"
+    shCiPrint "shRunWithScreenshotTxt - wrote - $SCREENSHOT_SVG"
     return "$EXIT_CODE"
 )}
 
-shServerPortRandom () {(set -e
+shServerPortRandom() {(set -e
 # this function will print random, unused tcp-port in range [0x8000, 0xffff]
     node -e '
 /* jslint utility2:true */
@@ -3395,194 +3175,18 @@ shServerPortRandom () {(set -e
 ' # '
 )}
 
-shSleep () {(set -e
+shSleep() {(set -e
 # this function will sleep $1
-    shBuildPrint "sleep $1 ..."
+    shCiPrint "sleep $1 ..."
     sleep "$1"
 )}
 
-shSource () {
+shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc"
 }
 
-shTravisRepoCreate () {(set -e
-# this function will create travis-repo https://github.com/$GITHUB_FULLNAME
-    export GITHUB_FULLNAME="$1"
-    export MODE_BUILD="${MODE_BUILD:-shTravisRepoCreate}"
-    shBuildPrint "$GITHUB_FULLNAME - creating ..."
-    shGithubRepoCreate "$GITHUB_FULLNAME"
-    node -e '
-/* jslint utility2:true */
-(async function () {
-    "use strict";
-    let tmp;
-    function httpRequest(opt) {
-    /*
-     * this function will make simple http-request to <opt>.url
-     * and return <opt>.statusCode and <opt>.responseText
-     * and throw any err encountered as uncaughtException
-     */
-        let promise;
-        let resolve;
-        promise = new Promise(function (arg) {
-            resolve = arg;
-        });
-        opt = Object.assign({
-            method: "GET"
-        }, opt);
-        console.error("httpRequest - " + JSON.stringify({
-            method: opt.method,
-            hostname: require("url").parse(opt.url).hostname
-        }));
-        require("https").request(opt.url, opt, function (res) {
-            if (!(res.statusCode < 400) && !opt.modeIgnoreStatusCode) {
-                throw new Error(JSON.stringify({
-                    method: opt.method,
-                    hostname: require("url").parse(opt.url).hostname,
-                    statusCode: res.statusCode
-                }));
-            }
-            opt.responseText = "";
-            opt.statusCode = res.statusCode;
-            res.on("data", function (chunk) {
-                opt.responseText += chunk;
-            }).on("end", function () {
-                resolve(opt);
-            }).setEncoding("utf8");
-        }).end(opt.data);
-        return promise;
-    }
-    function sleep(time) {
-        return new Promise(function (resolve) {
-            setTimeout(resolve, time);
-        });
-    }
-    process.on("unhandledRejection", function (err) {
-        throw err;
-    });
-    // request github-assets
-    [
-        (
-            "https://raw.githubusercontent.com" +
-            "/kaizhu256/node-utility2/alpha/.gitignore"
-        ), (
-            "https://raw.githubusercontent.com" +
-            "/kaizhu256/node-utility2/alpha/.travis.yml"
-        )
-    ].forEach(function (url) {
-        httpRequest({
-            url
-        }).then(function (opt) {
-            require("fs").promises.writeFile((
-                require("os").tmpdir() + "/githubRepo/" +
-                process.env.GITHUB_FULLNAME + "/" +
-                require("path").basename(url)
-            ), opt.responseText);
-        });
-    });
-    require("fs").promises.writeFile((
-        require("os").tmpdir() + "/githubRepo/" +
-        process.env.GITHUB_FULLNAME + "/package.json"
-    ), JSON.stringify({
-        devDependencies: {
-            utility2: "kaizhu256/node-utility2#alpha"
-        },
-        homepage: "https://github.com/" + process.env.GITHUB_FULLNAME,
-        name: process.env.GITHUB_FULLNAME.replace((
-            /.+?\/node-|.+?\//
-        ), ""),
-        repository: {
-            type: "git",
-            url: "https://github.com/" + process.env.GITHUB_FULLNAME + ".git"
-        },
-        scripts: {
-            "build-ci": "utility2 shBuildCi",
-            "test": "./npm_scripts.sh"
-        },
-        version: "0.0.1"
-    }, undefined, 4));
-    await sleep(5000);
-    // request travis-userid
-    tmp = await httpRequest({
-        headers: {
-            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-            "content-type": "application/json",
-            "travis-api-version": 3
-        },
-        url: "https://api.travis-ci.com/user"
-    });
-    // sync travis-userid
-    tmp = await httpRequest({
-        headers: {
-            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-            "content-type": "application/json",
-            "travis-api-version": 3
-        },
-        method: "POST",
-        url: (
-            "https://api.travis-ci.com/user/" +
-            JSON.parse(tmp.responseText).id + "/sync"
-        )
-    });
-    // activate travis-repo
-    while (true) {
-        await sleep(2000);
-        tmp = await httpRequest({
-            headers: {
-                authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "content-type": "application/json",
-                "travis-api-version": 3
-            },
-            method: "POST",
-            modeIgnoreStatusCode: true,
-            url: (
-                "https://api.travis-ci.com/repo/" +
-                process.env.GITHUB_FULLNAME.replace("/", "%2F") +
-                "/activate"
-            )
-        });
-        if (tmp.statusCode < 400) {
-            break;
-        }
-    }
-    // update travis-repo settings
-    [
-        // "auto_cancel_pull_requests",
-        "auto_cancel_pushes",
-        // "build_pull_requests",
-        // "build_pushes",
-        // "maximum_number_of_builds",
-        "builds_only_with_travis_yml"
-    ].forEach(function (setting) {
-        httpRequest({
-            data: "{\"setting.value\":true}",
-            headers: {
-                authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-                "content-type": "application/json",
-                "travis-api-version": 3
-            },
-            method: "PATCH",
-            url: (
-                "https://api.travis-ci.com/repo/" +
-                process.env.GITHUB_FULLNAME.replace("/", "%2F") +
-                "/setting/" + setting
-            )
-        });
-    });
-}());
-' # '
-    cd "/tmp/githubRepo/$GITHUB_FULLNAME"
-    unset GITHUB_OWNER
-    unset GITHUB_FULLNAME
-    shBuildInit
-    shCryptoTravisEncrypt > /dev/null
-    git add -f . .gitignore .travis.yml
-    git commit -am "[npm publishAfterCommitAfterBuild]"
-    shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" -f alpha
-)}
-
-shTravisRepoTrigger () {(set -e
+shTravisRepoTrigger() {(set -e
 # this function will trigger travis-repo $1, branch $2
     node -e '
 /* jslint utility2:true */
@@ -3608,18 +3212,18 @@ shTravisRepoTrigger () {(set -e
 ' "$@" # '
 )}
 
-shUtility2DependentsGitCommit () {(set -e
+shUtility2DependentsGitCommit() {(set -e
 # this function will git-commit-and-push $UTILITY2_DEPENDENTS
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n#### shUtility2DependentsGitCommit - $PWD - $@ ####\n\n\n"
+        printf "\n\n\n#### shUtility2DependentsGitCommit - $PWD - $* ####\n\n\n"
         git commit -am "${1:-shUtility2GitCommitAndPush}" || true
     done
 )}
 
-shUtility2DependentsGrep () {(set -e
+shUtility2DependentsGrep() {(set -e
 # this function will grep $UTILITY2_DEPENDENTS for regexp $1
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
@@ -3632,19 +3236,19 @@ shUtility2DependentsGrep () {(set -e
     done
 )}
 
-shUtility2DependentsShellEval () {(set -e
+shUtility2DependentsShellEval() {(set -e
 # this function will shell-eval "$@" in utility2 and its dependents
     local DIR
     for DIR in $UTILITY2_DEPENDENTS
     do
         cd "$HOME/Documents/$DIR" || continue
-        printf "\n\n\n#### shUtility2DependentsShellEval - $PWD - $@ ####\n\n\n"
+        printf "\n\n\n#### shUtility2DependentsShellEval - $PWD - $* ####\n\n\n"
         eval "$@"
     done
     printf "\n\n\n"
 )}
 
-shUtility2DependentsVersion () {(set -e
+shUtility2DependentsVersion() {(set -e
 # this function will print latest versions of $UTILITY2_DEPENDENTS
     node -e '
 /* jslint utility2:true */
@@ -3682,7 +3286,7 @@ shUtility2DependentsVersion () {(set -e
 ' # '
 )}
 
-shUtility2FncStat () {(set -e
+shUtility2FncStat() {(set -e
 # this function will print histogram of utility2-fnc code-frequency
 # in current dir
     node -e '
@@ -3732,19 +3336,19 @@ sqlite3-lite
     shift
     case "$CMD" in
     -*)
-        shBuildInit
+        shCiInit
         lib.utility2.js "$CMD" "$@"
         ;;
     help)
-        shBuildInit
+        shCiInit
         lib.utility2.js "$CMD" "$@"
         ;;
     source)
-        shBuildInit
+        shCiInit
         printf ". $UTILITY2_DIR_BIN/lib.utility2.sh\n"
         ;;
     start)
-        shBuildInit
+        shCiInit
         if [ "$1" ]
         then
             FILE="$1"
@@ -3753,18 +3357,19 @@ sqlite3-lite
             FILE="$UTILITY2_DIR_BIN/test.js"
         fi
         export npm_config_mode_auto_restart=1
-        shRun shIstanbulCover "$FILE"
+        shRun shNpmTest "$FILE"
         ;;
     test)
-        shBuildInit
+        shCiInit
+        export npm_config_mode_test=1
         shRunWithScreenshotTxt shNpmTest "$@"
         ;;
     utility2.*)
-        shBuildInit
+        shCiInit
         lib.utility2.js "$CMD" "$@"
         ;;
     utility2Dirname)
-        shBuildInit
+        shCiInit
         printf "$UTILITY2_DIR_BIN\n"
         ;;
     *)

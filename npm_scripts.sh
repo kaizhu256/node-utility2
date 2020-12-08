@@ -1,7 +1,7 @@
 #!/bin/sh
 # jslint utility2:true
 
-shMain () {(set -e
+shMain() {(set -e
 # this function will run the main program
     local ARG1
     printf "# start run cmd 'npm run $*'\n" 1>&2
