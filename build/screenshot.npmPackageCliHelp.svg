@@ -1,9 +1,9 @@
-<svg height="1038px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="1038px" fill="#555" width="720px"></rect>
+<svg height="1054px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="1054px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
-<tspan x="10" y="26">shCiInit - mkdir - /home/travis/build/kaizhu256/node-utility2/.tmp/build</tspan>
+<tspan x="10" y="26">shCiInit - mkdir - /home/runner/work/node-utility2/node-utility2/.tmp/build</tspan>
 <tspan x="10" y="42"># shCiInit env</tspan>
-<tspan x="10" y="58"># export PWD='/home/travis/build/kaizhu256/node-utility2'</tspan>
+<tspan x="10" y="58"># export PWD='/home/runner/work/node-utility2/node-utility2'</tspan>
 <tspan x="10" y="74">export npm_package_description='this zero-dependency package will provide high-level functions t\</tspan><tspan x="10" y="90">o to build, test, and deploy webapps'</tspan>
 <tspan x="10" y="106">export npm_package_homepage='https://github.com/kaizhu256/node-utility2'</tspan>
 <tspan x="10" y="122">export npm_package_main='lib.utility2.js'</tspan>
@@ -15,53 +15,53 @@
 <tspan x="10" y="218">export GITHUB_FULLNAME='kaizhu256/node-utility2'</tspan>
 <tspan x="10" y="234">export GITHUB_OWNER='kaizhu256'</tspan>
 <tspan x="10" y="250">export GITHUB_REPO='node-utility2'</tspan>
-<tspan x="10" y="266">export UTILITY2_BIN='/home/travis/build/kaizhu256/node-utility2/lib.utility2.sh'</tspan>
-<tspan x="10" y="282">export UTILITY2_DIR_BIN='/home/travis/build/kaizhu256/node-utility2'</tspan>
-<tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/travis/build/kaizhu256/node-utility2/.tmp/build'</tspan>
-<tspan x="10" y="314">export PATH="$PATH:/home/travis/build/kaizhu256/node-utility2:/home/travis/build/kaizhu256/.bin"</tspan>
-<tspan x="10" y="330">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="346">export CI_COMMIT_ID='82c688e68ae1e7ab2aee663e903c6a5623eecafb'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_MESSAGE='test.travis'</tspan>
-<tspan x="10" y="378">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
-<tspan x="10" y="394">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
-<tspan x="10" y="410">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
-<tspan x="10" y="426">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
-<tspan x="10" y="442">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="458">shCiInit - wrote - /home/travis/build/kaizhu256/node-utility2/.tmp/README.build_ci.sh</tspan>
-<tspan x="10" y="474">utility2 (2020.12.3)</tspan>
-<tspan x="10" y="490"></tspan>
-<tspan x="10" y="506">usage:</tspan>
-<tspan x="10" y="522">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
-<tspan x="10" y="538"></tspan>
-<tspan x="10" y="554">example:</tspan>
-<tspan x="10" y="570">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
-<tspan x="10" y="586"></tspan>
-<tspan x="10" y="602"># CMD --eval</tspan>
-<tspan x="10" y="618"># will eval &lt;code&gt;</tspan>
-<tspan x="10" y="634">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
-<tspan x="10" y="650"></tspan>
-<tspan x="10" y="666"># CMD --help</tspan>
-<tspan x="10" y="682"># will print help</tspan>
-<tspan x="10" y="698">  lib.utility2.js  --help|-h  </tspan>
-<tspan x="10" y="714"></tspan>
-<tspan x="10" y="730"># CMD --interactive</tspan>
-<tspan x="10" y="746"># will start interactive-mode</tspan>
-<tspan x="10" y="762">  lib.utility2.js  --interactive|-i  </tspan>
-<tspan x="10" y="778"></tspan>
-<tspan x="10" y="794"># CMD --version</tspan>
-<tspan x="10" y="810"># will print version</tspan>
-<tspan x="10" y="826">  lib.utility2.js  --version|-v  </tspan>
-<tspan x="10" y="842"></tspan>
-<tspan x="10" y="858"># CMD utility2.browserTest</tspan>
-<tspan x="10" y="874"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
-<tspan x="10" y="890">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
-<tspan x="10" y="906"></tspan>
-<tspan x="10" y="922"># CMD utility2.start</tspan>
-<tspan x="10" y="938"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
-<tspan x="10" y="954">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
-<tspan x="10" y="970"></tspan>
-<tspan x="10" y="986"># CMD utility2.testReportCreate</tspan>
-<tspan x="10" y="1002"># will create test-report</tspan>
-<tspan x="10" y="1018">  lib.utility2.js  utility2.testReportCreate</tspan>
+<tspan x="10" y="266">export UTILITY2_BIN='/home/runner/work/node-utility2/node-utility2/lib.utility2.sh'</tspan>
+<tspan x="10" y="282">export UTILITY2_DIR_BIN='/home/runner/work/node-utility2/node-utility2'</tspan>
+<tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/runner/work/node-utility2/node-utility2/.tmp/build'</tspan>
+<tspan x="10" y="314">export PATH="$PATH:/home/runner/work/node-utility2/node-utility2:/home/runner/work/node-utility2\</tspan><tspan x="10" y="330">/.bin"</tspan>
+<tspan x="10" y="346">export CI_BRANCH='alpha'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_ID='82c688e68ae1e7ab2aee663e903c6a5623eecafb'</tspan>
+<tspan x="10" y="378">export CI_COMMIT_MESSAGE='test.travis'</tspan>
+<tspan x="10" y="394">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.sh</tspan>
+<tspan x="10" y="410">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
+<tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
+<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+<tspan x="10" y="490">utility2 (2020.12.3)</tspan>
+<tspan x="10" y="506"></tspan>
+<tspan x="10" y="522">usage:</tspan>
+<tspan x="10" y="538">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+<tspan x="10" y="554"></tspan>
+<tspan x="10" y="570">example:</tspan>
+<tspan x="10" y="586">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+<tspan x="10" y="602"></tspan>
+<tspan x="10" y="618"># CMD --eval</tspan>
+<tspan x="10" y="634"># will eval &lt;code&gt;</tspan>
+<tspan x="10" y="650">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+<tspan x="10" y="666"></tspan>
+<tspan x="10" y="682"># CMD --help</tspan>
+<tspan x="10" y="698"># will print help</tspan>
+<tspan x="10" y="714">  lib.utility2.js  --help|-h  </tspan>
+<tspan x="10" y="730"></tspan>
+<tspan x="10" y="746"># CMD --interactive</tspan>
+<tspan x="10" y="762"># will start interactive-mode</tspan>
+<tspan x="10" y="778">  lib.utility2.js  --interactive|-i  </tspan>
+<tspan x="10" y="794"></tspan>
+<tspan x="10" y="810"># CMD --version</tspan>
+<tspan x="10" y="826"># will print version</tspan>
+<tspan x="10" y="842">  lib.utility2.js  --version|-v  </tspan>
+<tspan x="10" y="858"></tspan>
+<tspan x="10" y="874"># CMD utility2.browserTest</tspan>
+<tspan x="10" y="890"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+<tspan x="10" y="906">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+<tspan x="10" y="922"></tspan>
+<tspan x="10" y="938"># CMD utility2.start</tspan>
+<tspan x="10" y="954"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+<tspan x="10" y="970">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+<tspan x="10" y="986"></tspan>
+<tspan x="10" y="1002"># CMD utility2.testReportCreate</tspan>
+<tspan x="10" y="1018"># will create test-report</tspan>
+<tspan x="10" y="1034">  lib.utility2.js  utility2.testReportCreate</tspan>
 </text>
 </svg>
