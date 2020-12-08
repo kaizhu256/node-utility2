@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- "assets.utility2.template.html" -->
+<title>utility2 (2019.8.11)</title>
+<style>
+/* jslint utility2:true */
+/*csslint
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+/* csslint ignore:end */
+@keyframes uiAnimateShake {
+0%,
+50% {
+    transform: translateX(10px);
+}
+100% {
+    transform: translateX(0);
+}
+25%,
+75% {
+    transform: translateX(-10px);
+}
+}
+@keyframes uiAnimateSpin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+a {
+    overflow-wrap: break-word;
+}
+body {
+    background: #eef;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    margin: 0 40px;
+}
+body > div,
+body > form > div,
+body > form > input,
+body > form > pre,
+body > form > .button,
+body > form > .textarea,
+body > input,
+body > pre,
+body > .button,
+body > .textarea {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+body > form > input,
+body > form > .button,
+body > input,
+body > .button {
+    width: 20rem;
+}
+body > form > .textarea,
+body > .textarea {
+    height: 10rem;
+    width: 100%;
+}
+body > .readonly {
+    background: #ddd;
+}
+code,
+pre,
+.textarea {
+    font-family: Consolas, Menlo, monospace;
+    font-size: smaller;
+}
+pre {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+.button {
+    background-color: #fff;
+    border: 1px solid;
+    border-bottom-color: rgb(186, 186, 186);
+    border-left-color: rgb(209, 209, 209);
+    border-radius: 4px;
+    border-right-color: rgb(209, 209, 209);
+    border-top-color: rgb(216, 216, 216);
+    color: #00d;
+    cursor: pointer;
+    display: inline-block;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: normal;
+    margin: 0;
+    padding: 2px 7px 3px 7px;
+    text-align: center;
+    text-decoration: underline;
+}
+.colorError {
+    color: #d00;
+}
+.textarea {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 0;
+    cursor: auto;
+    overflow: auto;
+    padding: 2px;
+}
+.uiAnimateShake {
+    animation-duration: 500ms;
+    animation-name: uiAnimateShake;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
+.utility2FooterDiv {
+    text-align: center;
+}
+.zeroPixel {
+    border: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+}
+</style>
+</head>
+<body>
+<div id="ajaxProgressDiv1" style="background: #d00; height: 2px; left: 0; margin: 0; padding: 0; position: fixed; top: 0; transition: background 500ms, width 1500ms; width: 0%; z-index: 1;"></div>
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>
+<a class="zeroPixel" download="db.persistence.json" href="" id="dbExportA1"></a>
+<input class="zeroPixel" data-onevent="onEventDomDb" data-onevent-db="dbImportInput" type="file">
+<script>
+/* jslint utility2:true */
+// init domOnEventWindowOnloadTimeElapsed
+(function () {
+/*
+ * this function will measure and print time-elapsed for window.onload
+ */
+    "use strict";
+    if (window.domOnEventWindowOnloadTimeElapsed) {
+        return;
+    }
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now()
+                - window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.error(
+                "domOnEventWindowOnloadTimeElapsed = "
+                + window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}());
+
+
+
+// init domOnEventDelegateDict
+(function () {
+/*
+ * this function will handle delegated dom-event
+ */
+    "use strict";
+    var timerTimeoutDict;
+    if (window.domOnEventDelegateDict) {
+        return;
+    }
+    window.domOnEventDelegateDict = {};
+    timerTimeoutDict = {};
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {
+        evt.targetOnEvent = evt.target.closest(
+            "[data-onevent]"
+        );
+        if (
+            !evt.targetOnEvent
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNop"
+            || evt.target.closest(
+                ".disabled, .readonly"
+            )
+        ) {
+            return;
+        }
+        // rate-limit high-frequency-event
+        switch (evt.type) {
+        case "keydown":
+        case "keyup":
+            // filter non-input keyboard-event
+            if (!evt.target.closest(
+                "input, option, select, textarea"
+            )) {
+                return;
+            }
+            if (timerTimeoutDict[evt.type] !== true) {
+                timerTimeoutDict[evt.type] = timerTimeoutDict[
+                    evt.type
+                ] || setTimeout(function () {
+                    timerTimeoutDict[evt.type] = true;
+                    window.domOnEventDelegateDict.domOnEventDelegate(evt);
+                }, 50);
+                return;
+            }
+            timerTimeoutDict[evt.type] = null;
+            break;
+        }
+        switch (evt.targetOnEvent.tagName) {
+        case "BUTTON":
+        case "FORM":
+            evt.preventDefault();
+            break;
+        }
+        evt.stopPropagation();
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](
+            evt
+        );
+    };
+    window.domOnEventDelegateDict.domOnEventResetOutput = function () {
+        Array.from(document.querySelectorAll(
+            ".onevent-reset-output"
+        )).forEach(function (elem) {
+            switch (elem.tagName) {
+            case "INPUT":
+            case "TEXTAREA":
+                elem.value = "";
+                break;
+            case "PRE":
+                elem.textContent = "";
+                break;
+            default:
+                elem.innerHTML = "";
+            }
+        });
+    };
+    // init event-handling
+    [
+        "change",
+        "click",
+        "keydown",
+        "submit"
+    ].forEach(function (eventType) {
+        document.addEventListener(
+            eventType,
+            window.domOnEventDelegateDict.domOnEventDelegate
+        );
+    });
+}());
+
+
+
+// init timerIntervalAjaxProgressUpdate
+(function () {
+/*
+ * this function will increment ajax-progress-bar
+ * until webpage has loaded
+ */
+    "use strict";
+    var ajaxProgressDiv1;
+    var ajaxProgressState;
+    var ajaxProgressUpdate;
+    if (
+        window.timerIntervalAjaxProgressUpdate
+        || !document.querySelector(
+            "#ajaxProgressDiv1"
+        )
+    ) {
+        return;
+    }
+    ajaxProgressDiv1 = document.querySelector(
+        "#ajaxProgressDiv1"
+    );
+    setTimeout(function () {
+        ajaxProgressDiv1.style.width = "25%";
+    });
+    ajaxProgressState = 0;
+    ajaxProgressUpdate = (
+        window.local
+        && window.local.ajaxProgressUpdate
+    ) || function () {
+        ajaxProgressDiv1.style.width = "100%";
+        setTimeout(function () {
+            ajaxProgressDiv1.style.background = "transparent";
+            setTimeout(function () {
+                ajaxProgressDiv1.style.width = "0%";
+            }, 500);
+        }, 1000);
+    };
+    window.timerIntervalAjaxProgressUpdate = setInterval(function () {
+        ajaxProgressState += 1;
+        ajaxProgressDiv1.style.width = Math.max(
+            100 - 75 * Math.exp(-0.125 * ajaxProgressState),
+            ajaxProgressDiv1.style.width.slice(0, -1) | 0
+        ) + "%";
+    }, 1000);
+    window.addEventListener("load", function () {
+        clearInterval(window.timerIntervalAjaxProgressUpdate);
+        ajaxProgressUpdate();
+    });
+}());
+
+
+
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elements
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        var range;
+        var selection;
+        if (
+            evt
+            && evt.key === "a"
+            && (evt.ctrlKey || evt.metaKey)
+            && evt.target.closest(
+                "pre"
+            )
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest(
+                "pre"
+            ));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // init event-handling
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<h1>
+
+    <a
+        
+        href="https://github.com/kaizhu256/node-utility2"
+        
+        target="_blank"
+    >
+
+        utility2 (2019.8.11)
+
+    </a>
+
+</h1>
+<h3>this zero-dependency package will provide a collection of high-level functions to to build, test, and deploy webapps</h3>
+
+<a class="button" download href="assets.app.js">download standalone app</a><br>
+<button class="button" data-onevent="testRunBrowser" id="testRunButton1">run internal test</button><br>
+
+
+
+
+<label>edit or paste script below to cover and test</label>
+<textarea class="textarea" data-onevent="testRunBrowser" id="inputEval1">
+// remove comment below to disable jslint
+/*jslint browser, devel*/
+/*global window*/
+(function () {
+    "use strict";
+    var testCaseDict;
+    testCaseDict = {};
+    testCaseDict.modeTest = 1;
+
+    // comment this testCase to disable failed error demo
+    testCaseDict.testCase_failed_error_demo = function (opt, onError) {
+    /*
+     * this function will run a failed error demo
+     */
+        // jslint-hack
+        window.utility2.nop(opt);
+        onError(new Error("this is a failed error demo"));
+    };
+
+    testCaseDict.testCase_passed_ajax_demo = function (opt, onError) {
+    /*
+     * this function will demo a passed ajax test
+     */
+        var data;
+        opt = {url: "/"};
+        // test ajax-req for main-page "/"
+        window.utility2.ajax(opt, function (err, xhr) {
+            try {
+                // validate no err occurred
+                console.assert(!err, err);
+                // validate "200 ok" status
+                console.assert(xhr.statusCode === 200, xhr.statusCode);
+                // validate non-empty data
+                data = xhr.responseText;
+                console.assert(data && data.length > 0, data);
+                onError();
+            } catch (errorCaught) {
+                onError(errorCaught);
+            }
+        });
+    };
+
+    window.utility2.testRunDefault(testCaseDict);
+}());
+</textarea>
+<button class="button" data-onevent="testRunBrowser" id="jslintAutofixButton1">jslint autofix</button><br>
+<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
+<label>instrumented-code</label>
+<pre class="readonly textarea" id="outputCode1" tabindex="0"></pre>
+<label>stderr and stdout</label>
+<pre class="onevent-reset-output readonly textarea" id="outputStdout1" tabindex="0"></pre>
+<div id="testReportDiv1"></div>
+<div id="coverageReportDiv1"></div>
+
+
+<script src="assets.app.js"></script>
+
+
+<div class="utility2FooterDiv">
+    [ this app was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</body>
+</html>

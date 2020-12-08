@@ -1,0 +1,234 @@
+<svg height="1934" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="1934" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26"></tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">(re)starting shNpmTest test.js</tspan>
+
+<tspan x="10" y="74"></tspan>
+
+<tspan x="10" y="90">[MODE_BUILD=buildApidoc] - 2019-08-14T15:14:22.359Z - npm-testing /home/travis/build/kaizhu256/n\</tspan>
+<tspan x="10" y="106">ode-utility2</tspan>
+
+<tspan x="10" y="122"></tspan>
+
+<tspan x="10" y="138"></tspan>
+
+<tspan x="10" y="154">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/\</tspan>
+<tspan x="10" y="170">test-report.json</tspan>
+
+<tspan x="10" y="186">&gt; repl-server listening on port 42215</tspan>
+
+<tspan x="10" y="202">http-server listening on port 35680</tspan>
+
+<tspan x="10" y="218">db - dropping database ...</tspan>
+
+<tspan x="10" y="234">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="250">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/assets.hello.txt</tspan>
+
+<tspan x="10" y="266">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.dockerignore</tspan>
+
+<tspan x="10" y="282">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.gitconfig</tspan>
+
+<tspan x="10" y="298">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.gitignore</tspan>
+
+<tspan x="10" y="314">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
+
+<tspan x="10" y="330">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.db.js</tspan>
+
+<tspan x="10" y="346">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.github_crud.js</tspan>
+
+<tspan x="10" y="362">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
+
+<tspan x="10" y="378"></tspan>
+
+<tspan x="10" y="394">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/\</tspan>
+<tspan x="10" y="410">test-report.json</tspan>
+
+<tspan x="10" y="426">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
+
+<tspan x="10" y="442">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
+
+<tspan x="10" y="458">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.sjcl.js</tspan>
+
+<tspan x="10" y="474">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.swgg.js</tspan>
+
+<tspan x="10" y="490">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
+
+<tspan x="10" y="506">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="522">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
+
+<tspan x="10" y="538">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/LICENSE</tspan>
+
+<tspan x="10" y="554">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
+
+<tspan x="10" y="570">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="586">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package-lock.json</tspan>
+
+<tspan x="10" y="602">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.istanbul.js</tspan>
+
+<tspan x="10" y="618">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.jslint.js</tspan>
+
+<tspan x="10" y="634">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.uglifyjs.js</tspan>
+
+<tspan x="10" y="650">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="666">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.screenrc</tspan>
+
+<tspan x="10" y="682">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="698">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.travis.yml</tspan>
+
+<tspan x="10" y="714">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.vimrc</tspan>
+
+<tspan x="10" y="730">apidocCreate - requiring /home/travis/build/kaizhu256/node-utility2 ...</tspan>
+
+<tspan x="10" y="746">apidocCreate - ... required /home/travis/build/kaizhu256/node-utility2</tspan>
+
+<tspan x="10" y="762">apidocCreate - libFile lib.apidoc.js</tspan>
+
+<tspan x="10" y="778">apidocCreate - libFile lib.db.js</tspan>
+
+<tspan x="10" y="794">apidocCreate - libFile lib.github_crud.js</tspan>
+
+<tspan x="10" y="810">apidocCreate - libFile lib.istanbul.js</tspan>
+
+<tspan x="10" y="826">apidocCreate - libFile lib.jslint.js</tspan>
+
+<tspan x="10" y="842">apidocCreate - libFile lib.marked.js</tspan>
+
+<tspan x="10" y="858">apidocCreate - libFile lib.sjcl.js</tspan>
+
+<tspan x="10" y="874">apidocCreate - libFile lib.swgg.js</tspan>
+
+<tspan x="10" y="890">apidocCreate - libFile lib.terser.js</tspan>
+
+<tspan x="10" y="906">apidocCreate - libFile raw.istanbul.js</tspan>
+
+<tspan x="10" y="922">apidocCreate - libFile raw.jslint.js</tspan>
+
+<tspan x="10" y="938">apidocCreate - libFile raw.uglifyjs.js</tspan>
+
+<tspan x="10" y="954">jslint - 497ms /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="970">jslint - 238ms /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
+
+<tspan x="10" y="986">jslint - 529ms /home/travis/build/kaizhu256/node-utility2/lib.db.js</tspan>
+
+<tspan x="10" y="1002">jslint - 186ms /home/travis/build/kaizhu256/node-utility2/lib.github_crud.js</tspan>
+
+<tspan x="10" y="1018">jslint - 299ms /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
+
+<tspan x="10" y="1034">jslint - 35ms /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
+
+<tspan x="10" y="1050">jslint - 20ms /home/travis/build/kaizhu256/node-utility2/lib.sjcl.js</tspan>
+
+<tspan x="10" y="1066">jslint - 753ms /home/travis/build/kaizhu256/node-utility2/lib.swgg.js</tspan>
+
+<tspan x="10" y="1082">jslint - 1130ms /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="1098">jslint - 463ms /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
+
+<tspan x="10" y="1114">jslint - 12ms /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
+
+<tspan x="10" y="1130">jslint - 0ms /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="1146">jslint - 425ms /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="1162">local-function - unused (lib.jslint.js) local.jsonStringifyOrdered</tspan>
+
+<tspan x="10" y="1178">jslint - 1411ms /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
+
+<tspan x="10" y="1194">jslint - 3ms /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
+
+<tspan x="10" y="1210">created apidoc file /home/travis/build/kaizhu256/node-utility2/apidoc.html</tspan>
+
+<tspan x="10" y="1226"></tspan>
+
+<tspan x="10" y="1242">testRunDefault - 23527 ms - [node test-case 1 of 1 passed] - testCase_buildApidoc_default</tspan>
+
+<tspan x="10" y="1258"></tspan>
+
+<tspan x="10" y="1274">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/tmp/build/\</tspan>
+<tspan x="10" y="1290">test-report.json</tspan>
+
+<tspan x="10" y="1306"></tspan>
+
+<tspan x="10" y="1322">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1338">| test-report - buildApidoc - node - linux v12.8.0 - 2019-08-14T15:14:22.470Z</tspan>
+
+<tspan x="10" y="1354">|   23527 ms            0 failed        1 passed      |</tspan>
+
+<tspan x="10" y="1370">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1386">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan>
+<tspan x="10" y="1402">L, like Gecko) Chrome/61.0.3163.100 Electron/2.0.18 Safari/537.36 - 2019-08-14T15:14:11.693Z</tspan>
+
+<tspan x="10" y="1418">|    3039 ms            0 failed       80 passed      |</tspan>
+
+<tspan x="10" y="1434">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1450">| test-report - npmTest - node - linux v12.8.0 - 2019-08-14T15:13:42.031Z</tspan>
+
+<tspan x="10" y="1466">|   37145 ms            0 failed       81 passed      |</tspan>
+
+<tspan x="10" y="1482">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1498">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1514"> (KHTML, like Gecko) Chrome/61.0.3163.100 Electron/2.0.16 Safari/537.36 - 2019-08-14T15:13:08.63\</tspan>
+<tspan x="10" y="1530">4Z</tspan>
+
+<tspan x="10" y="1546">|    1007 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1562">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1578">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1594"> (KHTML, like Gecko) Chrome/61.0.3163.100 Electron/2.0.16 Safari/537.36 - 2019-08-14T15:13:08.63\</tspan>
+<tspan x="10" y="1610">4Z</tspan>
+
+<tspan x="10" y="1626">|    1007 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1642">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1658">| test-report - testExampleJs - node - linux v12.8.0 - 2019-08-14T15:13:07.594Z</tspan>
+
+<tspan x="10" y="1674">|    6753 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1690">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1706">| test-report - testExampleJs - node - linux v12.8.0 - 2019-08-14T15:13:07.594Z</tspan>
+
+<tspan x="10" y="1722">|    6753 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1738">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1754"></tspan>
+
+<tspan x="10" y="1770">created test-report file /home/travis/build/kaizhu256/node-utility2/tmp/build/test-report.html</tspan>
+
+<tspan x="10" y="1786"></tspan>
+
+<tspan x="10" y="1802"></tspan>
+
+<tspan x="10" y="1818">buildApidoc - 0 failed tests</tspan>
+
+<tspan x="10" y="1834"></tspan>
+
+<tspan x="10" y="1850"></tspan>
+
+<tspan x="10" y="1866">[MODE_BUILD=buildApidoc] - 2019-08-14T15:14:47.329Z - EXIT_CODE - 0</tspan>
+
+<tspan x="10" y="1882"></tspan>
+
+<tspan x="10" y="1898">process exited with code 0</tspan>
+
+<tspan x="10" y="1914">EXIT_CODE - 0</tspan>
+
+</text>
+</svg>

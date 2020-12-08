@@ -1,0 +1,257 @@
+<svg height="2158" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="2158" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26"></tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">(re)starting shNpmTest test.js</tspan>
+
+<tspan x="10" y="74"># shBuildInit env</tspan>
+
+<tspan x="10" y="90">export npm_package_description='this zero-dependency package will provide high-level functions t\</tspan>
+<tspan x="10" y="106">o to build, test, and deploy webapps'</tspan>
+
+<tspan x="10" y="122">export npm_package_homepage='https://github.com/kaizhu256/node-utility2'</tspan>
+
+<tspan x="10" y="138">export npm_package_main='lib.utility2.js'</tspan>
+
+<tspan x="10" y="154">export npm_package_name='utility2'</tspan>
+
+<tspan x="10" y="170">export npm_package_nameLib='utility2'</tspan>
+
+<tspan x="10" y="186">export npm_package_nameOriginal='utility2'</tspan>
+
+<tspan x="10" y="202">export npm_package_private=''</tspan>
+
+<tspan x="10" y="218">export npm_package_version='2020.11.12'</tspan>
+
+<tspan x="10" y="234">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.js</tspan>
+
+<tspan x="10" y="250">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.example.sh</tspan>
+
+<tspan x="10" y="266">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.base</tspan>
+
+<tspan x="10" y="282">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+
+<tspan x="10" y="298">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+
+<tspan x="10" y="314">shBuildInit - wrote /home/travis/build/kaizhu256/node-utility2/.tmp/README.build_ci.sh</tspan>
+
+<tspan x="10" y="330"></tspan>
+
+<tspan x="10" y="346">\x1b[35m[MODE_BUILD=buildApidoc]\x1b[0m - 2020-11-12T18:34:13.886Z - npm-testing /home/travis/bu\</tspan>
+<tspan x="10" y="362">ild/kaizhu256/node-utility2</tspan>
+
+<tspan x="10" y="378"></tspan>
+
+<tspan x="10" y="394"></tspan>
+
+<tspan x="10" y="410">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/build\</tspan>
+<tspan x="10" y="426">/test-report.json</tspan>
+
+<tspan x="10" y="442">&gt; http-server listening on port 41307</tspan>
+
+<tspan x="10" y="458">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="474"></tspan>
+
+<tspan x="10" y="490">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/build\</tspan>
+<tspan x="10" y="506">/test-report.json</tspan>
+
+<tspan x="10" y="522">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/action.yml</tspan>
+
+<tspan x="10" y="538">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/assets.hello.txt</tspan>
+
+<tspan x="10" y="554">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.dockerignore</tspan>
+
+<tspan x="10" y="570">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.gitconfig</tspan>
+
+<tspan x="10" y="586">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.gitignore</tspan>
+
+<tspan x="10" y="602">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
+
+<tspan x="10" y="618">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
+
+<tspan x="10" y="634">jslint - 5ms - /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="650">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
+
+<tspan x="10" y="666">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
+
+<tspan x="10" y="682">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.sqlite3.js</tspan>
+
+<tspan x="10" y="698">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
+
+<tspan x="10" y="714">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="730">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
+
+<tspan x="10" y="746">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/LICENSE</tspan>
+
+<tspan x="10" y="762">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
+
+<tspan x="10" y="778">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="794">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/package-lock.json</tspan>
+
+<tspan x="10" y="810">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.istanbul.js</tspan>
+
+<tspan x="10" y="826">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.jslint.js</tspan>
+
+<tspan x="10" y="842">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/raw.sqlite3.js</tspan>
+
+<tspan x="10" y="858">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/README.md</tspan>
+
+<tspan x="10" y="874">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.screenrc</tspan>
+
+<tspan x="10" y="890">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="906">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.travis.yml</tspan>
+
+<tspan x="10" y="922">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.vimrc</tspan>
+
+<tspan x="10" y="938">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.github/workflows/main.yml</tspan>
+
+<tspan x="10" y="954">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.github/workflows/node.js.\</tspan>
+<tspan x="10" y="970">yml</tspan>
+
+<tspan x="10" y="986">apidocCreate - readExample /home/travis/build/kaizhu256/node-utility2/.github/workflows/npm-publ\</tspan>
+<tspan x="10" y="1002">ish.yml</tspan>
+
+<tspan x="10" y="1018">apidocCreate - requiring /home/travis/build/kaizhu256/node-utility2 ...</tspan>
+
+<tspan x="10" y="1034">apidocCreate - ... required /home/travis/build/kaizhu256/node-utility2</tspan>
+
+<tspan x="10" y="1050">jslint - 136ms - /home/travis/build/kaizhu256/node-utility2/lib.apidoc.js</tspan>
+
+<tspan x="10" y="1066">apidocCreate - libFile lib.apidoc.js</tspan>
+
+<tspan x="10" y="1082">apidocCreate - libFile lib.istanbul.js</tspan>
+
+<tspan x="10" y="1098">apidocCreate - libFile lib.jslint.js</tspan>
+
+<tspan x="10" y="1114">apidocCreate - libFile lib.marked.js</tspan>
+
+<tspan x="10" y="1130">apidocCreate - libFile lib.sqlite3.js</tspan>
+
+<tspan x="10" y="1146">apidocCreate - libFile lib.terser.js</tspan>
+
+<tspan x="10" y="1162">apidocCreate - libFile raw.istanbul.js</tspan>
+
+<tspan x="10" y="1178">apidocCreate - libFile raw.jslint.js</tspan>
+
+<tspan x="10" y="1194">apidocCreate - libFile raw.sqlite3.js</tspan>
+
+<tspan x="10" y="1210">jslint - 313ms - /home/travis/build/kaizhu256/node-utility2/lib.istanbul.js</tspan>
+
+<tspan x="10" y="1226">jslint - 349ms - /home/travis/build/kaizhu256/node-utility2/lib.marked.js</tspan>
+
+<tspan x="10" y="1242">jslint - 368ms - /home/travis/build/kaizhu256/node-utility2/lib.sqlite3.js</tspan>
+
+<tspan x="10" y="1258">jslint - 652ms - /home/travis/build/kaizhu256/node-utility2/lib.utility2.js</tspan>
+
+<tspan x="10" y="1274">jslint - 657ms - /home/travis/build/kaizhu256/node-utility2/lib.utility2.sh</tspan>
+
+<tspan x="10" y="1290">jslint - 658ms - /home/travis/build/kaizhu256/node-utility2/npm_scripts.sh</tspan>
+
+<tspan x="10" y="1306">jslint - 660ms - /home/travis/build/kaizhu256/node-utility2/package.json</tspan>
+
+<tspan x="10" y="1322">jslint - 734ms - /home/travis/build/kaizhu256/node-utility2/test.js</tspan>
+
+<tspan x="10" y="1338">jslint - 803ms - /home/travis/build/kaizhu256/node-utility2/lib.jslint.js</tspan>
+
+<tspan x="10" y="1354">jslint - 808ms - /home/travis/build/kaizhu256/node-utility2/lib.terser.js</tspan>
+
+<tspan x="10" y="1370">testRunDefault - 6868 ms - testCase pending - testCase_buildApidoc_default ...</tspan>
+
+<tspan x="10" y="1386">fsWriteFileWithMkdirp - /home/travis/build/kaizhu256/node-utility2/.tmp/build/apidoc.html</tspan>
+
+<tspan x="10" y="1402">testRunDefault - 6872 ms - [node test-case 1 of 1 passed] - testCase_buildApidoc_default</tspan>
+
+<tspan x="10" y="1418">fsWriteFileWithMkdirpSync - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-report.js\</tspan>
+<tspan x="10" y="1434">on</tspan>
+
+<tspan x="10" y="1450"></tspan>
+
+<tspan x="10" y="1466">buildApidoc - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/build\</tspan>
+<tspan x="10" y="1482">/test-report.json</tspan>
+
+<tspan x="10" y="1498"></tspan>
+
+<tspan x="10" y="1514">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1530">| test-report - buildApidoc - node - linux v15.2.0 - 2020-11-12T18:34:13.950Z</tspan>
+
+<tspan x="10" y="1546">|    6873 ms            0 failed        1 passed      |</tspan>
+
+<tspan x="10" y="1562">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1578">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan>
+<tspan x="10" y="1594">L, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:08.845Z</tspan>
+
+<tspan x="10" y="1610">|    1445 ms            0 failed       37 passed      |</tspan>
+
+<tspan x="10" y="1626">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1642">| test-report - npmTest - node - linux v15.2.0 - 2020-11-12T18:34:06.829Z</tspan>
+
+<tspan x="10" y="1658">|    5472 ms            0 failed       37 passed      |</tspan>
+
+<tspan x="10" y="1674">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1690">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1706"> (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:04.337Z</tspan>
+
+<tspan x="10" y="1722">|      48 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1738">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1754">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1770"> (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:04.337Z</tspan>
+
+<tspan x="10" y="1786">|      48 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1802">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1818">| test-report - testExampleJs - node - linux v15.2.0 - 2020-11-12T18:34:04.014Z</tspan>
+
+<tspan x="10" y="1834">|     509 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1850">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1866">| test-report - testExampleJs - node - linux v15.2.0 - 2020-11-12T18:34:04.014Z</tspan>
+
+<tspan x="10" y="1882">|     509 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1898">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1914"></tspan>
+
+<tspan x="10" y="1930">fsWriteFileWithMkdirpSync - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-report.ht\</tspan>
+<tspan x="10" y="1946">ml</tspan>
+
+<tspan x="10" y="1962">fsWriteFileWithMkdirpSync - /home/travis/build/kaizhu256/node-utility2/.tmp/build/build.badge.sv\</tspan>
+<tspan x="10" y="1978">g</tspan>
+
+<tspan x="10" y="1994">fsWriteFileWithMkdirpSync - /home/travis/build/kaizhu256/node-utility2/.tmp/build/test-report.ba\</tspan>
+<tspan x="10" y="2010">dge.svg</tspan>
+
+<tspan x="10" y="2026"></tspan>
+
+<tspan x="10" y="2042">buildApidoc - 0 failed tests</tspan>
+
+<tspan x="10" y="2058"></tspan>
+
+<tspan x="10" y="2074"></tspan>
+
+<tspan x="10" y="2090">\x1b[35m[MODE_BUILD=buildApidoc]\x1b[0m - 2020-11-12T18:34:21.090Z - EXIT_CODE - 0</tspan>
+
+<tspan x="10" y="2106"></tspan>
+
+<tspan x="10" y="2122">process exited with code 0</tspan>
+
+<tspan x="10" y="2138">EXIT_CODE - 0</tspan>
+
+</text>
+</svg>

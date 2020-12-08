@@ -1,0 +1,145 @@
+<svg height="1150" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="1150" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">utility2 (2020.5.32)</tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">usage:</tspan>
+
+<tspan x="10" y="74">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+
+<tspan x="10" y="90"></tspan>
+
+<tspan x="10" y="106">example:</tspan>
+
+<tspan x="10" y="122">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+
+<tspan x="10" y="138"></tspan>
+
+<tspan x="10" y="154"># COMMAND --eval</tspan>
+
+<tspan x="10" y="170"># will eval &lt;code&gt;</tspan>
+
+<tspan x="10" y="186">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+
+<tspan x="10" y="202"></tspan>
+
+<tspan x="10" y="218"># COMMAND --help</tspan>
+
+<tspan x="10" y="234"># will print help</tspan>
+
+<tspan x="10" y="250">  lib.utility2.js  --help|-h|help  </tspan>
+
+<tspan x="10" y="266"></tspan>
+
+<tspan x="10" y="282"># COMMAND --interactive</tspan>
+
+<tspan x="10" y="298"># will start interactive-mode</tspan>
+
+<tspan x="10" y="314">  lib.utility2.js  --interactive|-i  </tspan>
+
+<tspan x="10" y="330"></tspan>
+
+<tspan x="10" y="346"># COMMAND --version</tspan>
+
+<tspan x="10" y="362"># will print version</tspan>
+
+<tspan x="10" y="378">  lib.utility2.js  --version|-v  </tspan>
+
+<tspan x="10" y="394"></tspan>
+
+<tspan x="10" y="410"># COMMAND utility2.browserTest</tspan>
+
+<tspan x="10" y="426"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+
+<tspan x="10" y="442">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+
+<tspan x="10" y="458"></tspan>
+
+<tspan x="10" y="474"># COMMAND utility2.start</tspan>
+
+<tspan x="10" y="490"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+
+<tspan x="10" y="506">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+
+<tspan x="10" y="522"></tspan>
+
+<tspan x="10" y="538"># COMMAND utility2.testReportCreate</tspan>
+
+<tspan x="10" y="554"># will create test-report</tspan>
+
+<tspan x="10" y="570">  lib.utility2.js  utility2.testReportCreate  </tspan>
+
+<tspan x="10" y="586">utility2 (2020.5.32)</tspan>
+
+<tspan x="10" y="602"></tspan>
+
+<tspan x="10" y="618">usage:</tspan>
+
+<tspan x="10" y="634">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+
+<tspan x="10" y="650"></tspan>
+
+<tspan x="10" y="666">example:</tspan>
+
+<tspan x="10" y="682">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+
+<tspan x="10" y="698"></tspan>
+
+<tspan x="10" y="714"># COMMAND --eval</tspan>
+
+<tspan x="10" y="730"># will eval &lt;code&gt;</tspan>
+
+<tspan x="10" y="746">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+
+<tspan x="10" y="762"></tspan>
+
+<tspan x="10" y="778"># COMMAND --help</tspan>
+
+<tspan x="10" y="794"># will print help</tspan>
+
+<tspan x="10" y="810">  lib.utility2.js  --help|-h|help  </tspan>
+
+<tspan x="10" y="826"></tspan>
+
+<tspan x="10" y="842"># COMMAND --interactive</tspan>
+
+<tspan x="10" y="858"># will start interactive-mode</tspan>
+
+<tspan x="10" y="874">  lib.utility2.js  --interactive|-i  </tspan>
+
+<tspan x="10" y="890"></tspan>
+
+<tspan x="10" y="906"># COMMAND --version</tspan>
+
+<tspan x="10" y="922"># will print version</tspan>
+
+<tspan x="10" y="938">  lib.utility2.js  --version|-v  </tspan>
+
+<tspan x="10" y="954"></tspan>
+
+<tspan x="10" y="970"># COMMAND utility2.browserTest</tspan>
+
+<tspan x="10" y="986"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+
+<tspan x="10" y="1002">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+
+<tspan x="10" y="1018"></tspan>
+
+<tspan x="10" y="1034"># COMMAND utility2.start</tspan>
+
+<tspan x="10" y="1050"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+
+<tspan x="10" y="1066">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+
+<tspan x="10" y="1082"></tspan>
+
+<tspan x="10" y="1098"># COMMAND utility2.testReportCreate</tspan>
+
+<tspan x="10" y="1114"># will create test-report</tspan>
+
+<tspan x="10" y="1130">  lib.utility2.js  utility2.testReportCreate</tspan>
+
+</text>
+</svg>

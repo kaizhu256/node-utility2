@@ -1,0 +1,2516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- "" -->
+<title>test-report</title>
+<style>
+/* jslint utility2:true */
+/*csslint
+*/
+/* csslint ignore:start */
+*,
+*:after,
+*:before {
+    box-sizing: border-box;
+}
+.uiAnimateSlide {
+    overflow-y: hidden;
+    transition: max-height ease-in 250ms, min-height ease-in 250ms, padding-bottom ease-in 250ms, padding-top ease-in 250ms;
+}
+/* csslint ignore:end */
+@keyframes uiAnimateSpin {
+0% {
+    transform: rotate(0deg);
+}
+100% {
+    transform: rotate(360deg);
+}
+}
+a {
+    overflow-wrap: break-word;
+}
+body {
+    background: #f7f7f7;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: small;
+    margin: 0 40px;
+}
+body > div,
+body > input,
+body > pre,
+body > .button,
+body > .textarea {
+    margin-bottom: 20px;
+    margin-top: 0;
+}
+body > input,
+body > .button {
+    width: 20rem;
+}
+body > .readonly {
+    background: #ddd;
+}
+body > .textarea {
+    height: 10rem;
+    resize: vertical;
+    width: 100%;
+}
+code,
+pre,
+.textarea {
+    font-family: Consolas, Menlo, monospace;
+    font-size: smaller;
+}
+pre {
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+.button {
+    background: #ddd;
+    border: 1px solid #999;
+    color: #000;
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px 5px;
+    text-align: center;
+    text-decoration: none;
+}
+.button:hover {
+    background: #bbb;
+}
+.colorError {
+    color: #d00;
+}
+.textarea {
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 0;
+    cursor: auto;
+    overflow: auto;
+    padding: 2px;
+}
+.zeroPixel {
+    border: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    width: 0;
+}
+/* jslint utility2:true */
+/*csslint
+*/
+.testReportDiv img {
+    border: 1px solid #999;
+    margin: 5px 0 5px 0;
+    max-height: 256px;
+    max-width: 512px;
+}
+.testReportDiv pre {
+    background: #fdd;
+    border-top: 1px solid #999;
+    margin-bottom: 0;
+    padding: 10px;
+}
+.testReportDiv span {
+    display: inline-block;
+    width: 120px;
+}
+.testReportDiv table {
+    border-top: 1px solid #999;
+    text-align: left;
+    width: 100%;
+}
+.testReportDiv table > tbody > tr:nth-child(odd) {
+    background: #bfb;
+}
+.testReportDiv .displayNone {
+    display: none;
+}
+.testReportDiv .footer {
+    text-align: center;
+}
+.testReportDiv .platform {
+    background: #fff;
+    border: 1px solid #999;
+    margin-bottom: 20px;
+    padding: 0 10px 10px 10px;
+    text-align: left;
+}
+.testReportDiv .summary {
+    background: #bfb;
+}
+.testReportDiv .testFailed {
+    background: #f99;
+}
+.testReportDiv .testPending {
+    background: #99f;
+}
+</style>
+</head>
+<body>
+<div class="uiAnimateSpin" style="animation: uiAnimateSpin 2s linear infinite; border: 5px solid #999; border-radius: 50%; border-top: 5px solid #7d7; display: none; height: 25px; vertical-align: middle; width: 25px;"></div>
+<script>
+/* jslint utility2:true */
+// polyfill globalThis
+(function () {
+/*
+ * this function will polyfill globalThis
+ */
+    "use strict";
+    window.globalThis = window.globalThis || globalThis;
+}());
+
+
+// init domOnEventWindowOnloadTimeElapsed
+(function () {
+/*
+ * this function will measure and print time-elapsed for window.onload
+ */
+    "use strict";
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventWindowOnloadTimeElapsed) {
+        return;
+    }
+    window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;
+    window.addEventListener("load", function () {
+        setTimeout(function () {
+            window.domOnEventWindowOnloadTimeElapsed = (
+                Date.now()
+                - window.domOnEventWindowOnloadTimeElapsed
+            );
+            console.error(
+                "domOnEventWindowOnloadTimeElapsed = "
+                + window.domOnEventWindowOnloadTimeElapsed
+            );
+        }, 100);
+    });
+}());
+
+
+// init domOnEventAjaxProgressUpdate
+(function () {
+/*
+ * this function will display incrementing ajax-progress-bar
+ */
+    "use strict";
+    let opt;
+    let styleBar0;
+    let styleBar;
+    let styleModal0;
+    let styleModal;
+    let timeStart;
+    let timerInterval;
+    let timerTimeout;
+    let tmp;
+    let width;
+    try {
+        if (
+            window.domOnEventAjaxProgressUpdate
+            || !document.getElementById("domElementAjaxProgressBar1").style
+        ) {
+            return;
+        }
+    } catch (ignore) {
+        return;
+    }
+    window.domOnEventAjaxProgressUpdate = function (gotoState, onError) {
+        gotoState = (gotoState | 0) + 1;
+        switch (gotoState) {
+        // ajaxProgress - show
+        case 1:
+            // init timerInterval and timerTimeout
+            if (!timerTimeout) {
+                timeStart = Date.now();
+                timerInterval = setInterval(opt, 2000, 1, onError);
+                timerTimeout = setTimeout(opt, opt.timeout, 2, onError);
+            }
+            // show ajaxProgressBar
+            if (width !== -1) {
+                styleBar.background = styleBar0.background;
+            }
+            setTimeout(opt, 50, gotoState, onError);
+            break;
+        // ajaxProgress - increment
+        case 2:
+            // show ajaxProgressBar
+            if (width === -1) {
+                break;
+            }
+            styleBar.background = styleBar0.background;
+            // reset ajaxProgress if it reaches end
+            if ((styleBar.width.slice(0, -1) | 0) > 95) {
+                width = 0;
+            }
+            // this algorithm will indefinitely increment ajaxProgress
+            // with successively smaller increments without reaching 100%
+            width += 1;
+            styleBar.width = Math.max(
+                100 - 75 * Math.exp(-0.125 * width),
+                styleBar.width.slice(0, -1) | 0
+            ) + "%";
+            // show ajaxProgressModal
+            styleModal.height = "100%";
+            styleModal.opacity = styleModal0.opacity;
+            if (!opt.cnt) {
+                setTimeout(opt, 0, gotoState, onError);
+            }
+            break;
+        // ajaxProgress - 100%
+        case 3:
+            width = -1;
+            styleBar.width = "100%";
+            setTimeout(opt, 1000, gotoState, onError);
+            break;
+        // ajaxProgress - hide
+        case 4:
+            // debug timeElapsed
+            tmp = Date.now();
+            console.error(
+                "domOnEventAjaxProgressUpdate - timeElapsed - "
+                + (tmp - timeStart)
+                + " ms"
+            );
+            // cleanup timerInterval and timerTimeout
+            timeStart = tmp;
+            clearInterval(timerInterval);
+            timerInterval = undefined;
+            clearTimeout(timerTimeout);
+            timerTimeout = undefined;
+            // hide ajaxProgressBar
+            styleBar.background = "transparent";
+            // hide ajaxProgressModal
+            styleModal.opacity = "0";
+            if (onError) {
+                onError();
+            }
+            setTimeout(opt, 250, gotoState);
+            break;
+        // ajaxProgress - reset
+        default:
+            opt.cnt = 0;
+            width = 0;
+            styleBar.width = "0%";
+            styleModal.height = "0";
+        }
+    };
+    opt = window.domOnEventAjaxProgressUpdate;
+    opt.end = function (onError) {
+        opt.cnt = 0;
+        window.domOnEventAjaxProgressUpdate(2, onError);
+    };
+    // init styleBar
+    styleBar = document.getElementById("domElementAjaxProgressBar1").style;
+    styleBar0 = Object.assign({}, styleBar);
+    Object.entries({
+        background: "#d00",
+        height: "2px",
+        left: "0",
+        margin: "0",
+        padding: "0",
+        position: "fixed",
+        top: "0",
+        transition: "background 250ms, width 750ms",
+        width: "0%",
+        "z-index": "1"
+    }).forEach(function (entry) {
+        styleBar[entry[0]] = styleBar[entry[0]] || entry[1];
+    });
+    // init styleModal
+    styleModal = document.getElementById("domElementAjaxProgressModal1") || {};
+    styleModal = styleModal.style || {};
+    styleModal0 = Object.assign({}, styleModal);
+    Object.entries({
+        height: "0",
+        left: "0",
+        margin: "0",
+        padding: "0",
+        position: "fixed",
+        top: "0",
+        transition: "opacity 125ms",
+        width: "100%",
+        "z-index": "1"
+    }).forEach(function (entry) {
+        styleModal[entry[0]] = styleModal[entry[0]] || entry[1];
+    });
+    // init state
+    width = 0;
+    opt.cnt = 0;
+    opt.timeout = 30000;
+    // init ajaxProgress
+    window.domOnEventAjaxProgressUpdate();
+}());
+
+
+// init domOnEventDelegateDict
+(function () {
+/*
+ * this function will handle delegated dom-evt
+ */
+    "use strict";
+    let debounce;
+    let timerTimeout;
+    debounce = function () {
+        return setTimeout(function () {
+            timerTimeout = undefined;
+        }, 30);
+    };
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventDelegateDict) {
+        return;
+    }
+    window.domOnEventDelegateDict = {};
+    window.domOnEventDelegateDict.domOnEventDelegate = function (evt) {
+        evt.targetOnEvent = evt.target.closest("[data-onevent]");
+        if (
+            !evt.targetOnEvent
+            || evt.targetOnEvent.dataset.onevent === "domOnEventNoop"
+            || evt.target.closest(".disabled,.readonly")
+        ) {
+            return;
+        }
+        // filter evt-change
+        switch (evt.type !== "change" && evt.target.type) {
+        case "checkbox":
+        case "file":
+        case "select-one":
+        case "radio":
+            return;
+        }
+        // filter evt-keyup
+        switch (evt.type) {
+        case "keyup":
+            if (!timerTimeout && (
+                evt.target.tagName === "INPUT"
+                || evt.target.tagName === "TEXTAREA"
+            )) {
+                timerTimeout = debounce();
+                if (evt.target.dataset.valueOld !== evt.target.value) {
+                    evt.target.dataset.valueOld = evt.target.value;
+                    break;
+                }
+            }
+            return;
+        }
+        switch (evt.targetOnEvent.tagName) {
+        case "BUTTON":
+        case "FORM":
+            evt.preventDefault();
+            break;
+        }
+        evt.stopPropagation();
+        // handle domOnEventClickTarget
+        if (evt.targetOnEvent.dataset.onevent === "domOnEventClickTarget") {
+            document.querySelector(
+                evt.targetOnEvent.dataset.clickTarget
+            ).click();
+            return;
+        }
+        window.domOnEventDelegateDict[evt.targetOnEvent.dataset.onevent](evt);
+    };
+    // handle evt
+    [
+        "change",
+        "click",
+        "keyup",
+        "submit"
+    ].forEach(function (eventType) {
+        document.addEventListener(
+            eventType,
+            window.domOnEventDelegateDict.domOnEventDelegate
+        );
+    });
+}());
+
+
+// init domOnEventSelectAllWithinPre
+(function () {
+/*
+ * this function will limit select-all within <pre tabIndex="0"> elem
+ * https://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse
+ */
+    "use strict";
+    if (!(
+        typeof window === "object" && window && window.document
+        && typeof document.addEventListener === "function"
+    ) || window.domOnEventSelectAllWithinPre) {
+        return;
+    }
+    window.domOnEventSelectAllWithinPre = function (evt) {
+        let range;
+        let selection;
+        if (
+            evt && (evt.ctrlKey || evt.metaKey) && evt.key === "a"
+            && evt.target.closest("pre")
+        ) {
+            range = document.createRange();
+            range.selectNodeContents(evt.target.closest("pre"));
+            selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            evt.preventDefault();
+        }
+    };
+    // handle evt
+    document.addEventListener(
+        "keydown",
+        window.domOnEventSelectAllWithinPre
+    );
+}());
+</script>
+<div class="testReportDiv">
+<h1>test-report for
+    <a
+        
+        href="https://github.com/kaizhu256/node-utility2"
+        
+    >
+        utility2 (2020.11.12)
+    </a>
+</h1>
+<div class="platform summary">
+<h2>summary</h2>
+<h4>
+    <span>version</span>-
+        2020.11.12<br>
+    <span>test date</span>- 2020-11-12T18:35:33.807Z<br>
+    <span>commit info</span>-
+        
+        905e5a85ad0996128499310892b9d9470c180ed0 - <br>
+        
+</h4>
+<table>
+<thead>
+    <tr>
+        <th>total time-elapsed</th>
+        <th>total tests failed</th>
+        <th>total tests passed</th>
+        <th>total tests pending</th>
+    </tr>
+</thead>
+<tbody><tr>
+    <td>92379 ms</td>
+    <td class="testPassed">0</td>
+    <td>239</td>
+    <td>0</td>
+</tr></tbody>
+</table>
+</div>
+
+<div class="platform">
+<h4>
+    1. buildApidoc - node - linux v15.2.0 - 2020-11-12T18:34:13.950Z<br>
+    
+    
+    <span>time-elapsed</span>- 82362 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 1<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>1</td>
+    <td>4542 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    2. deployGithubTest - browser - /node-utility2/build..master..travis-ci.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:35:16.498Z<br>
+    
+    <a href="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
+        <img alt="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png" src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 575 ms<br>
+    
+    <span>time-elapsed</span>- 19777 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>2</td>
+    <td>236 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>3</td>
+    <td>234 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>4</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>5</td>
+    <td>1038 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>6</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>7</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>8</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>9</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>10</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>11</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>12</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>13</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>14</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>15</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>16</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>17</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>18</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>19</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>20</td>
+    <td>1004 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>21</td>
+    <td>169 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>22</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>23</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>24</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>25</td>
+    <td>164 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>26</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>27</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>28</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>29</td>
+    <td>20 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>30</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>31</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>32</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>33</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>34</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>35</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>36</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>37</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>38</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    3. deployGithubTest - browser - /node-utility2/build..master..travis-ci.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:35:16.500Z<br>
+    
+    <a href="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
+        <img alt="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png" src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 395 ms<br>
+    
+    <span>time-elapsed</span>- 19831 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>39</td>
+    <td>184 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>40</td>
+    <td>193 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>41</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>42</td>
+    <td>1018 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>43</td>
+    <td>6 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>44</td>
+    <td>6 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>45</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>46</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>47</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>48</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>49</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>50</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>51</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>52</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>53</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>54</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>55</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>56</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>57</td>
+    <td>1003 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>58</td>
+    <td>150 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>59</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>60</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>61</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>62</td>
+    <td>153 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>63</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>64</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>65</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>66</td>
+    <td>9 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>67</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>68</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>69</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>70</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>71</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>72</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>73</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>74</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>75</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    4. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:35:34.781Z<br>
+    
+    <a href="screenshot.deployHerokuTest.browser.%252F.png">
+        <img alt="screenshot.deployHerokuTest.browser.%252F.png" src="screenshot.deployHerokuTest.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 485 ms<br>
+    
+    <span>time-elapsed</span>- 1573 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>76</td>
+    <td>162 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>77</td>
+    <td>168 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>78</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>79</td>
+    <td>1010 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>80</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>81</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>82</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>83</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>84</td>
+    <td>3 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>85</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>86</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>87</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>88</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>89</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>90</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>91</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>92</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>93</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>94</td>
+    <td>1003 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>95</td>
+    <td>143 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>96</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>97</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>98</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>99</td>
+    <td>142 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>100</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>101</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>102</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>103</td>
+    <td>9 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>104</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>105</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>106</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>107</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>108</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>109</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>110</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>111</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>112</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    5. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:35:34.959Z<br>
+    
+    <a href="screenshot.deployHerokuTest.browser.%252F.png">
+        <img alt="screenshot.deployHerokuTest.browser.%252F.png" src="screenshot.deployHerokuTest.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 654 ms<br>
+    
+    <span>time-elapsed</span>- 1268 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>113</td>
+    <td>124 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>114</td>
+    <td>127 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>115</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>116</td>
+    <td>1015 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>117</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>118</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>119</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>120</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>121</td>
+    <td>3 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>122</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>123</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>124</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>125</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>126</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>127</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>128</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>129</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>130</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>131</td>
+    <td>1004 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>132</td>
+    <td>92 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>133</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>134</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>135</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>136</td>
+    <td>90 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>137</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>138</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>139</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>140</td>
+    <td>15 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>141</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>142</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>143</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>144</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>145</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>146</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>147</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>148</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>149</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    6. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:08.845Z<br>
+    
+    <a href="screenshot.npmTest.browser.%252F.png">
+        <img alt="screenshot.npmTest.browser.%252F.png" src="screenshot.npmTest.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>onload-time</span>- 1057 ms<br>
+    
+    <span>time-elapsed</span>- 87342 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>150</td>
+    <td>407 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>151</td>
+    <td>361 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>152</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>153</td>
+    <td>1055 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>154</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>155</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>156</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>157</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>158</td>
+    <td>16 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>159</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>160</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>161</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>162</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>163</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>164</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>165</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>166</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>167</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>168</td>
+    <td>1004 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>169</td>
+    <td>182 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>170</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>171</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>172</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>173</td>
+    <td>169 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>174</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>175</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>176</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>177</td>
+    <td>11 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>178</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>179</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>180</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>181</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>182</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>183</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>184</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>185</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>186</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    7. npmTest - node - linux v15.2.0 - 2020-11-12T18:34:06.829Z<br>
+    
+    
+    <span>time-elapsed</span>- 88974 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 37<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>187</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>188</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>189</td>
+    <td>395 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_cache</td>
+</tr>
+
+<tr>
+    <td>190</td>
+    <td>1174 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_default</td>
+</tr>
+
+<tr>
+    <td>191</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_assertXxx_default</td>
+</tr>
+
+<tr>
+    <td>192</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_bufferValidateAndCoerce_err</td>
+</tr>
+
+<tr>
+    <td>193</td>
+    <td>200 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApidoc_default</td>
+</tr>
+
+<tr>
+    <td>194</td>
+    <td>5388 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildApp_default</td>
+</tr>
+
+<tr>
+    <td>195</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_buildXxx_default</td>
+</tr>
+
+<tr>
+    <td>196</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_chromeDevtoolsClient_processPlatform</td>
+</tr>
+
+<tr>
+    <td>197</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_cliRun_default</td>
+</tr>
+
+<tr>
+    <td>198</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_corsForwardProxyHostIfNeeded_default</td>
+</tr>
+
+<tr>
+    <td>199</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_domFragmentRender_default</td>
+</tr>
+
+<tr>
+    <td>200</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_eventListenerXxx_default</td>
+</tr>
+
+<tr>
+    <td>201</td>
+    <td>201 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_libUtility2Js_standalone</td>
+</tr>
+
+<tr>
+    <td>202</td>
+    <td>14 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_listShuffle_default</td>
+</tr>
+
+<tr>
+    <td>203</td>
+    <td>315 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_middlewareForwardProxy_default</td>
+</tr>
+
+<tr>
+    <td>204</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>205</td>
+    <td>1128 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallelList_default</td>
+</tr>
+
+<tr>
+    <td>206</td>
+    <td>12 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_onParallel_default</td>
+</tr>
+
+<tr>
+    <td>207</td>
+    <td>6 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_replStart_default</td>
+</tr>
+
+<tr>
+    <td>208</td>
+    <td>23 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_requireReadme_misc</td>
+</tr>
+
+<tr>
+    <td>209</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_serverRespondTimeoutDefault_timeout</td>
+</tr>
+
+<tr>
+    <td>210</td>
+    <td>87 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_setTimeoutOnError_default</td>
+</tr>
+
+<tr>
+    <td>211</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringHtmlSafe_default</td>
+</tr>
+
+<tr>
+    <td>212</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringQuotedToAscii_default</td>
+</tr>
+
+<tr>
+    <td>213</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_stringRegexpEscape_default</td>
+</tr>
+
+<tr>
+    <td>214</td>
+    <td>13 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_templateRender_default</td>
+</tr>
+
+<tr>
+    <td>215</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testMock_err</td>
+</tr>
+
+<tr>
+    <td>216</td>
+    <td>4 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_testReportCreate_default</td>
+</tr>
+
+<tr>
+    <td>217</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_throwError_default</td>
+</tr>
+
+<tr>
+    <td>218</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uiAnimateXxx_default</td>
+</tr>
+
+<tr>
+    <td>219</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlJoin_default</td>
+</tr>
+
+<tr>
+    <td>220</td>
+    <td>2 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_urlParse_default</td>
+</tr>
+
+<tr>
+    <td>221</td>
+    <td>1 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_uuid4Create_default</td>
+</tr>
+
+<tr>
+    <td>222</td>
+    <td>3688 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+<tr>
+    <td>223</td>
+    <td>4461 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_err</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    8. testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:04.337Z<br>
+    
+    <a href="screenshot.testExampleJs.browser.%252F.png">
+        <img alt="screenshot.testExampleJs.browser.%252F.png" src="screenshot.testExampleJs.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>time-elapsed</span>- 92075 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>224</td>
+    <td>43 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>225</td>
+    <td>43 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>226</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>227</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    9. testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36 - 2020-11-12T18:34:04.337Z<br>
+    
+    <a href="screenshot.testExampleJs.browser.%252F.png">
+        <img alt="screenshot.testExampleJs.browser.%252F.png" src="screenshot.testExampleJs.browser.%252F.png">
+    </a>
+    <br>
+    
+    
+    <span>time-elapsed</span>- 92075 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>228</td>
+    <td>43 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>229</td>
+    <td>43 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>230</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>231</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    10. testExampleJs - node - linux v15.2.0 - 2020-11-12T18:34:04.014Z<br>
+    
+    
+    <span>time-elapsed</span>- 92379 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>232</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>233</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>234</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>235</td>
+    <td>505 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="platform">
+<h4>
+    11. testExampleJs - node - linux v15.2.0 - 2020-11-12T18:34:04.014Z<br>
+    
+    
+    <span>time-elapsed</span>- 92379 ms<br>
+    <span>tests failed</span>- 0<br>
+    <span>tests passed</span>- 4<br>
+    <span>tests pending</span>- 0<br>
+</h4>
+<table>
+<thead><tr>
+    <th>#</th>
+    <th>time-elapsed</th>
+    <th>status</th>
+    <th>test-case</th>
+</tr></thead>
+<tbody>
+
+<tr>
+    <td>236</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_200</td>
+</tr>
+
+<tr>
+    <td>237</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_ajax_404</td>
+</tr>
+
+<tr>
+    <td>238</td>
+    <td>0 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_noop_default</td>
+</tr>
+
+<tr>
+    <td>239</td>
+    <td>505 ms</td>
+    <td class="testPassed">passed</td>
+    <td>testCase_webpage_default</td>
+</tr>
+
+</tbody>
+</table>
+<pre class="displayNone" tabIndex="0">
+
+</pre>
+</div>
+
+<div class="footer">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body>
+</html>
