@@ -20,15 +20,15 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/runner/work/node-utility2/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/runner/work/node-utility2/node-utility2:/home/runner/work/node-utility2\</tspan><tspan x="10" y="330">/.bin"</tspan>
 <tspan x="10" y="346">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_ID='543efd62bdb247825f2b8c5c963797d3b89f8242'</tspan>
-<tspan x="10" y="378">export CI_COMMIT_MESSAGE='commit.badge.svg'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_ID='fd8528973562507a1541db4c2d912f4613e9bb4f'</tspan>
+<tspan x="10" y="378">export CI_COMMIT_MESSAGE='npm run-script'</tspan>
 <tspan x="10" y="394">export NODE_OPTIONS='--unhandled-rejections=throw'</tspan>
 <tspan x="10" y="410">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.sh</tspan>
-<tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
-<tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
-<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
-<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
+<tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
+<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
+<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
+<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
 <tspan x="10" y="506"></tspan>
 <tspan x="10" y="522">npmPackageCliHelp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.\</tspan><tspan x="10" y="538">tmp/build/test-report.json</tspan>
 <tspan x="10" y="554">utility2 (2020.12.3)</tspan>
