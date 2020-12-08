@@ -2276,13 +2276,17 @@ shRawLibFetch() {(set -e
         let data;
         let result0;
         // replace from replaceList
-        replaceList.forEach(function (elem) {
+        replaceList.forEach(function ({
+            aa,
+            bb,
+            flags
+        }) {
             result0 = result;
-            result = result.replace(new RegExp(elem.aa, elem.flags), elem.bb);
+            result = result.replace(new RegExp(aa, flags), bb);
             if (result0 === result) {
                 throw new Error(
                     "shRawLibFetch - cannot find-and-replace snippet " +
-                    JSON.stringify(elem.aa)
+                    JSON.stringify(aa)
                 );
             }
         });
