@@ -7,9 +7,9 @@ this zero-dependency package will provide high-level functions to to build, test
 [![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/)
 
 
-[![github.com ci-status](https://github.com/kaizhu256/node-utility2/workflows/Node.js%20CI/badge.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
+[![github.com ci-status](https://github.com/kaizhu256/node-utility2/workflows/Node.js%20CI/badge.svg)](https://github.com/kaizhu256/node-utility2/actions) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
 
-[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-utility2)
+[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://github.com/kaizhu256/node-utility2/actions)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
