@@ -231,6 +231,7 @@ shBrowserScreenshot() {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
+    let child;
     let file;
     let sep;
     let timeStart;
@@ -259,7 +260,7 @@ shBrowserScreenshot() {(set -e
         encodeURIComponent(file.replace(
             "/build.." + CI_BRANCH + ".." + CI_HOST + "/",
             "/build/"
-        )) + ".png"
+        ))
     );
     process.on("exit", function (exitCode) {
         if (typeof exitCode === "object" && exitCode) {
@@ -268,24 +269,28 @@ shBrowserScreenshot() {(set -e
         }
         console.error(
             "\nshBrowserScreenshot" + " - " + (Date.now() - timeStart) + " ms" +
-            " - EXIT_CODE=" + exitCode + " - " + url + " - " + file + "\n"
+            " - EXIT_CODE=" + exitCode + " - " + url + " - " + file + ".png" +
+            "\n"
         );
     });
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
-    require("child_process").spawn((
+    child = require("child_process").spawn((
         process.platform === "darwin"
         ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
         : process.platform === "win32"
         ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
         : "/usr/bin/google-chrome-stable"
     ), [
+        //!! "--dump-dom",
         "--headless",
+        //!! "--ignore-certificate-errors",
         "--incognito",
         "--screenshot",
         "--timeout=30000",
+        //!! "--user-data-dir=/dev/null",
         "--window-size=800x600",
-        "-screenshot=" + file,
+        "-screenshot=" + file + ".png",
         (
             process.platform === "linux"
             ? "--no-sandbox"
@@ -294,11 +299,12 @@ shBrowserScreenshot() {(set -e
         url
     ], {
         stdio: [
-            "ignore", 1, 2
+            "ignore", "pipe", 2
         ]
     });
+    child.stdout.pipe(require("fs").createWriteStream(file + ".html"));
 }());
-' "$1" "$2" # '
+' "$1" # '
 )}
 
 shBrowserTest() {(set -e

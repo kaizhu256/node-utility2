@@ -1008,7 +1008,8 @@ RUN (set -e; \
         ca-certificates \
         curl \
         git \
-        gnupg; \
+        gnupg \
+        libnss3-tools; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -Lf https://deb.nodesource.com/setup_14.x | /bin/bash -; \
