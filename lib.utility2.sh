@@ -402,7 +402,7 @@ shBuildApp() {(set -e
     ], ii) {
         // hardlink file $HOME/lib.utility2.sh synchronously to prevent
         // race-condition with hardlink file $HOME/bin/utility2
-        if (ii === 0) {
+        if (ii < 2) {
             try {
                 fs.unlinkSync(bb);
             } catch (ignore) {}
@@ -2226,11 +2226,9 @@ shRawLibFetch() {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    let fetchList;
     let footer;
     let header;
     let opt;
-    let replaceList;
     let repoDict;
     let requireDict;
     let result;
@@ -2364,12 +2362,14 @@ shRawLibFetch() {(set -e
         }).sort().join("\n") + "*/\n\n\n"
     );
     // JSON.parse opt with comment
-    opt = JSON.parse(opt[1]);
+    let {
+        fetchList,
+        isRollupCommonJs,
+        replaceList = []
+    } = JSON.parse(opt[1]);
     // init replaceList
-    replaceList = opt.replaceList || [];
     // init repoDict, fetchList
     repoDict = {};
-    fetchList = opt.fetchList;
     fetchList.forEach(function (elem) {
         if (!elem.url) {
             return;
@@ -2455,7 +2455,7 @@ shRawLibFetch() {(set -e
             }
             // mangle module.exports
             data = elem.data.toString();
-            if (!opt.isRollupCommonJs) {
+            if (!isRollupCommonJs) {
                 result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
                 return;
             }
@@ -2486,7 +2486,7 @@ shRawLibFetch() {(set -e
         ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result);
-        if (!opt.isRollupCommonJs) {
+        if (!isRollupCommonJs) {
             result = (
                 header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
             );
