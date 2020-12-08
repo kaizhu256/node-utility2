@@ -32516,8 +32516,8 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://nodei.co/npm/my-app.png?downloads=true)]" +
     "(https://www.npmjs.com/package/my-app)\n" +
     "\n" +
-    "[![build commit status]" +
-    "({{app.io}}/build/build.badge.svg)]" +
+    "[![commit status]" +
+    "({{app.io}}/build/commit.badge.svg)]" +
     "(https://github.com/kaizhu256/node-my-app/actions)\n" +
     "\n" +
     "| git-branch : | " +
@@ -36066,8 +36066,8 @@ local.testReportMerge = function (
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
     fileWrite("test-report.html", html);
-    // create build.badge.svg
-    fileWrite("build.badge.svg", local.svgBadgeCreate({
+    // create commit.badge.svg
+    fileWrite("commit.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -57054,8 +57054,8 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"(https://nodei.co/npm/my-app.png?downloads=true)]\" +\n\
     \"(https://www.npmjs.com/package/my-app)\\n\" +\n\
     \"\\n\" +\n\
-    \"[![build commit status]\" +\n\
-    \"({{app.io}}/build/build.badge.svg)]\" +\n\
+    \"[![commit status]\" +\n\
+    \"({{app.io}}/build/commit.badge.svg)]\" +\n\
     \"(https://github.com/kaizhu256/node-my-app/actions)\\n\" +\n\
     \"\\n\" +\n\
     \"| git-branch : | \" +\n\
@@ -60604,8 +60604,8 @@ local.testReportMerge = function (\n\
     jslintAndPrint(html, \"test-report.html\");\n\
     // create test-report.html\n\
     fileWrite(\"test-report.html\", html);\n\
-    // create build.badge.svg\n\
-    fileWrite(\"build.badge.svg\", local.svgBadgeCreate({\n\
+    // create commit.badge.svg\n\
+    fileWrite(\"commit.badge.svg\", local.svgBadgeCreate({\n\
         fill: \"#07f\",\n\
         str1: \"last build\",\n\
         str2: (\n\
@@ -62378,8 +62378,8 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://nodei.co/npm/my-app.png?downloads=true)]" +
     "(https://www.npmjs.com/package/my-app)\n" +
     "\n" +
-    "[![build commit status]" +
-    "({{app.io}}/build/build.badge.svg)]" +
+    "[![commit status]" +
+    "({{app.io}}/build/commit.badge.svg)]" +
     "(https://github.com/kaizhu256/node-my-app/actions)\n" +
     "\n" +
     "| git-branch : | " +
@@ -65928,8 +65928,8 @@ local.testReportMerge = function (
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
     fileWrite("test-report.html", html);
-    // create build.badge.svg
-    fileWrite("build.badge.svg", local.svgBadgeCreate({
+    // create commit.badge.svg
+    fileWrite("commit.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
