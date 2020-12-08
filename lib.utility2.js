@@ -1067,8 +1067,8 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://nodei.co/npm/my-app.png?downloads=true)]" +
     "(https://www.npmjs.com/package/my-app)\n" +
     "\n" +
-    "[![build commit status]" +
-    "({{app.io}}/build/build.badge.svg)]" +
+    "[![commit status]" +
+    "({{app.io}}/build/commit.badge.svg)]" +
     "(https://github.com/kaizhu256/node-my-app/actions)\n" +
     "\n" +
     "| git-branch : | " +
@@ -4617,8 +4617,8 @@ local.testReportMerge = function (
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
     fileWrite("test-report.html", html);
-    // create build.badge.svg
-    fileWrite("build.badge.svg", local.svgBadgeCreate({
+    // create commit.badge.svg
+    fileWrite("commit.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
