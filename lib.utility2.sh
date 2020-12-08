@@ -312,7 +312,7 @@ shBrowserScreenshot() {(set -e
             return elem;
         });
         // debug argList
-        console.error(argList);
+        // console.error(argList);
         child = require("child_process").spawn((
             process.platform === "darwin"
             ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
