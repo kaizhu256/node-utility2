@@ -199,7 +199,7 @@ local.utility2 = local;
 if (
     typeof process === "object" && process &&
     typeof process.on === "function" &&
-    process.unhandledRejections !== "throw"
+    !process.unhandledRejections
 ) {
     process.unhandledRejections = "throw";
     process.on("unhandledRejection", function (err) {

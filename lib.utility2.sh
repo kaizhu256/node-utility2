@@ -24,15 +24,10 @@
 # git update-index --chmod=+x aa.js
 # gpupdate /force
 # npm test --mode-coverage --mode-test-case2=_testCase_webpage_default,testCase_nop_default
-# npm_package_private=1 GITHUB_FULLNAME=aa/node-aa-bb-pro shCryptoWithGithubOrg aa shCryptoTravisEncrypt
 # openssl rand -base64 32 # random key
 # printf "$USERNAME:$(openssl passwd -apr1 "$PASSWD")\n" # htpasswd
-# shCryptoWithGithubOrg aa shCryptoTravisDecrypt ciphertext.txt
-# shCryptoWithGithubOrg aa shCryptoTravisEncrypt plaintext.txt
 # shCryptoWithGithubOrg aa shGithubApiRateLimitGet
 # shCryptoWithGithubOrg aa shGithubRepoTouch aa/node-aa-bb alpha "[build app]"
-# shCryptoWithGithubOrg aa shTravisRepoCreate aa/node-aa-bb
-# shCryptoWithGithubOrg aa shTravisRepoTrigger aa/node-aa-bb alpha
 # shDockerRestartUtility2 work kaizhu256/node-utility2
 # shDockerSh work 'PORT=4065 npm start'
 # shDockerSh work 'shUtility2DependentsShellEval shBuildApp'
@@ -83,8 +78,8 @@ shBaseInit() {
 }
 
 shBaseInstall() {
-# this function will install .bashrc, .screenrc, .vimrc, and lib.utility2.sh in $HOME,
-# and is intended for aws-ec2 setup
+# this function will automate installing .bashrc, .screenrc, .vimrc, and
+# lib.utility2.sh in $HOME
 # example use:
 # curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
     for FILE in .screenrc .vimrc lib.utility2.sh
@@ -230,14 +225,22 @@ shBashrcDebianInit() {
 }
 
 shBrowserScreenshot() {(set -e
-# this function will run headless-chromium to screenshot url "$1"
+# this function will screenshot url "$1" with headless-chrome
     node -e '
 /* jslint utility2:true */
 (function () {
     "use strict";
     let file;
+    let sep;
     let timeStart;
     let url;
+    let {
+        CI_BRANCH,
+        CI_HOST,
+        MODE_CI,
+        UTILITY2_DIR_BUILD
+    } = process.env;
+    sep = require("path").sep;
     timeStart = Date.now();
     url = process.argv[1];
     if (!(
@@ -246,20 +249,16 @@ shBrowserScreenshot() {(set -e
         url = require("path").resolve(url);
     }
     file = require("url").parse(url).pathname;
-    if (String(
-        file + require("path").sep
-    ).indexOf(process.cwd() + require("path").sep) === 0) {
+    // remove prefix $PWD from file
+    if (String(file + sep).indexOf(process.cwd() + sep) === 0) {
         file = file.replace(process.cwd(), "");
     }
     file = require("path").resolve(
-        process.env.UTILITY2_DIR_BUILD +
-        "/screenshot." +
-        process.env.MODE_CI + ".browser." +
+        UTILITY2_DIR_BUILD + "/screenshot." + MODE_CI + ".browser." +
         encodeURIComponent(file.replace(
-            "/build.." + process.env.CI_BRANCH + ".." + process.env.CI_HOST,
-            "/build"
-        )) +
-        ".png"
+            "/build.." + CI_BRANCH + ".." + CI_HOST + "/",
+            "/build/"
+        )) + ".png"
     );
     process.on("exit", function (exitCode) {
         if (typeof exitCode === "object" && exitCode) {
@@ -267,12 +266,8 @@ shBrowserScreenshot() {(set -e
             exitCode = 1;
         }
         console.error(
-            "\nshBrowserScreenshot" +
-            " - " + (Date.now() - timeStart) + " ms" +
-            " - exitCode " + exitCode +
-            " - " + url +
-            " - " + file +
-            "\n"
+            "\nshBrowserScreenshot" + " - " + (Date.now() - timeStart) + " ms" +
+            " - EXIT_CODE=" + exitCode + " - " + url + " - " + file + "\n"
         );
     });
     process.on("uncaughtException", process.exit);
@@ -322,22 +317,11 @@ shBuildApidoc() {(set -e
 )}
 
 shBuildApp() {(set -e
-# this function will build app in "$PWD" with name "$1"
+# this function will build app in "$PWD"
     shEnvSanitize
+    shCiInit
     # cleanup empty-file
     find . -maxdepth 1 -empty | xargs rm -f
-    # update app-name to "$1"
-    if [ "$1" ]
-    then
-        unset npm_package_nameLib
-        if [ ! -f package.json ]
-        then
-            printf "{\"name\":\"$1\"}\n" > package.json
-        fi
-        sed -in -e "s/\"name\": *\".*\"\(,*\)/\"name\":\"$1\"\1/" package.json
-        rm -f package.jsonn
-    fi
-    shCiInit
     # hardlink file .gitignore, lib.xxx, assets.utility2.rollup.js
     # hardlink file ~/lib.utility2.sh, bin/utility2
     # bin/utility2-apidoc, bin/utility2-istanbul, bin/utility2-jslint
@@ -360,8 +344,7 @@ shBuildApp() {(set -e
     } catch (ignore) {
         return;
     }
-    // hardlink file ~/lib.utility2.sh, bin/utility2
-    // bin/utility2-apidoc, bin/utility2-istanbul, bin/utility2-jslint
+    // hardlink file $HOME/lib.utility2.sh, $HOME/bin/utility2-xxx
     [
         [
             dirDev + "/lib.utility2.sh", process.env.HOME + "/lib.utility2.sh"
@@ -380,11 +363,23 @@ shBuildApp() {(set -e
         ]
     ].forEach(function ([
         aa, bb
-    ]) {
-        try {
-            fs.unlinkSync(bb);
-        } catch (ignore) {}
-        fs.linkSync(aa, bb);
+    ], ii) {
+        // hardlink file $HOME/lib.utility2.sh synchronously to prevent
+        // race-condition with hardlink file $HOME/bin/utility2
+        if (ii === 0) {
+            try {
+                fs.unlinkSync(bb);
+            } catch (ignore) {}
+            fs.linkSync(aa, bb);
+        } else {
+            fs.unlink(bb, function (ignore) {
+                fs.link(aa, bb, function (err) {
+                    if (err) {
+                        throw err;
+                    }
+                });
+            });
+        }
         console.error("shBuildApp - hardlink - " + path.resolve(bb));
     });
     if (process.cwd() === path.resolve(dirDev)) {
@@ -448,7 +443,7 @@ shBuildApp() {(set -e
         });
         if (aa !== bb) {
             await fs.promises.writeFile(file, aa);
-            console.error("shBuildApp - modified - " + path.resolve(file));
+            console.error("shBuildApp - updated - " + path.resolve(file));
         }
     });
 }());
@@ -562,7 +557,7 @@ shCiInit() {
     # init env - $GITHUB_ACTIONS
     if [ "$GITHUB_ACTIONS" ]
     then
-        export CI_BRANCH="(printf "$GITHUB_REF" | grep -Eo "[^/]*$")"
+        export CI_BRANCH="$(printf "$GITHUB_REF" | grep -Eo "[^/]*$")"
         export CI_HOST=github.com
     fi
     # init env - $TRAVIS
@@ -580,6 +575,14 @@ shCiInit() {
     let fs;
     let packageJson;
     let path;
+    let {
+        HOME,
+        UTILITY2_DIR_BUILD,
+        CI_BRANCH,
+        CI_COMMIT_ID,
+        CI_COMMIT_MESSAGE,
+        NODE_OPTIONS = ""
+    } = process.env;
     function exportVar(key, val) {
     /*
      * this function will export "key=val" to shell-env
@@ -641,13 +644,13 @@ shCiInit() {
     // init $UTILITY2_BIN, $UTILITY2_DIR_*
     Array.from([
         process.cwd(),
-        path.resolve(process.env.HOME + "/Documents/utility2"),
+        path.resolve(HOME + "/Documents/utility2"),
         (function () {
             try {
                 return path.dirname(require.resolve("utility2"));
             } catch (ignore) {}
         }()),
-        path.resolve(process.env.HOME + "/node_modules/utility2")
+        path.resolve(HOME + "/node_modules/utility2")
     ]).some(function (dir) {
         if (!dir || !fs.existsSync(dir + "/lib.utility2.js")) {
             return;
@@ -656,7 +659,7 @@ shCiInit() {
         exportVar("UTILITY2_DIR_BIN", dir);
         exportVar(
             "UTILITY2_DIR_BUILD",
-            path.resolve(process.env.UTILITY2_DIR_BUILD || ".tmp/build")
+            path.resolve(UTILITY2_DIR_BUILD || ".tmp/build")
         );
         // interpolate $PATH
         cmd += (
@@ -665,16 +668,21 @@ shCiInit() {
         );
         // mkdir $UTILITY2_DIR_BUILD
         dir = path.resolve(".tmp/build");
-        console.error("shCiInit - mkdir -p " + dir);
         fs.mkdirSync(dir, {
             recursive: true
         });
+        console.error("shCiInit - mkdir - " + dir);
         return true;
     });
-    // init $CI_*
-    exportVar("CI_BRANCH", process.env.CI_BRANCH);
-    exportVar("CI_COMMIT_ID", process.env.CI_COMMIT_ID);
-    exportVar("CI_COMMIT_MESSAGE", process.env.CI_COMMIT_MESSAGE);
+    // init $CI_xxx, $NODE_OPTIONS
+    exportVar("CI_BRANCH", CI_BRANCH);
+    exportVar("CI_COMMIT_ID", CI_COMMIT_ID);
+    exportVar("CI_COMMIT_MESSAGE", CI_COMMIT_MESSAGE);
+    exportVar("NODE_OPTIONS", (
+        NODE_OPTIONS.indexOf("--unhandled-rejections=") >= 0
+        ? NODE_OPTIONS
+        : String(NODE_OPTIONS + " --unhandled-rejections=throw").trim()
+    ));
     process.stderr.write(cmd);
     process.stdout.write(cmd);
     // extract embedded-scripts from README.md to .tmp/README.xxx
@@ -712,45 +720,67 @@ shCiInit() {
 
 shCiInternal() {(set -e
 # this function will run internal-ci
+    local FILE
     (
-    shEnvSanitize
-    # run shCiBefore
-    if (type shCiBefore > /dev/null 2>&1)
-    then
-        shCiBefore
-    fi
-    export npm_config_mode_test_report_merge=1
-
-
-    # npm-test
-    MODE_CI=npmTest npm test --mode-coverage
-    # create apidoc
-    shBuildApidoc
-    # create npmPackageListing
-    shNpmPackageListingCreate
-    shNpmPackageDependencyTreeCreate "$npm_package_name" "$GITHUB_FULLNAME#alpha"
-    # create npmPackageCliHelp
-    shNpmPackageCliHelpCreate
-    # create recent changelog of last 50 commits
-    (MODE_CI=gitLog shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B")
-
-
-    # screenshot coverage
-    FILE="$(
-        find "$UTILITY2_DIR_BUILD" -name *.js.html 2>/dev/null | tail -n 1
-    )"
-    if [ -f "$FILE" ]
-    then
-        cp "$FILE" "$UTILITY2_DIR_BUILD/coverage.lib.html"
-    fi
-    for FILE in apidoc.html coverage.lib.html test-report.html
-    do
-        FILE="$UTILITY2_DIR_BUILD/$FILE"
-        if [ -f "$FILE" ]
+        shEnvSanitize
+        # run shCiBefore
+        if (type shCiBefore > /dev/null 2>&1)
         then
-            shBrowserScreenshot "file://$FILE" &
+            shCiBefore
         fi
-    done
+        export npm_config_mode_test_report_merge=1
+
+        # npm-test
+        export MODE_CI=npmTest
+        npm test --mode-coverage
+
+        # create apidoc.html
+        export MODE_CI=buildApidoc
+        shBuildApidoc
+
+        # create screenshot.npmPackageListing.svg
+        export MODE_CI=npmPackageListing
+        shRunWithScreenshotTxt eval \
+            "printf \"package files\n\n\" && shGitLsTree"
+
+        # create screenshot.npmPackageDependencyTree.svg
+        shNpmPackageDependencyTreeCreate "$npm_package_name" \
+            "$GITHUB_FULLNAME#alpha"
+
+        # create screenshot.npmPackageCliHelp.svg
+        export MODE_CI=npmPackageCliHelp
+        shRunWithScreenshotTxt eval "$(node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let file;
+    try {
+        file = require("path").resolve(Object.values(JSON.parse(
+            require("fs").readFileSync("package.json", "utf8")
+        ).bin)[0]);
+        if (require("fs").existsSync(file)) {
+            process.stdout.write(file + " --help");
+        }
+    } catch (ignore) {}
+    process.stdout.write("printf none");
+}());
+')" # '
+
+        # create screenshot.gitLog.svg
+        export MODE_CI=gitLog
+        shRunWithScreenshotTxt git log -50 --pretty="%ai\\u000a%B"
+
+        # screenshot apidoc.html, coverage.lib.html, test-report.html
+        export MODE_CI=ci
+        FILE="$(
+            find "$UTILITY2_DIR_BUILD" -name *.js.html 2>/dev/null | tail -n 1
+        )"
+        cp "$FILE" "$UTILITY2_DIR_BUILD/coverage.lib.html"
+        for FILE in apidoc.html coverage.lib.html test-report.html
+        do
+            FILE="$UTILITY2_DIR_BUILD/$FILE"
+            shBrowserScreenshot "file://$FILE" &
+        done
     )
 
 
@@ -761,7 +791,7 @@ shCiInternal() {(set -e
     fi
     export npm_config_mode_test_report_merge=1
     # build and deploy app to github
-    shBuildApp && shCiUpload && shSleep 15
+    (export MODE_CI=buildApp && shBuildApp && shCiUpload && shSleep 15)
     # run shCiAfter
     if (type shCiAfter > /dev/null 2>&1)
     then
@@ -769,30 +799,33 @@ shCiInternal() {(set -e
     fi
     # list $UTILITY2_DIR_BUILD
     find "$UTILITY2_DIR_BUILD" | sort
-    # upload ci-artifacts to github
-    # and if number of commits > $COMMIT_LIMIT
-    # then squash older commits
+    # upload $UTILITY2_DIR_BUILD to github-gh-pages and
+    # if number of commits > $COMMIT_LIMIT, then squash older commits
     if [ "$CI_BRANCH" = alpha ] ||
         [ "$CI_BRANCH" = beta ] ||
         [ "$CI_BRANCH" = master ]
     then
         COMMIT_LIMIT=100 shCiUpload
     fi
-    shGitInfo | head -n 4096 || true
-    # validate http-links embedded in README.md
+    shGitInfo
+    # validate http-link in README.md
     shSleep 60
     shReadmeLinkValidate
 )}
 
 shCiMain() {(set -e
 # this function will run main-ci
-    shCiInit
     export MODE_CI=ci
     # init env - $TRAVIS
     if [ "$TRAVIS" ]
     then
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_FULLNAME"
+        # decrypt and exec encrypted data
+        if [ "$CRYPTO_AES_KEY" ]
+        then
+            eval "$(shCryptoTravisDecrypt)"
+        fi
     fi
     # init env - $GITHUB_ACTIONS
     if [ "$GITHUB_ACTIONS" ]
@@ -800,66 +833,18 @@ shCiMain() {(set -e
         git remote remove origin 2>/dev/null || true
         git remote add origin "https://github.com/$GITHUB_FULLNAME"
     fi
-    # decrypt and exec encrypted data
-    if [ "$CRYPTO_AES_KEY" ]
-    then
-        eval "$(shCryptoTravisDecrypt)"
-    fi
     # init git config
     if (! git config user.email > /dev/null 2>&1)
     then
-        git config --global user.email nobody
-        git config --global user.name nobody
+        git config --global user.email ci
+        git config --global user.name ci
     fi
     case "$CI_BRANCH" in
     alpha)
-        case "$CI_COMMIT_MESSAGE" in
-        "[build app"*)
-            node -e '
-/* jslint utility2:true */
-(function (local) {
-    "use strict";
-    if (require("fs").existsSync("assets.utility2.rollup.js")) {
-        require("fs").writeFileSync(
-            "assets.utility2.rollup.js",
-            local.assetsDict["/assets.utility2.rollup.js"]
-        );
-    }
-}(require("utility2")));
-' # '
-            shBuildApp
-            ;;
-        # example use:
-        # shCryptoWithGithubOrg npmdoc shGithubRepoTouch "npmdoc/node-npmdoc-mysql npmdoc/node-npmdoc-mysql" alpha "[npm publishAfterCommitAfterBuild]"
-        "[npm publishAfterCommitAfterBuild]"*)
-            if [ ! "$GITHUB_TOKEN" ]
-            then
-                shCiPrint "no GITHUB_TOKEN"
-                return 1
-            fi
-            shBuildApp
-            rm -rf "$UTILITY2_DIR_BIN"
-            git clone https://github.com/kaizhu256/node-utility2 \
-                "$UTILITY2_DIR_BIN" \
-                --branch=alpha --single-branch --depth=50
-            mkdir -p "$UTILITY2_DIR_BIN/.tmp/build/app"
-            curl -Lf -o \
-"$UTILITY2_DIR_BIN/.tmp/build/app/assets.utility2.rollup.js" \
-https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/build..alpha..travis-ci.com/app\
-/assets.utility2.rollup.js
-            ;;
-        esac
         shCiInternal
         ;;
     beta)
-        case "$CI_COMMIT_MESSAGE" in
-        "[npm publishAfterCommitAfterBuild]"*)
-            ;;
-        *)
-            shCiInternal
-            ;;
-        esac
+        shCiInternal
         ;;
     docker.*)
         export CI_BRANCH=alpha
@@ -892,39 +877,9 @@ https://raw.githubusercontent.com\
     case "$CI_BRANCH" in
     alpha)
         case "$CI_COMMIT_MESSAGE" in
-        "[build app"*)
-            # rm file package-lock.json
-            rm -f package-lock.json
-            # increment $npm_package_version
-            shPackageJsonVersionIncrement today
-            # git commit and push
-            git add .
-            git commit -am "[ci skip] $CI_COMMIT_MESSAGE"
-            shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
-                -f HEAD:alpha
-            npm run build-ci
-            return
-            ;;
         "[npm publish]"*)
             shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
                 HEAD:publish
-            ;;
-        "[npm publishAfterCommit]"*)
-            export CI_BRANCH=publish
-            find node_modules -name .git -print0 | xargs -0 rm -rf
-            npm run build-ci
-            ;;
-        "[npm publishAfterCommitAfterBuild]"*)
-            # increment $npm_package_version
-            shPackageJsonVersionIncrement today
-            # git commit and push
-            git add .
-            git commit -am "[npm publishAfterCommit]"
-            shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
-                -f HEAD:alpha
-            export CI_COMMIT_ID="$(git rev-parse --verify HEAD)"
-            find node_modules -name .git -print0 | xargs -0 rm -rf
-            npm run build-ci
             ;;
         esac
         ;;
@@ -936,40 +891,10 @@ https://raw.githubusercontent.com\
             "$npm_package_version" || true
         ;;
     publish)
-        if (grep -q -E '    shNpmTestPublished' README.md)
-        then
-            # init .npmrc
-            printf "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > \
-                "$HOME/.npmrc"
-            # npm-publish aliases
-            for NAME in $npm_package_nameAliasPublish
-            do
-                shNpmPublishAlias . "$NAME" || true
-            done
-            shSleep 5
-            # npm-test published aliases
-            for NAME in $npm_package_nameAliasPublish
-            do
-                shNpmTestPublished "$NAME"
-            done
-        else
-            shCiPrint "skip npm-publish"
-        fi
         # security - cleanup .npmrc
         rm -f "$HOME/.npmrc"
-        case "$CI_COMMIT_MESSAGE" in
-        "[npm publishAfterCommit]"*)
-            shGitSquashPop HEAD~1 \
-"[ci skip] [npm published \
-$(node -e 'process.stdout.write(require("./package.json").version)')]"
-            shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
-                -f HEAD:alpha
-            ;;
-        *)
-            shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
-                HEAD:beta
-            ;;
-        esac
+        shGitCmdWithGithubToken push "https://github.com/$GITHUB_FULLNAME" \
+            HEAD:beta
         ;;
     esac
 )}
@@ -989,11 +914,11 @@ shCiPrint() {(set -e
 )}
 
 shCiUpload() {(set -e
-# this function will upload ci-artifacts to github
+# this function will upload dir $UTILITY2_DIR_BUILD to github-gh-pages
     local DIR
     local URL
-    shCiPrint "shCiUpload - uploading artifacts to \
-https://github.com/$GITHUB_FULLNAME"
+    shCiPrint "shCiUpload - upload - $UTILITY2_DIR_BUILD to \
+https://github.com/$GITHUB_FULLNAME/tree/gh-pages/build..$CI_BRANCH..$CI_HOST"
     URL="https://github.com/$GITHUB_FULLNAME"
     # init $DIR
     DIR=/tmp/shCiUpload
@@ -1004,23 +929,21 @@ https://github.com/$GITHUB_FULLNAME"
     rm -f build/*127.0.0.1*
     case "$CI_COMMIT_MESSAGE" in
     "[build clean]"*)
-        shCiPrint "[build clean]"
+        shCiPrint "shCiUpload - [build clean]"
         rm -rf build
         ;;
     esac
-    # copy ci-artifacts
+    # copy $UTILITY2_DIR_BUILD
     cp -a "$UTILITY2_DIR_BUILD" .
     rm -rf "build..$CI_BRANCH..$CI_HOST"
     cp -a "$UTILITY2_DIR_BUILD" "build..$CI_BRANCH..$CI_HOST"
     # disable github-jekyll
     touch .nojekyll
-    # git-add .
     git add .
-    # git-commit
     git commit -am "[ci skip] update gh-pages" || true
-    # if number of commits > $COMMIT_LIMIT,
-    # then backup current git-repo-branch to git-repo-branch.backup,
-    # and then squash to $COMMIT_LIMIT/2 in git-repo-branch
+    # if number of commits > $COMMIT_LIMIT, then
+    # backup gh-pages to gh-pages.backup, and then
+    # squash to $COMMIT_LIMIT/2 in git-repo-branch
     if [ "$COMMIT_LIMIT" ] &&
         [ "$(git rev-list HEAD --count)" -gt "$COMMIT_LIMIT" ]
     then
@@ -1144,120 +1067,8 @@ shCryptoAesXxxCbcRawDecrypt() {(set -e
 ' "$@" # '
 )}
 
-shCryptoAesXxxCbcRawEncrypt() {(set -e
-# this function will inplace aes-xxx-cbc encrypt stdin with given hex-key $1
-# example use:
-# printf 'hello world\n' | shCryptoAesXxxCbcRawEncrypt 0123456789abcdef0123456789abcdef | shCryptoAesXxxCbcRawDecrypt 0123456789abcdef0123456789abcdef
-    node -e '
-/* jslint utility2:true */
-(function () {
-    "use strict";
-    let bufList;
-    function assertOrThrow(passed, msg) {
-    /*
-     * this function will throw <msg> if <passed> is falsy
-     */
-        if (passed) {
-            return;
-        }
-        throw (
-            (
-                msg &&
-                typeof msg.message === "string" &&
-                typeof msg.stack === "string"
-            )
-            // if msg is err, then leave as is
-            ? msg
-            : new Error(
-                typeof msg === "string"
-                // if msg is string, then leave as is
-                ? msg
-                // else JSON.stringify(msg)
-                : JSON.stringify(msg, undefined, 4)
-            )
-        );
-    }
-    function cryptoAesXxxCbcRawEncrypt(opt, onError) {
-    /*
-     * this function will aes-xxx-cbc encrypt with given <opt>
-     * example use:
-        data = new Uint8Array([1,2,3]);
-        key = '"'"'0123456789abcdef0123456789abcdef'"'"';
-        mode = undefined;
-        cryptoAesXxxCbcRawEncrypt({
-            data,
-            key,
-            mode
-        }, function (err, data) {
-            console.assert(!err, err);
-            cryptoAesXxxCbcRawDecrypt({
-                data,
-                key,
-                mode
-            }, console.log);
-        });
-     */
-        let crypto;
-        let data;
-        let ii;
-        let iv;
-        let key;
-        // init key
-        key = new Uint8Array(0.5 * opt.key.length);
-        ii = 0;
-        while (ii < key.byteLength) {
-            key[ii] = parseInt(opt.key.slice(2 * ii, 2 * ii + 2), 16);
-            ii += 2;
-        }
-        data = opt.data;
-        // init iv
-        iv = new Uint8Array((((data.byteLength) >> 4) << 4) + 32);
-        crypto = globalThis.crypto;
-        // init iv
-        iv.set(crypto.getRandomValues(new Uint8Array(16)));
-        crypto.subtle.importKey("raw", key, {
-            name: "AES-CBC"
-        }, false, [
-            "encrypt"
-        ]).then(function (key) {
-            crypto.subtle.encrypt({
-                iv: iv.slice(0, 16),
-                name: "AES-CBC"
-            }, key, data).then(function (data) {
-                iv.set(new Uint8Array(data), 16);
-                // base64
-                if (opt.mode === "base64") {
-                    iv = Buffer.from().toString("base64").replace((
-                        /\=/g
-                    ), "");
-                    iv += "\n";
-                }
-                onError(undefined, iv);
-            }).catch(onError);
-        }).catch(onError);
-    }
-    bufList = [];
-    process.stdin.on("data", function (chunk) {
-        bufList.push(chunk);
-    });
-    process.stdin.on("end", function () {
-        cryptoAesXxxCbcRawEncrypt({
-            data: Buffer.concat(bufList),
-            key: process.argv[1],
-            mode: process.argv[2]
-        }, function (err, data) {
-            assertOrThrow(!err, err);
-            Object.setPrototypeOf(data, Buffer.prototype);
-            process.stdout.write(data);
-        });
-    });
-}());
-' "$@" # '
-)}
-
 shCryptoTravisDecrypt() {(set -e
 # this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
-    shCiInit
     export MODE_CI=cryptoTravisDecrypt
     if [ ! "$CRYPTO_AES_KEY" ]
     then
@@ -1279,53 +1090,6 @@ shCryptoTravisDecrypt() {(set -e
 /kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER"
     shCiPrint "decrypting $URL ..."
     curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
-)}
-
-shCryptoTravisEncrypt() {(set -e
-# this function will encrypt $CRYPTO_AES_SH_ENCRYPTED to .travis.yml,
-# and use $CRYPTO_AES_KEY to encrypt $FILE to stdout
-    shCiInit
-    export MODE_CI=cryptoTravisEncrypt
-    if [ ! "$CRYPTO_AES_KEY" ]
-    then
-        shCiPrint "no CRYPTO_AES_KEY"
-        return 1
-    fi
-    local FILE="$1"
-    if [ -f "$FILE" ]
-    then
-        cat "$FILE" | shCryptoAesXxxCbcRawEncrypt "$CRYPTO_AES_KEY" base64
-        return
-    fi
-    if [ -f .travis.yml ]
-    then
-        TMPFILE="$(mktemp)"
-        URL="https://api.travis-ci.com/repos/$GITHUB_FULLNAME/key"
-        shCiPrint "fetch $URL"
-        curl -Lf -H "Authorization: token $TRAVIS_ACCESS_TOKEN" "$URL" |
-            sed -n -e \
-"s/.*-----BEGIN [RSA ]*PUBLIC KEY-----\(.*\)-----END [RSA ]*PUBLIC KEY-----.*/\
------BEGIN PUBLIC KEY-----\\1-----END PUBLIC KEY-----/" \
-            -e "s/\\\\n/%/gp" |
-            tr "%" "\n" > "$TMPFILE"
-        CRYPTO_AES_KEY_ENCRYPTED="$(
-            printf "CRYPTO_AES_KEY=$CRYPTO_AES_KEY" |
-            openssl rsautl -encrypt -pubin -inkey "$TMPFILE" |
-            base64 |
-            tr -d "\n"
-        )"
-        rm "$TMPFILE"
-        if [ ! "$CRYPTO_AES_KEY_ENCRYPTED" ]
-        then
-            shCiPrint "no CRYPTO_AES_KEY_ENCRYPTED"
-        else
-            sed -in -e \
-"s|\(- secure: \).*\( # CRYPTO_AES_KEY$\)|\\1$CRYPTO_AES_KEY_ENCRYPTED\\2|" \
-                .travis.yml
-            rm -f .travis.ymln
-            shCiPrint "updated .travis.yml with CRYPTO_AES_KEY_ENCRYPTED"
-        fi
-    fi
 )}
 
 shCryptoWithGithubOrg() {(set -e
@@ -1680,44 +1444,25 @@ shEnvSanitize() {
 
 shGitCmdWithGithubToken() {(set -e
 # this function will run git $CMD with $GITHUB_TOKEN
-# http://stackoverflow.com/questions/18027115/committing-via-travis-ci-failing
     local CMD
     local URL
     # security - filter basic-auth
     shCiPrint "$(
-        printf "shGitCmdWithGithubToken $*" |
-        sed -e "s/:\/\/[^@]*@/:\/\/...@/"
+        printf "shGitCmdWithGithubToken - $*" | sed -e "s|://[^@]*@|://...@|"
     )"
     CMD="$1"
     shift
     URL="$1"
     shift
-    if [ ! "$GITHUB_TOKEN" ] || ! (printf "$URL" | grep -q -E "^https:\/\/")
-    then
-        git "$CMD" "$URL" "$@"
-        return
-    fi
-    case "$URL" in
-    .)
-        git "$CMD" "$URL" "$@"
-        return
-        ;;
-    https://github.com/*)
-        URL="$(printf "$URL" | sed -e "s/github.com/$GITHUB_TOKEN@github.com/")"
-        ;;
-    origin)
-        URL="https://$GITHUB_TOKEN@github.com/$GITHUB_FULLNAME"
-        ;;
-    esac
+    URL="$(
+        printf "$URL" |
+        sed -e \
+"s|^https://github.com/|https://x-access-token:$GITHUB_TOKEN@github.com/|" \
+        -e \
+"s|^origin$|https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_FULLNAME|"
+    )"
     # hide $GITHUB_TOKEN in case of err
     git "$CMD" "$URL" "$@" 2>/dev/null
-)}
-
-shGitDirCommitAndPush() {(set -e
-# this function will git-commit and git-push dir $1 with msg $2
-    cd "$1"
-    git commit -am "$2" || true
-    git push
 )}
 
 shGitGc() {(set -e
@@ -1928,7 +1673,8 @@ shGithubRepoDescriptionUpdate() {(set -e
     shSleep 5
     GITHUB_FULLNAME="$1"
     DESCRIPTION="$2"
-    shCiPrint "update $GITHUB_FULLNAME description"
+    shCiPrint \
+        "shGithubRepoDescriptionUpdate - update - $GITHUB_FULLNAME description"
     curl -Lf \
         -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
@@ -2180,41 +1926,15 @@ shJsonNormalize() {(set -e
 ' "$1" # '
 )}
 
-shMacAddressSpoof() {(set -e
-# this function will spoof mac-address $1
-    MAC_ADDRESS="${1-$(openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//')}"
-    printf "spoofing mac address $MAC_ADDRESS\n"
-    sudo ifconfig en0 ether "$MAC_ADDRESS"
-    # sudo ifconfig en0 ether Wi-Fi "$MAC_ADDRESS"
-    ifconfig en0
-)}
-
-shNpmPackageCliHelpCreate() {(set -e
-# this function will create svg of cli-help in current npm-package
-    local FILE
-    export MODE_CI=npmPackageCliHelp
-    shCiPrint "start"
-    FILE="$(
-node -e 'console.log(Object.values(require("./package.json").bin || {})[0]);
-')" # '
-    shRunWithScreenshotTxt printf none
-    if [ -f "./$FILE" ]
-    then
-        shRunWithScreenshotTxt "./$FILE" --help
-    fi
-    shCiPrint "end"
-)}
-
 shNpmPackageDependencyTreeCreate() {(set -e
 # this function will create svg-dependency-tree of npm-package
     local DIR
+    shEnvSanitize
     if [ -f README.md ] && ! (grep -q -E "https://nodei.co/npm/$1\b" README.md)
     then
         return
     fi
     export MODE_CI=npmPackageDependencyTree
-    shCiPrint "start"
-    shEnvSanitize
     # cleanup /tmp/node_modules
     rm -rf /tmp/node_modules
     DIR=/tmp/npmPackageDependencyTreeCreate
@@ -2248,27 +1968,40 @@ shNpmPackageDependencyTreeCreate() {(set -e
 ' "$(du -ks "$DIR/node_modules")" # '
     )}
     shRunWithScreenshotTxt npm ls || true
-    shCiPrint "end"
 )}
 
-shNpmPackageListingCreate() {(set -e
-# this function will create svg-listing of npm-package
-    export MODE_CI=npmPackageListing
-    shCiPrint "start"
-    # init .git
-    if [ ! -d .git ]
-    then
-        printf "
-*~
-.*
-node_modules
-" > .gitignore
-        git init
-        git add .
-        git commit -m 'initial commit' | head -n 1024
-    fi
-    shRunWithScreenshotTxt eval "printf \"package files\n\n\" && shGitLsTree"
-    shCiPrint "end"
+shNpmPublishAlias() {(set -e
+# this function will npm-publish $DIR as $NAME@$VERSION
+    cd "$1"
+    NAME="$2"
+    VERSION="$3"
+    export MODE_CI=npmPublishAlias
+    shCiPrint "shNpmPublishAlias - $NAME"
+    DIR=/tmp/npmPublishAlias
+    rm -rf "$DIR" && mkdir -p "$DIR"
+    # clean-copy . to $DIR
+    git ls-tree --name-only -r HEAD | xargs tar -czf - | tar -C "$DIR" -xvzf -
+    cd "$DIR"
+    node -e '
+/* jslint utility2:true */
+(function () {
+    "use strict";
+    let name;
+    let packageJson;
+    let version;
+    name = process.argv[1];
+    version = process.argv[2];
+    packageJson = require("./package.json");
+    packageJson.nameOriginal = packageJson.name;
+    packageJson.name = name || packageJson.name;
+    packageJson.version = version || packageJson.version;
+    require("fs").writeFileSync(
+        "package.json",
+        JSON.stringify(packageJson, undefined, 4) + "\n"
+    );
+}());
+' "$NAME" "$VERSION" # '
+    npm publish
 )}
 
 shNpmPublishV0() {(set -e
@@ -2327,7 +2060,7 @@ shNpmTestPublished() {(set -e
         (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
     ))
     then
-        shCiPrint "skip npm-testing published-package $npm_package_name"
+        shCiPrint "skip npm-test published-package $npm_package_name"
         return
     fi
     shEnvSanitize
@@ -2335,7 +2068,7 @@ shNpmTestPublished() {(set -e
     then
         export npm_package_name="$1"
     fi
-    shCiPrint "npm-testing published-package $npm_package_name"
+    shCiPrint "npm-test published-package $npm_package_name"
     DIR=/tmp/npmTestPublished
     rm -rf "$DIR" && mkdir -p "$DIR" && cd "$DIR"
     # npm-install package
@@ -2886,7 +2619,7 @@ shReadmeEval() {(set -e
 # this function will extract, save, and test script $FILE embedded in README.md
     shCiInit
     export MODE_CI=readmeEval
-    shCiPrint "running cmd 'shReadmeEval $*' ..."
+    shCiPrint "start - shReadmeEval $*"
     FILE="$1"
     if [ ! -f ".tmp/README.$FILE" ]
     then
@@ -2933,7 +2666,7 @@ shReadmeEval() {(set -e
     export npm_config_timeout_exit="${npm_config_timeout_exit:-30000}"
     # screenshot
     (shSleep 15 && shBrowserScreenshot "http://127.0.0.1:$PORT") &
-    shCiPrint "testing $FILE ..."
+    shCiPrint "test $FILE"
     case "$FILE" in
     .tmp/README.build_ci.sh)
         # delete all leading blank lines at top of file
@@ -2964,7 +2697,7 @@ shReadmeEval() {(set -e
         shRunWithScreenshotTxt /bin/sh "$FILE" || [ "$?" = 15 ]
         ;;
     esac
-    shCiPrint "... finished running cmd 'shReadmeEval $*'"
+    shCiPrint "end - shReadmeEval $*"
 )}
 
 shReadmeLinkValidate() {(set -e
@@ -3177,7 +2910,7 @@ shServerPortRandom() {(set -e
 
 shSleep() {(set -e
 # this function will sleep $1
-    shCiPrint "sleep $1 ..."
+    shCiPrint "sleep - $1"
     sleep "$1"
 )}
 
@@ -3185,32 +2918,6 @@ shSource() {
 # this function will source .bashrc
     . "$HOME/.bashrc"
 }
-
-shTravisRepoTrigger() {(set -e
-# this function will trigger travis-repo $1, branch $2
-    node -e '
-/* jslint utility2:true */
-(function () {
-    // trigger travis-repo
-    require("https").request((
-        "https://api.travis-ci.com/repo/" +
-        process.argv[1].replace("/", "%2F") +
-        "/requests"
-    ), {
-        headers: {
-            authorization: "token " + process.env.TRAVIS_ACCESS_TOKEN,
-            "content-type": "application/json",
-            "travis-api-version": 3
-        },
-        method: "POST"
-    }, function (res) {
-        if (!(res.statusCode < 400)) {
-            throw new Error(res.statusCode);
-        }
-    }).end("{\"request\":{\"branch\":\"" + process.argv[2] + "\"}}");
-}());
-' "$@" # '
-)}
 
 shUtility2DependentsGitCommit() {(set -e
 # this function will git-commit-and-push $UTILITY2_DEPENDENTS

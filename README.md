@@ -48,8 +48,9 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2020.12.3
+- pre - migrate ci from travis-ci.com to github.com
+- remove shell-functions shBuildInsideDocker, shChromeSocks5, shCryptoTravisEncrypt, shMacAddressSpoof, shNpmDeprecateAlias, shNpmPublishAlias, shTravisRepoCreate, shTravisRepoTrigger
 - init shell-var \$CI_xxx in shell-function shCiInit instead of shCiMain
-- remove shell-functions shBuildInsideDocker, shChromeSocks5, shNpmDeprecateAlias, shNpmPublishAlias, shTravisRepoCreate, shTravisRepoTrigger
 - rename shBuildXxx to shCiXxx
 - merge shell-function shIstanbulCover into shNpmTest
 - update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE
@@ -62,10 +63,10 @@ this zero-dependency package will provide high-level functions to to build, test
 - none
 
 #### todo
+- migrate ci from travis-ci.com to github.com
 - reimplement timerTimeout in function testRunDefault
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
-- migrate from travis to github-actions
 - update function fsWriteFileWithMkdirp to write to tmpfile first
 - jslint - unmangle function jslintAutofixLocalFunction
 - istanbul - inline class Instrumenter into function instrumentSync

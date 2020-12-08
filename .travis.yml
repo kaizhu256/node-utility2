@@ -5,14 +5,15 @@ before_install:
     - CI_COMMIT_MESSAGE="$(git log -1 --pretty=%s)" && if (printf "$CI_COMMIT_MESSAGE" | grep -qE "\bNODE_VERSION="); then nvm install "$(printf "$CI_COMMIT_MESSAGE" | sed -e "s/.*\bNODE_VERSION=//" -e "s/ .*//")" && node --version && npm --version; fi
 branches:
     only:
-    - /^alpha$/
-    - /^beta$/
-    - /^benchmark\..*/
-    - /^cron$/
-    - /^docker\..*/
-    - /^master$/
-    - /^publish$/
-    - /^task$/
+    #!! - /^alpha$/
+    #!! - /^beta$/
+    #!! - /^benchmark\..*/
+    #!! - /^cron$/
+    #!! - /^docker\..*/
+    #!! - /^master$/
+    #!! - /^publish$/
+    #!! - /^task$/
+    - none
 cache:
     npm: false
 dist:
