@@ -402,7 +402,7 @@ shBuildApp() {(set -e
     ], ii) {
         // hardlink file $HOME/lib.utility2.sh synchronously to prevent
         // race-condition with hardlink file $HOME/bin/utility2
-        if (ii === 0) {
+        if (ii < 2) {
             try {
                 fs.unlinkSync(bb);
             } catch (ignore) {}
@@ -3080,3 +3080,4 @@ sqlite3-lite
         "$CMD" "$@"
         ;;
     esac
+)
