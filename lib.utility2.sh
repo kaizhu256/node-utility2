@@ -285,17 +285,8 @@ shBrowserScreenshot() {(set -e
             "--ignore-certificate-errors",
             "--incognito",
             "--timeout=30000",
+            "--user-data-dir=/dev/null",
             "--window-size=800x600",
-            (
-                process.platform !== "win32"
-                ? "--user-data-dir=/dev/null"
-                : ""
-            ),
-            (
-                (process.getuid && process.getuid() === 0)
-                ? "--no-sandbox"
-                : ""
-            ),
             (
                 extname === ".html"
                 ? "--dump-dom"
@@ -309,6 +300,11 @@ shBrowserScreenshot() {(set -e
             (
                 extname === ".png"
                 ? "-screenshot=" + file + ".png"
+                : ""
+            ),
+            (
+                (process.getuid && process.getuid() === 0)
+                ? "--no-sandbox"
                 : ""
             ),
             url
