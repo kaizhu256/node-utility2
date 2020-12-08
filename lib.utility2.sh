@@ -275,23 +275,18 @@ shBrowserScreenshot() {(set -e
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
     [
+        ".html",
         ".png"
     ].forEach(function (extname) {
+        let argList;
         let child;
-        child = require("child_process").spawn((
-            process.platform === "darwin"
-            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-            : process.platform === "win32"
-            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-            : "/usr/bin/google-chrome-stable"
-        ), [].concat([
+        argList = [].concat([
             "--headless",
             "--ignore-certificate-errors",
             "--incognito",
             "--timeout=30000",
             "--user-data-dir=/dev/null",
-            "--window-size=800x600",
-            url
+            "--window-size=800x600"
         ], (
             extname === ".html"
             ? [
@@ -307,7 +302,18 @@ shBrowserScreenshot() {(set -e
             : ""
         )).filter(function (elem) {
             return elem;
-        }), {
+        }).concat([
+            url
+        ]);
+        // debug argList
+        // console.error(argList);
+        child = require("child_process").spawn((
+            process.platform === "darwin"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            : process.platform === "win32"
+            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            : "/usr/bin/google-chrome-stable"
+        ), argList, {
             stdio: [
                 "ignore", "pipe", 2
             ]
