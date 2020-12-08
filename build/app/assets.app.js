@@ -31648,7 +31648,7 @@ local.utility2 = local;
 if (
     typeof process === "object" && process &&
     typeof process.on === "function" &&
-    process.unhandledRejections !== "throw"
+    !process.unhandledRejections
 ) {
     process.unhandledRejections = "throw";
     process.on("unhandledRejection", function (err) {
@@ -56184,7 +56184,7 @@ local.utility2 = local;\n\
 if (\n\
     typeof process === \"object\" && process &&\n\
     typeof process.on === \"function\" &&\n\
-    process.unhandledRejections !== \"throw\"\n\
+    !process.unhandledRejections\n\
 ) {\n\
     process.unhandledRejections = \"throw\";\n\
     process.on(\"unhandledRejection\", function (err) {\n\
@@ -61506,7 +61506,7 @@ local.utility2 = local;
 if (
     typeof process === "object" && process &&
     typeof process.on === "function" &&
-    process.unhandledRejections !== "throw"
+    !process.unhandledRejections
 ) {
     process.unhandledRejections = "throw";
     process.on("unhandledRejection", function (err) {
