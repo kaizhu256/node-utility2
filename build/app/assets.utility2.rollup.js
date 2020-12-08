@@ -1197,7 +1197,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             tmp = function () {
                 return;
             };
-            // hack-coverage
+            // coverage-hack
             tmp();
             Object.defineProperties(tmp, {
                 toString: {
@@ -55291,7 +55291,7 @@ local.testCase_replStart_default = function (opt, onError) {\n\
         return;\n\
     }\n\
     local.replStart();\n\
-    // hack-coverage - test replStart's muliple-call handling-behavior\n\
+    // coverage-hack - test replStart's muliple-call handling-behavior\n\
     local.replStart();\n\
     local.testMock([\n\
         [\n\
