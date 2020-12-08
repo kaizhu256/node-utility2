@@ -284,27 +284,28 @@ shBrowserScreenshot() {(set -e
             : process.platform === "win32"
             ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
             : "/usr/bin/google-chrome-stable"
-        ), Array.from([
+        ), [].concat([
             "--headless",
             "--ignore-certificate-errors",
             "--incognito",
-            "--screenshot",
             "--timeout=30000",
             "--user-data-dir=/dev/null",
             "--window-size=800x600",
-            "-screenshot=" + file + ".png",
-            url,
-            (
-                extname === ".html"
-                ? "--dump-dom"
-                : ""
-            ),
-            (
-                process.platform === "linux"
-                ? "--no-sandbox"
-                : ""
-            )
-        ]).filter(function (elem) {
+            url
+        ], (
+            extname === ".html"
+            ? [
+                "--dump-dom"
+            ]
+            : [
+                "--screenshot",
+                "-screenshot=" + file + ".png"
+            ]
+        ), (
+            process.platform === "linux"
+            ? "--no-sandbox"
+            : ""
+        )).filter(function (elem) {
             return elem;
         }), {
             stdio: [
