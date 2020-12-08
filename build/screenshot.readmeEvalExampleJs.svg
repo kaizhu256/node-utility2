@@ -1,206 +1,182 @@
-<svg height="4622px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="4622px" fill="#555" width="720px"></rect>
+<svg height="4142px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="4142px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
 <tspan x="10" y="26"></tspan>
-<tspan x="10" y="42">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T01:15:14.248Z - shNpmTest - (node example.js)</tspan>
+<tspan x="10" y="42">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T02:32:24.062Z - shNpmTest - (node example.js)</tspan>
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74"></tspan>
-<tspan x="10" y="90">istanbul - covering $ /usr/local/bin/node /tmp/app/example.js</tspan>
+<tspan x="10" y="90">istanbul - covering $ /opt/hostedtoolcache/node/14.15.1/x64/bin/node /tmp/app/example.js</tspan>
 <tspan x="10" y="106">http-server listening on port 8081</tspan>
-<tspan x="10" y="122">testRunDefault - 3 ms - [node test-case 1 of 4 passed] - testCase_noop_default</tspan>
-<tspan x="10" y="138">testRunDefault - 22 ms - [node test-case 2 of 4 passed] - testCase_httpFetch_200</tspan>
-<tspan x="10" y="154">testRunDefault - 22 ms - [node test-case 3 of 4 passed] - testCase_httpFetch_404</tspan>
-<tspan x="10" y="170"></tspan>
-<tspan x="10" y="186">DevTools listening on ws://127.0.0.1:43863/devtools/browser/4df0e5db-1b7f-4f0e-b959-d3decddcd5db</tspan>
-<tspan x="10" y="202">testRunDefault - 2000 ms - testCase pending - testCase_webpage_default ...</tspan>
-<tspan x="10" y="218">[1208/011516.388626:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="234">le:/// (1)</tspan>
-<tspan x="10" y="250">[1208/011516.390198:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="266">ile:/// (2)</tspan>
-<tspan x="10" y="282">[1208/011516.390234:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="298">ile:/// (3)</tspan>
-<tspan x="10" y="314">[1208/011516.390249:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="330">ile:/// (4)</tspan>
-<tspan x="10" y="346">[1208/011516.390260:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="362">ile:/// (5)</tspan>
-<tspan x="10" y="378">[1208/011516.390269:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="394">ile:/// (6)</tspan>
-<tspan x="10" y="410">[1208/011516.390276:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="426">ile:/// (7)</tspan>
-<tspan x="10" y="442">[1208/011516.390285:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="458">ile:/// (8)</tspan>
-<tspan x="10" y="474">[1208/011516.390295:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="490">ile:/// (9)</tspan>
-<tspan x="10" y="506">[1208/011516.390304:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="522">file:/// (10)</tspan>
-<tspan x="10" y="538">[1208/011516.391553:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="554">file:/// (11)</tspan>
-<tspan x="10" y="570">[1208/011516.391693:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="586">file:/// (12)</tspan>
-<tspan x="10" y="602">[1208/011516.394272:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="618">file:/// (13)</tspan>
-<tspan x="10" y="634">[1208/011516.394297:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="650">file:/// (14)</tspan>
-<tspan x="10" y="666">[1208/011516.394311:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="682">file:/// (15)</tspan>
-<tspan x="10" y="698">[1208/011516.394329:INFO:CONSOLE(16)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="714">file:/// (16)</tspan>
-<tspan x="10" y="730">[1208/011516.394466:INFO:CONSOLE(17)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="746">file:/// (17)</tspan>
-<tspan x="10" y="762">[1208/011516.394563:INFO:CONSOLE(18)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="778">file:/// (18)</tspan>
-<tspan x="10" y="794">[1208/011516.394575:INFO:CONSOLE(19)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="810">file:/// (19)</tspan>
-<tspan x="10" y="826">[1208/011516.394583:INFO:CONSOLE(20)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="842">file:/// (20)</tspan>
-<tspan x="10" y="858">[1208/011516.394592:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="874">file:/// (21)</tspan>
-<tspan x="10" y="890">[1208/011516.394599:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="906">file:/// (22)</tspan>
-<tspan x="10" y="922">[1208/011516.394608:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="938">file:/// (23)</tspan>
-<tspan x="10" y="954">[1208/011516.394615:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="970">file:/// (24)</tspan>
-<tspan x="10" y="986">[1208/011516.394633:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1002">file:/// (25)</tspan>
-<tspan x="10" y="1018">[1208/011516.395808:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1034">file:/// (26)</tspan>
-<tspan x="10" y="1050">[1208/011516.396312:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1066">file:/// (27)</tspan>
-<tspan x="10" y="1082">[1208/011516.533807:INFO:CONSOLE(369)] "</tspan>
-<tspan x="10" y="1098">testRunDefault - 2 ms - testCase failed - testCase_failed_error_demo</tspan>
-<tspan x="10" y="1114">this is a failed error demo</tspan>
-<tspan x="10" y="1130">Error: this is a failed error demo</tspan>
-<tspan x="10" y="1146">    at Object.testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://1\</tspan><tspan x="10" y="1162">27.0.0.1:8081/?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:355)</tspan>
-<tspan x="10" y="1178">    at testCaseRun (http://127.0.0.1:8081/assets.utility2.js:4720:22)</tspan>
-<tspan x="10" y="1194">    at Array.map (&lt;anonymous&gt;)</tspan>
-<tspan x="10" y="1210">    at local.testRunDefault (http://127.0.0.1:8081/assets.utility2.js:4839:49)</tspan>
-<tspan x="10" y="1226">    at http://127.0.0.1:8081/assets.utility2.js:3125:18</tspan>
-<tspan x="10" y="1242">    at Array.forEach (&lt;anonymous&gt;)</tspan>
-<tspan x="10" y="1258">    at Object.local.eventListenerEmit (http://127.0.0.1:8081/assets.utility2.js:3118:44)</tspan>
-<tspan x="10" y="1274">    at Object.local.onReadyDecrement (http://127.0.0.1:8081/assets.utility2.js:3502:15)</tspan>
-<tspan x="10" y="1290">    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11", source: http://127.0.0.1:8081/asse\</tspan><tspan x="10" y="1306">ts.example.js (369)</tspan>
-<tspan x="10" y="1322">[1208/011516.546770:INFO:CONSOLE(369)] "testRunDefault - 2 ms - [browser test-case 1 of 2 failed\</tspan><tspan x="10" y="1338">] - testCase_failed_error_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="1354">[1208/011516.560568:INFO:CONSOLE(369)] "testRunDefault - 30 ms - [browser test-case 2 of 2 passe\</tspan><tspan x="10" y="1370">d] - testCase_passed_http_fetch_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="1386">[1208/011516.563249:INFO:CONSOLE(369)] "------------------|---------|---------|---------|-------\</tspan><tspan x="10" y="1402">--|</tspan>
-<tspan x="10" y="1418">File              | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
-<tspan x="10" y="1434">------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="1450">All files         |     100 |      75 |     100 |     100 |</tspan>
-<tspan x="10" y="1466">inputTextarea1.js |     100 |      75 |     100 |     100 |</tspan>
-<tspan x="10" y="1482">------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="1498">", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="1514">[1208/011516.571242:INFO:CONSOLE(369)] "istanbul - created coverage file .tmp/build/coverage/ind\</tspan><tspan x="10" y="1530">ex.html", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="1546">[1208/011516.612372:INFO:CONSOLE(369)] "domOnEventWindowOnloadTimeElapsed = 92", source: http://\</tspan><tspan x="10" y="1562">127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="1578">/tmp/app/node_modules/utility2/lib.utility2.js:206</tspan>
-<tspan x="10" y="1594">        throw err;</tspan>
-<tspan x="10" y="1610">        ^</tspan>
-<tspan x="10" y="1626"></tspan>
-<tspan x="10" y="1642">Error: 1</tspan>
-<tspan x="10" y="1658">    at Object.local.browserTest (/tmp/app/node_modules/utility2/lib.utility2.js:1667:61)</tspan>
-<tspan x="10" y="1674">    at processTicksAndRejections (internal/process/task_queues.js:93:5)</tspan>
-<tspan x="10" y="1690">    at async Object.local.testCase_webpage_default [as onTestCase] (/tmp/app/example.js:9:6946)</tspan>
-<tspan x="10" y="1706">http-server listening on port 8081</tspan>
-<tspan x="10" y="1722">testRunDefault - 4 ms - [node test-case 1 of 4 passed] - testCase_noop_default</tspan>
-<tspan x="10" y="1738">chrome-devtools - spawning - /usr/bin/google-chrome-stable</tspan>
-<tspan x="10" y="1754">testRunDefault - 22 ms - [node test-case 2 of 4 passed] - testCase_httpFetch_200</tspan>
-<tspan x="10" y="1770">testRunDefault - 23 ms - [node test-case 3 of 4 passed] - testCase_httpFetch_404</tspan>
-<tspan x="10" y="1786"></tspan>
-<tspan x="10" y="1802">DevTools listening on ws://127.0.0.1:44745/devtools/browser/6e28ad75-6fbe-4839-8c1e-c4718af8b115</tspan>
-<tspan x="10" y="1818">chrome-devtools - connecting - ws://127.0.0.1:44745/devtools/browser/6e28ad75-6fbe-4839-8c1e-c47\</tspan><tspan x="10" y="1834">18af8b115</tspan>
-<tspan x="10" y="1850">chrome-devtools - created - blank-page with sessionId</tspan>
-<tspan x="10" y="1866">[1208/011517.000119:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="1882">le:/// (1)</tspan>
-<tspan x="10" y="1898">[1208/011517.000944:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1914">ile:/// (2)</tspan>
-<tspan x="10" y="1930">[1208/011517.000965:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1946">ile:/// (3)</tspan>
-<tspan x="10" y="1962">[1208/011517.000974:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1978">ile:/// (4)</tspan>
-<tspan x="10" y="1994">[1208/011517.000981:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2010">ile:/// (5)</tspan>
-<tspan x="10" y="2026">[1208/011517.000989:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2042">ile:/// (6)</tspan>
-<tspan x="10" y="2058">[1208/011517.000996:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2074">ile:/// (7)</tspan>
-<tspan x="10" y="2090">[1208/011517.001005:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2106">ile:/// (8)</tspan>
-<tspan x="10" y="2122">[1208/011517.001012:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2138">ile:/// (9)</tspan>
-<tspan x="10" y="2154">[1208/011517.001019:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2170">file:/// (10)</tspan>
-<tspan x="10" y="2186">[1208/011517.001026:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2202">file:/// (11)</tspan>
-<tspan x="10" y="2218">[1208/011517.001034:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2234">file:/// (12)</tspan>
-<tspan x="10" y="2250">[1208/011517.001041:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2266">file:/// (13)</tspan>
-<tspan x="10" y="2282">[1208/011517.001048:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2298">file:/// (14)</tspan>
-<tspan x="10" y="2314">[1208/011517.001055:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2330">file:/// (15)</tspan>
-<tspan x="10" y="2346">[1208/011517.001063:INFO:CONSOLE(16)] "Uncaught R[1208/011517.000944:INFO:CONSOLE(2)] "Uncaught \</tspan><tspan x="10" y="2362">ReferenceError: addRow is not defined", source: file:/// (2)</tspan>
-<tspan x="10" y="2378">[1208/011517.000965:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2394">ile:/// (3)</tspan>
-<tspan x="10" y="2410">[1208/011517.000974:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="2426">ile:/// (4)</tspan>
-<tspan x="10" y="2442">[1208/011517.000981:INFO:CONSOLE(5)] "Uncaught ReferenceError: addR[1208/011517.002602:INFO:CONS\</tspan><tspan x="10" y="2458">OLE(20)] "Uncaught ReferenceError: addRow is not defined", source: file:/// (20)</tspan>
-<tspan x="10" y="2474">[1208/011517.002622:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2490">file:/// (21)</tspan>
-<tspan x="10" y="2506">[1208/011517.002632:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2522">file:/// (22)</tspan>
-<tspan x="10" y="2538">[1208/011517.002639:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2554">file:/// (23)</tspan>
-<tspan x="10" y="2570">[1208/011517.002649:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2586">file:/// (24)</tspan>
-<tspan x="10" y="2602">[1208/011517.002656:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2618">file:/// (25)</tspan>
-<tspan x="10" y="2634">[1208/011517.002663:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2650">file:/// (26)</tspan>
-<tspan x="10" y="2666">[1208/011517.005455:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2682">file:/// (27)</tspan>
-<tspan x="10" y="2698">[1208/011517.128510:INFO:CONSOLE(369)] "</tspan>
-<tspan x="10" y="2714">testRunDefault - 1 ms - testCase failed - testCase_failed_error_demo</tspan>
-<tspan x="10" y="2730">this is a failed error demo</tspan>
-<tspan x="10" y="2746">Error: this is a failed error demo</tspan>
-<tspan x="10" y="2762">    at Object.testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://1\</tspan><tspan x="10" y="2778">27.0.0.1:8081/?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:355)</tspan>
-<tspan x="10" y="2794">    at testCaseRun (http://127.0.0.1:8081/assets.utility2.js:4720:22)</tspan>
-<tspan x="10" y="2810">    at Array.map (&lt;anonymous&gt;)</tspan>
-<tspan x="10" y="2826">    at local.testRunDefault (http://127.0.0.1:8081/assets.utility2.js:4839:49)</tspan>
-<tspan x="10" y="2842">    at http://127.0.0.1:8081/assets.utility2.js:3125:18</tspan>
-<tspan x="10" y="2858">    at Array.forEach (&lt;anonymous&gt;)</tspan>
-<tspan x="10" y="2874">    at Object.local.eventListenerEmit (http://127.0.0.1:8081/assets.utility2.js:3118:44)</tspan>
-<tspan x="10" y="2890">    at Object.local.onReadyDecrement (http://127.0.0.1:8081/assets.utility2.js:3502:15)</tspan>
-<tspan x="10" y="2906">    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11", source: http://127.0.0.1:8081/asse\</tspan><tspan x="10" y="2922">ts.example.js (369)</tspan>
-<tspan x="10" y="2938">[1208/011517.141352:INFO:CONSOLE(369)] "testRunDefault - 1 ms - [browser test-case 1 of 2 failed\</tspan><tspan x="10" y="2954">] - testCase_failed_error_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="2970">chrome-devtools - loaded - page http://127.0.0.1:8081/?npm_config_mode_test=1</tspan>
-<tspan x="10" y="2986">[1208/011517.148605:INFO:CONSOLE(369)] "testRunDefault - 22 ms - [browser test-case 2 of 2 passe\</tspan><tspan x="10" y="3002">d] - testCase_passed_http_fetch_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="3018">[1208/011517.151244:INFO:CONSOLE(369)] "------------------|---------|---------|---------|-------\</tspan><tspan x="10" y="3034">--|</tspan>
-<tspan x="10" y="3050">File              | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
-<tspan x="10" y="3066">------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="3082">All files         |     100 |      75 |     100 |     100 |</tspan>
-<tspan x="10" y="3098">inputTextarea1.js |     100 |      75 |     100 |     100 |</tspan>
-<tspan x="10" y="3114">------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="3130">", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="3146">[1208/011517.156382:INFO:CONSOLE(369)] "istanbul - created coverage file .tmp/build/coverage/ind\</tspan><tspan x="10" y="3162">ex.html", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="3178"></tspan>
-<tspan x="10" y="3194">browserTest - merged test-report /tmp/app/.tmp/build/test-report.json</tspan>
-<tspan x="10" y="3210"></tspan>
-<tspan x="10" y="3226">[1208/011517.205904:INFO:CONSOLE(369)] "domOnEventWindowOnloadTimeElapsed = 75", source: http://\</tspan><tspan x="10" y="3242">127.0.0.1:8081/assets.example.js (369)</tspan>
-<tspan x="10" y="3258">chrome-devtools - wrote - screenshot /tmp/app/.tmp/build/screenshot.readmeEvalExampleJs.browser.\</tspan><tspan x="10" y="3274">%2F.png</tspan>
-<tspan x="10" y="3290">/tmp/app/node_modules/utility2/lib.utility2.js:206</tspan>
-<tspan x="10" y="3306">        throw err;</tspan>
-<tspan x="10" y="3322">        ^</tspan>
-<tspan x="10" y="3338"></tspan>
-<tspan x="10" y="3354">Error: 1</tspan>
-<tspan x="10" y="3370">    at Object.local.browserTest (/tmp/app/node_modules/utility2/lib.utility2.js:1667:61)</tspan>
-<tspan x="10" y="3386">    at processTicksAndRejections (internal/process/task_queues.js:93:5)</tspan>
-<tspan x="10" y="3402">    at async Object.local.testCase_webpage_default [as onTestCase] (/tmp/app/example.js:340:5)</tspan>
-<tspan x="10" y="3418"></tspan>
-<tspan x="10" y="3434">-------------------------------------------------------</tspan>
-<tspan x="10" y="3450">| test-report - readmeEvalExampleJs - node - linux - v14.15.1</tspan>
-<tspan x="10" y="3466">|      23 ms            0 failed        3 passed      |</tspan>
-<tspan x="10" y="3482">-------------------------------------------------------</tspan>
-<tspan x="10" y="3498">| test-report - readmeEvalExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/\</tspan><tspan x="10" y="3514">537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
-<tspan x="10" y="3530">|      23 ms            1 failed        1 passed      |</tspan>
-<tspan x="10" y="3546">-------------------------------------------------------</tspan>
-<tspan x="10" y="3562"></tspan>
-<tspan x="10" y="3578">{</tspan>
-<tspan x="10" y="3594">    "name": "testCase_webpage_default",</tspan>
-<tspan x="10" y="3610">    "status": "pending",</tspan>
-<tspan x="10" y="3626">    "timeStart": 1607390116859,</tspan>
-<tspan x="10" y="3642">    "timeElapsed": 0</tspan>
-<tspan x="10" y="3658">}</tspan>
-<tspan x="10" y="3674">{</tspan>
-<tspan x="10" y="3690">    "name": "testCase_failed_error_demo",</tspan>
-<tspan x="10" y="3706">    "status": "failed",</tspan>
-<tspan x="10" y="3722">    "timeStart": 1607390117127,</tspan>
-<tspan x="10" y="3738">    "timeElapsed": 14,</tspan>
-<tspan x="10" y="3754">    "errStack": "this is a failed error demo\nError: this is a failed error demo\n    at Object.\</tspan><tspan x="10" y="3770">testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://127.0.0.1:8081/\</tspan><tspan x="10" y="3786">?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:355)\n    at testCaseRun (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3802">sets.utility2.js:4720:22)\n    at Array.map (&lt;anonymous&gt;)\n    at local.testRunDefault (http://1\</tspan><tspan x="10" y="3818">27.0.0.1:8081/assets.utility2.js:4839:49)\n    at http://127.0.0.1:8081/assets.utility2.js:3125:\</tspan><tspan x="10" y="3834">18\n    at Array.forEach (&lt;anonymous&gt;)\n    at Object.local.eventListenerEmit (http://127.0.0.1:\</tspan><tspan x="10" y="3850">8081/assets.utility2.js:3118:44)\n    at Object.local.onReadyDecrement (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3866">sets.utility2.js:3502:15)\n    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11",</tspan>
-<tspan x="10" y="3882">    "isDone": true</tspan>
-<tspan x="10" y="3898">}</tspan>
-<tspan x="10" y="3914">test-report - wrote - /tmp/app/.tmp/build/test-report.html</tspan>
-<tspan x="10" y="3930">test-report - wrote - /tmp/app/.tmp/build/build.badge.svg</tspan>
-<tspan x="10" y="3946">test-report - wrote - /tmp/app/.tmp/build/test-report.badge.svg</tspan>
-<tspan x="10" y="3962"></tspan>
-<tspan x="10" y="3978">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T01:15:17.497Z - shNpmTest - EXIT_CODE=1</tspan>
+<tspan x="10" y="122">testRunDefault - 4 ms - [node test-case 1 of 4 passed] - testCase_noop_default</tspan>
+<tspan x="10" y="138">testRunDefault - 30 ms - [node test-case 2 of 4 passed] - testCase_httpFetch_200</tspan>
+<tspan x="10" y="154">testRunDefault - 30 ms - [node test-case 3 of 4 passed] - testCase_httpFetch_404</tspan>
+<tspan x="10" y="170">testRunDefault - 2002 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="186">testRunDefault - 6007 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="202">testRunDefault - 10011 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="218">testRunDefault - 12014 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="234">testRunDefault - 16018 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="250"></tspan>
+<tspan x="10" y="266">DevTools listening on ws://127.0.0.1:33597/devtools/browser/f4253db7-5ee8-4939-8e16-17549a61a164</tspan>
+<tspan x="10" y="282">testRunDefault - 20019 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="298">testRunDefault - 22020 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="314">testRunDefault - 26022 ms - testCase pending - testCase_webpage_default ...</tspan>
+<tspan x="10" y="330">[1208/023252.163077:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="346">le:/// (1)</tspan>
+<tspan x="10" y="362">[1208/023252.163970:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="378">ile:/// (2)</tspan>
+<tspan x="10" y="394">[1208/023252.164714:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="410">ile:/// (3)</tspan>
+<tspan x="10" y="426">[1208/023252.165400:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="442">ile:/// (4)</tspan>
+<tspan x="10" y="458">[1208/023252.165936:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="474">ile:/// (5)</tspan>
+<tspan x="10" y="490">[1208/023252.166500:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="506">ile:/// (6)</tspan>
+<tspan x="10" y="522">[1208/023252.166945:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="538">ile:/// (7)</tspan>
+<tspan x="10" y="554">[1208/023252.167362:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="570">ile:/// (8)</tspan>
+<tspan x="10" y="586">[1208/023252.167799:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="602">ile:/// (9)</tspan>
+<tspan x="10" y="618">[1208/023252.168160:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="634">file:/// (10)</tspan>
+<tspan x="10" y="650">[1208/023252.168408:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="666">file:/// (11)</tspan>
+<tspan x="10" y="682">[1208/023252.169012:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="698">file:/// (12)</tspan>
+<tspan x="10" y="714">[1208/023252.169107:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="730">file:/// (13)</tspan>
+<tspan x="10" y="746">[1208/023252.169211:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="762">file:/// (14)</tspan>
+<tspan x="10" y="778">[1208/023252.169239:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="794">file:/// (15)</tspan>
+<tspan x="10" y="810">[1208/023252.170236:INFO:CONSOLE(16)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="826">file:/// (16)</tspan>
+<tspan x="10" y="842">[1208/023252.170272:INFO:CONSOLE(17)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="858">file:/// (17)</tspan>
+<tspan x="10" y="874">[1208/023252.170313:INFO:CONSOLE(18)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="890">file:/// (18)</tspan>
+<tspan x="10" y="906">[1208/023252.170336:INFO:CONSOLE(19)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="922">file:/// (19)</tspan>
+<tspan x="10" y="938">[1208/023252.170354:INFO:CONSOLE(20)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="954">file:/// (20)</tspan>
+<tspan x="10" y="970">[1208/023252.171349:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="986">file:/// (21)</tspan>
+<tspan x="10" y="1002">[1208/023252.171379:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1018">file:/// (22)</tspan>
+<tspan x="10" y="1034">[1208/023252.171397:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1050">file:/// (23)</tspan>
+<tspan x="10" y="1066">[1208/023252.171415:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1082">file:/// (24)</tspan>
+<tspan x="10" y="1098">[1208/023252.171435:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1114">file:/// (25)</tspan>
+<tspan x="10" y="1130">[1208/023252.172168:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1146">file:/// (26)</tspan>
+<tspan x="10" y="1162">[1208/023252.172197:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1178">file:/// (27)</tspan>
+<tspan x="10" y="1194">http-server listening on port 8081</tspan>
+<tspan x="10" y="1210">testRunDefault - 5 ms - [node test-case 1 of 4 passed] - testCase_noop_default</tspan>
+<tspan x="10" y="1226">chrome-devtools - spawning - /usr/bin/google-chrome-stable</tspan>
+<tspan x="10" y="1242">testRunDefault - 30 ms - [node test-case 2 of 4 passed] - testCase_httpFetch_200</tspan>
+<tspan x="10" y="1258">testRunDefault - 30 ms - [node test-case 3 of 4 passed] - testCase_httpFetch_404</tspan>
+<tspan x="10" y="1274"></tspan>
+<tspan x="10" y="1290">DevTools listening on ws://127.0.0.1:45311/devtools/browser/eb56c77c-ee10-4e1e-bb08-f97282ea1f28</tspan>
+<tspan x="10" y="1306">chrome-devtools - connecting - ws://127.0.0.1:45311/devtools/browser/eb56c77c-ee10-4e1e-bb08-f97\</tspan><tspan x="10" y="1322">282ea1f28</tspan>
+<tspan x="10" y="1338">chrome-devtools - created - blank-page with sessionId</tspan>
+<tspan x="10" y="1354">[1208/023254.613936:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="1370">le:/// (1)</tspan>
+<tspan x="10" y="1386">[1208/023254.614642:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1402">ile:/// (2)</tspan>
+<tspan x="10" y="1418">[1208/023254.614663:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1434">ile:/// (3)</tspan>
+<tspan x="10" y="1450">[1208/023254.614675:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1466">ile:/// (4)</tspan>
+<tspan x="10" y="1482">[1208/023254.614682:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1498">ile:/// (5)</tspan>
+<tspan x="10" y="1514">[1208/023254.614746:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1530">ile:/// (6)</tspan>
+<tspan x="10" y="1546">[1208/023254.615153:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1562">ile:/// (7)</tspan>
+<tspan x="10" y="1578">[1208/023254.615171:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1594">ile:/// (8)</tspan>
+<tspan x="10" y="1610">[1208/023254.615181:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1626">ile:/// (9)</tspan>
+<tspan x="10" y="1642">[1208/023254.615322:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1658">file:/// (10)</tspan>
+<tspan x="10" y="1674">[1208/023254.615339:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1690">file:/// (11)</tspan>
+<tspan x="10" y="1706">[1208/023254.615495:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1722">file:/// (12)</tspan>
+<tspan x="10" y="1738">[1208/023254.615658:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1754">file:/// (13)</tspan>
+<tspan x="10" y="1770">[1208/023254.615853:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1786">file:/// (14)</tspan>
+<tspan x="10" y="1802">[1208/023254.616029:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1818">file:/// (15)</tspan>
+<tspan x="10" y="1834">[1208/023254.616225:INFO:CONSOLE(16)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1850">file:/// (16)</tspan>
+<tspan x="10" y="1866">[1208/023254.616402:INFO:CONSOLE(17)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1882">file:/// (17)</tspan>
+<tspan x="10" y="1898">[1208/023254.616571:INFO:CONSOLE(18)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1914">file:/// (18)</tspan>
+<tspan x="10" y="1930">[1208/023254.616742:INFO:CONSOLE(19)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1946">file:/// (19)</tspan>
+<tspan x="10" y="1962">[1208/023254.616919:INFO:CONSOLE(20)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1978">file:/// (20)</tspan>
+<tspan x="10" y="1994">[1208/023254.617098:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2010">file:/// (21)</tspan>
+<tspan x="10" y="2026">[1208/023254.617287:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2042">file:/// (22)</tspan>
+<tspan x="10" y="2058">[1208/023254.617459:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2074">file:/// (23)</tspan>
+<tspan x="10" y="2090">[1208/023254.617655:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2106">file:/// (24)</tspan>
+<tspan x="10" y="2122">[1208/023254.617846:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2138">file:/// (25)</tspan>
+<tspan x="10" y="2154">[1208/023254.618030:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2170">file:/// (26)</tspan>
+<tspan x="10" y="2186">[1208/023254.618461:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="2202">file:/// (27)</tspan>
+<tspan x="10" y="2218">[1208/023254.783755:INFO:CONSOLE(369)] "</tspan>
+<tspan x="10" y="2234">testRunDefault - 1 ms - testCase failed - testCase_failed_error_demo</tspan>
+<tspan x="10" y="2250">this is a failed error demo</tspan>
+<tspan x="10" y="2266">Error: this is a failed error demo</tspan>
+<tspan x="10" y="2282">    at Object.testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://1\</tspan><tspan x="10" y="2298">27.0.0.1:8081/?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:348)</tspan>
+<tspan x="10" y="2314">    at testCaseRun (http://127.0.0.1:8081/assets.utility2.js:4720:22)</tspan>
+<tspan x="10" y="2330">    at Array.map (&lt;anonymous&gt;)</tspan>
+<tspan x="10" y="2346">    at local.testRunDefault (http://127.0.0.1:8081/assets.utility2.js:4839:49)</tspan>
+<tspan x="10" y="2362">    at http://127.0.0.1:8081/assets.utility2.js:3125:18</tspan>
+<tspan x="10" y="2378">    at Array.forEach (&lt;anonymous&gt;)</tspan>
+<tspan x="10" y="2394">    at Object.local.eventListenerEmit (http://127.0.0.1:8081/assets.utility2.js:3118:44)</tspan>
+<tspan x="10" y="2410">    at Object.local.onReadyDecrement (http://127.0.0.1:8081/assets.utility2.js:3502:15)</tspan>
+<tspan x="10" y="2426">    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11", source: http://127.0.0.1:8081/asse\</tspan><tspan x="10" y="2442">ts.example.js (369)</tspan>
+<tspan x="10" y="2458">[1208/023254.797516:INFO:CONSOLE(369)] "testRunDefault - 1 ms - [browser test-case 1 of 2 failed\</tspan><tspan x="10" y="2474">] - testCase_failed_error_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
+<tspan x="10" y="2490">chrome-devtools - loaded - page http://127.0.0.1:8081/?npm_config_mode_test=1</tspan>
+<tspan x="10" y="2506">[1208/023255.333175:INFO:CONSOLE(369)] "domOnEventWindowOnloadTimeElapsed = 583", source: http:/\</tspan><tspan x="10" y="2522">/127.0.0.1:8081/assets.example.js (369)</tspan>
+<tspan x="10" y="2538">[1208/023255.361693:INFO:CONSOLE(369)] "testRunDefault - 580 ms - [browser test-case 2 of 2 pass\</tspan><tspan x="10" y="2554">ed] - testCase_passed_http_fetch_demo", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
+<tspan x="10" y="2570">[1208/023255.365941:INFO:CONSOLE(369)] "------------------|---------|---------|---------|-------\</tspan><tspan x="10" y="2586">--|</tspan>
+<tspan x="10" y="2602">File              | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
+<tspan x="10" y="2618">------------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2634">All files         |     100 |      75 |     100 |     100 |</tspan>
+<tspan x="10" y="2650">inputTextarea1.js |     100 |      75 |     100 |     100 |</tspan>
+<tspan x="10" y="2666">------------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2682">", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
+<tspan x="10" y="2698">[1208/023255.377850:INFO:CONSOLE(369)] "istanbul - created coverage file .tmp/build/coverage/ind\</tspan><tspan x="10" y="2714">ex.html", source: http://127.0.0.1:8081/assets.example.js (369)</tspan>
+<tspan x="10" y="2730"></tspan>
+<tspan x="10" y="2746">browserTest - merged test-report /tmp/app/.tmp/build/test-report.json</tspan>
+<tspan x="10" y="2762"></tspan>
+<tspan x="10" y="2778">chrome-devtools - wrote - screenshot /tmp/app/.tmp/build/screenshot.readmeEvalExampleJs.browser.\</tspan><tspan x="10" y="2794">%2F.png</tspan>
+<tspan x="10" y="2810">/tmp/app/node_modules/utility2/lib.utility2.js:206</tspan>
+<tspan x="10" y="2826">        throw err;</tspan>
+<tspan x="10" y="2842">        ^</tspan>
+<tspan x="10" y="2858"></tspan>
+<tspan x="10" y="2874">Error: 1</tspan>
+<tspan x="10" y="2890">    at Object.local.browserTest (/tmp/app/node_modules/utility2/lib.utility2.js:1667:61)</tspan>
+<tspan x="10" y="2906">    at processTicksAndRejections (internal/process/task_queues.js:93:5)</tspan>
+<tspan x="10" y="2922">    at async Object.local.testCase_webpage_default [as onTestCase] (/tmp/app/example.js:340:5)</tspan>
+<tspan x="10" y="2938"></tspan>
+<tspan x="10" y="2954">-------------------------------------------------------</tspan>
+<tspan x="10" y="2970">| test-report - readmeEvalExampleJs - node - linux - v14.15.1</tspan>
+<tspan x="10" y="2986">|      30 ms            0 failed        3 passed      |</tspan>
+<tspan x="10" y="3002">-------------------------------------------------------</tspan>
+<tspan x="10" y="3018">| test-report - readmeEvalExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/\</tspan><tspan x="10" y="3034">537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
+<tspan x="10" y="3050">|     581 ms            1 failed        1 passed      |</tspan>
+<tspan x="10" y="3066">-------------------------------------------------------</tspan>
+<tspan x="10" y="3082"></tspan>
+<tspan x="10" y="3098">{</tspan>
+<tspan x="10" y="3114">    "name": "testCase_webpage_default",</tspan>
+<tspan x="10" y="3130">    "status": "pending",</tspan>
+<tspan x="10" y="3146">    "timeStart": 1607394774351,</tspan>
+<tspan x="10" y="3162">    "timeElapsed": 0</tspan>
+<tspan x="10" y="3178">}</tspan>
+<tspan x="10" y="3194">{</tspan>
+<tspan x="10" y="3210">    "name": "testCase_failed_error_demo",</tspan>
+<tspan x="10" y="3226">    "status": "failed",</tspan>
+<tspan x="10" y="3242">    "timeStart": 1607394774782,</tspan>
+<tspan x="10" y="3258">    "timeElapsed": 15,</tspan>
+<tspan x="10" y="3274">    "errStack": "this is a failed error demo\nError: this is a failed error demo\n    at Object.\</tspan><tspan x="10" y="3290">testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://127.0.0.1:8081/\</tspan><tspan x="10" y="3306">?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:348)\n    at testCaseRun (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3322">sets.utility2.js:4720:22)\n    at Array.map (&lt;anonymous&gt;)\n    at local.testRunDefault (http://1\</tspan><tspan x="10" y="3338">27.0.0.1:8081/assets.utility2.js:4839:49)\n    at http://127.0.0.1:8081/assets.utility2.js:3125:\</tspan><tspan x="10" y="3354">18\n    at Array.forEach (&lt;anonymous&gt;)\n    at Object.local.eventListenerEmit (http://127.0.0.1:\</tspan><tspan x="10" y="3370">8081/assets.utility2.js:3118:44)\n    at Object.local.onReadyDecrement (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3386">sets.utility2.js:3502:15)\n    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11",</tspan>
+<tspan x="10" y="3402">    "isDone": true</tspan>
+<tspan x="10" y="3418">}</tspan>
+<tspan x="10" y="3434">test-report - wrote - /tmp/app/.tmp/build/test-report.html</tspan>
+<tspan x="10" y="3450">test-report - wrote - /tmp/app/.tmp/build/build.badge.svg</tspan>
+<tspan x="10" y="3466">test-report - wrote - /tmp/app/.tmp/build/test-report.badge.svg</tspan>
+<tspan x="10" y="3482"></tspan>
+<tspan x="10" y="3498">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T02:32:55.755Z - shNpmTest - EXIT_CODE=1</tspan>
+<tspan x="10" y="3514"></tspan>
+<tspan x="10" y="3530">report - readmeEvalExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \</tspan><tspan x="10" y="3546">(KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
+<tspan x="10" y="3562">|     581 ms            1 failed        1 passed      |</tspan>
+<tspan x="10" y="3578">-------------------------------------------------------</tspan>
+<tspan x="10" y="3594"></tspan>
+<tspan x="10" y="3610">{</tspan>
+<tspan x="10" y="3626">    "name": "testCase_webpage_default",</tspan>
+<tspan x="10" y="3642">    "status": "pending",</tspan>
+<tspan x="10" y="3658">    "timeStart": 1607394774351,</tspan>
+<tspan x="10" y="3674">    "timeElapsed": 0</tspan>
+<tspan x="10" y="3690">}</tspan>
+<tspan x="10" y="3706">{</tspan>
+<tspan x="10" y="3722">    "name": "testCase_failed_error_demo",</tspan>
+<tspan x="10" y="3738">    "status": "failed",</tspan>
+<tspan x="10" y="3754">    "timeStart": 1607394774782,</tspan>
+<tspan x="10" y="3770">    "timeElapsed": 15,</tspan>
+<tspan x="10" y="3786">    "errStack": "this is a failed error demo\nError: this is a failed error demo\n    at Object.\</tspan><tspan x="10" y="3802">testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://127.0.0.1:8081/\</tspan><tspan x="10" y="3818">?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:348)\n    at testCaseRun (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3834">sets.utility2.js:4720:22)\n    at Array.map (&lt;anonymous&gt;)\n    at local.testRunDefault (http://1\</tspan><tspan x="10" y="3850">27.0.0.1:8081/assets.utility2.js:4839:49)\n    at http://127.0.0.1:8081/assets.utility2.js:3125:\</tspan><tspan x="10" y="3866">18\n    at Array.forEach (&lt;anonymous&gt;)\n    at Object.local.eventListenerEmit (http://127.0.0.1:\</tspan><tspan x="10" y="3882">8081/assets.utility2.js:3118:44)\n    at Object.local.onReadyDecrement (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="3898">sets.utility2.js:3502:15)\n    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11",</tspan>
+<tspan x="10" y="3914">    "isDone": true</tspan>
+<tspan x="10" y="3930">}</tspan>
+<tspan x="10" y="3946">test-report - wrote - /tmp/app/.tmp/build/test-report.html</tspan>
+<tspan x="10" y="3962">test-report - wrote - /tmp/app/.tmp/build/build.badge.svg</tspan>
+<tspan x="10" y="3978">test-report - wrote - /tmp/app/.tmp/build/test-report.badge.svg</tspan>
 <tspan x="10" y="3994"></tspan>
-<tspan x="10" y="4010">report - readmeEvalExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \</tspan><tspan x="10" y="4026">(KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
-<tspan x="10" y="4042">|      23 ms            1 failed        1 passed      |</tspan>
-<tspan x="10" y="4058">-------------------------------------------------------</tspan>
+<tspan x="10" y="4010">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T02:32:55.755Z - shNpmTest - EXIT_CODE=1</tspan>
+<tspan x="10" y="4026"></tspan>
+<tspan x="10" y="4042"></tspan>
+<tspan x="10" y="4058">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T02:32:55.808Z - shRunWithScreenshotTxt - EXIT_CODE=1</tspan>
 <tspan x="10" y="4074"></tspan>
-<tspan x="10" y="4090">{</tspan>
-<tspan x="10" y="4106">    "name": "testCase_webpage_default",</tspan>
-<tspan x="10" y="4122">    "status": "pending",</tspan>
-<tspan x="10" y="4138">    "timeStart": 1607390116859,</tspan>
-<tspan x="10" y="4154">    "timeElapsed": 0</tspan>
-<tspan x="10" y="4170">}</tspan>
-<tspan x="10" y="4186">{</tspan>
-<tspan x="10" y="4202">    "name": "testCase_failed_error_demo",</tspan>
-<tspan x="10" y="4218">    "status": "failed",</tspan>
-<tspan x="10" y="4234">    "timeStart": 1607390117127,</tspan>
-<tspan x="10" y="4250">    "timeElapsed": 14,</tspan>
-<tspan x="10" y="4266">    "errStack": "this is a failed error demo\nError: this is a failed error demo\n    at Object.\</tspan><tspan x="10" y="4282">testCaseDict.testCase_failed_error_demo [as onTestCase] (eval at testRun (http://127.0.0.1:8081/\</tspan><tspan x="10" y="4298">?npm_config_mode_test=1:38:13), &lt;anonymous&gt;:9:355)\n    at testCaseRun (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="4314">sets.utility2.js:4720:22)\n    at Array.map (&lt;anonymous&gt;)\n    at local.testRunDefault (http://1\</tspan><tspan x="10" y="4330">27.0.0.1:8081/assets.utility2.js:4839:49)\n    at http://127.0.0.1:8081/assets.utility2.js:3125:\</tspan><tspan x="10" y="4346">18\n    at Array.forEach (&lt;anonymous&gt;)\n    at Object.local.eventListenerEmit (http://127.0.0.1:\</tspan><tspan x="10" y="4362">8081/assets.utility2.js:3118:44)\n    at Object.local.onReadyDecrement (http://127.0.0.1:8081/as\</tspan><tspan x="10" y="4378">sets.utility2.js:3502:15)\n    at http://127.0.0.1:8081/?npm_config_mode_test=1:408:11",</tspan>
-<tspan x="10" y="4394">    "isDone": true</tspan>
-<tspan x="10" y="4410">}</tspan>
-<tspan x="10" y="4426">test-report - wrote - /tmp/app/.tmp/build/test-report.html</tspan>
-<tspan x="10" y="4442">test-report - wrote - /tmp/app/.tmp/build/build.badge.svg</tspan>
-<tspan x="10" y="4458">test-report - wrote - /tmp/app/.tmp/build/test-report.badge.svg</tspan>
-<tspan x="10" y="4474"></tspan>
-<tspan x="10" y="4490">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T01:15:17.497Z - shNpmTest - EXIT_CODE=1</tspan>
-<tspan x="10" y="4506"></tspan>
-<tspan x="10" y="4522"></tspan>
-<tspan x="10" y="4538">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T01:15:17.532Z - shRunWithScreenshotTxt - EXIT_CODE=1</tspan>
-<tspan x="10" y="4554"></tspan>
-<tspan x="10" y="4570"></tspan>
-<tspan x="10" y="4586">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T01:15:17.606Z - shRunWithScreenshotTxt - wrote - /tmp\</tspan><tspan x="10" y="4602">/app/.tmp/build/screenshot.readmeEvalExampleJs.svg</tspan>
+<tspan x="10" y="4090"></tspan>
+<tspan x="10" y="4106">[MODE_CI=readmeEvalExampleJs] - 2020-12-08T02:32:55.922Z - shRunWithScreenshotTxt - wrote - /tmp\</tspan><tspan x="10" y="4122">/app/.tmp/build/screenshot.readmeEvalExampleJs.svg</tspan>
 </text>
 </svg>
