@@ -275,8 +275,7 @@ shBrowserScreenshot() {(set -e
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
     [
-        ".html",
-        ".png"
+        ".html", ".png"
     ].forEach(function (extname) {
         let argList;
         let child;

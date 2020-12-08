@@ -1011,7 +1011,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             tmp = function () {
                 return;
             };
-            // hack-coverage
+            // coverage-hack
             tmp();
             Object.defineProperties(tmp, {
                 toString: {

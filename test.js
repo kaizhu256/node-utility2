@@ -465,7 +465,7 @@ local.testCase_replStart_default = function (opt, onError) {
         return;
     }
     local.replStart();
-    // hack-coverage - test replStart's muliple-call handling-behavior
+    // coverage-hack - test replStart's muliple-call handling-behavior
     local.replStart();
     local.testMock([
         [
