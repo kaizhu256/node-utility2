@@ -231,7 +231,6 @@ shBrowserScreenshot() {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
-    let child;
     let file;
     let sep;
     let timeStart;
@@ -275,34 +274,48 @@ shBrowserScreenshot() {(set -e
     });
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
-    child = require("child_process").spawn((
-        process.platform === "darwin"
-        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        : process.platform === "win32"
-        ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-        : "/usr/bin/google-chrome-stable"
-    ), [
-        //!! "--dump-dom",
-        "--headless",
-        //!! "--ignore-certificate-errors",
-        "--incognito",
-        "--screenshot",
-        "--timeout=30000",
-        //!! "--user-data-dir=/dev/null",
-        "--window-size=800x600",
-        "-screenshot=" + file + ".png",
-        (
-            process.platform === "linux"
-            ? "--no-sandbox"
-            : ""
-        ),
-        url
-    ], {
-        stdio: [
-            "ignore", "pipe", 2
-        ]
+    [
+        ".html",
+        ".png"
+    ].forEach(function (extname) {
+        let child;
+        child = require("child_process").spawn((
+            process.platform === "darwin"
+            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            : process.platform === "win32"
+            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            : "/usr/bin/google-chrome-stable"
+        ), [
+            "--headless",
+            "--ignore-certificate-errors",
+            "--incognito",
+            "--screenshot",
+            "--timeout=30000",
+            "--user-data-dir=/dev/null",
+            "--window-size=800x600",
+            "-screenshot=" + file + ".png",
+            (
+                extname === ".html"
+                ? "--dump-dom"
+                : ""
+            ),
+            (
+                process.platform === "linux"
+                ? "--no-sandbox"
+                : ""
+            ),
+            url
+        ], {
+            stdio: [
+                "ignore", "pipe", 2
+            ]
+        });
+        child.stdout.pipe(
+            extname === ".html"
+            ? require("fs").createWriteStream(file + ".html")
+            : process.stdout
+        );
     });
-    child.stdout.pipe(require("fs").createWriteStream(file + ".html"));
 }());
 ' "$1" # '
 )}
