@@ -275,7 +275,6 @@ shBrowserScreenshot() {(set -e
     process.on("uncaughtException", process.exit);
     process.on("unhandledRejection", process.exit);
     [
-        ".html",
         ".png"
     ].forEach(function (extname) {
         let child;
@@ -285,7 +284,7 @@ shBrowserScreenshot() {(set -e
             : process.platform === "win32"
             ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
             : "/usr/bin/google-chrome-stable"
-        ), [
+        ), Array.from([
             "--headless",
             "--ignore-certificate-errors",
             "--incognito",
@@ -294,6 +293,7 @@ shBrowserScreenshot() {(set -e
             "--user-data-dir=/dev/null",
             "--window-size=800x600",
             "-screenshot=" + file + ".png",
+            url,
             (
                 extname === ".html"
                 ? "--dump-dom"
@@ -303,9 +303,10 @@ shBrowserScreenshot() {(set -e
                 process.platform === "linux"
                 ? "--no-sandbox"
                 : ""
-            ),
-            url
-        ], {
+            )
+        ]).filter(function (elem) {
+            return elem;
+        }), {
             stdio: [
                 "ignore", "pipe", 2
             ]
