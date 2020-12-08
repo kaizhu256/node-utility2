@@ -1,160 +1,158 @@
-<svg height="3758px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="3758px" fill="#555" width="720px"></rect>
+<svg height="3694px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="3694px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
 <tspan x="10" y="26"></tspan>
-<tspan x="10" y="42">[MODE_CI=npmTest] - 2020-12-08T18:53:29.115Z - shNpmTest - (node test.js)</tspan>
+<tspan x="10" y="42">[MODE_CI=npmTest] - 2020-12-08T18:56:22.260Z - shNpmTest - (node test.js)</tspan>
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74"></tspan>
 <tspan x="10" y="90">istanbul - covering $ /opt/hostedtoolcache/node/14.15.1/x64/bin/node /home/runner/work/node-util\</tspan><tspan x="10" y="106">ity2/node-utility2/test.js</tspan>
 <tspan x="10" y="122"></tspan>
 <tspan x="10" y="138">npmTest - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/build/\</tspan><tspan x="10" y="154">test-report.json</tspan>
-<tspan x="10" y="170">&gt; http-server listening on port 48957</tspan>
-<tspan x="10" y="186">jslint - 3ms - /home/runner/work/node-utility2/node-utility2/.windows_terminals_settings.json</tspan>
-<tspan x="10" y="202">jslint - 8ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
-<tspan x="10" y="218">jslint - 102ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
-<tspan x="10" y="234">jslint - 291ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
-<tspan x="10" y="250">jslint - 299ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
-<tspan x="10" y="266">jslint - 307ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
-<tspan x="10" y="282">testRunDefault - 4 ms - [node test-case 1 of 21 passed] - testCase_assertXxx_default</tspan>
-<tspan x="10" y="298">testRunDefault - 14 ms - [node test-case 2 of 21 passed] - testCase_buildApidoc_default</tspan>
-<tspan x="10" y="314">testRunDefault - 21 ms - [node test-case 3 of 21 passed] - testCase_cliRun_default</tspan>
-<tspan x="10" y="330">testRunDefault - 21 ms - [node test-case 4 of 21 passed] - testCase_eventListenerXxx_default</tspan>
-<tspan x="10" y="346">testRunDefault - 27 ms - [node test-case 5 of 21 passed] - testCase_listShuffle_default</tspan>
-<tspan x="10" y="362">testRunDefault - 28 ms - [node test-case 6 of 21 passed] - testCase_noop_default</tspan>
-<tspan x="10" y="378">testRunDefault - 32 ms - [node test-case 7 of 21 passed] - testCase_replStart_default</tspan>
-<tspan x="10" y="394">testRunDefault - 33 ms - [node test-case 8 of 21 passed] - testCase_stringHtmlSafe_default</tspan>
-<tspan x="10" y="410">testRunDefault - 33 ms - [node test-case 9 of 21 passed] - testCase_stringXxx_default</tspan>
-<tspan x="10" y="426">testRunDefault - 34 ms - [node test-case 10 of 21 passed] - testCase_testMock_err</tspan>
-<tspan x="10" y="442">testRunDefault - 34 ms - [node test-case 11 of 21 passed] - testCase_uiAnimateXxx_default</tspan>
-<tspan x="10" y="458">testRunDefault - 34 ms - [node test-case 12 of 21 passed] - testCase_urlJoin_default</tspan>
-<tspan x="10" y="474">testRunDefault - 34 ms - [node test-case 13 of 21 passed] - testCase_uuid4Create_default</tspan>
-<tspan x="10" y="490">testRunDefault - 47 ms - [node test-case 14 of 21 passed] - testCase_chromeDevtoolsClient_covera\</tspan><tspan x="10" y="506">ge</tspan>
-<tspan x="10" y="522">testRunDefault - 48 ms - [node test-case 15 of 21 passed] - testCase_setTimeoutOnError_default</tspan>
-<tspan x="10" y="538">testRunDefault - 174 ms - [node test-case 16 of 21 passed] - testCase_httpFetch_200</tspan>
-<tspan x="10" y="554">testRunDefault - 174 ms - [node test-case 17 of 21 passed] - testCase_httpFetch_404</tspan>
-<tspan x="10" y="570">testRunDefault - 185 ms - [node test-case 18 of 21 passed] - testCase_libUtility2Js_standalone</tspan>
-<tspan x="10" y="586">jslint - 641ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
-<tspan x="10" y="602">jslint - 661ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
-<tspan x="10" y="618">jslint - 662ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
-<tspan x="10" y="634">jslint - 672ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
-<tspan x="10" y="650">jslint - 785ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
+<tspan x="10" y="170">&gt; http-server listening on port 39040</tspan>
+<tspan x="10" y="186">jslint - 4ms - /home/runner/work/node-utility2/node-utility2/.windows_terminals_settings.json</tspan>
+<tspan x="10" y="202">jslint - 9ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
+<tspan x="10" y="218">jslint - 101ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
+<tspan x="10" y="234">testRunDefault - 3 ms - [node test-case 1 of 21 passed] - testCase_assertXxx_default</tspan>
+<tspan x="10" y="250">jslint - 298ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
+<tspan x="10" y="266">testRunDefault - 19 ms - [node test-case 2 of 21 passed] - testCase_buildApidoc_default</tspan>
+<tspan x="10" y="282">jslint - 308ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
+<tspan x="10" y="298">testRunDefault - 38 ms - [node test-case 3 of 21 passed] - testCase_cliRun_default</tspan>
+<tspan x="10" y="314">testRunDefault - 39 ms - [node test-case 4 of 21 passed] - testCase_eventListenerXxx_default</tspan>
+<tspan x="10" y="330">jslint - 322ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
+<tspan x="10" y="346">testRunDefault - 46 ms - [node test-case 5 of 21 passed] - testCase_listShuffle_default</tspan>
+<tspan x="10" y="362">testRunDefault - 47 ms - [node test-case 6 of 21 passed] - testCase_noop_default</tspan>
+<tspan x="10" y="378">testRunDefault - 53 ms - [node test-case 7 of 21 passed] - testCase_replStart_default</tspan>
+<tspan x="10" y="394">testRunDefault - 54 ms - [node test-case 8 of 21 passed] - testCase_stringHtmlSafe_default</tspan>
+<tspan x="10" y="410">testRunDefault - 55 ms - [node test-case 9 of 21 passed] - testCase_stringXxx_default</tspan>
+<tspan x="10" y="426">testRunDefault - 55 ms - [node test-case 10 of 21 passed] - testCase_testMock_err</tspan>
+<tspan x="10" y="442">testRunDefault - 56 ms - [node test-case 11 of 21 passed] - testCase_uiAnimateXxx_default</tspan>
+<tspan x="10" y="458">testRunDefault - 57 ms - [node test-case 12 of 21 passed] - testCase_urlJoin_default</tspan>
+<tspan x="10" y="474">testRunDefault - 57 ms - [node test-case 13 of 21 passed] - testCase_uuid4Create_default</tspan>
+<tspan x="10" y="490">testRunDefault - 73 ms - [node test-case 14 of 21 passed] - testCase_chromeDevtoolsClient_covera\</tspan><tspan x="10" y="506">ge</tspan>
+<tspan x="10" y="522">testRunDefault - 74 ms - [node test-case 15 of 21 passed] - testCase_setTimeoutOnError_default</tspan>
+<tspan x="10" y="538">testRunDefault - 226 ms - [node test-case 16 of 21 passed] - testCase_httpFetch_200</tspan>
+<tspan x="10" y="554">testRunDefault - 227 ms - [node test-case 17 of 21 passed] - testCase_httpFetch_404</tspan>
+<tspan x="10" y="570">testRunDefault - 228 ms - [node test-case 18 of 21 passed] - testCase_libUtility2Js_standalone</tspan>
+<tspan x="10" y="586">jslint - 629ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
+<tspan x="10" y="602">jslint - 635ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
+<tspan x="10" y="618">jslint - 635ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
+<tspan x="10" y="634">jslint - 651ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
+<tspan x="10" y="650">jslint - 762ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
 <tspan x="10" y="666"></tspan>
-<tspan x="10" y="682">DevTools listening on ws://127.0.0.1:45597/devtools/browser/fe6fa3d8-b334-4ac3-8122-17845017edd1</tspan>
-<tspan x="10" y="698">[1208/185330.526522:ERROR:command_buffer_proxy_impl.cc(122)] ContextResult::kTransientFailure: F\</tspan><tspan x="10" y="714">ailed to send GpuChannelMsg_CreateCommandBuffer.</tspan>
-<tspan x="10" y="730">[1208/185330.530671:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="746">le:/// (1)</tspan>
-<tspan x="10" y="762">[1208/185330.534362:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="778">ile:/// (2)</tspan>
-<tspan x="10" y="794">[1208/185330.534581:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="810">ile:/// (3)</tspan>
-<tspan x="10" y="826">[1208/185330.534770:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="842">ile:/// (4)</tspan>
-<tspan x="10" y="858">[1208/185330.534947:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="874">ile:/// (5)</tspan>
-<tspan x="10" y="890">[1208/185330.535114:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="906">ile:/// (6)</tspan>
-<tspan x="10" y="922">[1208/185330.535304:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="938">ile:/// (7)</tspan>
-<tspan x="10" y="954">[1208/185330.535471:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="970">ile:/// (8)</tspan>
-<tspan x="10" y="986">[1208/185330.536007:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1002">ile:/// (9)</tspan>
-<tspan x="10" y="1018">[1208/185330.536863:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1034">file:/// (10)</tspan>
-<tspan x="10" y="1050">[1208/185330.537062:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1066">file:/// (11)</tspan>
-<tspan x="10" y="1082">[1208/185330.537242:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1098">file:/// (12)</tspan>
-<tspan x="10" y="1114">[1208/185330.537404:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1130">file:/// (13)</tspan>
-<tspan x="10" y="1146">[1208/185330.537569:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1162">file:/// (14)</tspan>
-<tspan x="10" y="1178">[1208/185330.537752:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1194">file:/// (15)</tspan>
-<tspan x="10" y="1210">[1208/185330.537978:INFO:CONSOLE(16)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1226">file:/// (16)</tspan>
-<tspan x="10" y="1242">[1208/185330.538155:INFO:CONSOLE(17)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1258">file:/// (17)</tspan>
-<tspan x="10" y="1274">[1208/185330.538324:INFO:CONSOLE(18)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1290">file:/// (18)</tspan>
-<tspan x="10" y="1306">[1208/185330.538493:INFO:CONSOLE(19)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1322">file:/// (19)</tspan>
-<tspan x="10" y="1338">[1208/185330.538665:INFO:CONSOLE(20)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1354">file:/// (20)</tspan>
-<tspan x="10" y="1370">[1208/185330.538839:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1386">file:/// (21)</tspan>
-<tspan x="10" y="1402">[1208/185330.539011:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1418">file:/// (22)</tspan>
-<tspan x="10" y="1434">[1208/185330.539175:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1450">file:/// (23)</tspan>
-<tspan x="10" y="1466">[1208/185330.539338:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1482">file:/// (24)</tspan>
-<tspan x="10" y="1498">[1208/185330.539526:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1514">file:/// (25)</tspan>
-<tspan x="10" y="1530">[1208/185330.539704:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1546">file:/// (26)</tspan>
-<tspan x="10" y="1562">[1208/185330.539872:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1578">file:/// (27)</tspan>
-<tspan x="10" y="1594">[1208/185330.545441:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed wi\</tspan><tspan x="10" y="1610">th unconsumed attachments: 0/1</tspan>
-<tspan x="10" y="1626">jslint - 996ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
-<tspan x="10" y="1642">jslint - 1006ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
-<tspan x="10" y="1658">[1208/185331.013073:INFO:CONSOLE(9)] "testRunDefault - 4 ms - [browser test-case 1 of 21 passed]\</tspan><tspan x="10" y="1674"> - testCase_assertXxx_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="1690">jslint - 110ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.htm\</tspan><tspan x="10" y="1706">l</tspan>
-<tspan x="10" y="1722">jslint - 122ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.js</tspan>
-<tspan x="10" y="1738">jslint - 122ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.script_only\</tspan><tspan x="10" y="1754">.html</tspan>
-<tspan x="10" y="1770">jslint - 122ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.test.js</tspan>
-<tspan x="10" y="1786">jslint - 123ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.cs\</tspan><tspan x="10" y="1802">s</tspan>
-<tspan x="10" y="1818">[1208/185331.047385:INFO:CONSOLE(9)] "testRunDefault - 39 ms - [browser test-case 2 of 21 passed\</tspan><tspan x="10" y="1834">] - testCase_buildApidoc_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="1850">[1208/185331.051392:INFO:CONSOLE(9)] "testRunDefault - 43 ms - [browser test-case 3 of 21 passed\</tspan><tspan x="10" y="1866">] - testCase_buildApp_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="1882">[1208/185331.052089:INFO:CONSOLE(9)] "testRunDefault - 43 ms - [browser test-case 4 of 21 passed\</tspan><tspan x="10" y="1898">] - testCase_chromeDevtoolsClient_coverage", source: http://127.0.0.1:48957/assets.example.js (9\</tspan><tspan x="10" y="1914">)</tspan>
-<tspan x="10" y="1930">[1208/185331.052791:INFO:CONSOLE(9)] "testRunDefault - 44 ms - [browser test-case 5 of 21 passed\</tspan><tspan x="10" y="1946">] - testCase_cliRun_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="1962">[1208/185331.053734:INFO:CONSOLE(9)] "testRunDefault - 45 ms - [browser test-case 6 of 21 passed\</tspan><tspan x="10" y="1978">] - testCase_eventListenerXxx_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="1994">[1208/185331.068983:INFO:CONSOLE(9)] "testRunDefault - 59 ms - [browser test-case 7 of 21 passed\</tspan><tspan x="10" y="2010">] - testCase_libUtility2Js_standalone", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2026">[1208/185331.069122:INFO:CONSOLE(9)] "testRunDefault - 60 ms - [browser test-case 8 of 21 passed\</tspan><tspan x="10" y="2042">] - testCase_listShuffle_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2058">[1208/185331.069713:INFO:CONSOLE(9)] "testRunDefault - 61 ms - [browser test-case 9 of 21 passed\</tspan><tspan x="10" y="2074">] - testCase_noop_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2090">[1208/185331.070315:INFO:CONSOLE(9)] "testRunDefault - 62 ms - [browser test-case 10 of 21 passe\</tspan><tspan x="10" y="2106">d] - testCase_replStart_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2122">[1208/185331.081863:INFO:CONSOLE(9)] "testRunDefault - 73 ms - [browser test-case 11 of 21 passe\</tspan><tspan x="10" y="2138">d] - testCase_stringHtmlSafe_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2154">jslint - 178ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.ht\</tspan><tspan x="10" y="2170">ml</tspan>
-<tspan x="10" y="2186">[1208/185331.088045:INFO:CONSOLE(9)] "testRunDefault - 79 ms - [browser test-case 12 of 21 passe\</tspan><tspan x="10" y="2202">d] - testCase_stringXxx_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2218">[1208/185331.093398:INFO:CONSOLE(9)] "testRunDefault - 85 ms - [browser test-case 13 of 21 passe\</tspan><tspan x="10" y="2234">d] - testCase_testMock_err", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2250">[1208/185331.097824:INFO:CONSOLE(9)] "testRunDefault - 86 ms - [browser test-case 14 of 21 passe\</tspan><tspan x="10" y="2266">d] - testCase_uiAnimateXxx_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2282">[1208/185331.097846:INFO:CONSOLE(9)] "testRunDefault - 87 ms - [browser test-case 15 of 21 passe\</tspan><tspan x="10" y="2298">d] - testCase_urlJoin_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2314">[1208/185331.097859:INFO:CONSOLE(9)] "testRunDefault - 88 ms - [browser test-case 16 of 21 passe\</tspan><tspan x="10" y="2330">d] - testCase_uuid4Create_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2346">[1208/185331.112105:INFO:CONSOLE(9)] "testRunDefault - 103 ms - [browser test-case 17 of 21 pass\</tspan><tspan x="10" y="2362">ed] - testCase_webpage_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2378">[1208/185331.124277:INFO:CONSOLE(9)] "testRunDefault - 116 ms - [browser test-case 18 of 21 pass\</tspan><tspan x="10" y="2394">ed] - testCase_webpage_err", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2410">[1208/185331.146333:INFO:CONSOLE(9)] "testRunDefault - 138 ms - [browser test-case 19 of 21 pass\</tspan><tspan x="10" y="2426">ed] - testCase_httpFetch_404", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2442">[1208/185331.162367:INFO:CONSOLE(9)] "testRunDefault - 153 ms - [browser test-case 20 of 21 pass\</tspan><tspan x="10" y="2458">ed] - testCase_setTimeoutOnError_default", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2474">&gt; [1208/185331.199102:INFO:CONSOLE(9)] "testRunDefault - 190 ms - [browser test-case 21 of 21 pa\</tspan><tspan x="10" y="2490">ssed] - testCase_httpFetch_200", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2506">[1208/185331.240330:INFO:CONSOLE(9)] "----------------------------------------------|---------|-\</tspan><tspan x="10" y="2522">--------|---------|---------|</tspan>
-<tspan x="10" y="2538">File                                          | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
-<tspan x="10" y="2554">----------------------------------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="2570">All files                                     |    48.9 |   51.56 |   48.92 |    48.9 |</tspan>
-<tspan x="10" y="2586">home/runner/work/node-utility2/node-utility2/ |    48.8 |   51.71 |   49.22 |    48.8 |</tspan>
-<tspan x="10" y="2602">  example.js                                  |      95 |   93.83 |      96 |      95 |</tspan>
-<tspan x="10" y="2618">  lib.utility2.js                             |   39.18 |   40.18 |   36.67 |   39.18 |</tspan>
-<tspan x="10" y="2634">  test.js                                     |   83.26 |   90.54 |   83.33 |   83.26 |</tspan>
-<tspan x="10" y="2650">inputTextarea1.js                             |      60 |      25 |   33.33 |      60 |</tspan>
-<tspan x="10" y="2666">----------------------------------------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="2682">", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2698">http-server listening on port 45131</tspan>
-<tspan x="10" y="2714">jslint - 400ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2730">b.istanbul.js</tspan>
-<tspan x="10" y="2746">jslint - 406ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2762">b.marked.js</tspan>
-<tspan x="10" y="2778">[1208/185331.351663:INFO:CONSOLE(9)] "istanbul - created coverage file .tmp/build/coverage/index\</tspan><tspan x="10" y="2794">.html", source: http://127.0.0.1:48957/assets.example.js (9)</tspan>
-<tspan x="10" y="2810">jslint - 449ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/index.html</tspan>
-<tspan x="10" y="2826">jslint - 457ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
-<tspan x="10" y="2842">jslint - 626ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2858">b.jslint.js</tspan>
-<tspan x="10" y="2874">testRunDefault - 2001 ms - testCase pending - testCase_buildApp_default, testCase_webpage_defaul\</tspan><tspan x="10" y="2890">t, testCase_webpage_err ...</tspan>
-<tspan x="10" y="2906">testRunDefault - 2033 ms - [node test-case 19 of 21 passed] - testCase_webpage_default</tspan>
-<tspan x="10" y="2922">testRunDefault - 3670 ms - [node test-case 20 of 21 passed] - testCase_webpage_err</tspan>
-<tspan x="10" y="2938">testRunDefault - 4602 ms - [node test-case 21 of 21 passed] - testCase_buildApp_default</tspan>
-<tspan x="10" y="2954">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/tes\</tspan><tspan x="10" y="2970">t-report.json</tspan>
-<tspan x="10" y="2986">----------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="3002">File            | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
-<tspan x="10" y="3018">----------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="3034">All files       |   90.17 |   84.71 |   88.71 |   90.17 |</tspan>
-<tspan x="10" y="3050">example.js      |   95.83 |   97.53 |      96 |   95.83 |</tspan>
-<tspan x="10" y="3066">lib.utility2.js |   88.08 |   80.73 |   85.42 |   88.08 |</tspan>
-<tspan x="10" y="3082">test.js         |     100 |     100 |     100 |     100 |</tspan>
-<tspan x="10" y="3098">----------------|---------|---------|---------|---------|</tspan>
-<tspan x="10" y="3114"></tspan>
-<tspan x="10" y="3130">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3146">erage/coverage.txt</tspan>
-<tspan x="10" y="3162">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3178">erage/index.html</tspan>
-<tspan x="10" y="3194">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3210">erage/example.js.html</tspan>
-<tspan x="10" y="3226">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3242">erage/lib.utility2.js.html</tspan>
-<tspan x="10" y="3258">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3274">erage/test.js.html</tspan>
-<tspan x="10" y="3290">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3306">erage/coverage.all.html</tspan>
-<tspan x="10" y="3322">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3338">erage/coverage.json</tspan>
-<tspan x="10" y="3354">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3370">erage/coverage.include.json</tspan>
-<tspan x="10" y="3386">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3402">erage/coverage.badge.svg</tspan>
-<tspan x="10" y="3418">istanbul - created coverage file /home/runner/work/node-utility2/node-utility2/.tmp/build/covera\</tspan><tspan x="10" y="3434">ge/index.html</tspan>
-<tspan x="10" y="3450"></tspan>
-<tspan x="10" y="3466">npmTest - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/build/\</tspan><tspan x="10" y="3482">test-report.json</tspan>
-<tspan x="10" y="3498"></tspan>
-<tspan x="10" y="3514">-------------------------------------------------------</tspan>
-<tspan x="10" y="3530">| test-report - npmTest - node - linux - v14.15.1</tspan>
-<tspan x="10" y="3546">|    4602 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="682">DevTools listening on ws://127.0.0.1:38399/devtools/browser/25717cdb-3929-4eb3-a684-75fc0c41b532</tspan>
+<tspan x="10" y="698">jslint - 1085ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
+<tspan x="10" y="714">jslint - 1120ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
+<tspan x="10" y="730">[1208/185624.057386:INFO:CONSOLE(1)] "Uncaught ReferenceError: start is not defined", source: fi\</tspan><tspan x="10" y="746">le:/// (1)</tspan>
+<tspan x="10" y="762">[1208/185624.065556:INFO:CONSOLE(2)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="778">ile:/// (2)</tspan>
+<tspan x="10" y="794">[1208/185624.068052:INFO:CONSOLE(3)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="810">ile:/// (3)</tspan>
+<tspan x="10" y="826">[1208/185624.075236:INFO:CONSOLE(4)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="842">ile:/// (4)</tspan>
+<tspan x="10" y="858">[1208/185624.077084:INFO:CONSOLE(5)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="874">ile:/// (5)</tspan>
+<tspan x="10" y="890">[1208/185624.080113:INFO:CONSOLE(6)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="906">ile:/// (6)</tspan>
+<tspan x="10" y="922">[1208/185624.080810:INFO:CONSOLE(7)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="938">ile:/// (7)</tspan>
+<tspan x="10" y="954">[1208/185624.081706:INFO:CONSOLE(8)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="970">ile:/// (8)</tspan>
+<tspan x="10" y="986">[1208/185624.083724:INFO:CONSOLE(9)] "Uncaught ReferenceError: addRow is not defined", source: f\</tspan><tspan x="10" y="1002">ile:/// (9)</tspan>
+<tspan x="10" y="1018">[1208/185624.084645:INFO:CONSOLE(10)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1034">file:/// (10)</tspan>
+<tspan x="10" y="1050">[1208/185624.085555:INFO:CONSOLE(11)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1066">file:/// (11)</tspan>
+<tspan x="10" y="1082">[1208/185624.090186:INFO:CONSOLE(12)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1098">file:/// (12)</tspan>
+<tspan x="10" y="1114">[1208/185624.090210:INFO:CONSOLE(13)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1130">file:/// (13)</tspan>
+<tspan x="10" y="1146">[1208/185624.091059:INFO:CONSOLE(14)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1162">file:/// (14)</tspan>
+<tspan x="10" y="1178">[1208/185624.092512:INFO:CONSOLE(15)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1194">file:/// (15)</tspan>
+<tspan x="10" y="1210">[1208/185624.093687:INFO:CONSOLE(16)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1226">file:/// (16)</tspan>
+<tspan x="10" y="1242">[1208/185624.094644:INFO:CONSOLE(17)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1258">file:/// (17)</tspan>
+<tspan x="10" y="1274">[1208/185624.096134:INFO:CONSOLE(18)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1290">file:/// (18)</tspan>
+<tspan x="10" y="1306">[1208/185624.097566:INFO:CONSOLE(19)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1322">file:/// (19)</tspan>
+<tspan x="10" y="1338">[1208/185624.098370:INFO:CONSOLE(20)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1354">file:/// (20)</tspan>
+<tspan x="10" y="1370">[1208/185624.109162:INFO:CONSOLE(21)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1386">file:/// (21)</tspan>
+<tspan x="10" y="1402">[1208/185624.110074:INFO:CONSOLE(22)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1418">file:/// (22)</tspan>
+<tspan x="10" y="1434">[1208/185624.110667:INFO:CONSOLE(23)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1450">file:/// (23)</tspan>
+<tspan x="10" y="1466">[1208/185624.115963:INFO:CONSOLE(24)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1482">file:/// (24)</tspan>
+<tspan x="10" y="1498">[1208/185624.117220:INFO:CONSOLE(25)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1514">file:/// (25)</tspan>
+<tspan x="10" y="1530">[1208/185624.118591:INFO:CONSOLE(26)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1546">file:/// (26)</tspan>
+<tspan x="10" y="1562">[1208/185624.119507:INFO:CONSOLE(27)] "Uncaught ReferenceError: addRow is not defined", source: \</tspan><tspan x="10" y="1578">file:/// (27)</tspan>
+<tspan x="10" y="1594">[1208/185624.509856:INFO:CONSOLE(9)] "testRunDefault - 10 ms - [browser test-case 1 of 21 passed\</tspan><tspan x="10" y="1610">] - testCase_assertXxx_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1626">[1208/185624.565590:INFO:CONSOLE(9)] "testRunDefault - 66 ms - [browser test-case 2 of 21 passed\</tspan><tspan x="10" y="1642">] - testCase_buildApidoc_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1658">[1208/185624.566938:INFO:CONSOLE(9)] "testRunDefault - 67 ms - [browser test-case 3 of 21 passed\</tspan><tspan x="10" y="1674">] - testCase_buildApp_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1690">jslint - 196ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.htm\</tspan><tspan x="10" y="1706">l</tspan>
+<tspan x="10" y="1722">[1208/185624.572603:INFO:CONSOLE(9)] "testRunDefault - 73 ms - [browser test-case 4 of 21 passed\</tspan><tspan x="10" y="1738">] - testCase_chromeDevtoolsClient_coverage", source: http://127.0.0.1:39040/assets.example.js (9\</tspan><tspan x="10" y="1754">)</tspan>
+<tspan x="10" y="1770">[1208/185624.573694:INFO:CONSOLE(9)] "testRunDefault - 74 ms - [browser test-case 5 of 21 passed\</tspan><tspan x="10" y="1786">] - testCase_cliRun_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1802">[1208/185624.577529:INFO:CONSOLE(9)] "testRunDefault - 78 ms - [browser test-case 6 of 21 passed\</tspan><tspan x="10" y="1818">] - testCase_eventListenerXxx_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1834">jslint - 213ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.example.js</tspan>
+<tspan x="10" y="1850">jslint - 222ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.script_only\</tspan><tspan x="10" y="1866">.html</tspan>
+<tspan x="10" y="1882">jslint - 221ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.test.js</tspan>
+<tspan x="10" y="1898">jslint - 222ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.cs\</tspan><tspan x="10" y="1914">s</tspan>
+<tspan x="10" y="1930">[1208/185624.596031:INFO:CONSOLE(9)] "testRunDefault - 96 ms - [browser test-case 7 of 21 passed\</tspan><tspan x="10" y="1946">] - testCase_libUtility2Js_standalone", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1962">[1208/185624.597831:INFO:CONSOLE(9)] "testRunDefault - 98 ms - [browser test-case 8 of 21 passed\</tspan><tspan x="10" y="1978">] - testCase_listShuffle_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="1994">[1208/185624.599078:INFO:CONSOLE(9)] "testRunDefault - 99 ms - [browser test-case 9 of 21 passed\</tspan><tspan x="10" y="2010">] - testCase_noop_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2026">[1208/185624.600095:INFO:CONSOLE(9)] "testRunDefault - 100 ms - [browser test-case 10 of 21 pass\</tspan><tspan x="10" y="2042">ed] - testCase_replStart_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2058">[1208/185624.601622:INFO:CONSOLE(9)] "testRunDefault - 102 ms - [browser test-case 11 of 21 pass\</tspan><tspan x="10" y="2074">ed] - testCase_stringHtmlSafe_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2090">[1208/185624.602902:INFO:CONSOLE(9)] "testRunDefault - 103 ms - [browser test-case 12 of 21 pass\</tspan><tspan x="10" y="2106">ed] - testCase_stringXxx_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2122">[1208/185624.607278:INFO:CONSOLE(9)] "testRunDefault - 108 ms - [browser test-case 13 of 21 pass\</tspan><tspan x="10" y="2138">ed] - testCase_testMock_err", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2154">[1208/185624.608869:INFO:CONSOLE(9)] "testRunDefault - 109 ms - [browser test-case 14 of 21 pass\</tspan><tspan x="10" y="2170">ed] - testCase_uiAnimateXxx_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2186">[1208/185624.610386:INFO:CONSOLE(9)] "testRunDefault - 111 ms - [browser test-case 15 of 21 pass\</tspan><tspan x="10" y="2202">ed] - testCase_urlJoin_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2218">[1208/185624.611729:INFO:CONSOLE(9)] "testRunDefault - 112 ms - [browser test-case 16 of 21 pass\</tspan><tspan x="10" y="2234">ed] - testCase_uuid4Create_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2250">[1208/185624.615363:INFO:CONSOLE(9)] "testRunDefault - 116 ms - [browser test-case 17 of 21 pass\</tspan><tspan x="10" y="2266">ed] - testCase_webpage_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2282">[1208/185624.616654:INFO:CONSOLE(9)] "testRunDefault - 117 ms - [browser test-case 18 of 21 pass\</tspan><tspan x="10" y="2298">ed] - testCase_webpage_err", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2314">[1208/185624.664921:INFO:CONSOLE(9)] "testRunDefault - 165 ms - [browser test-case 19 of 21 pass\</tspan><tspan x="10" y="2330">ed] - testCase_setTimeoutOnError_default", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2346">[1208/185624.689897:INFO:CONSOLE(9)] "testRunDefault - 190 ms - [browser test-case 20 of 21 pass\</tspan><tspan x="10" y="2362">ed] - testCase_httpFetch_404", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2378">[1208/185624.694874:INFO:CONSOLE(9)] "testRunDefault - 195 ms - [browser test-case 21 of 21 pass\</tspan><tspan x="10" y="2394">ed] - testCase_httpFetch_200", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2410">jslint - 327ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.ht\</tspan><tspan x="10" y="2426">ml</tspan>
+<tspan x="10" y="2442">&gt; http-server listening on port 40272</tspan>
+<tspan x="10" y="2458">jslint - 549ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2474">b.istanbul.js</tspan>
+<tspan x="10" y="2490">jslint - 561ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2506">b.marked.js</tspan>
+<tspan x="10" y="2522">[1208/185624.966983:INFO:CONSOLE(9)] "----------------------------------------------|---------|-\</tspan><tspan x="10" y="2538">--------|---------|---------|</tspan>
+<tspan x="10" y="2554">File                                          | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
+<tspan x="10" y="2570">----------------------------------------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2586">All files                                     |    48.9 |   51.56 |   48.92 |    48.9 |</tspan>
+<tspan x="10" y="2602">home/runner/work/node-utility2/node-utility2/ |    48.8 |   51.71 |   49.22 |    48.8 |</tspan>
+<tspan x="10" y="2618">  example.js                                  |      95 |   93.83 |      96 |      95 |</tspan>
+<tspan x="10" y="2634">  lib.utility2.js                             |   39.18 |   40.18 |   36.67 |   39.18 |</tspan>
+<tspan x="10" y="2650">  test.js                                     |   83.26 |   90.54 |   83.33 |   83.26 |</tspan>
+<tspan x="10" y="2666">inputTextarea1.js                             |      60 |      25 |   33.33 |      60 |</tspan>
+<tspan x="10" y="2682">----------------------------------------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2698">", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2714">jslint - 619ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/index.html</tspan>
+<tspan x="10" y="2730">jslint - 639ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.js</tspan>
+<tspan x="10" y="2746">[1208/185625.050687:INFO:CONSOLE(9)] "istanbul - created coverage file .tmp/build/coverage/index\</tspan><tspan x="10" y="2762">.html", source: http://127.0.0.1:39040/assets.example.js (9)</tspan>
+<tspan x="10" y="2778">jslint - 780ms - /home/runner/work/node-utility2/node-utility2/.tmp/build/app/assets.utility2.li\</tspan><tspan x="10" y="2794">b.jslint.js</tspan>
+<tspan x="10" y="2810">testRunDefault - 2002 ms - testCase pending - testCase_buildApp_default, testCase_webpage_defaul\</tspan><tspan x="10" y="2826">t, testCase_webpage_err ...</tspan>
+<tspan x="10" y="2842">testRunDefault - 2597 ms - [node test-case 19 of 21 passed] - testCase_webpage_default</tspan>
+<tspan x="10" y="2858">testRunDefault - 4060 ms - [node test-case 20 of 21 passed] - testCase_webpage_err</tspan>
+<tspan x="10" y="2874">testRunDefault - 4551 ms - [node test-case 21 of 21 passed] - testCase_buildApp_default</tspan>
+<tspan x="10" y="2890">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/tes\</tspan><tspan x="10" y="2906">t-report.json</tspan>
+<tspan x="10" y="2922">----------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2938">File            | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
+<tspan x="10" y="2954">----------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="2970">All files       |   90.17 |   84.71 |   88.71 |   90.17 |</tspan>
+<tspan x="10" y="2986">example.js      |   95.83 |   97.53 |      96 |   95.83 |</tspan>
+<tspan x="10" y="3002">lib.utility2.js |   88.08 |   80.73 |   85.42 |   88.08 |</tspan>
+<tspan x="10" y="3018">test.js         |     100 |     100 |     100 |     100 |</tspan>
+<tspan x="10" y="3034">----------------|---------|---------|---------|---------|</tspan>
+<tspan x="10" y="3050"></tspan>
+<tspan x="10" y="3066">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3082">erage/coverage.txt</tspan>
+<tspan x="10" y="3098">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3114">erage/index.html</tspan>
+<tspan x="10" y="3130">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3146">erage/example.js.html</tspan>
+<tspan x="10" y="3162">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3178">erage/lib.utility2.js.html</tspan>
+<tspan x="10" y="3194">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3210">erage/test.js.html</tspan>
+<tspan x="10" y="3226">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3242">erage/coverage.all.html</tspan>
+<tspan x="10" y="3258">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3274">erage/coverage.json</tspan>
+<tspan x="10" y="3290">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3306">erage/coverage.include.json</tspan>
+<tspan x="10" y="3322">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/cov\</tspan><tspan x="10" y="3338">erage/coverage.badge.svg</tspan>
+<tspan x="10" y="3354">istanbul - created coverage file /home/runner/work/node-utility2/node-utility2/.tmp/build/covera\</tspan><tspan x="10" y="3370">ge/index.html</tspan>
+<tspan x="10" y="3386"></tspan>
+<tspan x="10" y="3402">npmTest - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/build/\</tspan><tspan x="10" y="3418">test-report.json</tspan>
+<tspan x="10" y="3434"></tspan>
+<tspan x="10" y="3450">-------------------------------------------------------</tspan>
+<tspan x="10" y="3466">| test-report - npmTest - node - linux - v14.15.1</tspan>
+<tspan x="10" y="3482">|    4552 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="3498">-------------------------------------------------------</tspan>
+<tspan x="10" y="3514">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="3530">L, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
+<tspan x="10" y="3546">|     197 ms            0 failed       21 passed      |</tspan>
 <tspan x="10" y="3562">-------------------------------------------------------</tspan>
-<tspan x="10" y="3578">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="3594">L, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36</tspan>
-<tspan x="10" y="3610">|     192 ms            0 failed       21 passed      |</tspan>
-<tspan x="10" y="3626">-------------------------------------------------------</tspan>
-<tspan x="10" y="3642"></tspan>
-<tspan x="10" y="3658">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.html</tspan>
-<tspan x="10" y="3674">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/commit.badge.svg</tspan>
-<tspan x="10" y="3690">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.badge\</tspan><tspan x="10" y="3706">.svg</tspan>
-<tspan x="10" y="3722"></tspan>
-<tspan x="10" y="3738">[MODE_CI=npmTest] - 2020-12-08T18:53:34.851Z - shNpmTest - EXIT_CODE=0</tspan>
+<tspan x="10" y="3578"></tspan>
+<tspan x="10" y="3594">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.html</tspan>
+<tspan x="10" y="3610">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/commit.badge.svg</tspan>
+<tspan x="10" y="3626">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.badge\</tspan><tspan x="10" y="3642">.svg</tspan>
+<tspan x="10" y="3658"></tspan>
+<tspan x="10" y="3674">[MODE_CI=npmTest] - 2020-12-08T18:56:28.040Z - shNpmTest - EXIT_CODE=0</tspan>
 </text>
 </svg>
