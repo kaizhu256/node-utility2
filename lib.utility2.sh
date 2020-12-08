@@ -226,6 +226,7 @@ shBashrcDebianInit() {
 
 shBrowserScreenshot() {(set -e
 # this function will screenshot url "$1" with headless-chrome
+    shCiInit
     node -e '
 /* jslint utility2:true */
 (function () {
