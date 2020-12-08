@@ -32301,12 +32301,12 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "the greatest app in the world!\n" +
     "\n" +
     "# live web demo\n" +
-    "- [{{app.io}}/build..beta..github.com/app]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app]" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "[![screenshot]" +
     "({{app.io}}/build/screenshot.deployGithub.{{app.png}})]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "\n" +
     "[![travis-ci.com build-status]" +
@@ -32334,13 +32334,13 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "| test-server-github : | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..master..github.com/app) | " +
+    "({{app.io}}/build..master..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..beta..github.com/app) | " +
+    "({{app.io}}/build..beta..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..alpha..github.com/app)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/app)|\n" +
     "| test-server-heroku : | " +
     "[![heroku.com test-server]" +
     "({{app.io}}/heroku-logo.75x25.png)]" +
@@ -32353,34 +32353,34 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://h1-my-app-alpha.herokuapp.com)|\n" +
     "| test-report : | " +
     "[![test-report]" +
-    "({{app.io}}/build..master..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/test-report.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..beta..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/test-report.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..alpha..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/test-report.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.html)|\n" +
     "| coverage : | " +
     "[![coverage]" +
-    "({{app.io}}/build..master..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..beta..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..alpha..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/coverage/index.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/index.html)|\n" +
     "| build-artifacts : | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..master..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..master..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..beta..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..beta..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..alpha..github.com)|\n" +
+    "({{app.com}}/tree/gh-pages/build..alpha..travis-ci.com)|\n" +
     "\n" +
     "[![npmPackageListing]" +
     "({{app.io}}/build/screenshot.npmPackageListing.svg)]" +
@@ -32394,18 +32394,18 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "\n" +
     "# cdn download\n" +
-    "- [{{app.io}}/build..beta..github.com/app/assets.my_app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.my_app.js)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js)\n" +
     "\n" +
     "\n" +
     "# documentation\n" +
     "#### api doc\n" +
-    "- [{{app.io}}/build..beta..github.com/apidoc.html]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/apidoc.html]" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "[![apidoc]" +
     "({{app.io}}/build/{{screenshot}}apidoc.html.png)]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "#### cli help\n" +
     "![screenshot]" +
@@ -32422,7 +32422,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "# quickstart standalone app\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [assets.app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.app.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.app.js)\n" +
     "```shell\n" +
     "# example.sh\n" +
     "\n" +
@@ -32430,7 +32430,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "as standalone app\n" +
     "\n" +
     "# 1. download standalone app\n" +
-    "curl -O {{app.io}}/build..beta..github.com/app/assets.app.js\n" +
+    "curl -O {{app.io}}/build..beta..travis-ci.com/app/assets.app.js\n" +
     "# 2. run standalone app\n" +
     "PORT=8081 node ./assets.app.js\n" +
     "# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
@@ -32454,7 +32454,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [example.js]" +
-    "({{app.io}}/build..beta..github.com/example.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/example.js)\n" +
     "```javascript\n" +
     local.assetsDict["/assets.example.template.js"] +
     "```\n" +
