@@ -223,8 +223,8 @@ pre {
 <h2>summary</h2>
 <h4>
     <span>version</span>- 2020.12.3<br>
-    <span>test-date</span>- 2020-12-08T15:33:06.022Z<br>
-    <span>commit-info</span>- 03ebddfb7729b3fbe1ced12ed64c49d07abdfd62 - ci-badge<br>
+    <span>test-date</span>- 2020-12-08T15:35:44.962Z<br>
+    <span>commit-info</span>- 543efd62bdb247825f2b8c5c963797d3b89f8242 - commit.badge.svg<br>
 </h4>
 <table>
 <thead>
@@ -237,7 +237,7 @@ pre {
 <tbody>
     <tr>
     <td class="testPassed">0</td>
-    <td>86</td>
+    <td>44</td>
     <td>0</td>
     </tr>
 </tbody>
@@ -246,40 +246,11 @@ pre {
 
 <div class="platform">
 <h4>
-1. deployHerokuTest - node - linux - v14.15.1<br>
-<span>test-date</span>- 2020-12-08T15:33:06.022Z<br>
-<span>time-elapsed</span>- 0 ms<br>
+1. buildApp - node - linux - v14.15.1<br>
+<span>test-date</span>- 2020-12-08T15:35:44.962Z<br>
+<span>time-elapsed</span>- 4174 ms<br>
 <span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 0<br>
-<span>tests-pending</span>- 0<br>
-</h4>
-
-<table>
-<thead><tr>
-<th>#</th>
-<th>time-elapsed</th>
-<th>status</th>
-<th>test-case</th>
-</tr></thead>
-<tbody>
-</tbody>
-</table>
-
-</div>
-<div class="platform">
-<h4>
-2. deployHerokuTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36<br>
-<a href="screenshot.deployHerokuTest.browser.%252F.png">
-<img
-alt="screenshot.deployHerokuTest.browser.%252F.png"
-src="screenshot.deployHerokuTest.browser.%252F.png"
->
-</a>
-<br>
-<span>test-date</span>- 2020-12-08T15:33:06.487Z<br>
-<span>time-elapsed</span>- 66 ms<br>
-<span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 21<br>
+<span>tests-passed</span>- 1<br>
 <span>tests-pending</span>- 0<br>
 </h4>
 
@@ -293,360 +264,35 @@ src="screenshot.deployHerokuTest.browser.%252F.png"
 <tbody>
 <tr>
 <td>1</td>
-<td>1 ms</td>
+<td>4173 ms</td>
 <td class="test-passed">passed</td>
-<td>testCase_assertXxx_default</td>
+<td>testCase_buildApp_default</td>
 </tr>
+</tbody>
+</table>
+
+</div>
+<div class="platform">
+<h4>
+2. buildApidoc - node - linux - v14.15.1<br>
+<span>test-date</span>- 2020-12-08T15:35:37.806Z<br>
+<span>time-elapsed</span>- 4782 ms<br>
+<span>tests-failed</span>- 0<br>
+<span>tests-passed</span>- 1<br>
+<span>tests-pending</span>- 0<br>
+</h4>
+
+<table>
+<thead><tr>
+<th>#</th>
+<th>time-elapsed</th>
+<th>status</th>
+<th>test-case</th>
+</tr></thead>
+<tbody>
 <tr>
 <td>2</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_buildApidoc_default</td>
-</tr>
-<tr>
-<td>3</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_buildApp_default</td>
-</tr>
-<tr>
-<td>4</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_chromeDevtoolsClient_coverage</td>
-</tr>
-<tr>
-<td>5</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_cliRun_default</td>
-</tr>
-<tr>
-<td>6</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_eventListenerXxx_default</td>
-</tr>
-<tr>
-<td>7</td>
-<td>27 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_httpFetch_200</td>
-</tr>
-<tr>
-<td>8</td>
-<td>30 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_httpFetch_404</td>
-</tr>
-<tr>
-<td>9</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_libUtility2Js_standalone</td>
-</tr>
-<tr>
-<td>10</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_listShuffle_default</td>
-</tr>
-<tr>
-<td>11</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_noop_default</td>
-</tr>
-<tr>
-<td>12</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_replStart_default</td>
-</tr>
-<tr>
-<td>13</td>
-<td>18 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_setTimeoutOnError_default</td>
-</tr>
-<tr>
-<td>14</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_stringHtmlSafe_default</td>
-</tr>
-<tr>
-<td>15</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_stringXxx_default</td>
-</tr>
-<tr>
-<td>16</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_testMock_err</td>
-</tr>
-<tr>
-<td>17</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_uiAnimateXxx_default</td>
-</tr>
-<tr>
-<td>18</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_urlJoin_default</td>
-</tr>
-<tr>
-<td>19</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_uuid4Create_default</td>
-</tr>
-<tr>
-<td>20</td>
-<td>2 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_webpage_default</td>
-</tr>
-<tr>
-<td>21</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_webpage_err</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-<div class="platform">
-<h4>
-3. deployGithubTest - browser - /node-utility2/build..alpha..github.com/app/ - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36<br>
-<a href="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png">
-<img
-alt="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png"
-src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.png"
->
-</a>
-<br>
-<span>test-date</span>- 2020-12-08T15:32:50.224Z<br>
-<span>time-elapsed</span>- 71 ms<br>
-<span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 21<br>
-<span>tests-pending</span>- 0<br>
-</h4>
-
-<table>
-<thead><tr>
-<th>#</th>
-<th>time-elapsed</th>
-<th>status</th>
-<th>test-case</th>
-</tr></thead>
-<tbody>
-<tr>
-<td>22</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_assertXxx_default</td>
-</tr>
-<tr>
-<td>23</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_buildApidoc_default</td>
-</tr>
-<tr>
-<td>24</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_buildApp_default</td>
-</tr>
-<tr>
-<td>25</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_chromeDevtoolsClient_coverage</td>
-</tr>
-<tr>
-<td>26</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_cliRun_default</td>
-</tr>
-<tr>
-<td>27</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_eventListenerXxx_default</td>
-</tr>
-<tr>
-<td>28</td>
-<td>46 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_httpFetch_200</td>
-</tr>
-<tr>
-<td>29</td>
-<td>36 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_httpFetch_404</td>
-</tr>
-<tr>
-<td>30</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_libUtility2Js_standalone</td>
-</tr>
-<tr>
-<td>31</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_listShuffle_default</td>
-</tr>
-<tr>
-<td>32</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_noop_default</td>
-</tr>
-<tr>
-<td>33</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_replStart_default</td>
-</tr>
-<tr>
-<td>34</td>
-<td>39 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_setTimeoutOnError_default</td>
-</tr>
-<tr>
-<td>35</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_stringHtmlSafe_default</td>
-</tr>
-<tr>
-<td>36</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_stringXxx_default</td>
-</tr>
-<tr>
-<td>37</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_testMock_err</td>
-</tr>
-<tr>
-<td>38</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_uiAnimateXxx_default</td>
-</tr>
-<tr>
-<td>39</td>
-<td>0 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_urlJoin_default</td>
-</tr>
-<tr>
-<td>40</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_uuid4Create_default</td>
-</tr>
-<tr>
-<td>41</td>
-<td>7 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_webpage_default</td>
-</tr>
-<tr>
-<td>42</td>
-<td>1 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_webpage_err</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-<div class="platform">
-<h4>
-4. deployGithubTest - node - linux - v14.15.1<br>
-<span>test-date</span>- 2020-12-08T15:32:49.348Z<br>
-<span>time-elapsed</span>- 0 ms<br>
-<span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 0<br>
-<span>tests-pending</span>- 0<br>
-</h4>
-
-<table>
-<thead><tr>
-<th>#</th>
-<th>time-elapsed</th>
-<th>status</th>
-<th>test-case</th>
-</tr></thead>
-<tbody>
-</tbody>
-</table>
-
-</div>
-<div class="platform">
-<h4>
-5. buildApp - node - linux - v14.15.1<br>
-<span>test-date</span>- 2020-12-08T15:31:59.477Z<br>
-<span>time-elapsed</span>- 4155 ms<br>
-<span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 1<br>
-<span>tests-pending</span>- 0<br>
-</h4>
-
-<table>
-<thead><tr>
-<th>#</th>
-<th>time-elapsed</th>
-<th>status</th>
-<th>test-case</th>
-</tr></thead>
-<tbody>
-<tr>
-<td>43</td>
-<td>4153 ms</td>
-<td class="test-passed">passed</td>
-<td>testCase_buildApp_default</td>
-</tr>
-</tbody>
-</table>
-
-</div>
-<div class="platform">
-<h4>
-6. buildApidoc - node - linux - v14.15.1<br>
-<span>test-date</span>- 2020-12-08T15:31:50.903Z<br>
-<span>time-elapsed</span>- 5957 ms<br>
-<span>tests-failed</span>- 0<br>
-<span>tests-passed</span>- 1<br>
-<span>tests-pending</span>- 0<br>
-</h4>
-
-<table>
-<thead><tr>
-<th>#</th>
-<th>time-elapsed</th>
-<th>status</th>
-<th>test-case</th>
-</tr></thead>
-<tbody>
-<tr>
-<td>44</td>
-<td>5954 ms</td>
+<td>4781 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_buildApidoc_default</td>
 </tr>
@@ -656,7 +302,7 @@ src="screenshot.deployGithubTest.browser.%252Fnode-utility2%252Fbuild%252Fapp.pn
 </div>
 <div class="platform">
 <h4>
-7. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36<br>
+3. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/87.0.4280.66 Safari/537.36<br>
 <a href="screenshot.npmTest.browser.%252F.png">
 <img
 alt="screenshot.npmTest.browser.%252F.png"
@@ -664,8 +310,8 @@ src="screenshot.npmTest.browser.%252F.png"
 >
 </a>
 <br>
-<span>test-date</span>- 2020-12-08T15:31:46.430Z<br>
-<span>time-elapsed</span>- 212 ms<br>
+<span>test-date</span>- 2020-12-08T15:35:33.529Z<br>
+<span>time-elapsed</span>- 166 ms<br>
 <span>tests-failed</span>- 0<br>
 <span>tests-passed</span>- 21<br>
 <span>tests-pending</span>- 0<br>
@@ -680,127 +326,127 @@ src="screenshot.npmTest.browser.%252F.png"
 </tr></thead>
 <tbody>
 <tr>
-<td>45</td>
+<td>3</td>
 <td>4 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_assertXxx_default</td>
 </tr>
 <tr>
-<td>46</td>
+<td>4</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_buildApidoc_default</td>
 </tr>
 <tr>
-<td>47</td>
+<td>5</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_buildApp_default</td>
 </tr>
 <tr>
-<td>48</td>
+<td>6</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_chromeDevtoolsClient_coverage</td>
 </tr>
 <tr>
-<td>49</td>
+<td>7</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_cliRun_default</td>
 </tr>
 <tr>
-<td>50</td>
+<td>8</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_eventListenerXxx_default</td>
 </tr>
 <tr>
-<td>51</td>
-<td>146 ms</td>
+<td>9</td>
+<td>105 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_httpFetch_200</td>
 </tr>
 <tr>
-<td>52</td>
+<td>10</td>
 <td>79 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_httpFetch_404</td>
 </tr>
 <tr>
-<td>53</td>
+<td>11</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_libUtility2Js_standalone</td>
 </tr>
 <tr>
-<td>54</td>
-<td>3 ms</td>
+<td>12</td>
+<td>1 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_listShuffle_default</td>
 </tr>
 <tr>
-<td>55</td>
+<td>13</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_noop_default</td>
 </tr>
 <tr>
-<td>56</td>
+<td>14</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_replStart_default</td>
 </tr>
 <tr>
-<td>57</td>
-<td>86 ms</td>
+<td>15</td>
+<td>55 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_setTimeoutOnError_default</td>
 </tr>
 <tr>
-<td>58</td>
+<td>16</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_stringHtmlSafe_default</td>
 </tr>
 <tr>
-<td>59</td>
+<td>17</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_stringXxx_default</td>
 </tr>
 <tr>
-<td>60</td>
-<td>0 ms</td>
+<td>18</td>
+<td>1 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_testMock_err</td>
 </tr>
 <tr>
-<td>61</td>
-<td>1 ms</td>
+<td>19</td>
+<td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_uiAnimateXxx_default</td>
 </tr>
 <tr>
-<td>62</td>
+<td>20</td>
 <td>1 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_urlJoin_default</td>
 </tr>
 <tr>
-<td>63</td>
+<td>21</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_uuid4Create_default</td>
 </tr>
 <tr>
-<td>64</td>
+<td>22</td>
 <td>2 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_webpage_default</td>
 </tr>
 <tr>
-<td>65</td>
+<td>23</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_webpage_err</td>
@@ -811,9 +457,9 @@ src="screenshot.npmTest.browser.%252F.png"
 </div>
 <div class="platform">
 <h4>
-8. npmTest - node - linux - v14.15.1<br>
-<span>test-date</span>- 2020-12-08T15:31:44.887Z<br>
-<span>time-elapsed</span>- 4556 ms<br>
+4. npmTest - node - linux - v14.15.1<br>
+<span>test-date</span>- 2020-12-08T15:35:32.098Z<br>
+<span>time-elapsed</span>- 4503 ms<br>
 <span>tests-failed</span>- 0<br>
 <span>tests-passed</span>- 21<br>
 <span>tests-pending</span>- 0<br>
@@ -828,128 +474,128 @@ src="screenshot.npmTest.browser.%252F.png"
 </tr></thead>
 <tbody>
 <tr>
-<td>66</td>
-<td>18 ms</td>
+<td>24</td>
+<td>2 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_assertXxx_default</td>
 </tr>
 <tr>
-<td>67</td>
-<td>31 ms</td>
+<td>25</td>
+<td>10 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_buildApidoc_default</td>
 </tr>
 <tr>
-<td>68</td>
-<td>4506 ms</td>
+<td>26</td>
+<td>4489 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_buildApp_default</td>
 </tr>
 <tr>
-<td>69</td>
-<td>99 ms</td>
+<td>27</td>
+<td>45 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_chromeDevtoolsClient_coverage</td>
 </tr>
 <tr>
-<td>70</td>
-<td>8 ms</td>
+<td>28</td>
+<td>3 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_cliRun_default</td>
 </tr>
 <tr>
-<td>71</td>
+<td>29</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_eventListenerXxx_default</td>
 </tr>
 <tr>
-<td>72</td>
-<td>171 ms</td>
+<td>30</td>
+<td>169 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_httpFetch_200</td>
 </tr>
 <tr>
-<td>73</td>
-<td>159 ms</td>
+<td>31</td>
+<td>167 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_httpFetch_404</td>
 </tr>
 <tr>
-<td>74</td>
-<td>161 ms</td>
+<td>32</td>
+<td>168 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_libUtility2Js_standalone</td>
 </tr>
 <tr>
-<td>75</td>
+<td>33</td>
 <td>1 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_listShuffle_default</td>
 </tr>
 <tr>
-<td>76</td>
+<td>34</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_noop_default</td>
 </tr>
 <tr>
-<td>77</td>
-<td>10 ms</td>
+<td>35</td>
+<td>4 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_replStart_default</td>
 </tr>
 <tr>
-<td>78</td>
-<td>52 ms</td>
+<td>36</td>
+<td>15 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_setTimeoutOnError_default</td>
 </tr>
 <tr>
-<td>79</td>
-<td>1 ms</td>
+<td>37</td>
+<td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_stringHtmlSafe_default</td>
 </tr>
 <tr>
-<td>80</td>
+<td>38</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_stringXxx_default</td>
 </tr>
 <tr>
-<td>81</td>
+<td>39</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_testMock_err</td>
 </tr>
 <tr>
-<td>82</td>
+<td>40</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_uiAnimateXxx_default</td>
 </tr>
 <tr>
-<td>83</td>
-<td>1 ms</td>
+<td>41</td>
+<td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_urlJoin_default</td>
 </tr>
 <tr>
-<td>84</td>
+<td>42</td>
 <td>0 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_uuid4Create_default</td>
 </tr>
 <tr>
-<td>85</td>
-<td>2209 ms</td>
+<td>43</td>
+<td>2034 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_webpage_default</td>
 </tr>
 <tr>
-<td>86</td>
-<td>3670 ms</td>
+<td>44</td>
+<td>3620 ms</td>
 <td class="test-passed">passed</td>
 <td>testCase_webpage_err</td>
 </tr>
