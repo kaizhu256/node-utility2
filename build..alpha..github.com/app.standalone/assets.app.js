@@ -32504,9 +32504,11 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "({{app.io}}/build..beta..github.com/app)\n" +
     "\n" +
     "\n" +
-    "[![travis-ci.com build-status]" +
-    "(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]" +
-    "(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]" +
+    "[![github.com ci-status]" +
+    "(https://github.com/kaizhu256/node-my-app/workflows/" +
+    "Node.js%20CI/badge.svg)]" +
+    "(https://github.com/kaizhu256/node-my-app/actions) " +
+    "[![coverage]" +
     "({{app.io}}/build/coverage/coverage.badge.svg)]" +
     "({{app.io}}/build/coverage/index.html)\n" +
     "\n" +
@@ -32516,7 +32518,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "[![build commit status]" +
     "({{app.io}}/build/build.badge.svg)]" +
-    "(https://travis-ci.com/kaizhu256/node-my-app)\n" +
+    "(https://github.com/kaizhu256/node-my-app/actions)\n" +
     "\n" +
     "| git-branch : | " +
     "[master]" +
@@ -57040,9 +57042,11 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"({{app.io}}/build..beta..github.com/app)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
-    \"[![travis-ci.com build-status]\" +\n\
-    \"(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]\" +\n\
-    \"(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]\" +\n\
+    \"[![github.com ci-status]\" +\n\
+    \"(https://github.com/kaizhu256/node-my-app/workflows/\" +\n\
+    \"Node.js%20CI/badge.svg)]\" +\n\
+    \"(https://github.com/kaizhu256/node-my-app/actions) \" +\n\
+    \"[![coverage]\" +\n\
     \"({{app.io}}/build/coverage/coverage.badge.svg)]\" +\n\
     \"({{app.io}}/build/coverage/index.html)\\n\" +\n\
     \"\\n\" +\n\
@@ -57052,7 +57056,7 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"\\n\" +\n\
     \"[![build commit status]\" +\n\
     \"({{app.io}}/build/build.badge.svg)]\" +\n\
-    \"(https://travis-ci.com/kaizhu256/node-my-app)\\n\" +\n\
+    \"(https://github.com/kaizhu256/node-my-app/actions)\\n\" +\n\
     \"\\n\" +\n\
     \"| git-branch : | \" +\n\
     \"[master]\" +\n\
@@ -62362,9 +62366,11 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "({{app.io}}/build..beta..github.com/app)\n" +
     "\n" +
     "\n" +
-    "[![travis-ci.com build-status]" +
-    "(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]" +
-    "(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]" +
+    "[![github.com ci-status]" +
+    "(https://github.com/kaizhu256/node-my-app/workflows/" +
+    "Node.js%20CI/badge.svg)]" +
+    "(https://github.com/kaizhu256/node-my-app/actions) " +
+    "[![coverage]" +
     "({{app.io}}/build/coverage/coverage.badge.svg)]" +
     "({{app.io}}/build/coverage/index.html)\n" +
     "\n" +
@@ -62374,7 +62380,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "[![build commit status]" +
     "({{app.io}}/build/build.badge.svg)]" +
-    "(https://travis-ci.com/kaizhu256/node-my-app)\n" +
+    "(https://github.com/kaizhu256/node-my-app/actions)\n" +
     "\n" +
     "| git-branch : | " +
     "[master]" +
