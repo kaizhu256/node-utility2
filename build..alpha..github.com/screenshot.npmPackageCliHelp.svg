@@ -1,5 +1,5 @@
-<svg height="1070px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="1070px" fill="#555" width="720px"></rect>
+<svg height="1118px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="1118px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
 <tspan x="10" y="26">shCiInit - mkdir - /home/runner/work/node-utility2/node-utility2/.tmp/build</tspan>
 <tspan x="10" y="42"># shCiInit env</tspan>
@@ -20,49 +20,51 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/runner/work/node-utility2/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/runner/work/node-utility2/node-utility2:/home/runner/work/node-utility2\</tspan><tspan x="10" y="330">/.bin"</tspan>
 <tspan x="10" y="346">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_ID='0c9f08184ac2bec9b06028698451cbd1ab1a13f9'</tspan>
-<tspan x="10" y="378">export CI_COMMIT_MESSAGE='mode_ci'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_ID='034ae34dfe41651fd8bb5f585f6f03efe254e467'</tspan>
+<tspan x="10" y="378">export CI_COMMIT_MESSAGE='screenshot.npmPackageCliHelp.svg'</tspan>
 <tspan x="10" y="394">export NODE_OPTIONS='--unhandled-rejections=throw'</tspan>
 <tspan x="10" y="410">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.sh</tspan>
-<tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
-<tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
-<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
+<tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
+<tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
+<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
 <tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
-<tspan x="10" y="506">utility2 (2020.12.3)</tspan>
-<tspan x="10" y="522"></tspan>
-<tspan x="10" y="538">usage:</tspan>
-<tspan x="10" y="554">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
+<tspan x="10" y="506"></tspan>
+<tspan x="10" y="522">npmPackageCliHelp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.\</tspan><tspan x="10" y="538">tmp/build/test-report.json</tspan>
+<tspan x="10" y="554">utility2 (2020.12.3)</tspan>
 <tspan x="10" y="570"></tspan>
-<tspan x="10" y="586">example:</tspan>
-<tspan x="10" y="602">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+<tspan x="10" y="586">usage:</tspan>
+<tspan x="10" y="602">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
 <tspan x="10" y="618"></tspan>
-<tspan x="10" y="634"># CMD --eval</tspan>
-<tspan x="10" y="650"># will eval &lt;code&gt;</tspan>
-<tspan x="10" y="666">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
-<tspan x="10" y="682"></tspan>
-<tspan x="10" y="698"># CMD --help</tspan>
-<tspan x="10" y="714"># will print help</tspan>
-<tspan x="10" y="730">  lib.utility2.js  --help|-h  </tspan>
-<tspan x="10" y="746"></tspan>
-<tspan x="10" y="762"># CMD --interactive</tspan>
-<tspan x="10" y="778"># will start interactive-mode</tspan>
-<tspan x="10" y="794">  lib.utility2.js  --interactive|-i  </tspan>
-<tspan x="10" y="810"></tspan>
-<tspan x="10" y="826"># CMD --version</tspan>
-<tspan x="10" y="842"># will print version</tspan>
-<tspan x="10" y="858">  lib.utility2.js  --version|-v  </tspan>
-<tspan x="10" y="874"></tspan>
-<tspan x="10" y="890"># CMD utility2.browserTest</tspan>
-<tspan x="10" y="906"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
-<tspan x="10" y="922">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
-<tspan x="10" y="938"></tspan>
-<tspan x="10" y="954"># CMD utility2.start</tspan>
-<tspan x="10" y="970"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
-<tspan x="10" y="986">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
-<tspan x="10" y="1002"></tspan>
-<tspan x="10" y="1018"># CMD utility2.testReportCreate</tspan>
-<tspan x="10" y="1034"># will create test-report</tspan>
-<tspan x="10" y="1050">  lib.utility2.js  utility2.testReportCreate</tspan>
+<tspan x="10" y="634">example:</tspan>
+<tspan x="10" y="650">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+<tspan x="10" y="666"></tspan>
+<tspan x="10" y="682"># CMD --eval</tspan>
+<tspan x="10" y="698"># will eval &lt;code&gt;</tspan>
+<tspan x="10" y="714">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+<tspan x="10" y="730"></tspan>
+<tspan x="10" y="746"># CMD --help</tspan>
+<tspan x="10" y="762"># will print help</tspan>
+<tspan x="10" y="778">  lib.utility2.js  --help|-h  </tspan>
+<tspan x="10" y="794"></tspan>
+<tspan x="10" y="810"># CMD --interactive</tspan>
+<tspan x="10" y="826"># will start interactive-mode</tspan>
+<tspan x="10" y="842">  lib.utility2.js  --interactive|-i  </tspan>
+<tspan x="10" y="858"></tspan>
+<tspan x="10" y="874"># CMD --version</tspan>
+<tspan x="10" y="890"># will print version</tspan>
+<tspan x="10" y="906">  lib.utility2.js  --version|-v  </tspan>
+<tspan x="10" y="922"></tspan>
+<tspan x="10" y="938"># CMD utility2.browserTest</tspan>
+<tspan x="10" y="954"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+<tspan x="10" y="970">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+<tspan x="10" y="986"></tspan>
+<tspan x="10" y="1002"># CMD utility2.start</tspan>
+<tspan x="10" y="1018"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+<tspan x="10" y="1034">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+<tspan x="10" y="1050"></tspan>
+<tspan x="10" y="1066"># CMD utility2.testReportCreate</tspan>
+<tspan x="10" y="1082"># will create test-report</tspan>
+<tspan x="10" y="1098">  lib.utility2.js  utility2.testReportCreate</tspan>
 </text>
 </svg>
