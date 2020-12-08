@@ -560,12 +560,6 @@ shCiInit() {
         export CI_BRANCH="$(printf "$GITHUB_REF" | grep -Eo "[^/]*$")"
         export CI_HOST=github.com
     fi
-    # init env - $TRAVIS
-    if [ "$TRAVIS" ]
-    then
-        export CI_BRANCH="$TRAVIS_BRANCH"
-        export CI_HOST=travis-ci.com
-    fi
     eval "$(node -e '
 /* jslint utility2:true */
 (function () {
@@ -816,17 +810,6 @@ shCiInternal() {(set -e
 shCiMain() {(set -e
 # this function will run main-ci
     export MODE_CI=ci
-    # init env - $TRAVIS
-    if [ "$TRAVIS" ]
-    then
-        git remote remove origin 2>/dev/null || true
-        git remote add origin "https://github.com/$GITHUB_FULLNAME"
-        # decrypt and exec encrypted data
-        if [ "$CRYPTO_AES_KEY" ]
-        then
-            eval "$(shCryptoTravisDecrypt)"
-        fi
-    fi
     # init env - $GITHUB_ACTIONS
     if [ "$GITHUB_ACTIONS" ]
     then
@@ -1067,31 +1050,6 @@ shCryptoAesXxxCbcRawDecrypt() {(set -e
 ' "$@" # '
 )}
 
-shCryptoTravisDecrypt() {(set -e
-# this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
-    export MODE_CI=cryptoTravisDecrypt
-    if [ ! "$CRYPTO_AES_KEY" ]
-    then
-        eval "CRYPTO_AES_KEY=$(printf "\$CRYPTO_AES_KEY_$GITHUB_OWNER")"
-    fi
-    if [ ! "$CRYPTO_AES_KEY" ]
-    then
-        shCiPrint "no CRYPTO_AES_KEY"
-        return 1
-    fi
-    local FILE="$1"
-    if [ -f "$FILE" ]
-    then
-        cat "$FILE" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
-        return
-    fi
-    # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER
-    URL="https://raw.githubusercontent.com\
-/kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER"
-    shCiPrint "decrypting $URL ..."
-    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
-)}
-
 shCryptoWithGithubOrg() {(set -e
 # this function will run "$@" with private $GITHUB_OWNER-env
     export GITHUB_OWNER="$1"
@@ -1112,7 +1070,7 @@ shDeployGithub() {(set -e
     export MODE_CI=deployGithub
     export TEST_URL="https://$(
         printf "$GITHUB_FULLNAME" | sed -e "s/\//.github.io\//"
-    )/build..$CI_BRANCH..travis-ci.com/app"
+    )/build..$CI_BRANCH..$CI_HOST/app"
     shCiPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
@@ -2055,10 +2013,13 @@ shNpmTest() {(set -e
 shNpmTestPublished() {(set -e
 # this function will npm-test published npm-package $npm_package_name
     export MODE_CI=npmTestPublished
-    if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
-        [ "$CI_BRANCH" = alpha ] &&
-        (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
-    ))
+    if [ "$GITHUB_ACTIONS" ] && (
+        [ ! "$NPM_TOKEN" ] ||
+        (
+            [ "$CI_BRANCH" = alpha ] &&
+            (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
+        )
+    )
     then
         shCiPrint "skip npm-test published-package $npm_package_name"
         return
@@ -2651,7 +2612,7 @@ shReadmeEval() {(set -e
         if [ "$CI_BRANCH" = alpha ]
         then
             sed -in \
--e "s|/build..beta..travis-ci.com/|/build..alpha..travis-ci.com/|g" \
+-e "s|/build..beta..github.com/|/build..alpha..github.com/|g" \
 -e "s|npm install $npm_package_name|npm install $GITHUB_FULLNAME#alpha|g" \
 -e "s| -b beta | -b alpha |g" \
                 "$FILE"
@@ -2718,7 +2679,7 @@ shReadmeLinkValidate() {(set -e
             /\bbeta\b|\bmaster\b/g
         ), "alpha").replace((
             /\/build\//g
-        ), "/build..alpha..travis-ci.com/");
+        ), "/build..alpha..github.com/");
         // ignore private-link
         if (
             process.env.npm_package_private &&
