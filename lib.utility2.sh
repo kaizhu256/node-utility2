@@ -267,9 +267,12 @@ shBrowserScreenshot() {(set -e
             exitCode = 1;
         }
         console.error(
-            "\nshBrowserScreenshot" + " - " + (Date.now() - timeStart) + " ms" +
-            " - EXIT_CODE=" + exitCode + " - " + url + " - " + file + ".png" +
-            "\n"
+            "shBrowserScreenshot" +
+            "\n  - url - " + url +
+            "\n  - wrote - " + file + ".html" +
+            "\n  - wrote - " + file + ".png" +
+            "\n  - timeElapsed - " + (Date.now() - timeStart) + " ms" +
+            "\n  - EXIT_CODE=" + exitCode
         );
     });
     process.on("uncaughtException", process.exit);
@@ -922,8 +925,8 @@ shCiPrint() {(set -e
 (function () {
     "use strict";
     process.stderr.write(
-        "\n\u001b[35m[MODE_CI=" + process.env.MODE_CI + "]\u001b[0m - " +
-        new Date().toISOString() + " - " + process.argv[1] + "\n\n"
+        "\u001b[35m[MODE_CI=" + process.env.MODE_CI + "]\u001b[0m - " +
+        new Date().toISOString() + "\n  - " + process.argv[1] + "\n"
     );
 }());
 ' "$1" # '
