@@ -2271,8 +2271,6 @@ shRawLibFetch() {(set -e
     /*
      * this function will replace result with replaceList and write to file
      */
-        let aa;
-        let bb;
         let data;
         let result0;
         // replace from replaceList
@@ -2290,14 +2288,14 @@ shRawLibFetch() {(set -e
                 );
             }
         });
-        // replace from header
+        // replace from header-diff
         header.replace((
             /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
-        ), function (ignore, match1, match2) {
-            aa = "\n" + match1.replace((
+        ), function (ignore, aa, bb) {
+            aa = "\n" + aa.replace((
                 /^-/gm
             ), "");
-            bb = "\n" + match2.replace((
+            bb = "\n" + bb.replace((
                 /^\+/gm
             ), "");
             result0 = result;
@@ -2371,7 +2369,6 @@ shRawLibFetch() {(set -e
         isRollupCommonJs,
         replaceList = []
     } = JSON.parse(opt[1]);
-    // init replaceList
     // init repoDict, fetchList
     repoDict = {};
     fetchList.forEach(function (elem) {
