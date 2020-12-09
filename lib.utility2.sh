@@ -275,8 +275,6 @@ shBrowserScreenshot() {(set -e
             "\n  - EXIT_CODE=" + exitCode
         );
     });
-    process.on("uncaughtException", process.exit);
-    process.on("unhandledRejection", process.exit);
     [
         ".html", ".png"
     ].forEach(function (extname) {
@@ -711,7 +709,7 @@ shCiInit() {
     exportVar("NODE_OPTIONS", (
         NODE_OPTIONS.indexOf("--unhandled-rejections=") >= 0
         ? NODE_OPTIONS
-        : String(NODE_OPTIONS + " --unhandled-rejections=throw").trim()
+        : String(NODE_OPTIONS + " --unhandled-rejections=strict").trim()
     ));
     process.stderr.write(cmd);
     process.stdout.write(cmd);
