@@ -91,8 +91,8 @@
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -117,8 +117,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -278,8 +278,8 @@
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -304,8 +304,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -1594,8 +1594,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -1620,8 +1620,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -13507,8 +13507,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -13533,8 +13533,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -30935,8 +30935,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -30961,8 +30961,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -31346,8 +31346,8 @@ if (local.isEnvNode) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -31372,8 +31372,8 @@ if (local.isEnvNode) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -31732,8 +31732,9 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function documentQuerySelectorAll(selector) {\n" +
     "    /*\n" +
-    "     * this function will return document.querySelectorAll(<selector>)\n" +
-    "     * or empty list if function is not available\n" +
+    "     * this function will return document.querySelectorAll(<selector>) " +
+    "or\n" +
+    "     * empty list if function is not available\n" +
     "     */\n" +
     "        return Array.from(\n" +
     "            (\n" +
@@ -31758,8 +31759,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
     "    /*\n" +
-    "     * this function will if items from <tgt> are null, undefined,\n" +
-    "     * or \"\", then overwrite them with items from <src>\n" +
+    "     * this function will if items from <tgt> are null, undefined, or\n" +
+    "     * \"\", then overwrite them with items from <src>\n" +
     "     */\n" +
     "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
@@ -36236,8 +36237,8 @@ local.urlJoin = function (aa, bb) {
 
 local.uuid4Create = function () {
 /*
- * this function will create random uuid,
- * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+ * this function will create random uuid with format
+ * "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
  */
     // code derived from http://jsperf.com/uuid4
     let id;
@@ -36689,8 +36690,8 @@ instruction\n\
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>)\n\
-     * or empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>) or\n\
+     * empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -36715,8 +36716,8 @@ instruction\n\
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined,\n\
-     * or \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined, or\n\
+     * \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -37475,8 +37476,8 @@ local.assetsDict["/assets.utility2.lib.jslint.js"] = (
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>)\n\
-     * or empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>) or\n\
+     * empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -37501,8 +37502,8 @@ local.assetsDict["/assets.utility2.lib.jslint.js"] = (
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined,\n\
-     * or \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined, or\n\
+     * \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -54909,8 +54910,8 @@ local.assetsDict["/assets.utility2.test.js"] = (
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>)\n\
-     * or empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>) or\n\
+     * empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -54935,8 +54936,8 @@ local.assetsDict["/assets.utility2.test.js"] = (
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined,\n\
-     * or \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined, or\n\
+     * \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
