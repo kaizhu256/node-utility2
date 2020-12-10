@@ -46,22 +46,27 @@ shBaseInit() {
         export PATH="$PATH_BIN:$PATH" || return "$?"
     fi
     # init $PATH_OS
-    case "$(uname)" in
-    Darwin)
-        if [ ! "$PATH_OS" ]
-        then
+    if [ ! "$PATH_OS" ]
+    then
+        case "$(uname)" in
+        Darwin)
             export PATH_OS="$HOME/bin/darwin" || return "$?"
             export PATH="$PATH_OS:$PATH" || return "$?"
-        fi
-        ;;
-    Linux)
-        if [ ! "$PATH_OS" ]
-        then
+            ;;
+        Linux)
             export PATH_OS="$HOME/bin/linux" || return "$?"
             export PATH="$PATH_OS:$PATH" || return "$?"
-        fi
-        ;;
-    esac
+            ;;
+        MINGW*)
+            export PATH_OS="$HOME/bin/win32" || return "$?"
+            export PATH="$PATH_OS:$PATH" || return "$?"
+            ;;
+        MSYS*)
+            export PATH_OS="$HOME/bin/win32" || return "$?"
+            export PATH="$PATH_OS:$PATH" || return "$?"
+            ;;
+        esac
+    fi
     # init lib.utility2.sh and .bashrc2
     for FILE in "$HOME/lib.utility2.sh" "$HOME/.bashrc2"
     do
