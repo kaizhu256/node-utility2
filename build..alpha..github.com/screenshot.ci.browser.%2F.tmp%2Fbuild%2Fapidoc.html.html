@@ -5127,6 +5127,9 @@ local.cliDict["utility2.testReportCreate"] = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
+                if (file[0] === ".") {
+                    return;
+                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;
@@ -5213,9 +5216,7 @@ local.cliDict["utility2.testReportCreate"] = function () {
     exports._compile(code, file);
     // export example.js
     exports = exports.exports;
-    exports.utility2 = local;
-    exports[npm_package_nameLib] = globalThis.utility2_moduleExports;
-    /...</pre></li>
+    export...</pre></li>
     <li>example use<pre class="apidocCodePre">...
 "\n" +
 "\n" +
@@ -11260,21 +11261,21 @@ tgt = local.templateRenderMyApp(
     this.stats[name] = value;
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-    return local;
-}
-// if file modified, then restart process
-if (npm_config_mode_auto_restart) {
-    require("fs").readdir(".", function (ignore, fileList) {
-        fileList.concat(__filename).forEach(async function (file) {
-            let stats;
-            stats = await require("fs").promises.<span class="apidocCodeKeywordSpan">stat</span>(file);
-            if (!stats.isFile()) {
-                return;
-            }
-            require("fs").watchFile(file, {
-                interval: 1000,
-                persistent: false
-            }, function () {
+    if (npm_config_mode_auto_restart) {
+require("fs").readdir(".", function (ignore, fileList) {
+    fileList.concat(__filename).forEach(async function (file) {
+        let stats;
+        if (file[0] === ".") {
+            return;
+        }
+        stats = await require("fs").promises.<span class="apidocCodeKeywordSpan">stat</span>(file);
+        if (!stats.isFile()) {
+            return;
+        }
+        require("fs").watchFile(file, {
+            interval: 1000,
+            persistent: false
+        }, function () {
 ...</pre></li>
     </ul>
 
