@@ -35101,6 +35101,9 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
+                if (file[0] === ".") {
+                    return;
+                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;
@@ -59640,6 +59643,9 @@ local.requireReadme = function () {\n\
         require(\"fs\").readdir(\".\", function (ignore, fileList) {\n\
             fileList.concat(__filename).forEach(async function (file) {\n\
                 let stats;\n\
+                if (file[0] === \".\") {\n\
+                    return;\n\
+                }\n\
                 stats = await require(\"fs\").promises.stat(file);\n\
                 if (!stats.isFile()) {\n\
                     return;\n\
@@ -64965,6 +64971,9 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
+                if (file[0] === ".") {
+                    return;
+                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;

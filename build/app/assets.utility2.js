@@ -3652,6 +3652,9 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
+                if (file[0] === ".") {
+                    return;
+                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;
