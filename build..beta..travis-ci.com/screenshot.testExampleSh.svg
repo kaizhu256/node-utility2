@@ -1,0 +1,59 @@
+<svg height="606" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="606" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</tspan>
+
+<tspan x="10" y="42">                                 Dload  Upload   Total   Spent    Left  Speed</tspan>
+
+<tspan x="10" y="58"></tspan>
+<tspan x="10" y="74">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan>
+<tspan x="10" y="90"> 12 2722k   12  345k    0     0  1006k      0  0:00:02 --:--:--  0:00:02 1006k</tspan>
+<tspan x="10" y="106">100 2722k  100 2722k    0     0  4904k      0 --:--:-- --:--:-- --:--:-- 4905k</tspan>
+
+<tspan x="10" y="122"></tspan>
+
+<tspan x="10" y="138">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/bui\</tspan>
+<tspan x="10" y="154">ld/test-report.json</tspan>
+
+<tspan x="10" y="170"></tspan>
+
+<tspan x="10" y="186">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/bui\</tspan>
+<tspan x="10" y="202">ld/test-report.json</tspan>
+
+<tspan x="10" y="218">http-server listening on port 8081</tspan>
+
+<tspan x="10" y="234">&gt; </tspan>
+
+<tspan x="10" y="250">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/bui\</tspan>
+<tspan x="10" y="266">ld/test-report.json</tspan>
+
+<tspan x="10" y="282"></tspan>
+
+<tspan x="10" y="298">testExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.tmp/bui\</tspan>
+<tspan x="10" y="314">ld/test-report.json</tspan>
+
+<tspan x="10" y="330">jslint - 2ms - /tmp/app/example.sh</tspan>
+
+<tspan x="10" y="346">serverLog - {"time":"2020-11-12T18:15:39.679Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="362">"statusCode":200,"timeElapsed":5,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="378">or":"","reqHeaderOrigin":"","reqHeaderReferer":"","reqHeaderUserAgent":"Mozilla/5.0 (X11; Linux \</tspan>
+<tspan x="10" y="394">x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.198 Safari/537.36"}</tspan>
+
+<tspan x="10" y="410"></tspan>
+
+<tspan x="10" y="426">serverLog - {"time":"2020-11-12T18:15:39.705Z","type":"serverResponse","method":"GET","url":"/as\</tspan>
+<tspan x="10" y="442">sets.app.js","statusCode":200,"timeElapsed":34,"reqContentLength":0,"resContentLength":0,"reqHea\</tspan>
+<tspan x="10" y="458">derXForwardedFor":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeader\</tspan>
+<tspan x="10" y="474">UserAgent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrom\</tspan>
+<tspan x="10" y="490">e/86.0.4240.198 Safari/537.36"}</tspan>
+
+<tspan x="10" y="506"></tspan>
+
+<tspan x="10" y="522">serverLog - {"time":"2020-11-12T18:15:39.880Z","type":"serverResponse","method":"GET","url":"/",\</tspan>
+<tspan x="10" y="538">"statusCode":200,"timeElapsed":1,"reqContentLength":0,"resContentLength":0,"reqHeaderXForwardedF\</tspan>
+<tspan x="10" y="554">or":"","reqHeaderOrigin":"","reqHeaderReferer":"http://127.0.0.1:8081/","reqHeaderUserAgent":"Mo\</tspan>
+<tspan x="10" y="570">zilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.19\</tspan>
+<tspan x="10" y="586">8 Safari/537.36"}</tspan>
+
+</text>
+</svg>

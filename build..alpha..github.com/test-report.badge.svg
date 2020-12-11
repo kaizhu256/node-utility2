@@ -1,0 +1,15 @@
+<svg height="20" width="118" xmlns="http://www.w3.org/2000/svg">
+<rect fill="#555" height="20" width="118"/>
+<rect fill="#0d0" height="20" width="26" x="92"/>
+<g
+fill="#fff"
+font-family="DejaVu Sans,Verdana,Geneva,sans-serif"
+font-size="11"
+text-anchor="middle"
+>
+<text fill-opacity=".5" fill="#777" x="46" y="15">tests failed</text>
+<text x="46" y="14">tests failed</text>
+<text fill-opacity=".5" fill="#777" x="105" y="15">0</text>
+<text x="105" y="14">0</text>
+</g>
+</svg>

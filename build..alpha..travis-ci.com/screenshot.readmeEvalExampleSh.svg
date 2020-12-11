@@ -1,0 +1,49 @@
+<svg height="1102px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="1102px" fill="#555" width="720px"></rect>
+<text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</tspan>
+<tspan x="10" y="42">                                 Dload  Upload   Total   Spent    Left  Speed</tspan>
+<tspan x="10" y="58"></tspan><tspan x="10" y="74">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan><tspan x="10" y="90">  0 2313k    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</tspan><tspan x="10" y="106">100 2313k  100 2313k    0     0  3594k      0 --:--:-- --:--:-- --:--:-- 3592k</tspan>
+<tspan x="10" y="122"></tspan>
+<tspan x="10" y="138">readmeEvalExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.t\</tspan><tspan x="10" y="154">mp/build/test-report.json</tspan>
+<tspan x="10" y="170"></tspan>
+<tspan x="10" y="186">readmeEvalExampleSh - merged test-report from file /home/travis/build/kaizhu256/node-utility2/.t\</tspan><tspan x="10" y="202">mp/build/test-report.json</tspan>
+<tspan x="10" y="218">&gt; http-server listening on port 8081</tspan>
+<tspan x="10" y="234">jslint - 1ms - /tmp/app/example.sh</tspan>
+<tspan x="10" y="250">serverLog - {"time":"2020-12-08T00:21:44.092Z","type":"serverResponse","method":"GET","url":"/",\</tspan><tspan x="10" y="266">"statusCode":200,"timeElapsed":7}</tspan>
+<tspan x="10" y="282"></tspan>
+<tspan x="10" y="298">serverLog - {"time":"2020-12-08T00:21:44.092Z","type":"serverResponse","method":"GET","url":"/",\</tspan><tspan x="10" y="314">"statusCode":200,"timeElapsed":10}</tspan>
+<tspan x="10" y="330"></tspan>
+<tspan x="10" y="346">serverLog - {"time":"2020-12-08T00:21:44.116Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="362">sets.utility2.lib.jslint.js","statusCode":200,"timeElapsed":4}</tspan>
+<tspan x="10" y="378"></tspan>
+<tspan x="10" y="394">serverLog - {"time":"2020-12-08T00:21:44.116Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="410">sets.utility2.lib.jslint.js","statusCode":200,"timeElapsed":11}</tspan>
+<tspan x="10" y="426"></tspan>
+<tspan x="10" y="442">serverLog - {"time":"2020-12-08T00:21:44.131Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="458">sets.utility2.js","statusCode":200,"timeElapsed":9}</tspan>
+<tspan x="10" y="474"></tspan>
+<tspan x="10" y="490">serverLog - {"time":"2020-12-08T00:21:44.131Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="506">sets.utility2.js","statusCode":200,"timeElapsed":11}</tspan>
+<tspan x="10" y="522"></tspan>
+<tspan x="10" y="538">serverLog - {"time":"2020-12-08T00:21:44.115Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="554">sets.utility2.lib.istanbul.js","statusCode":404,"timeElapsed":33}</tspan>
+<tspan x="10" y="570"></tspan>
+<tspan x="10" y="586">serverLog - {"time":"2020-12-08T00:21:44.115Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="602">sets.utility2.lib.istanbul.js","statusCode":404,"timeElapsed":34}</tspan>
+<tspan x="10" y="618"></tspan>
+<tspan x="10" y="634">serverLog - {"time":"2020-12-08T00:21:44.130Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="650">sets.utility2.lib.marked.js","statusCode":404,"timeElapsed":22}</tspan>
+<tspan x="10" y="666"></tspan>
+<tspan x="10" y="682">serverLog - {"time":"2020-12-08T00:21:44.130Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="698">sets.utility2.lib.marked.js","statusCode":404,"timeElapsed":23}</tspan>
+<tspan x="10" y="714"></tspan>
+<tspan x="10" y="730">serverLog - {"time":"2020-12-08T00:21:44.144Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="746">sets.example.js","statusCode":404,"timeElapsed":12}</tspan>
+<tspan x="10" y="762"></tspan>
+<tspan x="10" y="778">serverLog - {"time":"2020-12-08T00:21:44.144Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="794">sets.example.js","statusCode":404,"timeElapsed":13}</tspan>
+<tspan x="10" y="810"></tspan>
+<tspan x="10" y="826">serverLog - {"time":"2020-12-08T00:21:44.145Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="842">sets.test.js","statusCode":404,"timeElapsed":15}</tspan>
+<tspan x="10" y="858"></tspan>
+<tspan x="10" y="874">serverLog - {"time":"2020-12-08T00:21:44.145Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="890">sets.test.js","statusCode":404,"timeElapsed":16}</tspan>
+<tspan x="10" y="906"></tspan>
+<tspan x="10" y="922">serverLog - {"time":"2020-12-08T00:21:44.192Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="938">sets.example.js","statusCode":404,"timeElapsed":1}</tspan>
+<tspan x="10" y="954"></tspan>
+<tspan x="10" y="970">serverLog - {"time":"2020-12-08T00:21:44.192Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="986">sets.example.js","statusCode":404,"timeElapsed":5}</tspan>
+<tspan x="10" y="1002"></tspan>
+<tspan x="10" y="1018">serverLog - {"time":"2020-12-08T00:21:44.200Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="1034">sets.test.js","statusCode":404,"timeElapsed":0}</tspan>
+<tspan x="10" y="1050"></tspan>
+<tspan x="10" y="1066">serverLog - {"time":"2020-12-08T00:21:44.200Z","type":"serverResponse","method":"GET","url":"/as\</tspan><tspan x="10" y="1082">sets.test.js","statusCode":404,"timeElapsed":2}</tspan>
+</text>
+</svg>

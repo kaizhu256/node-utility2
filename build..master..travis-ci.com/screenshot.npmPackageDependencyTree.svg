@@ -1,0 +1,14 @@
+<svg height="110" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="110" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">npm install - 4 megabytes</tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">node_modules</tspan>
+
+<tspan x="10" y="74">└── utility2@2020.11.13 (git+ssh://git@github.com/kaizhu256/node-utility2.git#2f7b2e4a808ebf9802\</tspan>
+<tspan x="10" y="90">3de04580a77c5d6a68d814)</tspan>
+
+</text>
+</svg>

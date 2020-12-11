@@ -1,0 +1,257 @@
+<svg height="2046" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="2046" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">utility2 (2019.8.11)</tspan>
+
+<tspan x="10" y="42"></tspan>
+
+<tspan x="10" y="58">usage:</tspan>
+
+<tspan x="10" y="74">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+
+<tspan x="10" y="90"></tspan>
+
+<tspan x="10" y="106">example:</tspan>
+
+<tspan x="10" y="122">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+
+<tspan x="10" y="138"></tspan>
+
+<tspan x="10" y="154"># COMMAND --eval</tspan>
+
+<tspan x="10" y="170"># will eval &lt;code&gt;</tspan>
+
+<tspan x="10" y="186">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+
+<tspan x="10" y="202"></tspan>
+
+<tspan x="10" y="218"># COMMAND --help</tspan>
+
+<tspan x="10" y="234"># will print help</tspan>
+
+<tspan x="10" y="250">  lib.utility2.js  --help|-h|help  </tspan>
+
+<tspan x="10" y="266"></tspan>
+
+<tspan x="10" y="282"># COMMAND --interactive</tspan>
+
+<tspan x="10" y="298"># will start interactive-mode</tspan>
+
+<tspan x="10" y="314">  lib.utility2.js  --interactive|-i  </tspan>
+
+<tspan x="10" y="330"></tspan>
+
+<tspan x="10" y="346"># COMMAND --version</tspan>
+
+<tspan x="10" y="362"># will print version</tspan>
+
+<tspan x="10" y="378">  lib.utility2.js  --version|-v  </tspan>
+
+<tspan x="10" y="394"></tspan>
+
+<tspan x="10" y="410"># COMMAND utility2.browserTest</tspan>
+
+<tspan x="10" y="426"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+
+<tspan x="10" y="442">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+
+<tspan x="10" y="458"></tspan>
+
+<tspan x="10" y="474"># COMMAND utility2.githubCrudContentDelete</tspan>
+
+<tspan x="10" y="490"># will delete from github &lt;fileRemote|dirRemote&gt;</tspan>
+
+<tspan x="10" y="506">  lib.utility2.js  utility2.githubCrudContentDelete  &lt;fileRemote|dirRemote&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="522"></tspan>
+
+<tspan x="10" y="538"># COMMAND utility2.githubCrudContentGet</tspan>
+
+<tspan x="10" y="554"># will get from github &lt;fileRemote&gt;</tspan>
+
+<tspan x="10" y="570">  lib.utility2.js  utility2.githubCrudContentGet  &lt;fileRemote&gt;</tspan>
+
+<tspan x="10" y="586"></tspan>
+
+<tspan x="10" y="602"># COMMAND utility2.githubCrudContentPut</tspan>
+
+<tspan x="10" y="618"># will put on github &lt;fileRemote&gt;, &lt;fileLocal&gt;</tspan>
+
+<tspan x="10" y="634">  lib.utility2.js  utility2.githubCrudContentPut  &lt;fileRemote&gt;  &lt;fileLocal&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="650"></tspan>
+
+<tspan x="10" y="666"># COMMAND utility2.githubCrudContentTouch</tspan>
+
+<tspan x="10" y="682"># will touch on github in parallel, comma-separated &lt;fileRemoteList&gt;</tspan>
+
+<tspan x="10" y="698">  lib.utility2.js  utility2.githubCrudContentTouch  &lt;fileRemoteList&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="714"></tspan>
+
+<tspan x="10" y="730"># COMMAND utility2.githubCrudRepoCreate</tspan>
+
+<tspan x="10" y="746"># will create on github in parallel, comma-separated &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="762">  lib.utility2.js  utility2.githubCrudRepoCreate  &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="778"></tspan>
+
+<tspan x="10" y="794"># COMMAND utility2.githubCrudRepoDelete</tspan>
+
+<tspan x="10" y="810"># will delete from github in parallel, comma-separated &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="826">  lib.utility2.js  utility2.githubCrudRepoDelete  &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="842"></tspan>
+
+<tspan x="10" y="858"># COMMAND utility2.start</tspan>
+
+<tspan x="10" y="874"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+
+<tspan x="10" y="890">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+
+<tspan x="10" y="906"></tspan>
+
+<tspan x="10" y="922"># COMMAND utility2.swaggerValidateFile</tspan>
+
+<tspan x="10" y="938"># will swagger-validate file/url</tspan>
+
+<tspan x="10" y="954">  lib.utility2.js  utility2.swaggerValidateFile  &lt;file/url&gt;</tspan>
+
+<tspan x="10" y="970"></tspan>
+
+<tspan x="10" y="986"># COMMAND utility2.testReportCreate</tspan>
+
+<tspan x="10" y="1002"># will create test-report</tspan>
+
+<tspan x="10" y="1018">  lib.utility2.js  utility2.testReportCreate  </tspan>
+
+<tspan x="10" y="1034">utility2 (2019.8.11)</tspan>
+
+<tspan x="10" y="1050"></tspan>
+
+<tspan x="10" y="1066">usage:</tspan>
+
+<tspan x="10" y="1082">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
+
+<tspan x="10" y="1098"></tspan>
+
+<tspan x="10" y="1114">example:</tspan>
+
+<tspan x="10" y="1130">  lib.utility2.js  --eval  'console.log("hello world")'</tspan>
+
+<tspan x="10" y="1146"></tspan>
+
+<tspan x="10" y="1162"># COMMAND --eval</tspan>
+
+<tspan x="10" y="1178"># will eval &lt;code&gt;</tspan>
+
+<tspan x="10" y="1194">  lib.utility2.js  --eval|-e  &lt;code&gt;</tspan>
+
+<tspan x="10" y="1210"></tspan>
+
+<tspan x="10" y="1226"># COMMAND --help</tspan>
+
+<tspan x="10" y="1242"># will print help</tspan>
+
+<tspan x="10" y="1258">  lib.utility2.js  --help|-h|help  </tspan>
+
+<tspan x="10" y="1274"></tspan>
+
+<tspan x="10" y="1290"># COMMAND --interactive</tspan>
+
+<tspan x="10" y="1306"># will start interactive-mode</tspan>
+
+<tspan x="10" y="1322">  lib.utility2.js  --interactive|-i  </tspan>
+
+<tspan x="10" y="1338"></tspan>
+
+<tspan x="10" y="1354"># COMMAND --version</tspan>
+
+<tspan x="10" y="1370"># will print version</tspan>
+
+<tspan x="10" y="1386">  lib.utility2.js  --version|-v  </tspan>
+
+<tspan x="10" y="1402"></tspan>
+
+<tspan x="10" y="1418"># COMMAND utility2.browserTest</tspan>
+
+<tspan x="10" y="1434"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
+
+<tspan x="10" y="1450">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
+
+<tspan x="10" y="1466"></tspan>
+
+<tspan x="10" y="1482"># COMMAND utility2.githubCrudContentDelete</tspan>
+
+<tspan x="10" y="1498"># will delete from github &lt;fileRemote|dirRemote&gt;</tspan>
+
+<tspan x="10" y="1514">  lib.utility2.js  utility2.githubCrudContentDelete  &lt;fileRemote|dirRemote&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="1530"></tspan>
+
+<tspan x="10" y="1546"># COMMAND utility2.githubCrudContentGet</tspan>
+
+<tspan x="10" y="1562"># will get from github &lt;fileRemote&gt;</tspan>
+
+<tspan x="10" y="1578">  lib.utility2.js  utility2.githubCrudContentGet  &lt;fileRemote&gt;</tspan>
+
+<tspan x="10" y="1594"></tspan>
+
+<tspan x="10" y="1610"># COMMAND utility2.githubCrudContentPut</tspan>
+
+<tspan x="10" y="1626"># will put on github &lt;fileRemote&gt;, &lt;fileLocal&gt;</tspan>
+
+<tspan x="10" y="1642">  lib.utility2.js  utility2.githubCrudContentPut  &lt;fileRemote&gt;  &lt;fileLocal&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="1658"></tspan>
+
+<tspan x="10" y="1674"># COMMAND utility2.githubCrudContentTouch</tspan>
+
+<tspan x="10" y="1690"># will touch on github in parallel, comma-separated &lt;fileRemoteList&gt;</tspan>
+
+<tspan x="10" y="1706">  lib.utility2.js  utility2.githubCrudContentTouch  &lt;fileRemoteList&gt;  &lt;commitMessage&gt;</tspan>
+
+<tspan x="10" y="1722"></tspan>
+
+<tspan x="10" y="1738"># COMMAND utility2.githubCrudRepoCreate</tspan>
+
+<tspan x="10" y="1754"># will create on github in parallel, comma-separated &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="1770">  lib.utility2.js  utility2.githubCrudRepoCreate  &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="1786"></tspan>
+
+<tspan x="10" y="1802"># COMMAND utility2.githubCrudRepoDelete</tspan>
+
+<tspan x="10" y="1818"># will delete from github in parallel, comma-separated &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="1834">  lib.utility2.js  utility2.githubCrudRepoDelete  &lt;repoList&gt;</tspan>
+
+<tspan x="10" y="1850"></tspan>
+
+<tspan x="10" y="1866"># COMMAND utility2.start</tspan>
+
+<tspan x="10" y="1882"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+
+<tspan x="10" y="1898">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+
+<tspan x="10" y="1914"></tspan>
+
+<tspan x="10" y="1930"># COMMAND utility2.swaggerValidateFile</tspan>
+
+<tspan x="10" y="1946"># will swagger-validate file/url</tspan>
+
+<tspan x="10" y="1962">  lib.utility2.js  utility2.swaggerValidateFile  &lt;file/url&gt;</tspan>
+
+<tspan x="10" y="1978"></tspan>
+
+<tspan x="10" y="1994"># COMMAND utility2.testReportCreate</tspan>
+
+<tspan x="10" y="2010"># will create test-report</tspan>
+
+<tspan x="10" y="2026">  lib.utility2.js  utility2.testReportCreate</tspan>
+
+</text>
+</svg>

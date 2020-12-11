@@ -1,0 +1,207 @@
+<svg height="1774" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="1774" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26"></tspan>
+
+<tspan x="10" y="42">&gt; utility2@2020.5.32 postinstall /tmp/app/node_modules/utility2</tspan>
+
+<tspan x="10" y="58">&gt; ./npm_scripts.sh</tspan>
+
+<tspan x="10" y="74"></tspan>
+
+<tspan x="10" y="90">running command 'npm run postinstall kaizhu256/node-utility2#alpha' ...</tspan>
+
+<tspan x="10" y="106">... finished running command 'npm run postinstall kaizhu256/node-utility2#alpha'</tspan>
+
+<tspan x="10" y="122">npm WARN saveError ENOENT: no such file or directory, open '/tmp/app/package.json'</tspan>
+
+<tspan x="10" y="138">npm notice created a lockfile as package-lock.json. You should commit this file.</tspan>
+
+<tspan x="10" y="154">npm WARN enoent ENOENT: no such file or directory, open '/tmp/app/package.json'</tspan>
+
+<tspan x="10" y="170">npm WARN app No description</tspan>
+
+<tspan x="10" y="186">npm WARN app No repository field.</tspan>
+
+<tspan x="10" y="202">npm WARN app No README data</tspan>
+
+<tspan x="10" y="218">npm WARN app No license field.</tspan>
+
+<tspan x="10" y="234"></tspan>
+
+<tspan x="10" y="250">+ utility2@2020.5.32</tspan>
+
+<tspan x="10" y="266">added 1 package from 1 contributor and audited 1 package in 1.264s</tspan>
+
+<tspan x="10" y="282">found 0 vulnerabilities</tspan>
+
+<tspan x="10" y="298"></tspan>
+
+<tspan x="10" y="314"></tspan>
+
+<tspan x="10" y="330">\x1b[35m[MODE_BUILD=testExampleJs]\x1b[0m - 2020-06-04T21:44:04.516Z - (shRun shNpmTest example.\</tspan>
+<tspan x="10" y="346">js 2&gt;&amp;1)</tspan>
+
+<tspan x="10" y="362"></tspan>
+
+<tspan x="10" y="378"></tspan>
+
+<tspan x="10" y="394">\x1b[35m[MODE_BUILD=testExampleJs]\x1b[0m - 2020-06-04T21:44:04.551Z - npm-testing /tmp/app</tspan>
+
+<tspan x="10" y="410"></tspan>
+
+<tspan x="10" y="426"></tspan>
+
+<tspan x="10" y="442">istanbul - covering $ /home/travis/.nvm/versions/node/v14.4.0/bin/node /tmp/app/example.js</tspan>
+
+<tspan x="10" y="458">http-server listening on port 8081</tspan>
+
+<tspan x="10" y="474">testRunDefault - 3 ms - [node test-case 1 of 4 passed] - testCase_ajax_200</tspan>
+
+<tspan x="10" y="490">testRunDefault - 4 ms - [node test-case 2 of 4 passed] - testCase_ajax_404</tspan>
+
+<tspan x="10" y="506">testRunDefault - 4 ms - [node test-case 3 of 4 passed] - testCase_nop_default</tspan>
+
+<tspan x="10" y="522"></tspan>
+
+<tspan x="10" y="538">DevTools listening on ws://127.0.0.1:35337/devtools/browser/8c1aee0d-4af0-4371-8826-67eced08a9c7</tspan>
+
+<tspan x="10" y="554">[0604/214405.125722:ERROR:command_buffer_proxy_impl.cc(122)] ContextResult::kTransientFailure: F\</tspan>
+<tspan x="10" y="570">ailed to send GpuChannelMsg_CreateCommandBuffer.</tspan>
+
+<tspan x="10" y="586">[0604/214405.139434:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed wi\</tspan>
+<tspan x="10" y="602">th unconsumed attachments: 0/1</tspan>
+
+<tspan x="10" y="618">[0604/214405.141612:ERROR:command_buffer_proxy_impl.cc(122)] ContextResult::kTransientFailure: F\</tspan>
+<tspan x="10" y="634">ailed to send GpuChannelMsg_CreateCommandBuffer.</tspan>
+
+<tspan x="10" y="650">[0604/214405.141612:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed wi\</tspan>
+<tspan x="10" y="666">th unconsumed attachments: 0/1</tspan>
+
+<tspan x="10" y="682">[0604/214405.147670:WARNING:ipc_message_attachment_set.cc(49)] MessageAttachmentSet destroyed wi\</tspan>
+<tspan x="10" y="698">th unconsumed attachments: 0/1</tspan>
+
+<tspan x="10" y="714">[0604/214405.271584:INFO:CONSOLE(6725)] "http-server listening on port undefined", source: http:\</tspan>
+<tspan x="10" y="730">//127.0.0.1:8081/assets.utility2.js (6725)</tspan>
+
+<tspan x="10" y="746">[0604/214405.284389:INFO:CONSOLE(483)] "testRunDefault - 5 ms - [browser test-case 1 of 4 passed\</tspan>
+<tspan x="10" y="762">] - testCase_nop_default", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="778">[0604/214405.286198:INFO:CONSOLE(483)] "testRunDefault - 7 ms - [browser test-case 2 of 4 passed\</tspan>
+<tspan x="10" y="794">] - testCase_webpage_default", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="810">[0604/214405.325507:INFO:CONSOLE(483)] "testRunDefault - 45 ms - [browser test-case 3 of 4 passe\</tspan>
+<tspan x="10" y="826">d] - testCase_ajax_200", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="842">[0604/214405.325785:INFO:CONSOLE(483)] "testRunDefault - 47 ms - [browser test-case 4 of 4 passe\</tspan>
+<tspan x="10" y="858">d] - testCase_ajax_404", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="874">[0604/214405.335061:INFO:CONSOLE(483)] "--------------------|---------|---------|---------|-----\</tspan>
+<tspan x="10" y="890">----|</tspan>
+
+<tspan x="10" y="906">File                | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
+
+<tspan x="10" y="922">--------------------|---------|---------|---------|---------|</tspan>
+
+<tspan x="10" y="938">All files           |   36.84 |       0 |      25 |   36.84 |</tspan>
+
+<tspan x="10" y="954">All files           |   36.84 |       0 |      25 |   36.84 |</tspan>
+
+<tspan x="10" y="970">  inputTextarea1.js |   36.84 |       0 |      25 |   36.84 |</tspan>
+
+<tspan x="10" y="986">--------------------|---------|---------|---------|---------|</tspan>
+
+<tspan x="10" y="1002">", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="1018">[0604/214405.346942:INFO:CONSOLE(483)] "istanbul - created coverage file tmp/build/coverage.html\</tspan>
+<tspan x="10" y="1034">/index.html", source: http://127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="1050">[0604/214405.387631:INFO:CONSOLE(483)] "domOnEventWindowOnloadTimeElapsed = 97", source: http://\</tspan>
+<tspan x="10" y="1066">127.0.0.1:8081/assets.example.js (483)</tspan>
+
+<tspan x="10" y="1082">testRunDefault - 760 ms - [node test-case 4 of 4 passed] - testCase_webpage_default</tspan>
+
+<tspan x="10" y="1098">-------------|---------|---------|---------|---------|</tspan>
+
+<tspan x="10" y="1114">File         | % Stmts | % Brchs | % Funcs | % Lines |</tspan>
+
+<tspan x="10" y="1130">-------------|---------|---------|---------|---------|</tspan>
+
+<tspan x="10" y="1146">All files    |   91.67 |   96.74 |   86.21 |   91.67 |</tspan>
+
+<tspan x="10" y="1162">app/         |   91.67 |   96.74 |   86.21 |   91.67 |</tspan>
+
+<tspan x="10" y="1178">  example.js |   91.67 |   96.74 |   86.21 |   91.67 |</tspan>
+
+<tspan x="10" y="1194">-------------|---------|---------|---------|---------|</tspan>
+
+<tspan x="10" y="1210"></tspan>
+
+<tspan x="10" y="1226">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/coverage.txt</tspan>
+
+<tspan x="10" y="1242">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/index.html</tspan>
+
+<tspan x="10" y="1258">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/app/index.html</tspan>
+
+<tspan x="10" y="1274">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/app/example.js.html</tspan>
+
+<tspan x="10" y="1290">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/coverage.all.html</tspan>
+
+<tspan x="10" y="1306">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/coverage.json</tspan>
+
+<tspan x="10" y="1322">wrote file - coverage-report - /tmp/app/tmp/build/coverage.html/coverage.include.json</tspan>
+
+<tspan x="10" y="1338">wrote file - coverage-report - /tmp/app/tmp/build/coverage.badge.svg</tspan>
+
+<tspan x="10" y="1354">istanbul - created coverage file /tmp/app/tmp/build/coverage.html/index.html</tspan>
+
+<tspan x="10" y="1370"></tspan>
+
+<tspan x="10" y="1386">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1402">| test-report - testExampleJs - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36\</tspan>
+<tspan x="10" y="1418"> (KHTML, like Gecko) HeadlessChrome/83.0.4103.97 Safari/537.36 - 2020-06-04T21:44:05.263Z</tspan>
+
+<tspan x="10" y="1434">|      48 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1450">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1466">| test-report - testExampleJs - node - linux v14.4.0 - 2020-06-04T21:44:04.739Z</tspan>
+
+<tspan x="10" y="1482">|     760 ms            0 failed        4 passed      |</tspan>
+
+<tspan x="10" y="1498">-------------------------------------------------------</tspan>
+
+<tspan x="10" y="1514"></tspan>
+
+<tspan x="10" y="1530">wrote file - test-report - /tmp/app/tmp/build/test-report.html</tspan>
+
+<tspan x="10" y="1546">wrote file - test-report - /tmp/app/tmp/build/build.badge.svg</tspan>
+
+<tspan x="10" y="1562">wrote file - test-report - /tmp/app/tmp/build/test-report.badge.svg</tspan>
+
+<tspan x="10" y="1578"></tspan>
+
+<tspan x="10" y="1594">testExampleJs - 0 failed tests</tspan>
+
+<tspan x="10" y="1610"></tspan>
+
+<tspan x="10" y="1626"></tspan>
+
+<tspan x="10" y="1642">\x1b[35m[MODE_BUILD=testExampleJs]\x1b[0m - 2020-06-04T21:44:05.716Z - EXIT_CODE - 0</tspan>
+
+<tspan x="10" y="1658"></tspan>
+
+<tspan x="10" y="1674"></tspan>
+
+<tspan x="10" y="1690">\x1b[35m[MODE_BUILD=testExampleJs]\x1b[0m - 2020-06-04T21:44:05.749Z - EXIT_CODE - 0</tspan>
+
+<tspan x="10" y="1706"></tspan>
+
+<tspan x="10" y="1722"></tspan>
+
+<tspan x="10" y="1738">\x1b[35m[MODE_BUILD=testExampleJs]\x1b[0m - 2020-06-04T21:44:05.810Z - created screenshot file /\</tspan>
+<tspan x="10" y="1754">home/travis/build/kaizhu256/node-utility2/tmp/build/screenshot.testExampleJs.svg</tspan>
+
+</text>
+</svg>

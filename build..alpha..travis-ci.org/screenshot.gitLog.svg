@@ -1,0 +1,333 @@
+<svg height="2654" width="720" xmlns="http://www.w3.org/2000/svg">
+<rect height="2654" fill="#555" width="720"></rect>
+<text fill="#7f7" font-family="Courier New" font-size="12" xml:space="preserve">
+<tspan x="10" y="26">2020-06-04 16:42:44 -0500</tspan>
+
+<tspan x="10" y="42">- migrate to travis-ci.com</tspan>
+
+<tspan x="10" y="58"></tspan>
+
+<tspan x="10" y="74">2020-06-04 16:39:49 -0500</tspan>
+
+<tspan x="10" y="90">- migrate to travis-ci.com</tspan>
+
+<tspan x="10" y="106"></tspan>
+
+<tspan x="10" y="122">2020-06-04 16:35:03 -0500</tspan>
+
+<tspan x="10" y="138">touch</tspan>
+
+<tspan x="10" y="154"></tspan>
+
+<tspan x="10" y="170">2020-06-04 16:34:56 -0500</tspan>
+
+<tspan x="10" y="186">touch</tspan>
+
+<tspan x="10" y="202"></tspan>
+
+<tspan x="10" y="218">2020-06-03 14:42:54 -0500</tspan>
+
+<tspan x="10" y="234">- istanbul - fix html-coverage-report bug showing branch-metrics instead of line-metrics</tspan>
+
+<tspan x="10" y="250"></tspan>
+
+<tspan x="10" y="266">2020-06-03 13:24:52 -0500</tspan>
+
+<tspan x="10" y="282">remove functions     dateGetWeekOfMonth,</tspan>
+
+<tspan x="10" y="298">    dateGetWeekOfYear,</tspan>
+
+<tspan x="10" y="314">    dateUtcFromLocal,</tspan>
+
+<tspan x="10" y="330">    dateUtcToLocal,</tspan>
+
+<tspan x="10" y="346"></tspan>
+
+<tspan x="10" y="362">2020-06-03 13:20:44 -0500</tspan>
+
+<tspan x="10" y="378">inline.eventEmitterCreate</tspan>
+
+<tspan x="10" y="394"></tspan>
+
+<tspan x="10" y="410">2020-06-03 13:13:36 -0500</tspan>
+
+<tspan x="10" y="426">inline.eventEmitterCreate</tspan>
+
+<tspan x="10" y="442"></tspan>
+
+<tspan x="10" y="458">2020-06-03 13:00:45 -0500</tspan>
+
+<tspan x="10" y="474">inline.eventEmitterCreate</tspan>
+
+<tspan x="10" y="490"></tspan>
+
+<tspan x="10" y="506">2020-06-03 12:57:00 -0500</tspan>
+
+<tspan x="10" y="522">inline.eventEmitterCreate</tspan>
+
+<tspan x="10" y="538"></tspan>
+
+<tspan x="10" y="554">2020-06-03 12:36:55 -0500</tspan>
+
+<tspan x="10" y="570">inline.eventEmitterCreate</tspan>
+
+<tspan x="10" y="586"></tspan>
+
+<tspan x="10" y="602">2020-06-03 12:11:37 -0500</tspan>
+
+<tspan x="10" y="618">unline.fsWriteFileWithMkdirp</tspan>
+
+<tspan x="10" y="634"></tspan>
+
+<tspan x="10" y="650">2020-06-03 12:06:08 -0500</tspan>
+
+<tspan x="10" y="666">- inline local._http.STATUS_CODES into function serverRespondDefault</tspan>
+
+<tspan x="10" y="682"></tspan>
+
+<tspan x="10" y="698">2020-06-03 12:01:05 -0500</tspan>
+
+<tspan x="10" y="714">msg</tspan>
+
+<tspan x="10" y="730"></tspan>
+
+<tspan x="10" y="746">2020-06-03 11:51:13 -0500</tspan>
+
+<tspan x="10" y="762">cull.</tspan>
+
+<tspan x="10" y="778"></tspan>
+
+<tspan x="10" y="794">2020-06-03 11:46:44 -0500</tspan>
+
+<tspan x="10" y="810">cull.onErrorDefault</tspan>
+
+<tspan x="10" y="826"></tspan>
+
+<tspan x="10" y="842">2020-06-03 11:17:38 -0500</tspan>
+
+<tspan x="10" y="858">disable.shnpmtestpublished</tspan>
+
+<tspan x="10" y="874"></tspan>
+
+<tspan x="10" y="890">2020-06-03 11:11:26 -0500</tspan>
+
+<tspan x="10" y="906">- rename errorMessage to errMsg, errorStack to errStack</tspan>
+
+<tspan x="10" y="922"></tspan>
+
+<tspan x="10" y="938">2020-06-03 11:00:16 -0500</tspan>
+
+<tspan x="10" y="954">- rename errorStack to errStack</tspan>
+
+<tspan x="10" y="970"></tspan>
+
+<tspan x="10" y="986">2020-06-03 03:03:15 -0500</tspan>
+
+<tspan x="10" y="1002">fix.branches.covered</tspan>
+
+<tspan x="10" y="1018"></tspan>
+
+<tspan x="10" y="1034">2020-06-03 02:38:55 -0500</tspan>
+
+<tspan x="10" y="1050">fix.branches.covered</tspan>
+
+<tspan x="10" y="1066"></tspan>
+
+<tspan x="10" y="1082">2020-06-03 02:17:20 -0500</tspan>
+
+<tspan x="10" y="1098">fix.branches.covered</tspan>
+
+<tspan x="10" y="1114"></tspan>
+
+<tspan x="10" y="1130">2020-06-03 02:15:12 -0500</tspan>
+
+<tspan x="10" y="1146">improve.coverage</tspan>
+
+<tspan x="10" y="1162"></tspan>
+
+<tspan x="10" y="1178">2020-06-03 02:07:52 -0500</tspan>
+
+<tspan x="10" y="1194">improve.coverage</tspan>
+
+<tspan x="10" y="1210"></tspan>
+
+<tspan x="10" y="1226">2020-06-03 01:48:26 -0500</tspan>
+
+<tspan x="10" y="1242">- remove polyfills String.prototype.trimStart, String.prototype.trimEnd</tspan>
+
+<tspan x="10" y="1258"></tspan>
+
+<tspan x="10" y="1274">2020-06-03 01:18:16 -0500</tspan>
+
+<tspan x="10" y="1290">revert.local.__coverageInclude__</tspan>
+
+<tspan x="10" y="1306"></tspan>
+
+<tspan x="10" y="1322">2020-06-03 01:02:26 -0500</tspan>
+
+<tspan x="10" y="1338">local.__coverageInclude__</tspan>
+
+<tspan x="10" y="1354"></tspan>
+
+<tspan x="10" y="1370">2020-06-03 00:42:09 -0500</tspan>
+
+<tspan x="10" y="1386">disable.browser.crypto.test</tspan>
+
+<tspan x="10" y="1402"></tspan>
+
+<tspan x="10" y="1418">2020-06-03 00:30:04 -0500</tspan>
+
+<tspan x="10" y="1434">rmrf</tspan>
+
+<tspan x="10" y="1450"></tspan>
+
+<tspan x="10" y="1466">2020-06-03 00:24:06 -0500</tspan>
+
+<tspan x="10" y="1482">coverageInclude</tspan>
+
+<tspan x="10" y="1498"></tspan>
+
+<tspan x="10" y="1514">2020-06-03 00:15:26 -0500</tspan>
+
+<tspan x="10" y="1530">private.process</tspan>
+
+<tspan x="10" y="1546"></tspan>
+
+<tspan x="10" y="1562">2020-06-03 00:01:07 -0500</tspan>
+
+<tspan x="10" y="1578">inline.istanbul.require</tspan>
+
+<tspan x="10" y="1594"></tspan>
+
+<tspan x="10" y="1610">2020-06-02 23:44:45 -0500</tspan>
+
+<tspan x="10" y="1626">moduleExtensionsJs</tspan>
+
+<tspan x="10" y="1642"></tspan>
+
+<tspan x="10" y="1658">2020-06-02 23:32:34 -0500</tspan>
+
+<tspan x="10" y="1674">rmrf</tspan>
+
+<tspan x="10" y="1690"></tspan>
+
+<tspan x="10" y="1706">2020-06-02 23:07:33 -0500</tspan>
+
+<tspan x="10" y="1722">fsRmrfSync</tspan>
+
+<tspan x="10" y="1738"></tspan>
+
+<tspan x="10" y="1754">2020-06-02 22:53:35 -0500</tspan>
+
+<tspan x="10" y="1770">buf.slice</tspan>
+
+<tspan x="10" y="1786"></tspan>
+
+<tspan x="10" y="1802">2020-06-02 22:46:02 -0500</tspan>
+
+<tspan x="10" y="1818">cull.numberToRomanNumerals</tspan>
+
+<tspan x="10" y="1834"></tspan>
+
+<tspan x="10" y="1850">2020-06-02 22:44:21 -0500</tspan>
+
+<tspan x="10" y="1866">- remove functions</tspan>
+
+<tspan x="10" y="1882">    childProcessSpawnWithTimeout,</tspan>
+
+<tspan x="10" y="1898">    childProcessSpawnWithUtility2,</tspan>
+
+<tspan x="10" y="1914">    isNullOrUndefined,</tspan>
+
+<tspan x="10" y="1930">    normalizeJwt,</tspan>
+
+<tspan x="10" y="1946">    normalizeJwtBase64Url,</tspan>
+
+<tspan x="10" y="1962">    promisify,</tspan>
+
+<tspan x="10" y="1978">    timeElapsedPoll,</tspan>
+
+<tspan x="10" y="1994">    timeElapsedStart,</tspan>
+
+<tspan x="10" y="2010"></tspan>
+
+<tspan x="10" y="2026">2020-06-03 02:54:12 +0000</tspan>
+
+<tspan x="10" y="2042">crypto</tspan>
+
+<tspan x="10" y="2058"></tspan>
+
+<tspan x="10" y="2074">2020-06-03 02:30:35 +0000</tspan>
+
+<tspan x="10" y="2090">update</tspan>
+
+<tspan x="10" y="2106"></tspan>
+
+<tspan x="10" y="2122">2020-06-03 02:28:59 +0000</tspan>
+
+<tspan x="10" y="2138">mockList</tspan>
+
+<tspan x="10" y="2154"></tspan>
+
+<tspan x="10" y="2170">2020-06-02 20:02:02 -0500</tspan>
+
+<tspan x="10" y="2186">mode_lib</tspan>
+
+<tspan x="10" y="2202"></tspan>
+
+<tspan x="10" y="2218">2020-06-02 19:53:35 -0500</tspan>
+
+<tspan x="10" y="2234">cull.null.case</tspan>
+
+<tspan x="10" y="2250"></tspan>
+
+<tspan x="10" y="2266">2020-06-02 19:51:37 -0500</tspan>
+
+<tspan x="10" y="2282">cull.null.case</tspan>
+
+<tspan x="10" y="2298"></tspan>
+
+<tspan x="10" y="2314">2020-06-03 00:45:01 +0000</tspan>
+
+<tspan x="10" y="2330">timeElapsed</tspan>
+
+<tspan x="10" y="2346"></tspan>
+
+<tspan x="10" y="2362">2020-06-03 00:44:23 +0000</tspan>
+
+<tspan x="10" y="2378">timeElapsed</tspan>
+
+<tspan x="10" y="2394"></tspan>
+
+<tspan x="10" y="2410">2020-06-02 19:36:03 -0500</tspan>
+
+<tspan x="10" y="2426">cull     timeElapsedPoll,</tspan>
+
+<tspan x="10" y="2442">    timeElapsedStart,</tspan>
+
+<tspan x="10" y="2458"></tspan>
+
+<tspan x="10" y="2474">2020-06-02 19:29:21 -0500</tspan>
+
+<tspan x="10" y="2490">cull     timeElapsedPoll,</tspan>
+
+<tspan x="10" y="2506">    timeElapsedStart,</tspan>
+
+<tspan x="10" y="2522"></tspan>
+
+<tspan x="10" y="2538">2020-06-02 19:24:35 -0500</tspan>
+
+<tspan x="10" y="2554">cull     timeElapsedPoll,</tspan>
+
+<tspan x="10" y="2570">    timeElapsedStart,</tspan>
+
+<tspan x="10" y="2586"></tspan>
+
+<tspan x="10" y="2602">2020-06-02 19:14:22 -0500</tspan>
+
+<tspan x="10" y="2618">cull     timeElapsedPoll,</tspan>
+
+<tspan x="10" y="2634">    timeElapsedStart,</tspan>
+
+</text>
+</svg>
