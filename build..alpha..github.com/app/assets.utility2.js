@@ -329,7 +329,6 @@ globalThis.utility2 = local;
         "npm_config_mode_test",
         "npm_config_mode_test_case",
         "npm_config_mode_test_report_merge",
-        "npm_config_runme",
         "npm_config_timeout",
         "npm_config_timeout_exit",
         "npm_package_description",
@@ -373,7 +372,6 @@ let {
     npm_config_mode_test,
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
-    npm_config_runme,
     npm_config_timeout,
     npm_config_timeout_exit,
     npm_package_description,
@@ -5105,19 +5103,6 @@ local.cliDict["utility2.browserTest"] = async function () {
     local.browserTest({
         url: process.argv[3]
     });
-};
-
-local.cliDict["utility2.start"] = function () {
-/*
- * <port>
- * will start utility2 http-server on given <port> (default 8081)
- */
-    globalThis.local = local;
-    local.replStart();
-    local.testRunDefault({});
-    if (npm_config_runme) {
-        require(require("path").resolve(npm_config_runme));
-    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {

@@ -1084,15 +1084,6 @@
 
         <li>
 
-            <a class="apidocElementLiA" href="#apidoc.elem.utility2.cliDict.utility2.start">
-            function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.start
-            <span class="apidocSignatureSpan">()</span>
-            </a>
-
-        </li>
-
-        <li>
-
             <a class="apidocElementLiA" href="#apidoc.elem.utility2.cliDict.utility2.testReportCreate">
             function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.testReportCreate
             <span class="apidocSignatureSpan">()</span>
@@ -5082,21 +5073,21 @@ function onTestRun({
                     match2 + &quot;[key]&amp;&amp;&quot; +
                     match2 + &q...</pre></li>
     <li>example use<pre class="apidocCodePre">...
-
-local.cliDict[&quot;utility2.start&quot;] = function () {
 /*
- * &lt;port&gt;
- * will start utility2 http-server on given &lt;port&gt; (default 8081)
- */
-    globalThis.local = local;
-    local.<span class="apidocCodeKeywordSpan">replStart</span>();
-    local.testRunDefault({});
-    if (npm_config_runme) {
-        require(require(&quot;path&quot;).resolve(npm_config_runme));
-    }
-};
-
-local.cliDict[&quot;utility2.testReportCreate&quot;] = function () {
+* this function will test replStart&apos;s default handling-behavior
+*/
+   if (!isEnvNode) {
+       onError(undefined, opt);
+       return;
+   }
+   local.<span class="apidocCodeKeywordSpan">replStart</span>();
+   // coverage-hack - test replStart&apos;s muliple-call handling-behavior
+   local.replStart();
+   local.testMock([
+       [
+           require(&quot;child_process&quot;), {
+               spawn: function () {
+                   return {
 ...</pre></li>
     </ul>
 
@@ -7459,30 +7450,6 @@ readExample = function (file) {
 </span>    local.browserTest({
         url: process.argv[3]
     });
-}</pre></li>
-    <li>example use<pre class="apidocCodePre">n/a</pre></li>
-    </ul>
-
-
-
-    <h2>
-        <a href="#apidoc.elem.utility2.cliDict.utility2.start" id="apidoc.elem.utility2.cliDict.utility2.start">
-        function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.start
-        <span class="apidocSignatureSpan">()</span>
-        </a>
-    </h2>
-    <ul>
-    <li>description and source-code<pre class="apidocCodePre">utility2.start = function () {
-<span class="apidocCodeCommentSpan">/*
- * &lt;port&gt;
- * will start utility2 http-server on given &lt;port&gt; (default 8081)
- */
-</span>    globalThis.local = local;
-    local.replStart();
-    local.testRunDefault({});
-    if (npm_config_runme) {
-        require(require(&quot;path&quot;).resolve(npm_config_runme));
-    }
 }</pre></li>
     <li>example use<pre class="apidocCodePre">n/a</pre></li>
     </ul>
