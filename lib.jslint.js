@@ -16444,6 +16444,10 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
     let rgx1;
     let rgx2;
     let tmp;
+    // normalize carriage-return
+    code = code.replace((
+        /\r\n*/g
+    ), "\n");
     // autofix-all - normalize local-function
     if (
         globalThis.utility2
