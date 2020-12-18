@@ -11862,6 +11862,7 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
+                    "await",
                     "global",
                     "globalThis"
                 ).forEach(function (key) {
