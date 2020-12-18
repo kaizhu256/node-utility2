@@ -25277,6 +25277,7 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
+                    "await",
                     "global",
                     "globalThis"
                 ).forEach(function (key) {
@@ -49227,6 +49228,7 @@ function tokenize(source) {\n\
                 [].concat(\n\
                     allowed_option.browser,\n\
                     allowed_option.node,\n\
+                    \"await\",\n\
                     \"global\",\n\
                     \"globalThis\"\n\
                 ).forEach(function (key) {\n\
