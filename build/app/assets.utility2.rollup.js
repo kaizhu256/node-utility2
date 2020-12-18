@@ -29859,6 +29859,10 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
     let rgx1;
     let rgx2;
     let tmp;
+    // normalize carriage-return
+    code = code.replace((
+        /\r\n*/g
+    ), "\n");
     // autofix-all - normalize local-function
     if (
         globalThis.utility2
@@ -53810,6 +53814,10 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {\n\
     let rgx1;\n\
     let rgx2;\n\
     let tmp;\n\
+    // normalize carriage-return\n\
+    code = code.replace((\n\
+        /\\r\\n*/g\n\
+    ), \"\\n\");\n\
     // autofix-all - normalize local-function\n\
     if (\n\
         globalThis.utility2\n\
