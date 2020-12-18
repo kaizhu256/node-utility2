@@ -29718,13 +29718,6 @@ local.jslint0 = Object.freeze(function (
                 );
             }
             break;
-        // expected_a_before_b: "Expected '{a}' before '{b}'.",
-        case "expected_a_before_b":
-            bb = (
-                aa.slice(0, warning.column - 1) + warning.a
-                + aa.slice(warning.column - 1)
-            );
-            break;
         // expected_identifier_a:
         // "Expected an identifier and instead saw '{a}'.",
         case "expected_identifier_a":
@@ -53674,13 +53667,6 @@ local.jslint0 = Object.freeze(function (\n\
                     + aa.slice(warning.column + 1)\n\
                 );\n\
             }\n\
-            break;\n\
-        // expected_a_before_b: \"Expected '{a}' before '{b}'.\",\n\
-        case \"expected_a_before_b\":\n\
-            bb = (\n\
-                aa.slice(0, warning.column - 1) + warning.a\n\
-                + aa.slice(warning.column - 1)\n\
-            );\n\
             break;\n\
         // expected_identifier_a:\n\
         // \"Expected an identifier and instead saw '{a}'.\",\n\
