@@ -35151,14 +35151,16 @@ local.serverRequestListener = function (req, res) {
     /*
      * this function will hand "close" evt
      */
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: "serverResponse",
-            method: req.method,
-            url: urlParsed.pathname,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - timeStart
-        }) + "\n");
+        if (req.url.indexOf("/favicon.ico") !== 0) {
+            console.error("serverLog - " + JSON.stringify({
+                time: new Date(timeStart).toISOString(),
+                type: "serverResponse",
+                method: req.method,
+                url: urlParsed.pathname,
+                statusCode: res.statusCode | 0,
+                timeElapsed: Date.now() - timeStart
+            }) + "\n");
+        }
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();

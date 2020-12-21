@@ -5262,14 +5262,16 @@ function onTestRun({
     /*
      * this function will hand &quot;close&quot; evt
      */
-        console.error(&quot;serverLog - &quot; + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: &quot;serverResponse&quot;,
-            method: req.method,
-            url: urlParsed.pathname,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - timeStart
-        }) + &quot;\n&quot;);
+        if (req.url.indexOf(&quot;/favicon.ico&quot;) !== 0) {
+            console.error(&quot;serverLog - &quot; + JSON.stringify({
+                time: new Date(timeStart).toISOString(),
+                type: &quot;serverResponse&quot;,
+                method: req.method,
+                url: urlParsed.pathname,
+                statusCode: res.statusCode | 0,
+                timeElapsed: Date.now() - timeStart
+            }) + &quot;\n&quot;);
+        }
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
@@ -5349,9 +5351,7 @@ function onTestRun({
     }
     async function middlewareServeAsset(ignore, res, next) {
     /*
-     * this function will serve assets from &lt;assetsDict&gt;
-     */
-        if (!assetsDict.hasOwnProperty(urlParsed.p...</pre></li>
+     * this func...</pre></li>
     <li>example use<pre class="apidocCodePre">n/a</pre></li>
     </ul>
 

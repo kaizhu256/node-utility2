@@ -35346,14 +35346,16 @@ local.serverRequestListener = function (req, res) {
     /*
      * this function will hand "close" evt
      */
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: "serverResponse",
-            method: req.method,
-            url: urlParsed.pathname,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - timeStart
-        }) + "\n");
+        if (req.url.indexOf("/favicon.ico") !== 0) {
+            console.error("serverLog - " + JSON.stringify({
+                time: new Date(timeStart).toISOString(),
+                type: "serverResponse",
+                method: req.method,
+                url: urlParsed.pathname,
+                statusCode: res.statusCode | 0,
+                timeElapsed: Date.now() - timeStart
+            }) + "\n");
+        }
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
@@ -59871,14 +59873,16 @@ local.serverRequestListener = function (req, res) {\n\
     /*\n\
      * this function will hand \"close\" evt\n\
      */\n\
-        console.error(\"serverLog - \" + JSON.stringify({\n\
-            time: new Date(timeStart).toISOString(),\n\
-            type: \"serverResponse\",\n\
-            method: req.method,\n\
-            url: urlParsed.pathname,\n\
-            statusCode: res.statusCode | 0,\n\
-            timeElapsed: Date.now() - timeStart\n\
-        }) + \"\\n\");\n\
+        if (req.url.indexOf(\"/favicon.ico\") !== 0) {\n\
+            console.error(\"serverLog - \" + JSON.stringify({\n\
+                time: new Date(timeStart).toISOString(),\n\
+                type: \"serverResponse\",\n\
+                method: req.method,\n\
+                url: urlParsed.pathname,\n\
+                statusCode: res.statusCode | 0,\n\
+                timeElapsed: Date.now() - timeStart\n\
+            }) + \"\\n\");\n\
+        }\n\
         isDone = true;\n\
         clearTimeout(timerTimeout);\n\
         req.destroy();\n\
@@ -65184,14 +65188,16 @@ local.serverRequestListener = function (req, res) {
     /*
      * this function will hand "close" evt
      */
-        console.error("serverLog - " + JSON.stringify({
-            time: new Date(timeStart).toISOString(),
-            type: "serverResponse",
-            method: req.method,
-            url: urlParsed.pathname,
-            statusCode: res.statusCode | 0,
-            timeElapsed: Date.now() - timeStart
-        }) + "\n");
+        if (req.url.indexOf("/favicon.ico") !== 0) {
+            console.error("serverLog - " + JSON.stringify({
+                time: new Date(timeStart).toISOString(),
+                type: "serverResponse",
+                method: req.method,
+                url: urlParsed.pathname,
+                statusCode: res.statusCode | 0,
+                timeElapsed: Date.now() - timeStart
+            }) + "\n");
+        }
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
