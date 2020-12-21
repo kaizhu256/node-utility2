@@ -2409,12 +2409,19 @@ shRawLibFetch() {(set -e
             }).stdout, elem, "data");
             return;
         }
-        require("https").request(elem.url2 || elem.url.replace(
+        require("https").get(elem.url2 || elem.url.replace(
             "https://github.com/",
             "https://raw.githubusercontent.com/"
         ).replace("/blob/", "/"), function (res) {
+            // http-redirect
+            if (res.statusCode === 302) {
+                require("https").get(res.headers.location, function (res) {
+                    onResponse(res, elem, "data");
+                });
+                return;
+            }
             onResponse(res, elem, "data");
-        }).end();
+        });
     });
     // parse fetched data
     process.on("exit", function () {
