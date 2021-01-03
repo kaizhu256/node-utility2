@@ -645,7 +645,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ".button:hover {\n" +
     "    background: #bbb;\n" +
     "}\n" +
-    ".colorError {\n" +
+    ".styleColorError {\n" +
     "    color: #d00;\n" +
     "}\n" +
     ".textarea {\n" +
@@ -3070,7 +3070,7 @@ local.domStyleValidate = function () {
     let list;
     let rgx;
     rgx = (
-        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
     documentQuerySelectorAll("style").forEach(function (elem, ii) {

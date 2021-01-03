@@ -498,7 +498,7 @@ pre {
 .button:hover {
     background: #bbb;
 }
-.colorError {
+.styleColorError {
     color: #d00;
 }
 .textarea {
@@ -660,7 +660,7 @@ pre {
     class="button"
     id="buttonJslintAutofix1"
 >jslint autofix</button><br>
-<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
+<pre class= "styleColorError" id="outputJslintPre1" tabindex="0"></pre>
 <label>instrumented-code</label>
 <textarea
     class="readonly textarea"
