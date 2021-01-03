@@ -8092,8 +8092,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">58</span>
-<span class="cline-any cline-yes">53</span>
+<span class="cline-any cline-yes">41</span>
+<span class="cline-any cline-yes">36</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3</span>
@@ -8197,10 +8197,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">249</span>
-<span class="cline-any cline-yes">249</span>
-<span class="cline-any cline-yes">249</span>
-<span class="cline-any cline-yes">392</span>
+<span class="cline-any cline-yes">232</span>
+<span class="cline-any cline-yes">232</span>
+<span class="cline-any cline-yes">232</span>
+<span class="cline-any cline-yes">358</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -8208,7 +8208,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">73</span>
+<span class="cline-any cline-yes">56</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">176</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -8262,13 +8262,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">73</span>
-<span class="cline-any cline-yes">73</span>
-<span class="cline-any cline-yes">249</span>
-<span class="cline-any cline-yes">73</span>
+<span class="cline-any cline-yes">56</span>
+<span class="cline-any cline-yes">56</span>
+<span class="cline-any cline-yes">232</span>
+<span class="cline-any cline-yes">56</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">73</span>
+<span class="cline-any cline-yes">56</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3</span>
@@ -11601,7 +11601,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ".button:hover {\n" +
     "    background: #bbb;\n" +
     "}\n" +
-    ".colorError {\n" +
+    ".styleColorError {\n" +
     "    color: #d00;\n" +
     "}\n" +
     ".textarea {\n" +
@@ -14026,7 +14026,7 @@ local.domStyleValidate = function () {
     let list;
     let rgx;
     rgx = (
-        /^0\u0020(?:(body\u0020&gt;\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020&gt;\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
     documentQuerySelectorAll("style").forEach(function (elem, ii) {
