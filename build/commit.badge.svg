@@ -9,7 +9,7 @@ text-anchor="middle"
 >
 <text fill-opacity=".5" fill="#777" x="40" y="15">last build</text>
 <text x="40" y="14">last build</text>
-<text fill-opacity=".5" fill="#777" x="300" y="15">2021-01-03 21:44:25 - alpha - 032896dcbdb1d4cba87ecd0814fe56656982d7c0</text>
-<text x="300" y="14">2021-01-03 21:44:25 - alpha - 032896dcbdb1d4cba87ecd0814fe56656982d7c0</text>
+<text fill-opacity=".5" fill="#777" x="300" y="15">2021-01-06 04:52:06 - alpha - 2c98f9364965a54dbb5fd57b7169a056448ef328</text>
+<text x="300" y="14">2021-01-06 04:52:06 - alpha - 2c98f9364965a54dbb5fd57b7169a056448ef328</text>
 </g>
 </svg>

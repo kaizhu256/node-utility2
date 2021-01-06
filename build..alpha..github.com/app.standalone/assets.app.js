@@ -35465,7 +35465,7 @@ local.serverRequestListener = function (req, res) {
             file.indexOf(process.cwd() + require("path").sep) !== 0 ||
             // security - ignore file with non-alphanumeric-first-character
             !(
-                /[0-9A-Za-z]/
+                /[.0-9A-Za-z]/
             ).test(require("path").basename(file)[0])
         ) {
             await next();
@@ -59992,7 +59992,7 @@ local.serverRequestListener = function (req, res) {\n\
             file.indexOf(process.cwd() + require(\"path\").sep) !== 0 ||\n\
             // security - ignore file with non-alphanumeric-first-character\n\
             !(\n\
-                /[0-9A-Za-z]/\n\
+                /[.0-9A-Za-z]/\n\
             ).test(require(\"path\").basename(file)[0])\n\
         ) {\n\
             await next();\n\
@@ -65307,7 +65307,7 @@ local.serverRequestListener = function (req, res) {
             file.indexOf(process.cwd() + require("path").sep) !== 0 ||
             // security - ignore file with non-alphanumeric-first-character
             !(
-                /[0-9A-Za-z]/
+                /[.0-9A-Za-z]/
             ).test(require("path").basename(file)[0])
         ) {
             await next();
