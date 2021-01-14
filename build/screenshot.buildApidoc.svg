@@ -1,31 +1,31 @@
 <svg height="1470px" width="720px" xmlns="http://www.w3.org/2000/svg">
 <rect height="1470px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
-<tspan x="10" y="26">[MODE_CI=buildApidoc] - 2021-01-06T04:51:53.979Z</tspan>
+<tspan x="10" y="26">[MODE_CI=buildApidoc] - 2021-01-14T19:10:59.335Z</tspan>
 <tspan x="10" y="42">  - shNpmTest - (node test.js)</tspan>
 <tspan x="10" y="58"></tspan>
 <tspan x="10" y="74">buildApidoc - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/bu\</tspan><tspan x="10" y="90">ild/test-report.json</tspan>
-<tspan x="10" y="106">&gt; http-server listening on port 57979</tspan>
+<tspan x="10" y="106">&gt; http-server listening on port 60967</tspan>
 <tspan x="10" y="122">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/package.json</tspan>
-<tspan x="10" y="138">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.dockerignore</tspan>
-<tspan x="10" y="154">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.gitconfig</tspan>
-<tspan x="10" y="170">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.gitignore</tspan>
-<tspan x="10" y="186">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.screenrc</tspan>
-<tspan x="10" y="202">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.travis.yml</tspan>
-<tspan x="10" y="218">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.vimrc</tspan>
-<tspan x="10" y="234">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.windows_terminals_sett\</tspan><tspan x="10" y="250">ings.json</tspan>
-<tspan x="10" y="266">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/LICENSE</tspan>
-<tspan x="10" y="282">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/README.md</tspan>
-<tspan x="10" y="298">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/action.yml</tspan>
-<tspan x="10" y="314">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/assets.hello.txt</tspan>
-<tspan x="10" y="330">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
-<tspan x="10" y="346">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
-<tspan x="10" y="362">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
-<tspan x="10" y="378">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
-<tspan x="10" y="394">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
-<tspan x="10" y="410">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
-<tspan x="10" y="426">jslint - 3ms - /home/runner/work/node-utility2/node-utility2/.windows_terminals_settings.json</tspan>
-<tspan x="10" y="442">jslint - 8ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
+<tspan x="10" y="138">jslint - 3ms - /home/runner/work/node-utility2/node-utility2/.windows_terminals_settings.json</tspan>
+<tspan x="10" y="154">jslint - 11ms - /home/runner/work/node-utility2/node-utility2/README.md</tspan>
+<tspan x="10" y="170">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.dockerignore</tspan>
+<tspan x="10" y="186">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.gitconfig</tspan>
+<tspan x="10" y="202">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.gitignore</tspan>
+<tspan x="10" y="218">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.screenrc</tspan>
+<tspan x="10" y="234">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.travis.yml</tspan>
+<tspan x="10" y="250">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.vimrc</tspan>
+<tspan x="10" y="266">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.windows_terminals_sett\</tspan><tspan x="10" y="282">ings.json</tspan>
+<tspan x="10" y="298">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/LICENSE</tspan>
+<tspan x="10" y="314">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/README.md</tspan>
+<tspan x="10" y="330">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/action.yml</tspan>
+<tspan x="10" y="346">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/assets.hello.txt</tspan>
+<tspan x="10" y="362">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
+<tspan x="10" y="378">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
+<tspan x="10" y="394">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
+<tspan x="10" y="410">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
+<tspan x="10" y="426">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
+<tspan x="10" y="442">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
 <tspan x="10" y="458">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
 <tspan x="10" y="474">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
 <tspan x="10" y="490">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
@@ -39,47 +39,47 @@
 <tspan x="10" y="650">apidocCreate - readExample /home/runner/work/node-utility2/node-utility2/.github/workflows/npm-p\</tspan><tspan x="10" y="666">ublish.yml</tspan>
 <tspan x="10" y="682">apidocCreate - requiring /home/runner/work/node-utility2/node-utility2 ...</tspan>
 <tspan x="10" y="698">apidocCreate - ... required /home/runner/work/node-utility2/node-utility2</tspan>
-<tspan x="10" y="714">jslint - 83ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
+<tspan x="10" y="714">jslint - 105ms - /home/runner/work/node-utility2/node-utility2/lib.apidoc.js</tspan>
 <tspan x="10" y="730">apidocCreate - libFile lib.apidoc.js</tspan>
 <tspan x="10" y="746">apidocCreate - libFile lib.istanbul.js</tspan>
 <tspan x="10" y="762">apidocCreate - libFile lib.jslint.js</tspan>
 <tspan x="10" y="778">apidocCreate - libFile lib.marked.js</tspan>
 <tspan x="10" y="794">apidocCreate - libFile lib.sqlite3.js</tspan>
 <tspan x="10" y="810">apidocCreate - libFile lib.terser.js</tspan>
-<tspan x="10" y="826">apidocCreate - libFile raw.istanbul.js</tspan>
-<tspan x="10" y="842">apidocCreate - libFile raw.jslint.js</tspan>
-<tspan x="10" y="858">apidocCreate - libFile raw.sqlite3.js</tspan>
-<tspan x="10" y="874">jslint - 215ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
-<tspan x="10" y="890">jslint - 220ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
-<tspan x="10" y="906">jslint - 226ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
-<tspan x="10" y="922">jslint - 447ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
-<tspan x="10" y="938">jslint - 451ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
-<tspan x="10" y="954">jslint - 451ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
-<tspan x="10" y="970">jslint - 461ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
-<tspan x="10" y="986">jslint - 532ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
-<tspan x="10" y="1002">jslint - 604ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
-<tspan x="10" y="1018">jslint - 607ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
+<tspan x="10" y="826">jslint - 225ms - /home/runner/work/node-utility2/node-utility2/lib.istanbul.js</tspan>
+<tspan x="10" y="842">jslint - 229ms - /home/runner/work/node-utility2/node-utility2/lib.marked.js</tspan>
+<tspan x="10" y="858">apidocCreate - libFile raw.istanbul.js</tspan>
+<tspan x="10" y="874">apidocCreate - libFile raw.jslint.js</tspan>
+<tspan x="10" y="890">jslint - 249ms - /home/runner/work/node-utility2/node-utility2/lib.sqlite3.js</tspan>
+<tspan x="10" y="906">apidocCreate - libFile raw.sqlite3.js</tspan>
+<tspan x="10" y="922">jslint - 491ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.js</tspan>
+<tspan x="10" y="938">jslint - 505ms - /home/runner/work/node-utility2/node-utility2/lib.utility2.sh</tspan>
+<tspan x="10" y="954">jslint - 506ms - /home/runner/work/node-utility2/node-utility2/npm_scripts.sh</tspan>
+<tspan x="10" y="970">jslint - 511ms - /home/runner/work/node-utility2/node-utility2/package.json</tspan>
+<tspan x="10" y="986">jslint - 576ms - /home/runner/work/node-utility2/node-utility2/test.js</tspan>
+<tspan x="10" y="1002">jslint - 669ms - /home/runner/work/node-utility2/node-utility2/lib.jslint.js</tspan>
+<tspan x="10" y="1018">jslint - 671ms - /home/runner/work/node-utility2/node-utility2/lib.terser.js</tspan>
 <tspan x="10" y="1034">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/api\</tspan><tspan x="10" y="1050">doc.html</tspan>
-<tspan x="10" y="1066">testRunDefault - 5079 ms - [node test-case 1 of 1 passed] - testCase_buildApidoc_default</tspan>
+<tspan x="10" y="1066">testRunDefault - 6150 ms - [node test-case 1 of 1 passed] - testCase_buildApidoc_default</tspan>
 <tspan x="10" y="1082">fsWriteFileWithMkdirpSync - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/tes\</tspan><tspan x="10" y="1098">t-report.json</tspan>
 <tspan x="10" y="1114"></tspan>
 <tspan x="10" y="1130">buildApidoc - merged test-report from file /home/runner/work/node-utility2/node-utility2/.tmp/bu\</tspan><tspan x="10" y="1146">ild/test-report.json</tspan>
 <tspan x="10" y="1162"></tspan>
 <tspan x="10" y="1178">-------------------------------------------------------</tspan>
-<tspan x="10" y="1194">| test-report - buildApidoc - node - linux - v14.15.1</tspan>
-<tspan x="10" y="1210">|    5080 ms            0 failed        1 passed      |</tspan>
+<tspan x="10" y="1194">| test-report - buildApidoc - node - linux - v14.15.4</tspan>
+<tspan x="10" y="1210">|    6151 ms            0 failed        1 passed      |</tspan>
 <tspan x="10" y="1226">-------------------------------------------------------</tspan>
-<tspan x="10" y="1242">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="1258">L, like Gecko) HeadlessChrome/87.0.4280.88 Safari/537.36</tspan>
-<tspan x="10" y="1274">|     115 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="1242">| test-report - npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTM\</tspan><tspan x="10" y="1258">L, like Gecko) HeadlessChrome/87.0.4280.141 Safari/537.36</tspan>
+<tspan x="10" y="1274">|     222 ms            0 failed       21 passed      |</tspan>
 <tspan x="10" y="1290">-------------------------------------------------------</tspan>
-<tspan x="10" y="1306">| test-report - npmTest - node - linux - v14.15.1</tspan>
-<tspan x="10" y="1322">|    4508 ms            0 failed       21 passed      |</tspan>
+<tspan x="10" y="1306">| test-report - npmTest - node - linux - v14.15.4</tspan>
+<tspan x="10" y="1322">|    4589 ms            0 failed       21 passed      |</tspan>
 <tspan x="10" y="1338">-------------------------------------------------------</tspan>
 <tspan x="10" y="1354"></tspan>
 <tspan x="10" y="1370">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.html</tspan>
 <tspan x="10" y="1386">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/commit.badge.svg</tspan>
 <tspan x="10" y="1402">test-report - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/build/test-report.badge\</tspan><tspan x="10" y="1418">.svg</tspan>
-<tspan x="10" y="1434">[MODE_CI=buildApidoc] - 2021-01-06T04:51:59.362Z</tspan>
+<tspan x="10" y="1434">[MODE_CI=buildApidoc] - 2021-01-14T19:11:05.865Z</tspan>
 <tspan x="10" y="1450">  - shNpmTest - EXIT_CODE=0</tspan>
 </text>
 </svg>
