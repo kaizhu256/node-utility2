@@ -1915,9 +1915,11 @@ shJsonNormalize() {(set -e
     console.error("shJsonNormalize - " + process.argv[1]);
     require("fs").writeFileSync(
         process.argv[1],
-        JSON.stringify(objectDeepCopyWithKeysSorted(
-            JSON.parse(require("fs").readFileSync(process.argv[1]))
-        ), undefined, 4) + "\n"
+        JSON.stringify(objectDeepCopyWithKeysSorted(JSON.parse(
+            require("fs").readFileSync(process.argv[1], "utf8").replace((
+                /^\ufeff/
+            ), "")
+        )), undefined, 4) + "\n"
     );
 }());
 ' "$1" # '
