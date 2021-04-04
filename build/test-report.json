@@ -1,8 +1,8 @@
 {
-    "date": "2021-04-04T16:43:46.936Z",
+    "date": "2021-04-04T16:45:30.172Z",
     "testPlatformList": [
         {
-            "date": "2021-04-04T16:43:46.937Z",
+            "date": "2021-04-04T16:45:30.172Z",
             "modeBuild": "buildApp",
             "nameBase": "node - linux - v14.16.0",
             "status": "passed",
@@ -10,21 +10,21 @@
                 {
                     "name": "testCase_buildApp_default",
                     "status": "passed",
-                    "timeStart": 1617554627035,
-                    "timeElapsed": 4151,
+                    "timeStart": 1617554730259,
+                    "timeElapsed": 4155,
                     "isDone": true
                 }
             ],
             "testsFailed": 0,
             "testsPassed": 1,
             "testsPending": 0,
-            "timeElapsed": 4152,
+            "timeElapsed": 4157,
             "timeOnload": false,
-            "timeStart": 1617554627034,
+            "timeStart": 1617554730257,
             "name": "buildApp - node - linux - v14.16.0"
         },
         {
-            "date": "2021-04-04T16:43:34.529Z",
+            "date": "2021-04-04T16:45:18.334Z",
             "modeBuild": "buildApidoc",
             "nameBase": "node - linux - v14.16.0",
             "status": "passed",
@@ -32,168 +32,168 @@
                 {
                     "name": "testCase_buildApidoc_default",
                     "status": "passed",
-                    "timeStart": 1617554614617,
-                    "timeElapsed": 6892,
+                    "timeStart": 1617554718422,
+                    "timeElapsed": 6424,
                     "isDone": true
                 }
             ],
             "testsFailed": 0,
             "testsPassed": 1,
             "testsPending": 0,
-            "timeElapsed": 6894,
+            "timeElapsed": 6426,
             "timeOnload": false,
-            "timeStart": 1617554614616,
+            "timeStart": 1617554718421,
             "name": "buildApidoc - node - linux - v14.16.0"
         },
         {
-            "date": "2021-04-04T16:43:30.085Z",
+            "date": "2021-04-04T16:45:14.108Z",
             "nameBase": "browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/89.0.4389.90 Safari/537.36",
             "status": "passed",
             "testCaseList": [
                 {
                     "name": "testCase_assertXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554610216,
-                    "timeElapsed": 30,
+                    "timeStart": 1617554714199,
+                    "timeElapsed": 2,
                     "isDone": true
                 },
                 {
                     "name": "testCase_buildApidoc_default",
                     "status": "passed",
-                    "timeStart": 1617554610294,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714267,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_buildApp_default",
                     "status": "passed",
-                    "timeStart": 1617554610296,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714271,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_chromeDevtoolsClient_coverage",
                     "status": "passed",
-                    "timeStart": 1617554610298,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714272,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_cliRun_default",
                     "status": "passed",
-                    "timeStart": 1617554610299,
+                    "timeStart": 1617554714273,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_eventListenerXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554610300,
+                    "timeStart": 1617554714274,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_httpFetch_200",
                     "status": "passed",
-                    "timeStart": 1617554610303,
-                    "timeElapsed": 100,
+                    "timeStart": 1617554714276,
+                    "timeElapsed": 144,
                     "isDone": true
                 },
                 {
                     "name": "testCase_httpFetch_404",
                     "status": "passed",
-                    "timeStart": 1617554610306,
-                    "timeElapsed": 78,
+                    "timeStart": 1617554714281,
+                    "timeElapsed": 134,
                     "isDone": true
                 },
                 {
                     "name": "testCase_libUtility2Js_standalone",
                     "status": "passed",
-                    "timeStart": 1617554610315,
+                    "timeStart": 1617554714288,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_listShuffle_default",
                     "status": "passed",
-                    "timeStart": 1617554610325,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714289,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_noop_default",
                     "status": "passed",
-                    "timeStart": 1617554610326,
-                    "timeElapsed": 1,
+                    "timeStart": 1617554714308,
+                    "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_replStart_default",
                     "status": "passed",
-                    "timeStart": 1617554610330,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714310,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_setTimeoutOnError_default",
                     "status": "passed",
-                    "timeStart": 1617554610331,
-                    "timeElapsed": 51,
+                    "timeStart": 1617554714318,
+                    "timeElapsed": 84,
                     "isDone": true
                 },
                 {
                     "name": "testCase_stringHtmlSafe_default",
                     "status": "passed",
-                    "timeStart": 1617554610331,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714318,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_stringXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554610332,
+                    "timeStart": 1617554714320,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_testMock_err",
                     "status": "passed",
-                    "timeStart": 1617554610339,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554714330,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_uiAnimateXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554610340,
-                    "timeElapsed": 1,
+                    "timeStart": 1617554714332,
+                    "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_urlJoin_default",
                     "status": "passed",
-                    "timeStart": 1617554610342,
+                    "timeStart": 1617554714333,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_uuid4Create_default",
                     "status": "passed",
-                    "timeStart": 1617554610349,
+                    "timeStart": 1617554714335,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_webpage_default",
                     "status": "passed",
-                    "timeStart": 1617554610350,
+                    "timeStart": 1617554714338,
                     "timeElapsed": 2,
                     "isDone": true
                 },
                 {
                     "name": "testCase_webpage_err",
                     "status": "passed",
-                    "timeStart": 1617554610354,
+                    "timeStart": 1617554714347,
                     "timeElapsed": 0,
                     "isDone": true
                 }
@@ -201,15 +201,15 @@
             "testsFailed": 0,
             "testsPassed": 21,
             "testsPending": 0,
-            "timeElapsed": 190,
+            "timeElapsed": 224,
             "timeOnload": false,
-            "timeStart": 1617554610214,
+            "timeStart": 1617554714197,
             "name": "npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/89.0.4389.90 Safari/537.36",
             "screenshot": "screenshot.npmTest.browser.%2F.png",
             "modeBuild": "npmTest"
         },
         {
-            "date": "2021-04-04T16:43:28.439Z",
+            "date": "2021-04-04T16:45:12.469Z",
             "modeBuild": "npmTest",
             "nameBase": "node - linux - v14.16.0",
             "status": "passed",
@@ -217,162 +217,162 @@
                 {
                     "name": "testCase_assertXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554609045,
+                    "timeStart": 1617554712983,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_buildApidoc_default",
                     "status": "passed",
-                    "timeStart": 1617554609046,
-                    "timeElapsed": 18,
+                    "timeStart": 1617554712984,
+                    "timeElapsed": 11,
                     "isDone": true
                 },
                 {
                     "name": "testCase_buildApp_default",
                     "status": "passed",
-                    "timeStart": 1617554609064,
-                    "timeElapsed": 4457,
+                    "timeStart": 1617554712995,
+                    "timeElapsed": 4386,
                     "isDone": true
                 },
                 {
                     "name": "testCase_chromeDevtoolsClient_coverage",
                     "status": "passed",
-                    "timeStart": 1617554609065,
-                    "timeElapsed": 39,
+                    "timeStart": 1617554712996,
+                    "timeElapsed": 36,
                     "isDone": true
                 },
                 {
                     "name": "testCase_cliRun_default",
                     "status": "passed",
-                    "timeStart": 1617554609068,
-                    "timeElapsed": 5,
+                    "timeStart": 1617554712999,
+                    "timeElapsed": 3,
                     "isDone": true
                 },
                 {
                     "name": "testCase_eventListenerXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554609073,
-                    "timeElapsed": 1,
+                    "timeStart": 1617554713003,
+                    "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_httpFetch_200",
                     "status": "passed",
-                    "timeStart": 1617554609074,
-                    "timeElapsed": 173,
+                    "timeStart": 1617554713004,
+                    "timeElapsed": 155,
                     "isDone": true
                 },
                 {
                     "name": "testCase_httpFetch_404",
                     "status": "passed",
-                    "timeStart": 1617554609078,
-                    "timeElapsed": 170,
+                    "timeStart": 1617554713007,
+                    "timeElapsed": 153,
                     "isDone": true
                 },
                 {
                     "name": "testCase_libUtility2Js_standalone",
                     "status": "passed",
-                    "timeStart": 1617554609079,
-                    "timeElapsed": 171,
+                    "timeStart": 1617554713008,
+                    "timeElapsed": 154,
                     "isDone": true
                 },
                 {
                     "name": "testCase_listShuffle_default",
                     "status": "passed",
-                    "timeStart": 1617554609079,
+                    "timeStart": 1617554713008,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_noop_default",
                     "status": "passed",
-                    "timeStart": 1617554609080,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554713009,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_replStart_default",
                     "status": "passed",
-                    "timeStart": 1617554609080,
-                    "timeElapsed": 6,
+                    "timeStart": 1617554713010,
+                    "timeElapsed": 5,
                     "isDone": true
                 },
                 {
                     "name": "testCase_setTimeoutOnError_default",
                     "status": "passed",
-                    "timeStart": 1617554609086,
-                    "timeElapsed": 19,
+                    "timeStart": 1617554713015,
+                    "timeElapsed": 18,
                     "isDone": true
                 },
                 {
                     "name": "testCase_stringHtmlSafe_default",
                     "status": "passed",
-                    "timeStart": 1617554609087,
+                    "timeStart": 1617554713016,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_stringXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554609087,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554713016,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_testMock_err",
                     "status": "passed",
-                    "timeStart": 1617554609088,
+                    "timeStart": 1617554713017,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_uiAnimateXxx_default",
                     "status": "passed",
-                    "timeStart": 1617554609088,
+                    "timeStart": 1617554713017,
                     "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_urlJoin_default",
                     "status": "passed",
-                    "timeStart": 1617554609089,
-                    "timeElapsed": 0,
+                    "timeStart": 1617554713018,
+                    "timeElapsed": 1,
                     "isDone": true
                 },
                 {
                     "name": "testCase_uuid4Create_default",
                     "status": "passed",
-                    "timeStart": 1617554609090,
+                    "timeStart": 1617554713019,
                     "timeElapsed": 0,
                     "isDone": true
                 },
                 {
                     "name": "testCase_webpage_default",
                     "status": "passed",
-                    "timeStart": 1617554609090,
-                    "timeElapsed": 2255,
+                    "timeStart": 1617554713019,
+                    "timeElapsed": 2291,
                     "isDone": true
                 },
                 {
                     "name": "testCase_webpage_err",
                     "status": "passed",
-                    "timeStart": 1617554609093,
-                    "timeElapsed": 3774,
+                    "timeStart": 1617554713022,
+                    "timeElapsed": 3761,
                     "isDone": true
                 }
             ],
             "testsFailed": 0,
             "testsPassed": 21,
             "testsPending": 0,
-            "timeElapsed": 4479,
+            "timeElapsed": 4400,
             "timeOnload": false,
-            "timeStart": 1617554609043,
+            "timeStart": 1617554712981,
             "name": "npmTest - node - linux - v14.16.0"
         }
     ],
     "testsFailed": 0,
     "testsPassed": 44,
     "testsPending": 0,
-    "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta\n    content=\"width=device-width, initial-scale=1\"\n    name=\"viewport\"\n>\n<!-- \"\" -->\n<title>test-report</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition:\n        max-height ease-in 250ms,\n        min-height ease-in 250ms,\n        padding-bottom ease-in 250ms,\n        padding-top ease-in 250ms;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.styleColorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n<style>\n/* jslint utility2:true */\n.test-report-div img {\n    border: 1px solid #999;\n    margin: 5px 0 5px 0;\n    max-height: 256px;\n    max-width: 512px;\n}\n.test-report-div pre {\n    background: #fdd;\n    border-top: 1px solid #999;\n    margin-bottom: 0;\n    padding: 10px;\n}\n.test-report-div span {\n    display: inline-block;\n    width: 120px;\n}\n.test-report-div table {\n    border-top: 1px solid #999;\n    text-align: left;\n    width: 100%;\n}\n.test-report-div table > tbody > tr:nth-child(odd) {\n    background: #bfb;\n}\n.test-report-div .footer {\n    text-align: center;\n}\n.test-report-div .platform {\n    background: #fff;\n    border: 1px solid #999;\n    margin-bottom: 20px;\n    padding: 0 10px 10px 10px;\n    text-align: left;\n}\n.test-report-div .summary {\n    background: #bfb;\n}\n.test-report-div .test-failed {\n    background: #f99;\n}\n.test-report-div .test-pending {\n    background: #99f;\n}\n</style>\n</head>\n<body>\n<div class=\"uiAnimateSpin\" style=\"\n    animation: uiAnimateSpin 2s linear infinite;\n    border-radius: 50%;\n    border-top: 5px solid #7d7;\n    border: 5px solid #999;\n    display: none;\n    height: 25px;\n    vertical-align: middle;\n    width: 25px;\n\"></div>\n<script>\n/* jslint utility2:true */\n(function () {\n    \"use strict\";\n    // polyfill globalThis\n    window.globalThis = window;\n    // measure-and-print time-elapsed for window.onload\n    if (!window.domOnEventWindowOnloadTimeElapsed) {\n        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n        window.addEventListener(\"load\", function () {\n            setTimeout(function () {\n                window.domOnEventWindowOnloadTimeElapsed = (\n                    Date.now() -\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n                console.error(\n                    \"domOnEventWindowOnloadTimeElapsed = \" +\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n            }, 100);\n        });\n    }\n    // limit select-all within <pre tabIndex=\"0\"> elem\n    if (!window.domOnEventSelectAllWithinPre) {\n        window.domOnEventSelectAllWithinPre = function (evt) {\n            let range;\n            let selection;\n            if (\n                (evt.ctrlKey || evt.metaKey) &&\n                evt.key === \"a\" &&\n                evt.target.closest(\"pre\")\n            ) {\n                range = document.createRange();\n                range.selectNodeContents(evt.target.closest(\"pre\"));\n                selection = window.getSelection();\n                selection.removeAllRanges();\n                selection.addRange(range);\n                evt.preventDefault();\n            }\n        };\n        // handle evt\n        document.addEventListener(\n            \"keydown\",\n            window.domOnEventSelectAllWithinPre\n        );\n    }\n}());\n</script>\n<div class=\"test-report-div\">\n<h1>test-report for\n    <a href=\"https://github.com/kaizhu256/node-utility2\">\n    utility2 (2021.1.1)\n    </a>\n</h1>\n\n<div class=\"platform summary\">\n<h2>summary</h2>\n<h4>\n    <span>version</span>- 2021.1.1<br>\n    <span>test-date</span>- 2021-04-04T16:43:46.936Z<br>\n    <span>commit-info</span>- 12129923b5db59bce555e7ad17ce151b07699904 - travis-ci<br>\n</h4>\n<table>\n<thead>\n    <tr>\n    <th>total tests-failed</th>\n    <th>total tests-passed</th>\n    <th>total tests-pending</th>\n    </tr>\n</thead>\n<tbody>\n    <tr>\n    <td class=\"testPassed\">0</td>\n    <td>44</td>\n    <td>0</td>\n    </tr>\n</tbody>\n</table>\n</div>\n\n<div class=\"platform\">\n<h4>\n1. buildApp - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:43:46.937Z<br>\n<span>time-elapsed</span>- 4152 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>4151 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n2. buildApidoc - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:43:34.529Z<br>\n<span>time-elapsed</span>- 6894 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>2</td>\n<td>6892 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n3. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/89.0.4389.90 Safari/537.36<br>\n<a href=\"screenshot.npmTest.browser.%252F.png\">\n<img\nalt=\"screenshot.npmTest.browser.%252F.png\"\nsrc=\"screenshot.npmTest.browser.%252F.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2021-04-04T16:43:30.085Z<br>\n<span>time-elapsed</span>- 190 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>3</td>\n<td>30 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>4</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>5</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>6</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>7</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>8</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>9</td>\n<td>100 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>10</td>\n<td>78 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>11</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>12</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>13</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>14</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>15</td>\n<td>51 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>16</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>17</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>18</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>19</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>20</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>21</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>22</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>23</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n4. npmTest - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:43:28.439Z<br>\n<span>time-elapsed</span>- 4479 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>24</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>25</td>\n<td>18 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>26</td>\n<td>4457 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>27</td>\n<td>39 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>28</td>\n<td>5 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>29</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>30</td>\n<td>173 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>31</td>\n<td>170 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>32</td>\n<td>171 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>33</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>34</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>35</td>\n<td>6 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>36</td>\n<td>19 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>37</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>38</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>39</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>40</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>41</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>42</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>43</td>\n<td>2255 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>44</td>\n<td>3774 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n\n<div class=\"footer\">\n[ this document was created with <a\n    href=\"https://github.com/kaizhu256/node-utility2\"\n    target=\"_blank\"\n>utility2</a> ]\n</div>\n\n</div>\n</body>\n</html>\n"
+    "html": "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta\n    content=\"width=device-width, initial-scale=1\"\n    name=\"viewport\"\n>\n<!-- \"\" -->\n<title>test-report</title>\n<style>\n/* jslint utility2:true */\n/*csslint\n*/\n/* csslint ignore:start */\n*,\n*:after,\n*:before {\n    box-sizing: border-box;\n}\n.uiAnimateSlide {\n    overflow-y: hidden;\n    transition:\n        max-height ease-in 250ms,\n        min-height ease-in 250ms,\n        padding-bottom ease-in 250ms,\n        padding-top ease-in 250ms;\n}\n/* csslint ignore:end */\n@keyframes uiAnimateSpin {\n0% {\n    transform: rotate(0deg);\n}\n100% {\n    transform: rotate(360deg);\n}\n}\na {\n    overflow-wrap: break-word;\n}\nbody {\n    background: #f7f7f7;\n    font-family: Arial, Helvetica, sans-serif;\n    font-size: small;\n    margin: 0 40px;\n}\nbody > div,\nbody > input,\nbody > pre,\nbody > .button,\nbody > .textarea {\n    margin-bottom: 20px;\n    margin-top: 0;\n}\nbody > input,\nbody > .button {\n    width: 20rem;\n}\nbody > .readonly {\n    background: #ddd;\n}\nbody > .textarea {\n    height: 10rem;\n    resize: vertical;\n    width: 100%;\n}\ncode,\npre,\n.textarea {\n    font-family: Consolas, Menlo, monospace;\n    font-size: smaller;\n}\npre {\n    overflow-wrap: break-word;\n    white-space: pre-wrap;\n}\n.button {\n    background: #ddd;\n    border: 1px solid #999;\n    color: #000;\n    cursor: pointer;\n    display: inline-block;\n    padding: 2px 5px;\n    text-align: center;\n    text-decoration: none;\n}\n.button:hover {\n    background: #bbb;\n}\n.styleColorError {\n    color: #d00;\n}\n.textarea {\n    background: #fff;\n    border: 1px solid #999;\n    border-radius: 0;\n    cursor: auto;\n    overflow: auto;\n    padding: 2px;\n}\n.zeroPixel {\n    border: 0;\n    height: 0;\n    margin: 0;\n    padding: 0;\n    width: 0;\n}\n</style>\n<style>\n/* jslint utility2:true */\n.test-report-div img {\n    border: 1px solid #999;\n    margin: 5px 0 5px 0;\n    max-height: 256px;\n    max-width: 512px;\n}\n.test-report-div pre {\n    background: #fdd;\n    border-top: 1px solid #999;\n    margin-bottom: 0;\n    padding: 10px;\n}\n.test-report-div span {\n    display: inline-block;\n    width: 120px;\n}\n.test-report-div table {\n    border-top: 1px solid #999;\n    text-align: left;\n    width: 100%;\n}\n.test-report-div table > tbody > tr:nth-child(odd) {\n    background: #bfb;\n}\n.test-report-div .footer {\n    text-align: center;\n}\n.test-report-div .platform {\n    background: #fff;\n    border: 1px solid #999;\n    margin-bottom: 20px;\n    padding: 0 10px 10px 10px;\n    text-align: left;\n}\n.test-report-div .summary {\n    background: #bfb;\n}\n.test-report-div .test-failed {\n    background: #f99;\n}\n.test-report-div .test-pending {\n    background: #99f;\n}\n</style>\n</head>\n<body>\n<div class=\"uiAnimateSpin\" style=\"\n    animation: uiAnimateSpin 2s linear infinite;\n    border-radius: 50%;\n    border-top: 5px solid #7d7;\n    border: 5px solid #999;\n    display: none;\n    height: 25px;\n    vertical-align: middle;\n    width: 25px;\n\"></div>\n<script>\n/* jslint utility2:true */\n(function () {\n    \"use strict\";\n    // polyfill globalThis\n    window.globalThis = window;\n    // measure-and-print time-elapsed for window.onload\n    if (!window.domOnEventWindowOnloadTimeElapsed) {\n        window.domOnEventWindowOnloadTimeElapsed = Date.now() + 100;\n        window.addEventListener(\"load\", function () {\n            setTimeout(function () {\n                window.domOnEventWindowOnloadTimeElapsed = (\n                    Date.now() -\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n                console.error(\n                    \"domOnEventWindowOnloadTimeElapsed = \" +\n                    window.domOnEventWindowOnloadTimeElapsed\n                );\n            }, 100);\n        });\n    }\n    // limit select-all within <pre tabIndex=\"0\"> elem\n    if (!window.domOnEventSelectAllWithinPre) {\n        window.domOnEventSelectAllWithinPre = function (evt) {\n            let range;\n            let selection;\n            if (\n                (evt.ctrlKey || evt.metaKey) &&\n                evt.key === \"a\" &&\n                evt.target.closest(\"pre\")\n            ) {\n                range = document.createRange();\n                range.selectNodeContents(evt.target.closest(\"pre\"));\n                selection = window.getSelection();\n                selection.removeAllRanges();\n                selection.addRange(range);\n                evt.preventDefault();\n            }\n        };\n        // handle evt\n        document.addEventListener(\n            \"keydown\",\n            window.domOnEventSelectAllWithinPre\n        );\n    }\n}());\n</script>\n<div class=\"test-report-div\">\n<h1>test-report for\n    <a href=\"https://github.com/kaizhu256/node-utility2\">\n    utility2 (2021.1.1)\n    </a>\n</h1>\n\n<div class=\"platform summary\">\n<h2>summary</h2>\n<h4>\n    <span>version</span>- 2021.1.1<br>\n    <span>test-date</span>- 2021-04-04T16:45:30.172Z<br>\n    <span>commit-info</span>- 00ddda3248bfd6b79aa8ad66d328bef1fa6e8c1e - travis-ci<br>\n</h4>\n<table>\n<thead>\n    <tr>\n    <th>total tests-failed</th>\n    <th>total tests-passed</th>\n    <th>total tests-pending</th>\n    </tr>\n</thead>\n<tbody>\n    <tr>\n    <td class=\"testPassed\">0</td>\n    <td>44</td>\n    <td>0</td>\n    </tr>\n</tbody>\n</table>\n</div>\n\n<div class=\"platform\">\n<h4>\n1. buildApp - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:45:30.172Z<br>\n<span>time-elapsed</span>- 4157 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>4155 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n2. buildApidoc - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:45:18.334Z<br>\n<span>time-elapsed</span>- 6426 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 1<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>2</td>\n<td>6424 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n3. npmTest - browser - / - Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/89.0.4389.90 Safari/537.36<br>\n<a href=\"screenshot.npmTest.browser.%252F.png\">\n<img\nalt=\"screenshot.npmTest.browser.%252F.png\"\nsrc=\"screenshot.npmTest.browser.%252F.png\"\n>\n</a>\n<br>\n<span>test-date</span>- 2021-04-04T16:45:14.108Z<br>\n<span>time-elapsed</span>- 224 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>3</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>4</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>5</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>6</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>7</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>8</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>9</td>\n<td>144 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>10</td>\n<td>134 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>11</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>12</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>13</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>14</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>15</td>\n<td>84 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>16</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>17</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>18</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>19</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>20</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>21</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>22</td>\n<td>2 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>23</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n<div class=\"platform\">\n<h4>\n4. npmTest - node - linux - v14.16.0<br>\n<span>test-date</span>- 2021-04-04T16:45:12.469Z<br>\n<span>time-elapsed</span>- 4400 ms<br>\n<span>tests-failed</span>- 0<br>\n<span>tests-passed</span>- 21<br>\n<span>tests-pending</span>- 0<br>\n</h4>\n\n<table>\n<thead><tr>\n<th>#</th>\n<th>time-elapsed</th>\n<th>status</th>\n<th>test-case</th>\n</tr></thead>\n<tbody>\n<tr>\n<td>24</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_assertXxx_default</td>\n</tr>\n<tr>\n<td>25</td>\n<td>11 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApidoc_default</td>\n</tr>\n<tr>\n<td>26</td>\n<td>4386 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_buildApp_default</td>\n</tr>\n<tr>\n<td>27</td>\n<td>36 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_chromeDevtoolsClient_coverage</td>\n</tr>\n<tr>\n<td>28</td>\n<td>3 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_cliRun_default</td>\n</tr>\n<tr>\n<td>29</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_eventListenerXxx_default</td>\n</tr>\n<tr>\n<td>30</td>\n<td>155 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_200</td>\n</tr>\n<tr>\n<td>31</td>\n<td>153 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_httpFetch_404</td>\n</tr>\n<tr>\n<td>32</td>\n<td>154 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_libUtility2Js_standalone</td>\n</tr>\n<tr>\n<td>33</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_listShuffle_default</td>\n</tr>\n<tr>\n<td>34</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_noop_default</td>\n</tr>\n<tr>\n<td>35</td>\n<td>5 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_replStart_default</td>\n</tr>\n<tr>\n<td>36</td>\n<td>18 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_setTimeoutOnError_default</td>\n</tr>\n<tr>\n<td>37</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringHtmlSafe_default</td>\n</tr>\n<tr>\n<td>38</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_stringXxx_default</td>\n</tr>\n<tr>\n<td>39</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_testMock_err</td>\n</tr>\n<tr>\n<td>40</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uiAnimateXxx_default</td>\n</tr>\n<tr>\n<td>41</td>\n<td>1 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_urlJoin_default</td>\n</tr>\n<tr>\n<td>42</td>\n<td>0 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_uuid4Create_default</td>\n</tr>\n<tr>\n<td>43</td>\n<td>2291 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_default</td>\n</tr>\n<tr>\n<td>44</td>\n<td>3761 ms</td>\n<td class=\"test-passed\">passed</td>\n<td>testCase_webpage_err</td>\n</tr>\n</tbody>\n</table>\n\n</div>\n\n<div class=\"footer\">\n[ this document was created with <a\n    href=\"https://github.com/kaizhu256/node-utility2\"\n    target=\"_blank\"\n>utility2</a> ]\n</div>\n\n</div>\n</body>\n</html>\n"
 }
