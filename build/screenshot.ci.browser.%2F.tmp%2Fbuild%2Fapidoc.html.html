@@ -11258,24 +11258,7 @@ require("fs").readdir(".", function (ignore, fileList) {
     "use strict";
     this.report(message, line, col, rule);
 }</pre></li>
-    <li>example use<pre class="apidocCodePre">...
-    options.source_map.add(
-        mapping.token.file,
-        mapping.line, mapping.col,
-        mapping.token.line, mapping.token.col,
-        !mapping.name &amp;&amp; mapping.token.type == "name" ? mapping.token.value : mapping.name
-    );
-} catch(ex) {
-    mapping.token.file != null &amp;&amp; AST_Node.<span class="apidocCodeKeywordSpan">warn</span>("Couldn't figure out
- mapping for {file}:{line},{col} â†’ {cline},{ccol} [{name}]", {
-        file: mapping.token.file,
-        line: mapping.token.line,
-        col: mapping.token.col,
-        cline: mapping.line,
-        ccol: mapping.col,
-        name: mapping.name || ""
-    });
-...</pre></li>
+    <li>example use<pre class="apidocCodePre">n/a</pre></li>
     </ul>
 
 
