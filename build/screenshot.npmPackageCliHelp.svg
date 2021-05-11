@@ -11,7 +11,7 @@
 <tspan x="10" y="154">export npm_package_nameLib='utility2'</tspan>
 <tspan x="10" y="170">export npm_package_nameOriginal='utility2'</tspan>
 <tspan x="10" y="186">export npm_package_private=''</tspan>
-<tspan x="10" y="202">export npm_package_version='2021.1.1'</tspan>
+<tspan x="10" y="202">export npm_package_version='2021.5.1'</tspan>
 <tspan x="10" y="218">export GITHUB_FULLNAME='kaizhu256/node-utility2'</tspan>
 <tspan x="10" y="234">export GITHUB_OWNER='kaizhu256'</tspan>
 <tspan x="10" y="250">export GITHUB_REPO='node-utility2'</tspan>
@@ -20,18 +20,18 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/runner/work/node-utility2/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/runner/work/node-utility2/node-utility2:/home/runner/work/node-utility2\</tspan><tspan x="10" y="330">/.bin"</tspan>
 <tspan x="10" y="346">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_ID='d4111e8d1463421250979fa35e99c3e0c8178e3f'</tspan>
-<tspan x="10" y="378">export CI_COMMIT_MESSAGE='- remove unused file lib.terser.js'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_ID='455fc16a9b8605194389fd9b564240da6ffa6d9a'</tspan>
+<tspan x="10" y="378">export CI_COMMIT_MESSAGE='- remove shell-function shGitSquashShift'</tspan>
 <tspan x="10" y="394">export NODE_OPTIONS='--unhandled-rejections=strict'</tspan>
 <tspan x="10" y="410">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.sh</tspan>
 <tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
 <tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
-<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
 <tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
 <tspan x="10" y="506"></tspan>
 <tspan x="10" y="522">npmPackageCliHelp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.\</tspan><tspan x="10" y="538">tmp/build/test-report.json</tspan>
-<tspan x="10" y="554">utility2 (2021.1.1)</tspan>
+<tspan x="10" y="554">utility2 (2021.5.1)</tspan>
 <tspan x="10" y="570"></tspan>
 <tspan x="10" y="586">usage:</tspan>
 <tspan x="10" y="602">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>

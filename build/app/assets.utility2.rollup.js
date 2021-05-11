@@ -31252,7 +31252,7 @@ if (local.isEnvNode) {
 /* script-begin /assets.utility2.js */
 // usr/bin/env node
 /*
- * lib.utility2.js (2021.1.1)
+ * lib.utility2.js (2021.5.1)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -36888,7 +36888,7 @@ local.assetsDict[\"/\"] = `<!doctype html>\n\
     name=\"viewport\"\n\
 >\n\
 <!-- \"assets.utility2.template.html\" -->\n\
-<title>utility2 (2021.1.1)</title>\n\
+<title>utility2 (2021.5.1)</title>\n\
 <style>\n\
 /* jslint utility2:true */\n\
 /*csslint\n\
@@ -37049,7 +37049,7 @@ pre {\n\
 </script>\n\
 <h1>\n\
 <a href=\"https://github.com/kaizhu256/node-utility2\" target=\"_blank\">\n\
-    utility2 (2021.1.1)\n\
+    utility2 (2021.5.1)\n\
 </a>\n\
 </h1>\n\
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>\n\
@@ -37214,7 +37214,7 @@ npm_package_description: \"this zero-dependency package will provide high-level 
 npm_package_homepage: \"https://github.com/kaizhu256/node-utility2\",\n\
 npm_package_name: \"utility2\",\n\
 npm_package_nameLib: \"utility2\",\n\
-npm_package_version: \"2021.1.1\"\n\
+npm_package_version: \"2021.5.1\"\n\
 }\n\
 </script>\n\
 <script src=\"assets.utility2.lib.istanbul.js\"></script>\n\
