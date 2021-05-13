@@ -238,7 +238,7 @@ shDockerRestartUtility2() {(set -e
         LOCALHOST="${LOCALHOST:-127.0.0.1}"
         ;;
     esac
-    if [ -d /g ]
+    if [ -d /g/ ]
     then
         DOCKER_V_GAME="-v g:/:/mnt"
     fi
@@ -324,7 +324,7 @@ shDockerSh() {
     fi
     # update-ca-certificates
     if [ -f "$CURL_CA_BUNDLE" ] &&
-        [ -d /usr/local/share/ca-certificates ] &&
+        [ -d /usr/local/share/ca-certificates/ ] &&
         [ ! -f /usr/local/share/ca-certificates/.curl-ca-bundle.crt ]
     then
         cp "$CURL_CA_BUNDLE" \
@@ -394,9 +394,9 @@ shGitLsTree() {(set -e
     node -e '
 (function () {
     "use strict";
-    let data;
+    let result;
     // get file, mode, size
-    data = require("child_process").spawnSync("git", [
+    result = require("child_process").spawnSync("git", [
         "ls-tree", "-lr", "HEAD"
     ], {
         encoding: "utf8",
@@ -404,7 +404,7 @@ shGitLsTree() {(set -e
             "ignore", "pipe", 2
         ]
     }).stdout;
-    data = Array.from(data.matchAll(
+    result = Array.from(result.matchAll(
         /^(\S+?)\u0020+?\S+?\u0020+?\S+?\u0020+?(\S+?)\t(\S+?)$/gm
     )).map(function ([
         ignore, mode, size, file
@@ -415,18 +415,18 @@ shGitLsTree() {(set -e
             size: Number(size)
         };
     });
-    data = data.sort(function (aa, bb) {
+    result = result.sort(function (aa, bb) {
         return aa.file > bb.file || -1;
     });
-    data = data.slice(0, 1000);
-    data.unshift({
+    result = result.slice(0, 1000);
+    result.unshift({
         file: ".",
         mode: "755",
         size: 0
     });
     // get date
-    data.forEach(function (elem) {
-        data[0].size += elem.size;
+    result.forEach(function (elem) {
+        result[0].size += elem.size;
         require("child_process").spawn("git", [
             "log", "--max-count=1", "--format=%at", elem.file
         ], {
@@ -442,9 +442,9 @@ shGitLsTree() {(set -e
     process.on("exit", function () {
         let iiPad;
         let sizePad;
-        iiPad = String(data.length).length + 1;
-        sizePad = String(Math.ceil(data[0].size / 1024)).length;
-        process.stdout.write(data.map(function (elem, ii) {
+        iiPad = String(result.length).length + 1;
+        sizePad = String(Math.ceil(result[0].size / 1024)).length;
+        process.stdout.write(result.map(function (elem, ii) {
             return (
                 String(ii + ".").padStart(iiPad, " ") +
                 "  " + elem.mode +
@@ -502,20 +502,18 @@ vendor)s{0,1}(\\b|_)\
     find "$DIR" -type f |
         grep -v -E "$FILE_FILTER" |
         tr "\n" "\000" |
-        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
-    find "$DIR" -name .travis.yml |
-        tr "\n" "\000" |
-        xargs -0 grep -HIn -E "$REGEXP" "$@" || true
+        xargs -0 grep -HIn -E "$REGEXP" "$@" |
+        tee /tmp/shGrep.txt || true
 )}
 
 shGrepReplace() {(set -e
-# this function will inline grep-and-replace files in $1
+# this function will inline grep-and-replace /tmp/shGrep.txt
     node -e '
 (function () {
     "use strict";
     let dict;
     dict = {};
-    require("fs").readFileSync(process.argv[1], "utf8").replace((
+    require("fs").readFileSync("/tmp/shGrep.txt", "utf8").replace((
         /^(.+?):(\d+?):(.*?)$/gm
     ), function (ignore, file, lineno, str) {
         dict[file] = dict[file] || require("fs").readFileSync(
@@ -535,7 +533,7 @@ shGrepReplace() {(set -e
         });
     });
 }());
-' "$@" # '
+' # '
 )}
 
 shHttpFileServer() {(set -e
@@ -799,7 +797,7 @@ if (!globalThis.debugInline) {
         });
     });
 }());
-' "$@"
+' "$@" # '
 )}
 
 shImageToDataUri() {(set -e
@@ -1353,6 +1351,11 @@ shRmDsStore() {(set -e
 
 shSource() {
 # this function will source .bashrc
+    if [ -d "$HOME/Documents/utility2/" ] && [ -f "$HOME/lib.utility2.sh" ]
+    then
+        rm -f "$HOME/Documents/utility2/lib.utility2.sh"
+        ln "$HOME/lib.utility2.sh" "$HOME/Documents/utility2/lib.utility2.sh"
+    fi
     . "$HOME/.bashrc"
     # . lib.utility2.sh
 }
