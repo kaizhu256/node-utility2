@@ -32,6 +32,48 @@
 # shDockerSh work 'PORT=4065 npm start'
 # vim rgx-lowercase \L\1\e
 
+# windows_terminal_settings.json
+: '
+// ~/AppData/Local/Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState/settings.json
+{
+    "defaultProfile": "{00000000-0000-6170-ba54-000000000001}",
+    "profiles":
+    {
+        "defaults":
+        {
+            // Put settings here that you want to apply to all profiles.
+            // https://docs.microsoft.com/en-us/windows/terminal/customize-settings/profile-settings
+            "acrylicOpacity" : 0.5, // default 0.5
+            "closeOnExit" : "graceful", // default "graceful"
+            "colorScheme" : "Campbell Powershell", // default "Campbell"
+            "cursorColor" : "#0f0",
+            "cursorShape" : "vintage", // default "bar"
+            "fontFace" : "Lucida Console", // default "Cascadia Mono"
+            "fontSize" : 6, // default 12
+            "historySize" : 9001, // default 9001
+            "padding" : "0, 0, 0, 0", // default "8, 8, 8, 8"
+            "snapOnInput" : true, // defaut true
+            "useAcrylic" : false, // default false
+        },
+        "list":
+        [
+            // https://stackoverflow.com/questions/56839307/adding-git-bash-to-the-new-windows-terminal
+            {
+                "commandline": "%PROGRAMFILES%/git/usr/bin/bash.exe -i -l",
+                // "commandline": "%USERPROFILE%/AppData/Local/Programs/Git/bin/bash.exe -l -i",
+                // "commandline": "%USERPROFILE%/scoop/apps/git/current/usr/bin/bash.exe -l -i",
+                "guid": "{00000000-0000-6170-ba54-000000000001}",
+                "icon": "%PROGRAMFILES%/Git/mingw64/share/git/git-for-windows.ico",
+                // "icon": "%USERPROFILE%/AppData/Local/Programs/Git/mingw64/share/git/git-for-windows.ico",
+                // "icon": "%USERPROFILE%/apps/git/current/usr/share/git/git-for-windows.ico",
+                "name" : "Bash",
+                "startingDirectory" : "%USERPROFILE%",
+            }
+        ]
+    },
+}
+'
+
 shBaseInit() {
 # this function will init bash-login base-env, and is intended for aws-ec2 setup
     local FILE || return "$?"
