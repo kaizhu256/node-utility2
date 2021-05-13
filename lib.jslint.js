@@ -1,386 +1,463 @@
 #!/usr/bin/env node
 /*
- * lib.jslint.js (2020.11.3)
- * https://github.com/kaizhu256/node-jslint-lite
- * this zero-dependency package will provide browser-compatible versions of jslint (v2020.7.2) and csslint (v2018.2.25), with working web-demo
- *
- */
-
-
-/* istanbul instrument in package jslint */
-// assets.utility2.header.js - start
-/* jslint utility2:true */
-/* istanbul ignore next */
-// run shared js-env code - init-local
-(function () {
-    "use strict";
-    let isEnvNode;
-    let local;
-    // init debugInline
-    if (!globalThis.debugInline) {
-        let consoleError;
-        consoleError = console.error;
-        globalThis.debugInline = function (...argList) {
-        /*
-         * this function will both print <argList> to stderr and
-         * return <argList>[0]
-         */
-            consoleError("\n\ndebugInline");
-            consoleError(...argList);
-            consoleError("\n");
-            return argList[0];
-        };
-    }
-    // init isEnvNode
-    isEnvNode = (
-        typeof process === "object" && process &&
-        process.versions && typeof process.versions.node === "string"
-    );
-    // init function
-    function objectDeepCopyWithKeysSorted(obj) {
-    /*
-     * this function will recursively deep-copy <obj> with keys sorted
-     */
-        let sorted;
-        if (typeof obj !== "object" || !obj) {
-            return obj;
+shRawLibFetch
+{
+    "fetchList": [
+        {
+            "url": "https://github.com/CSSLint/csslint/blob/49a748126ec0a6e4f6905a03c0eaece47ece04d3/dist/csslint.js"
+        },
+        {
+            "url": "https://github.com/douglascrockford/JSLint/blob/bca8b225a376352899d634442802b241fee8b97b/jslint.js"
         }
-        // recursively deep-copy list with child-keys sorted
-        if (Array.isArray(obj)) {
-            return obj.map(objectDeepCopyWithKeysSorted);
-        }
-        // recursively deep-copy obj with keys sorted
-        sorted = {};
-        Object.keys(obj).sort().forEach(function (key) {
-            sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-        });
-        return sorted;
-    }
-    function assertJsonEqual(aa, bb) {
-    /*
-     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
-     */
-        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
-        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
-        if (aa !== bb) {
-            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
-        }
-    }
-    function assertOrThrow(passed, msg) {
-    /*
-     * this function will throw <msg> if <passed> is falsy
-     */
-        if (passed) {
-            return;
-        }
-        throw (
-            (
-                msg &&
-                typeof msg.message === "string" &&
-                typeof msg.stack === "string"
-            )
-            // if msg is err, then leave as is
-            ? msg
-            : new Error(
-                typeof msg === "string"
-                // if msg is string, then leave as is
-                ? msg
-                // else JSON.stringify(msg)
-                : JSON.stringify(msg, undefined, 4)
-            )
-        );
-    }
-    function documentQuerySelectorAll(selector) {
-    /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
-     */
-        return Array.from(
-            (
-                typeof document === "object" && document &&
-                typeof document.querySelectorAll === "function"
-            )
-            ? document.querySelectorAll(selector)
-            : []
-        );
-    }
-    function identity(val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    }
-    function noop() {
-    /*
-     * this function will do nothing
-     */
-        return;
-    }
-    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
-    /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
-     */
-        function recurse(tgt, src, depth) {
-            Object.entries(src).forEach(function ([
-                key, bb
-            ]) {
-                let aa;
-                aa = tgt[key];
-                if (aa === undefined || aa === null || aa === "") {
-                    tgt[key] = bb;
-                    return;
-                }
-                if (
-                    depth !== 0 &&
-                    typeof aa === "object" && aa && !Array.isArray(aa) &&
-                    typeof bb === "object" && bb && !Array.isArray(bb)
-                ) {
-                    recurse(aa, bb, depth - 1);
-                }
-            });
-        }
-        recurse(tgt, src, depth | 0);
-        return tgt;
-    }
-    function onErrorThrow(err) {
-    /*
-     * this function will throw <err> if exists
-     */
-        if (err) {
-            throw err;
-        }
-    }
-    // init local
-    local = {
-        assertJsonEqual,
-        assertOrThrow,
-        documentQuerySelectorAll,
-        identity,
-        isEnvNode,
-        local,
-        noop,
-        objectAssignDefault,
-        objectDeepCopyWithKeysSorted,
-        onErrorThrow
-    };
-    globalThis.globalLocal = local;
-}());
-// assets.utility2.header.js - end
-
-
-(function (local) {
-"use strict";
-
-
-/* istanbul ignore next */
-// run shared js-env code - init-before
-(function () {
-// init local
-local = (
-    globalThis.utility2_rollup ||
-    // globalThis.utility2_rollup_old ||
-    // require("./assets.utility2.rollup.js") ||
-    globalThis.globalLocal
-);
-// init exports
-if (local.isEnvNode) {
-    module.exports = local;
-    module.exports.__dirname = __dirname;
-} else {
-    globalThis.utility2_jslint = local;
+    ]
 }
-// init lib main
-local.jslint = local;
+-                    parent: global,
+-                    id: thing.id,
+-                    init: true,
++                    // hack-jslint - validate sorted-object-keys
++                    id: thing.id,
++                    init: true,
++                    parent: global,
 
+-                if (right.from < at) {
++                // hack-jslint - exact margin
++                if (right.from !== at) {
 
-/* validateLineSortedReset */
-local.cliRun = function ({
-    rgxComment
-}) {
-/*
- * this function will run cli
- */
-    let {
-        _default,
-        _eval,
-        _help,
-        _interactive,
-        _version,
-        cliDict,
-        replStart
-    } = Object.assign({}, local, local.cliDict);
-    _eval = _eval || function () {
-    /*
-     * <code>
-     * will eval <code>
-     */
-        Object.assign(globalThis, local);
-        require("vm").runInThisContext(process.argv[3]);
-    };
-    _help = _help || function () {
-    /*
-     *
-     * will print help
-     */
-        let cmdList;
-        let file;
-        let packageJson;
-        let str;
-        let strDict;
-        cmdList = [
-            {
-                argList: "<arg2>  ...",
-                description: "usage:",
-                cmd: [
-                    "<arg1>"
-                ]
-            }, {
-                argList: "'console.log(\"hello world\")'",
-                description: "example:",
-                cmd: [
-                    "--eval"
-                ]
-            }
-        ];
-        file = __filename.replace((
-            /.*\//
-        ), "");
-        packageJson = require("./package.json");
-        // validate comment
-        rgxComment = rgxComment || (
-            /\)\u0020\{\n(?:|\u0020{4})\/\*\n(?:\u0020|\u0020{5})\*((?:\u0020<[^>]*?>|\u0020\.\.\.)*?)\n(?:\u0020|\u0020{5})\*\u0020(will\u0020.*?\S)\n(?:\u0020|\u0020{5})\*\/\n(?:\u0020{4}|\u0020{8})\S/
-        );
-        strDict = {};
-        Object.keys(cliDict).sort().forEach(function (key, ii) {
-            if (key[0] === "_" && key !== "_default") {
-                return;
-            }
-            str = String(cliDict[key]);
-            if (key === "_default") {
-                key = "";
-            }
-            strDict[str] = strDict[str] || (ii + 2);
-            ii = strDict[str];
-            if (cmdList[ii]) {
-                cmdList[ii].cmd.push(key);
-                return;
-            }
-            cmdList[ii] = rgxComment.exec(str);
-            if (!cmdList[ii]) {
-                throw new Error(
-                    "cliRun - cannot parse comment in cmd " +
-                    key + ":\nnew RegExp(" +
-                    JSON.stringify(rgxComment.source) +
-                    ").exec(" + JSON.stringify(str).replace((
-                        /\\\\/g
-                    ), "\u0000").replace((
-                        /\\n/g
-                    ), "\\n\\\n").replace((
-                        /\u0000/g
-                    ), "\\\\") + ");"
-                );
-            }
-            cmdList[ii] = {
-                argList: String(cmdList[ii][1] || "").trim(),
-                cmd: [
-                    key
-                ],
-                description: cmdList[ii][2]
-            };
-        });
-        str = "";
-        str += packageJson.name + " (" + packageJson.version + ")\n\n";
-        str += cmdList.filter(function (elem) {
-            return elem;
-        }).map(function (elem, ii) {
-            elem.cmd = elem.cmd.filter(function (elem) {
-                return elem;
-            });
-            switch (ii) {
-            case 0:
-            case 1:
-                elem.argList = [
-                    elem.argList
-                ];
-                break;
-            default:
-                elem.argList = elem.argList.split(" ");
-                elem.description = (
-                    "# CMD " +
-                    (elem.cmd[0] || "<none>") + "\n# " +
-                    elem.description
-                );
-            }
-            return (
-                elem.description + "\n  " + file +
-                "  " + elem.cmd.sort().join("|") + "  " +
-                elem.argList.join("  ")
-            );
-        }).join("\n\n");
-        console.log(str);
-    };
-    _interactive = _interactive || function () {
-    /*
-     *
-     * will start interactive-mode
-     */
-        Object.assign(globalThis, local);
-        replStart = replStart || require("repl").start;
-        replStart({
-            useGlobal: true
-        });
-    };
-    _version = _version || function () {
-    /*
-     *
-     * will print version
-     */
-        console.log(require(__dirname + "/package.json").version);
-    };
-    _default = _default || _help;
-    Object.assign(cliDict, {
-        "--eval": _eval,
-        "--help": _help,
-        "--interactive": _interactive,
-        "--version": _version,
-        "-e": _eval,
-        "-h": _help,
-        "-i": _interactive,
-        "-v": _version,
-        _default,
-        _eval,
-        _help,
-        _interactive,
-        _version
-    });
-    // run help-cmd if no arguments are given
-    if (process.argv.length <= 2) {
-        _help();
-        return;
-    }
-    // run defined-cmd if it exists
-    if (cliDict[process.argv[2]]) {
-        cliDict[process.argv[2]]();
-        return;
-    }
-    // run default-cmd
-    _default();
-};
-}());
+-            && !regexp_seen
++            && !regexp_seen
++            // hack-jslint - ignore too_long url
++            && !(
++                /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
++            ).test(whole_line)
 
+-            id: "(global)",
+-            body: true,
+-            context: empty(),
+-            from: 0,
++            // hack-jslint - validate sorted-object-keys
++            body: true,
++            context: empty(),
++            from: 0,
++            id: "(global)",
 
-// run shared js-env code - function
-(function () {
-/* jslint ignore:start */
-/*
-repo https://github.com/CSSLint/csslint/tree/e8aeeda06c928636e21428e09b1af93f66621209
-committed 2018-02-25T11:28:16Z
+-        if (source_line !== undefined) {
++        if (source_line !== undefined) {
++            // hack-jslint - parse source_line for ignore-macro
++            let match;
++            lines_extra[line] = {
++                line,
++                source_line
++            };
++            match = (
++                source_line.match(
++                    /^\/\*\u0020jslint\u0020(ignore:start|ignore:end)\u0020\*\/$/m
++                ) ||
++                source_line.slice(-50).match(
++                    /\u0020\/\/\u0020jslint\u0020(ignore:line)$/m
++                )
++            );
++            switch (match && match[1]) {
++            case "ignore:end":
++                line_ignore = undefined;
++                break;
++            case "ignore:line":
++                line_ignore = "line";
++                break;
++            case "ignore:start":
++                line_ignore = true;
++                break;
++            }
++            lines_extra[line].ignore = line_ignore;
++            switch (line_ignore) {
++            case "line":
++                line_ignore = undefined;
++                break;
++            case true:
++                source_line = "";
++                break;
++            }
+
+-        name: "JSLintError",
+-        column,
+-        line,
+-        code
++        // hack-jslint - validate sorted-object-keys
++        code,
++        column,
++        line,
++        name: "JSLintError"
+
+-        })
+-    };
+-});
++        })
++    };
++}
++// hack-jslint - cli
++function stringLineCount(data) {
++/\*\*
++ * this function will count number of newlines in <data>
++ *\*\/
++    let cnt;
++    let ii;
++    // https://jsperf.com/regexp-counting-2/8
++    cnt = 0;
++    ii = 0;
++    while (true) {
++        ii = data.indexOf("\n", ii) + 1;
++        if (ii === 0) {
++            break;
++        }
++        cnt += 1;
++    }
++    return cnt;
++}
++async function jslint2({
++    code,
++    errMsg = [],
++    file,
++    lineOffset = 0
++}) {
++    switch ((
++        /\.\w+?$|$/m
++    ).exec(file)[0]) {
++    case ".css":
++        errMsg = CSSLint.verify(code).messages; // jslint ignore:line
++        break;
++    case ".html":
++        // recurse
++        code.replace((
++            /^<style>\n([\S\s]*?\n)<\/style>$/gm
++        ), function (ignore, match1, ii) {
++            jslint2({
++                code: match1,
++                file: file + ".<style>.css",
++                lineOffset: stringLineCount(code.slice(0, ii)) + 1
++            });
++            return "";
++        });
++        // recurse
++        code.replace((
++            /^<script>\n([\S\s]*?\n)<\/script>$/gm
++        ), function (ignore, match1, ii) {
++            jslint2({
++                code: match1,
++                file: file + ".<script>.js",
++                lineOffset: stringLineCount(code.slice(0, ii)) + 1
++            });
++            return "";
++        });
++        return;
++    case ".md":
++        // recurse
++        code.replace((
++            /^```javascript\n([\S\s]*?\n)```$/gm
++        ), function (ignore, match1, ii) {
++            jslint2({
++                code: match1.replace((
++                    /'"'"'/g
++                ), "'"),
++                file: file + ".<```javascript>.js",
++                lineOffset: stringLineCount(code.slice(0, ii)) + 1
++            });
++            return "";
++        });
++        return;
++    case ".sh":
++        // recurse
++        code.replace((
++            /\bnode\u0020-e\u0020'\n([\S\s]*?\n)'/gm
++        ), function (ignore, match1, ii) {
++            jslint2({
++                code: match1.replace((
++                    /'"'"'/g
++                ), "'"),
++                file: file + ".<node -e>.js",
++                lineOffset: stringLineCount(code.slice(0, ii)) + 1
++            });
++            return "";
++        });
++        return;
++    default:
++        errMsg = jslint(code, {
++            bitwise: true,
++            browser: true,
++            debug: true,
++            node: true,
++            this: true
++        }, [
++            "global", "globalThis"
++        ]).warnings;
++    }
++    errMsg = errMsg.filter(function ({
++        message
++    }) {
++        return message;
++    // print only first 10 err
++    }).slice(0, 10).map(function ({
++        col,
++        column,
++        evidence,
++        line,
++        message,
++        source_line
++    }, ii) {
++        // mode csslint
++        if (col !== undefined) {
++            column = col;
++            source_line = evidence;
++        // mode jslint
++        } else {
++            column += 1;
++            line += 1;
++        }
++        line += lineOffset;
++        return (
++            String(ii + 1).padStart(3, " ") +
++            " \u001b[31m" + message + "\u001b[39m" +
++            " \u001b[90m\/\/ line " + line + ", column " + column +
++            "\u001b[39m\n" +
++            ("    " + String(source_line).trim()).slice(0, 72)
++        );
++    }).join("\n");
++    if (errMsg) {
++        // print err to stderr
++        console.error("\u001b[1mjslint " + file + "\u001b[22m\n" + errMsg);
++    }
++}
++let file;
++file = process.argv[2];
++if (file === ".") {
++    require("fs").readdirSync(".").forEach(function (file) {
++        let timeStart;
++        timeStart = Date.now();
++        switch ((
++            /\.\w+?$|$/m
++        ).exec(file)[0]) {
++        case ".css":
++        case ".html":
++        case ".js":
++        // case ".json":
++        case ".md":
++        case ".sh":
++            break;
++        default:
++            return;
++        }
++        require("fs").readFile(file, "utf8", function (err, code) {
++            if (err || !(
++                !(
++                    /\b(?:assets\.app\.js|lock|min|raw|rollup)\b/
++                ).test(file) &&
++                code &&
++                code.length < 1048576 &&
++                (
++                    /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$/m
++                ).test(code)
++            )) {
++                return;
++            }
++            jslint2({
++                code,
++                file
++            });
++            console.error(
++                "jslint - " + (Date.now() - timeStart) + "ms - " + file
++            );
++        });
++    });
++} else {
++    jslint2({
++        code: require("fs").readFileSync(file, "utf8"),
++        file
++    });
++}
++// hack-jslint - global-function-scope
++/\*\* jslint ignore:start *\*\/
++}());
++/\*\* jslint ignore:end *\*\/
+
+-    "(": ")",       // paren
+-    "[": "]",       // bracket
+-    "{": "}",       // brace
+-    "${": "}"       // mega
++    // hack-jslint - validate sorted-object-keys
++    "${": "}",      // mega
++    "(": ")",       // paren
++    "[": "]",       // bracket
++    "{": "}"        // brace
+
+-    couch: [
+-        "emit", "getRow", "isArray", "log", "provides", "registerType",
+-        "require", "send", "start", "sum", "toJSON"
+-    ],
+-    convert: true,
++    // hack-jslint - validate sorted-object-keys
++    convert: true,
++    couch: [
++        "emit", "getRow", "isArray", "log", "provides", "registerType",
++        "require", "send", "start", "sum", "toJSON"
++    ],
+
+-    if (cadet.id === "(comment)") {
++    // hack-jslint - advance token async/await to next_token by context
++    const next_cadet = tokens[token_nr] || {};
++    if (next_cadet.identifier && (
++        cadet.id === "await"
++        || (cadet.id === "async" && next_cadet.id === "function")
++    )) {
++        cadet.id = next_cadet.id;
++        token_nr += 1;
++    }
++    if (cadet.id === "(comment)") {
+
+-    if (next_token.id !== "}") {
+-        (function member() {
+-            let extra;
+-            let full;
+-            let id;
+-            let name = next_token;
+-            let value;
++    if (next_token.id !== "}") {
++        // hack-jslint - validate sorted-object-keys
++        let aa;
++        let bb;
++        bb = "";
++        (function member() {
++            let extra;
++            let full;
++            let id;
++            let name = next_token;
++            let value;
++            aa = bb;
++            bb = String(name.value || name.id);
++            if (!(aa < bb)) {
++                warn("Unsorted object-keys.", name);
++            }
+
+-    let line = -1;              // the line number of the next character
++    let line = -1;              // the line number of the next character
++    // hack-jslint - init line_ignore
++    let line_ignore = undefined;
+
+-    return the_switch;
++    // hack-jslint - validate sorted-case-statements
++    let aa;
++    let bb;
++    let ii;
++    ii = 0;
++    while (ii < the_cases.length) {
++        aa = bb;
++        bb = the_cases[ii].expression[0];
++        if (!(
++            ii === 0
++            || (
++                aa.id === "(number)" && bb.id === "(number)"
++                && Number(aa.value) < Number(bb.value)
++            )
++            || lines[aa.line] < lines[bb.line]
++        )) {
++            warn("Unsorted case-statements.", the_cases[ii].expression[0]);
++            break;
++        }
++        ii += 1;
++    }
++    return the_switch;
+
+-    try {
+-        warnings = [];
++    // hack-jslint - init lines_extra
++    lines = (
++        Array.isArray(source)
++        ? source
++        : source.split(rx_crlf)
++    );
++    lines_extra = lines.map(function () {
++        return {};
++    });
++    try {
++        warnings = [];
+
+-    warnings.push(warning);
+-    return warning;
++    // hack-jslint - ignore warning
++    if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
++        warnings.push(warning);
++    }
++    return warning;
+
+-  | (
+-        0
+-      | [ 1-9 ] [ 0-9 ]*
+-    )
+-) ( .* ) $ `;
+-const rx_digits = /^[0-9]*\*\/;
+-const rx_hexs = /^[0-9A-F]*\*\/i;
+-const rx_octals = /^[0-7]*\*\/;
+-const rx_bits = /^[01]*\*\/;
++  | (
++        0 n?
++      | [ 1-9 ] [ 0-9 ]* n?
++    )
++) ( .* ) $ `;
++// hack-jslint - bigint
++const rx_digits = /^[0-9]*n?/;
++const rx_hexs = /^[0-9A-F]*n?/i;
++const rx_octals = /^[0-7]*n?/;
++const rx_bits = /^[01]*n?/;
+
+-/\*\*property
++// hack-jslint - global-function-scope
++/\*\* jslint ignore:end *\*\/
++let lines_extra;
++// hack-jslint - disable property-check
++/\*\*\property
+
+-const rx_bad_property = tag_regexp `
+-    ^_
+-  | \$
+-  | Sync $
+-  | _ $
++// hack-jslint - nomen
++const rx_bad_property = tag_regexp `
++    $^
+
+-export default Object.freeze(function jslint(
++// hack-jslint - function jslint
++function jslint(
+
+-var CSSLint = (function(){
++// hack-csslint - global-function-scope
++/\*\* jslint utility2:true *\*\/
++/\*\* jslint ignore:start *\*\/
++(function () {
++// init debugInline
++if (!globalThis.debugInline) {
++    let consoleError;
++    consoleError = console.error;
++    globalThis.debugInline = function (...argList) {
++    /\*\*
++     * this function will both print <argList> to stderr and
++     * return <argList>[0]
++     *\*\/
++        consoleError("\n\ndebugInline");
++        consoleError(...argList);
++        consoleError("\n");
++        return argList[0];
++    };
++}
++var CSSLint = (function(){
 */
 
 
 /*
-file https://github.com/CSSLint/csslint/blob/e8aeeda06c928636e21428e09b1af93f66621209/dist/csslint.js
+repo https://github.com/CSSLint/csslint/tree/49a748126ec0a6e4f6905a03c0eaece47ece04d3
+committed 2019-02-21T01:35:18Z
+*/
+
+
+/*
+file https://github.com/CSSLint/csslint/blob/49a748126ec0a6e4f6905a03c0eaece47ece04d3/dist/csslint.js
 */
 /*!
 CSSLint v1.0.5
@@ -406,7 +483,25 @@ THE SOFTWARE.
 
 */
 
-/* istanbul ignore next */
+// hack-csslint - global-function-scope
+/* jslint utility2:true */
+/* jslint ignore:start */
+(function () {
+// init debugInline
+if (!globalThis.debugInline) {
+    let consoleError;
+    consoleError = console.error;
+    globalThis.debugInline = function (...argList) {
+    /*
+     * this function will both print <argList> to stderr and
+     * return <argList>[0]
+     */
+        consoleError("\n\ndebugInline");
+        consoleError(...argList);
+        consoleError("\n");
+        return argList[0];
+    };
+}
 var CSSLint = (function(){
   var module = module || {},
       exports = exports || {};
@@ -11215,9 +11310,10 @@ file https://github.com/douglascrockford/JSLint/blob/bca8b225a376352899d63444280
 
 // WARNING: JSLint will hurt your feelings.
 
-// hack-jslint - property
-let line_ignore;
+// hack-jslint - global-function-scope
+/* jslint ignore:end */
 let lines_extra;
+// hack-jslint - disable property-check
 /*\property
     a, and, arity, assign, b, bad_assignment_a, bad_directive_a, bad_get,
     bad_module_name_a, bad_option_a, bad_property_a, bad_set, bitwise, block,
@@ -11275,10 +11371,6 @@ function populate(array, object = empty(), value = true) {
 }
 
 const allowed_option = {
-    // hack-jslint - allowed_option extra
-    debug: true,
-    nomen: true,
-    throw_error: true,
 
 // These are the options that are recognized in the option object or that may
 // appear in a /*jslint*/ directive. Most options will have a boolean value,
@@ -11295,11 +11387,12 @@ const allowed_option = {
         "TextDecoder", "TextEncoder", "URL", "window", "Worker",
         "XMLHttpRequest"
     ],
+    // hack-jslint - validate sorted-object-keys
+    convert: true,
     couch: [
         "emit", "getRow", "isArray", "log", "provides", "registerType",
         "require", "send", "start", "sum", "toJSON"
     ],
-    convert: true,
     devel: [
         "alert", "confirm", "console", "prompt"
     ],
@@ -11339,10 +11432,11 @@ const opener = {
 
 // The open and close pairs.
 
+    // hack-jslint - validate sorted-object-keys
+    "${": "}",      // mega
     "(": ")",       // paren
     "[": "]",       // bracket
-    "{": "}",       // brace
-    "${": "}"       // mega
+    "{": "}"        // brace
 };
 
 // The relational operators.
@@ -11509,11 +11603,9 @@ const rx_identifier = tag_regexp ` ^(
     [ a-z A-Z 0-9 _ $ ]*
 )$`;
 const rx_module = tag_regexp ` ^ [ a-z A-Z 0-9 _ $ : . @ \- \/ ]+ $ `;
+// hack-jslint - nomen
 const rx_bad_property = tag_regexp `
-    ^_
-  | \$
-  | Sync $
-  | _ $
+    $^
 `;
 // star slash
 const rx_star_slash = tag_regexp ` \* \/ `;
@@ -11682,10 +11774,11 @@ function warn_at(code, line, column, a, b, c, d) {
 // resembles an exception.
 
     const warning = {         // ~~
-        name: "JSLintError",
+        // hack-jslint - validate sorted-object-keys
+        code,
         column,
         line,
-        code
+        name: "JSLintError"
     };
     if (a !== undefined) {
         warning.a = a;
@@ -11700,16 +11793,10 @@ function warn_at(code, line, column, a, b, c, d) {
         warning.d = d;
     }
     warning.message = supplant(bundle[code] || code, warning);
-    // hack-jslint - line_ignore
-    Object.assign(warning, lines_extra[warning.line]);
-    if (warning.ignore) {
-        return;
+    // hack-jslint - ignore warning
+    if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
+        warnings.push(warning);
     }
-    // hack-jslint - debug warning
-    if (option.debug) {
-        warning.stack = warning.stack || new Error().stack;
-    }
-    warnings.push(warning);
     return warning;
 }
 
@@ -11782,6 +11869,8 @@ function tokenize(source) {
     let first;                  // the first token
     let from;                   // the starting column number of the token
     let line = -1;              // the line number of the next character
+    // hack-jslint - init line_ignore
+    let line_ignore = undefined;
     let nr = 0;                 // the next token number
     let previous = global;      // the previous token including comments
     let prior = global;         // the previous token excluding comments
@@ -11812,11 +11901,8 @@ function tokenize(source) {
             && !regexp_seen
             // hack-jslint - ignore too_long url
             && !(
-                option.modeUtility2
-                && (
-                    /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
-                ).test(whole_line)
-            )
+                /^\s*?(?:\/\/(?:!!\u0020|\u0020https:\/\/)|(?:\S+?\u0020)?(?:https:\/\/|this\u0020.*?\u0020package\u0020will\u0020))/m
+            ).test(whole_line)
         ) {
             warn_at("too_long", line, 80);
         }
@@ -11826,18 +11912,17 @@ function tokenize(source) {
         source_line = lines[line];
         whole_line = source_line || "";
         if (source_line !== undefined) {
-            // hack-jslint - source_line
-            let line_extra;
+            // hack-jslint - parse source_line for ignore-macro
             let match;
-            line_extra = {};
-            line_extra.line = line;
-            line_extra.source = source_line;
-            lines_extra[line] = line_extra;
+            lines_extra[line] = {
+                line,
+                source_line
+            };
             match = (
                 source_line.match(
-                    /^\/\*\u0020jslint\u0020(ignore:start|ignore:end|utility2:true)\u0020\*\/$/m
-                )
-                || source_line.slice(-50).match(
+                    /^\/\*\u0020jslint\u0020(ignore:start|ignore:end)\u0020\*\/$/m
+                ) ||
+                source_line.slice(-50).match(
                     /\u0020\/\/\u0020jslint\u0020(ignore:line)$/m
                 )
             );
@@ -11851,26 +11936,8 @@ function tokenize(source) {
             case "ignore:start":
                 line_ignore = true;
                 break;
-            case "utility2:true":
-                option.bitwise = true;
-                option.browser = true;
-                option.debug = true;
-                option.node = true;
-                option.nomen = true;
-                option.this = true;
-                option.modeUtility2 = true;
-                [].concat(
-                    allowed_option.browser,
-                    allowed_option.node,
-                    "await",
-                    "global",
-                    "globalThis"
-                ).forEach(function (key) {
-                    declared_globals[key] = false;
-                });
-                break;
             }
-            line_extra.ignore = line_ignore;
+            lines_extra[line].ignore = line_ignore;
             switch (line_ignore) {
             case "line":
                 line_ignore = undefined;
@@ -12820,8 +12887,7 @@ function survey(name) {
                 warn("unregistered_property_a", name);
             }
         } else {
-            // hack-jslint - nomen
-            if (!option.nomen && name.identifier && rx_bad_property.test(id)) {
+            if (name.identifier && rx_bad_property.test(id)) {
                 warn("bad_property_a", name);
             }
         }
@@ -14280,12 +14346,21 @@ prefix("{", function () {
     const seen = empty();
     the_brace.expression = [];
     if (next_token.id !== "}") {
+        // hack-jslint - validate sorted-object-keys
+        let aa;
+        let bb;
+        bb = "";
         (function member() {
             let extra;
             let full;
             let id;
             let name = next_token;
             let value;
+            aa = bb;
+            bb = String(name.value || name.id);
+            if (!(aa < bb)) {
+                warn("Unsorted object-keys.", name);
+            }
             advance();
             if (
                 (name.id === "get" || name.id === "set")
@@ -14912,11 +14987,7 @@ stmt("switch", function () {
             )
             || lines[aa.line] < lines[bb.line]
         )) {
-            warn_at(
-                "Unsorted case-statements.",
-                the_cases[ii].expression[0].line,
-                0
-            );
+            warn("Unsorted case-statements.", the_cases[ii].expression[0]);
             break;
         }
         ii += 1;
@@ -15168,9 +15239,10 @@ function lookup(thing) {
                 }
                 the_variable = {
                     dead: false,
-                    parent: global,
+                    // hack-jslint - validate sorted-object-keys
                     id: thing.id,
                     init: true,
+                    parent: global,
                     role: "variable",
                     used: 0,
                     writable: false
@@ -15843,7 +15915,6 @@ function whitage() {
 
     function at_margin(fit) {
         const at = margin + fit;
-        // hack-jslint - exact-margin
         if (right.from !== at) {
             return expected_at(at);
         }
@@ -15884,12 +15955,11 @@ function whitage() {
                     ? margin
                     : margin + 8
                 );
-                // hack-jslint - exact-margin
+                // hack-jslint - exact margin
                 if (right.from !== at) {
                     expected_at(at);
                 }
             } else {
-                // hack-jslint - exact-margin
                 if (right.from !== margin + 8) {
                     expected_at(margin + 8);
                 }
@@ -15919,7 +15989,6 @@ function whitage() {
                 );
             }
         } else {
-            // hack-jslint - exact-margin
             if (right.from !== margin) {
                 expected_at(margin);
             }
@@ -15949,15 +16018,8 @@ function whitage() {
                     if (opening) {
                         free = closer === ")" && left.free;
                         open = true;
-                        // hack-jslint - conditional-margin
-                        if (
-                            !option.modeUtility2
-                            || lines[right.line].startsWith(" ")
-                        ) {
-                            margin += 4;
-                        }
+                        margin += 4;
                         if (right.role === "label") {
-                            // hack-jslint - exact-margin
                             if (right.from !== 0) {
                                 expected_at(0);
                             }
@@ -16018,7 +16080,6 @@ function whitage() {
                     if (right.switch) {
                         at_margin(-4);
                     } else if (right.role === "label") {
-                        // hack-jslint - exact-margin
                         if (right.from !== 0) {
                             expected_at(0);
                         }
@@ -16132,20 +16193,17 @@ function whitage() {
 
 // The jslint function itself.
 
-// hack-jslint - jslint0
-local.jslint0 = Object.freeze(function (
+// hack-jslint - function jslint
+function jslint(
     source = "",
     option_object = empty(),
     global_array = []
 ) {
     // hack-jslint - init lines_extra
-    line_ignore = undefined;
     lines = (
         Array.isArray(source)
         ? source
-        : source.split(
-            /\n|\r\n?/
-        )
+        : source.split(rx_crlf)
     );
     lines_extra = lines.map(function () {
         return {};
@@ -16168,10 +16226,11 @@ local.jslint0 = Object.freeze(function (
         );
         functions = [];
         global = {
-            id: "(global)",
+            // hack-jslint - validate sorted-object-keys
             body: true,
             context: empty(),
             from: 0,
+            id: "(global)",
             level: 0,
             line: 0,
             live: [],
@@ -16246,145 +16305,11 @@ local.jslint0 = Object.freeze(function (
             });
         }
         early_stop = false;
-        // hack-jslint - throw_error
-        if (option.throw_error) {
-            throw new Error();
-        }
     } catch (e) {
-        // hack-jslint - early_stop
-        e.early_stop = true;
-        e.column = e.column || -1;
-        e.line = e.line || -1;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
     }
-    // hack-jslint - autofix
-    warnings = warnings.filter(function (warning) {
-        let aa;
-        let bb;
-        let tmp;
-        if (!lines_extra[warning.line]) {
-            return true;
-        }
-        aa = lines_extra[warning.line].source;
-        warning.a = warning.a || aa.trim();
-        switch (option.modeAutofix && warning.code) {
-        // expected_a_at_b_c: "Expected '{a}' at column {b}, not column {c}.",
-        case "expected_a_at_b_c":
-            // autofix indent - increment
-            tmp = warning.b - warning.c;
-            if (tmp >= 0) {
-                bb = " ".repeat(tmp) + aa;
-                break;
-            }
-            // autofix indent - decrement
-            tmp = -tmp;
-            if ((
-                /^\u0020*?$/m
-            ).test(aa.slice(0, warning.column))) {
-                bb = aa.slice(tmp);
-                break;
-            }
-            // autofix indent - newline
-            bb = (
-                aa.slice(0, warning.column) + "\n"
-                + " ".repeat(warning.b) + aa.slice(warning.column)
-            );
-            break;
-        // expected_a_b: "Expected '{a}' and instead saw '{b}'.",
-        case "expected_a_b":
-            if (
-                (warning.a === "\\s" || warning.a === "\\u0020")
-                && warning.b === " "
-            ) {
-                bb = (
-                    aa.slice(0, warning.column) + "\\u0020"
-                    + aa.slice(warning.column + 1)
-                );
-            }
-            break;
-        // expected_identifier_a:
-        // "Expected an identifier and instead saw '{a}'.",
-        case "expected_identifier_a":
-            if (
-                (
-                    /^\d+$/m
-                ).test(warning.a)
-                && aa[warning.column + warning.a.length] === ":"
-            ) {
-                bb = (
-                    aa.slice(0, warning.column) + "\"" + warning.a + "\""
-                    + aa.slice(warning.column + warning.a.length)
-                );
-                break;
-            }
-            break;
-        // expected_space_a_b: "Expected one space between '{a}' and '{b}'.",
-        case "expected_space_a_b":
-            bb = (
-                aa.slice(0, warning.column).trimRight() + " "
-                + aa.slice(warning.column)
-            );
-            break;
-        // unexpected_space_a_b: "Unexpected space between '{a}' and '{b}'.",
-        case "unexpected_space_a_b":
-            bb = (
-                aa.slice(0, warning.column).trimRight()
-                + aa.slice(warning.column)
-            );
-            break;
-        // use_double: "Use double quotes, not single quotes.",
-        case "use_double":
-            tmp = undefined;
-            bb = aa.slice(
-                0,
-                warning.column - 1
-            ) + "\"" + aa.slice(warning.column, tmp).replace((
-                /\\.|"|'/g
-            ), function (match0) {
-                if (tmp) {
-                    return match0;
-                }
-                if (match0 === "'") {
-                    tmp = true;
-                    return "\"";
-                }
-                return (
-                    match0 === "\""
-                    ? "\\\""
-                    : match0[1] === "'"
-                    ? "'"
-                    : match0
-                );
-            });
-            break;
-        // use_spaces: "Use spaces, not tabs.",
-        case "use_spaces":
-            bb = aa.replace((
-                /^(\u0020*?)\t/
-            ), "$1   ");
-            break;
-        }
-        if (bb !== undefined) {
-            lines_extra[warning.line].source_autofixed = bb;
-            return;
-        }
-        return true;
-    });
-    // hack-jslint - debug warning
-    warnings.some(function (warning) {
-        if (!option.modeUtility2) {
-            return true;
-        }
-        warning.option = Object.assign({}, option);
-        Object.keys(warning.option).forEach(function (key) {
-            if (typeof warning.option[key] === "object") {
-                delete warning.option[key];
-            }
-        });
-        return true;
-    });
     return {
         directives,
         edition: "2020-11-06",
@@ -16407,1021 +16332,196 @@ local.jslint0 = Object.freeze(function (
         stop: early_stop,
         tokens,
         tree,
-        // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return Boolean(b.early_stop) - Boolean(a.early_stop)
-            || (a.line - b.line);
-        }),
-        // hack-jslint - autofix
-        source_autofixed: lines_extra.map(function (element, ii) {
-            return element.source_autofixed || lines[ii];
-        }).join("\n")
+            return a.line - b.line || a.column - b.column;
+        })
     };
-});
+}
+// hack-jslint - cli
+function stringLineCount(data) {
+/*
+ * this function will count number of newlines in <data>
+ */
+    let cnt;
+    let ii;
+    // https://jsperf.com/regexp-counting-2/8
+    cnt = 0;
+    ii = 0;
+    while (true) {
+        ii = data.indexOf("\n", ii) + 1;
+        if (ii === 0) {
+            break;
+        }
+        cnt += 1;
+    }
+    return cnt;
+}
+async function jslint2({
+    code,
+    errMsg = [],
+    file,
+    lineOffset = 0
+}) {
+    switch ((
+        /\.\w+?$|$/m
+    ).exec(file)[0]) {
+    case ".css":
+        errMsg = CSSLint.verify(code).messages; // jslint ignore:line
+        break;
+    case ".html":
+        // recurse
+        code.replace((
+            /^<style>\n([\S\s]*?\n)<\/style>$/gm
+        ), function (ignore, match1, ii) {
+            jslint2({
+                code: match1,
+                file: file + ".<style>.css",
+                lineOffset: stringLineCount(code.slice(0, ii)) + 1
+            });
+            return "";
+        });
+        // recurse
+        code.replace((
+            /^<script>\n([\S\s]*?\n)<\/script>$/gm
+        ), function (ignore, match1, ii) {
+            jslint2({
+                code: match1,
+                file: file + ".<script>.js",
+                lineOffset: stringLineCount(code.slice(0, ii)) + 1
+            });
+            return "";
+        });
+        return;
+    case ".md":
+        // recurse
+        code.replace((
+            /^```javascript\n([\S\s]*?\n)```$/gm
+        ), function (ignore, match1, ii) {
+            jslint2({
+                code: match1.replace((
+                    /'"'"'/g
+                ), "'"),
+                file: file + ".<```javascript>.js",
+                lineOffset: stringLineCount(code.slice(0, ii)) + 1
+            });
+            return "";
+        });
+        return;
+    case ".sh":
+        // recurse
+        code.replace((
+            /\bnode\u0020-e\u0020'\n([\S\s]*?\n)'/gm
+        ), function (ignore, match1, ii) {
+            jslint2({
+                code: match1.replace((
+                    /'"'"'/g
+                ), "'"),
+                file: file + ".<node -e>.js",
+                lineOffset: stringLineCount(code.slice(0, ii)) + 1
+            });
+            return "";
+        });
+        return;
+    default:
+        errMsg = jslint(code, {
+            bitwise: true,
+            browser: true,
+            debug: true,
+            node: true,
+            this: true
+        }, [
+            "global", "globalThis"
+        ]).warnings;
+    }
+    errMsg = errMsg.filter(function ({
+        message
+    }) {
+        return message;
+    // print only first 10 err
+    }).slice(0, 10).map(function ({
+        col,
+        column,
+        evidence,
+        line,
+        message,
+        source_line
+    }, ii) {
+        // mode csslint
+        if (col !== undefined) {
+            column = col;
+            source_line = evidence;
+        // mode jslint
+        } else {
+            column += 1;
+            line += 1;
+        }
+        line += lineOffset;
+        return (
+            String(ii + 1).padStart(3, " ") +
+            " \u001b[31m" + message + "\u001b[39m" +
+            " \u001b[90m\/\/ line " + line + ", column " + column +
+            "\u001b[39m\n" +
+            ("    " + String(source_line).trim()).slice(0, 72)
+        );
+    }).join("\n");
+    if (errMsg) {
+        // print err to stderr
+        console.error("\u001b[1mjslint " + file + "\u001b[22m\n" + errMsg);
+    }
+}
+let file;
+file = process.argv[2];
+if (file === ".") {
+    require("fs").readdirSync(".").forEach(function (file) {
+        let timeStart;
+        timeStart = Date.now();
+        switch ((
+            /\.\w+?$|$/m
+        ).exec(file)[0]) {
+        case ".css":
+        case ".html":
+        case ".js":
+        // case ".json":
+        case ".md":
+        case ".sh":
+            break;
+        default:
+            return;
+        }
+        require("fs").readFile(file, "utf8", function (err, code) {
+            if (err || !(
+                !(
+                    /\b(?:assets\.app\.js|lock|min|raw|rollup)\b/
+                ).test(file) &&
+                code &&
+                code.length < 1048576 &&
+                (
+                    /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$/m
+                ).test(code)
+            )) {
+                return;
+            }
+            jslint2({
+                code,
+                file
+            });
+            console.error(
+                "jslint - " + (Date.now() - timeStart) + "ms - " + file
+            );
+        });
+    });
+} else {
+    jslint2({
+        code: require("fs").readFileSync(file, "utf8"),
+        file
+    });
+}
+// hack-jslint - global-function-scope
+/* jslint ignore:start */
+}());
+/* jslint ignore:end */
 
 
 /*
 file none
 */
-local.CSSLint = CSSLint;
-/* jslint ignore:end */
-
-
-let jslintRecurse;
-let jslintUtility2;
-let stringGetLineAndCol;
-
-function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
-/*
- * this function will jslint-autofix <code>
- */
-    let code0;
-    let code2;
-    let dataList;
-    let ignoreList;
-    let ii;
-    let result;
-    let rgx1;
-    let rgx2;
-    let tmp;
-    // normalize carriage-return
-    code = code.replace((
-        /\r\n*/g
-    ), "\n");
-    // autofix-all - normalize local-function
-    if (
-        globalThis.utility2
-        && typeof globalThis.utility2.jslintAutofixLocalFunction
-        === "function"
-    ) {
-        code = globalThis.utility2.jslintAutofixLocalFunction(code, file);
-    }
-    // autofix-all - remove trailing-whitespace
-    code = code.replace((
-        /\u0020+$/gm
-    ), "");
-    // autofix-all - remove newlines before )]}
-    code = code.replace((
-        /\n+?(\n\u0020*?[)\]}])/g
-    ), "$1");
-    // autofix-all - eslint - no-multiple-empty-lines
-    // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
-    code = code.replace((
-        /\n{4,}/g
-    ), "\n\n\n");
-    // autofix-all - recurse <script>...</script>, <style>...</style>
-    code = code.replace((
-        /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\\n\\\n(?:^.*?\\n\\\n)*?)(';$|<\/script>\\n\\$|<\/style>\\n\\$)/gm
-    ), function (ignore, match1, match2, ii) {
-        return jslintRecurse(code, file + (
-            match2.indexOf("style") >= 0
-            ? ".<style>.css"
-            : ".<script>.js"
-        ), opt, {
-            fileType0: ".\\n\\",
-            iiEnd: ii + match1.length,
-            iiLine,
-            iiStart: ii
-        }) + match2;
-    });
-    switch (fileType) {
-    case ".css":
-        break;
-    case ".html":
-        // autofix-html - recurse <script>...</script>, <style>...</style>
-        code = code.replace((
-            /^(\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n)(<\/(?:script|style)>)$/gm
-        ), function (ignore, match1, footer, ii) {
-            return jslintRecurse(code, file + (
-                footer === "</style>"
-                ? ".<style>.css"
-                : ".<script>.js"
-            ), opt, {
-                fileType0: fileType,
-                iiEnd: ii + match1.length,
-                iiLine,
-                iiStart: ii
-            }) + footer;
-        });
-        break;
-    case ".js":
-        // de-mux - code to [code, ignoreList]
-        ignoreList = [];
-        code = code.replace((
-            /^\u0020*?\/\*\u0020jslint\u0020ignore:start\u0020\*\/$[\S\s]*?^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$/gm
-        ), function (match0) {
-            ignoreList.push(match0);
-            return "/* jslint ignore:start:end */";
-        });
-        // de-mux - code2 to [code2, ignoreList]
-        code2 = "";
-        dataList = [];
-        ii = 0;
-        rgx1 = (
-            /\\.|\/\*|\*\/|\/\/!!|\/\/|["'\/`]|$/gm
-        );
-        // parse rgx
-        // https://github.com/douglascrockford/JSLint/blob/557afd32bcaa35480d31a86f02d3a8c06a4e5b5c/jslint.js#L1383
-        rgx2 = (
-            /(?:[^.]\b(?:case|delete|in|instanceof|new|return|typeof|void|yield)|[!%&(*+,\-\/:;<=>?\[\^{|}~])[\s\u0028]*?\/[^*\/]/g
-        );
-        tmp = "";
-        // de-mux - shebang
-        code.replace((
-            /^#!.*/
-        ), function (match0) {
-            code2 += "#!";
-            dataList.push({
-                code: match0,
-                type: "#_"
-            });
-            rgx1.lastIndex = match0.length;
-            ii = rgx1.lastIndex;
-            return "";
-        });
-        while (rgx1.lastIndex < code.length) {
-            tmp = rgx1.exec(code);
-            switch (tmp[0]) {
-            case "":
-            case "\"":
-            case "'":
-            case "/*":
-            case "//!!":
-            case "//":
-            case "`":
-                if (tmp[0] === "") {
-                    rgx1.lastIndex += 1;
-                }
-                // de-mux - rgx /_/
-                rgx2.lastIndex = ii;
-                // normalize rgx /_*/ to /_/
-                if (rgx2.test(code) && rgx2.lastIndex - 2 <= tmp.index) {
-                    rgx1.lastIndex = rgx2.lastIndex - 1;
-                    tmp[0] = "/";
-                }
-                if (tmp[0] === "") {
-                    break;
-                }
-                // de-mux - code to [code, dataList]
-                code2 += code.slice(ii, rgx1.lastIndex);
-                ii = rgx1.lastIndex;
-                while (rgx1.lastIndex < code.length) {
-                    tmp[1] = rgx1.exec(code)[0];
-                    tmp[2] = tmp[0] + "_" + tmp[1];
-                    switch (tmp[2]) {
-                    // de-mux - false-positive rgx /_/
-                    case "/_":
-                        code2 += code.slice(ii, rgx1.lastIndex);
-                        ii = 0;
-                        break;
-                    case "\"_\"":
-                    case "'_'":
-                    case "/*_*/":
-                    case "//!!_":
-                    case "//_":
-                    case "/_*/":
-                    case "/_/":
-                    case "`_`":
-                        code2 += "_" + tmp[1];
-                        dataList.push({
-                            code: tmp[0] + code.slice(ii, rgx1.lastIndex),
-                            type: tmp[2].replace("/_*/", "/_/")
-                        });
-                        ii = 0;
-                        break;
-                    }
-                    if (!ii) {
-                        break;
-                    }
-                    if (!tmp[1]) {
-                        rgx1.lastIndex += 1;
-                    }
-                }
-                ii = rgx1.lastIndex;
-                break;
-            }
-        }
-        code2 += code.slice(ii);
-        code = code2;
-        // normalize rgx /_*/ to /_/
-        code = code.replace((
-            /\/_\*\//g
-        ), "/_/");
-        // autofix-js - left-align comment //_
-        tmp = "";
-        code = code.split("\n").reverse().map(function (line) {
-            return line.replace((
-                /^(\u0020*)(\/\/_)?/
-            ), function (match0, match1, match2) {
-                if (match1 && match2) {
-                    return tmp + match2;
-                }
-                tmp = match1;
-                return match0;
-            });
-        }).reverse().join("\n");
-        // autofix-js-braket - normalize rgx /_/ to (/_/)
-        code = code.replace((
-            /\/_\/[\w\s]*(\S)/g
-        ), function (match0, match1) {
-            return (
-                match1 === ")"
-                ? match0
-                : match0.replace((
-                    /\/_\/\w*/
-                ), "($&)")
-            );
-        });
-        // autofix-js-braket - normalize rgx (/_/) to (\n/_/\n)
-        code = code.replace((
-            /\((\/_\/\w*)\)/g
-        ), "(\n    $1\n)");
-        // autofix-js-braket - normalize {... to {\n   ...
-        code = code.replace((
-            /^(\u0020+)(.*?(?:\u0020\[|\(\[|\{))\u0020*?(\S)/gm
-        ), "$1$2\n$1    $3");
-        // autofix-js-braket - normalize {\s+} to {}
-        code = code.replace((
-            /([(\[{])\s*?([)\]}])/g
-        ), "$1$2");
-        // autofix-js-whitespace - normalize 8-space-indent to 4-space-indent
-        tmp = "";
-        code = code.replace((
-            /^\u0020+/gm
-        ), function (match0) {
-            if (match0.length > tmp.length + 4) {
-                match0 = tmp;
-            }
-            tmp = match0;
-            return match0;
-        });
-        code = ("\n" + code + "\n");
-        // autofix-js-whitespace - normalize comment //_... to //_\n...
-        code = code.replace((
-            /\/\/_([^\n])/g
-        ), "//_\n$1");
-        // autofix-js-whitespace - normalize (function { to \n\n\n(function {
-        code = code.replace((
-            /\n+((?:\/\*_\*\/\n|\/\/_\n)*?\(function\u0020.*?)\n+/g
-        ), "\n\n\n$1\n");
-        code = code.trim();
-        dataList.forEach(function (data) {
-            switch (data.type) {
-            case "/*_*/":
-                // autofix-js - comment - "/*" to "\*"
-                data.code = "/*" + data.code.slice(2).replace((
-                    /\/\*/g
-                ), "/\\*");
-                break;
-            }
-        });
-        // re-mux - shebang
-        code = code.replace((
-            /^#!/
-        ), function () {
-            return dataList.shift().code;
-        });
-        // re-mux - [code, dataList] to code
-        code = code.replace((
-            /"_"|'_'|\/\*_\*\/|\/\/!!_|\/\/_|\/_\/|`_`/g
-        ), function (match0) {
-            // re-mux - defer rgx /_/
-            if (match0 === "/_/") {
-                dataList.push(dataList.shift());
-                return "/\u0000/";
-            }
-            return dataList.shift().code;
-        });
-        // autofix-js - jslint autofixed code
-        ii = 0;
-        while (true) {
-            ii += 1;
-            code0 = code;
-            result = local.jslint0(code, opt, globalList);
-            code = result.source_autofixed;
-            if (ii >= 10 || result.stop || code0 === code) {
-                break;
-            }
-        }
-        // re-mux - rgx /_/
-        code = code.replace((
-            /\/\u0000\//g
-        ), function () {
-            return dataList.shift().code;
-        });
-        // autofix-js - sort const, let, var
-        code = code.replace((
-            /(?:^\u0020*?(?:const|let|var)\u0020[\w$]*?;.*?\n)+/gm
-        ), function (match0) {
-            return match0.split("\n").slice(0, -1).sort().join("\n") + "\n";
-        });
-        // re-mux - [code, ignoreList] to code
-        code = code.replace((
-            /^\u0020*?\/\*\u0020jslint\u0020ignore:start:end\u0020\*\/$/gm
-        ), function () {
-            return ignoreList.shift().trimStart();
-        });
-        break;
-    case ".json":
-        code = JSON.stringify(local.objectDeepCopyWithKeysSorted(JSON.parse(
-            code
-        )), undefined, 4);
-        break;
-    case ".md":
-        // autofix-md - recurse ```javascript...```
-        code = code.replace((
-            /^(```javascript\n)([\S\s]*?\n)```$/gm
-        ), function (ignore, match1, match2, ii) {
-            return match1 + jslintRecurse(code, (
-                file + ".<```javascript>.js"
-            ), opt, {
-                fileType0: fileType,
-                iiEnd: ii + match1.length + match2.length,
-                iiLine,
-                iiStart: ii + match1.length
-            }) + "```";
-        });
-        break;
-    case ".sh":
-        // autofix-sh - recurse node -e '...'
-        code = code.replace((
-            /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/\n[\S\s]*?\n'/gm
-        ), function (match0, ii) {
-            return jslintRecurse(code, file + ".<node -e>.js", opt, {
-                fileType0: fileType,
-                iiEnd: ii + match0.length - 1,
-                iiLine,
-                iiStart: ii
-            }) + "'";
-        });
-        break;
-    }
-    return code;
-}
-
-jslintRecurse = function (code, file, opt, {
-    fileType0,
-    iiEnd,
-    iiLine = 0,
-    iiStart = 0
-}) {
-/*
- * this function will recursively jslint <code> for embedded code
- */
-    let code0;
-    let errList;
-    let errMsg;
-    let fileType;
-    let globalList;
-    let result;
-    let tmp;
-    // init opt
-    local.jslintResult = {};
-    opt = Object.assign(local.jslintResult, opt, {
-        errList: [],
-        errMsg: ""
-    });
-    // init var
-    errList = [];
-    fileType = (
-        /\.\w+?$|$/m
-    ).exec(file)[0];
-    globalList = opt.globalList;
-    result = {};
-    // preserve lineno - save iiLine
-    iiLine += stringGetLineAndCol(code, iiStart).line;
-    // de-embed
-    code = code.slice(iiStart, iiEnd || code.length);
-    switch (fileType0) {
-    // de-embed-js - '\\n\\\n...\\n\\\n'
-    case ".\\n\\":
-        // rgx - remove \\n\\
-        code = code.replace((
-            /\\n\\$|\\(.)/gm
-        ), function (ignore, match1) {
-            return match1 || "";
-        });
-        break;
-    // de-embed-js - '\n...\n'
-    case ".sh":
-        // rgx - convert '"'"' to '
-        code = code.replace((
-            /'"'"'/g
-        ), "'");
-        break;
-    }
-    // init
-    code0 = code;
-    tmp = {
-        ".css": (
-            /^\/\*csslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
-        ),
-        ".html": (
-            /^\/\*csslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
-        ),
-        ".js": (
-            /^\/\*jslint\b|(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
-        ),
-        ".json": (
-            /^\s*?\{\s*?"!!jslint_utility2":\s*?true/
-        ),
-        ".md": (
-            /(^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$)/m
-        ),
-        ".sh": (
-            /(^#\u0020jslint\u0020utility2:true$)/m
-        )
-    };
-    // jslint - .json
-    if (fileType === ".js" && tmp[".json"].test(code.slice(0, 4096))) {
-        fileType = ".json";
-    }
-    // init mode-utility2
-    tmp = tmp[fileType] && tmp[fileType].exec(code.slice(0, 4096));
-    opt.modeUtility2 = Boolean((tmp && tmp[1]) || opt.modeAutofix);
-    // if not modeConditional, then do not jslint
-    if (opt.modeConditional && !tmp) {
-        return code;
-    }
-    // jslint - modeAutofix
-    if (opt.modeAutofix) {
-        code = jslintAutofix(code, file, opt, {
-            fileType,
-            globalList,
-            iiLine
-        });
-    }
-    // preserve lineno - restore iiLine
-    code = "\n".repeat(iiLine) + code;
-    switch (fileType) {
-    // jslint - .css
-    case ".css":
-        // call csslint
-        result = local.CSSLint.verify(code);
-        // init errList
-        errList = result.messages.map(function (err) {
-            err.column = Math.max(err.col - 1, 0);
-            err.message = (
-                err.type + " - " + err.rule.id + " - " + err.message
-                + "\n    " + err.rule.desc
-            );
-            return err;
-        });
-        break;
-    case ".html":
-        jslintAutofix(code, file, opt, {
-            fileType,
-            globalList,
-            iiLine
-        });
-        break;
-    case ".md":
-    case ".sh":
-        break;
-    // jslint - .js
-    default:
-        // call jslint
-        result = local.jslint0(code, opt, globalList);
-        code = result.source_autofixed || code;
-        // init errList
-        errList = result.warnings.filter(function (err) {
-            return err && err.message;
-        }).map(function (err) {
-            err.column = err.column + 1;
-            err.evidence = err.source;
-            err.line = err.line + 1;
-            // debug early_stop
-            if (err.early_stop) {
-                err.message = (
-                    "[JSLint was unable to finish] - "
-                    + err.message
-                );
-            }
-            return err;
-        });
-    }
-    if (opt.modeUtility2) {
-        jslintUtility2({
-            code,
-            errList,
-            fileType
-        });
-    }
-    // jslint - print
-    switch (Boolean(fileType0) && fileType0) {
-    // re-embed-js - '\\n\\\n...\\n\\\n'
-    case ".\\n\\":
-        code = code.trim();
-        // rgx - escape \ to \\
-        code = code.replace((
-            /\\/g
-        ), "\\\\");
-        // rgx - append \n\
-        code = code.replace((
-            /$/gm
-        ), "\\n\\");
-        // rgx - escape ' to \'
-        code = code.replace((
-            /'/g
-        ), "\\'");
-        // rgx - escape js-env to js\-env
-        code = code.replace((
-            /\u0020js\u002denv\u0020/g
-        ), " js\\\u002denv ");
-        code += "\n";
-        break;
-    // re-embed-js - '\n...\n'
-    case ".sh":
-        // rgx - escape ' to '"'"'
-        code = code.trim().replace((
-            /'/g
-        ), "'\"'\"'") + "\n";
-        break;
-    case false:
-        code = code.trimEnd() + "\n";
-        break;
-    default:
-        code = code.trim() + "\n";
-    }
-    // autofix-save
-    if (
-        local.isEnvNode
-        && opt.modeAutofix
-        && !fileType0
-        && !result.stop
-        && code !== code0
-        && require("fs").existsSync(file)
-    ) {
-        require("fs").writeFileSync(file, code);
-        require("fs").writeFileSync(file + ".autofix.old", code0);
-        require("child_process").spawnSync(
-            "diff",
-            [
-                "-u", file + ".autofix.old", file
-            ],
-            {
-                stdio: [
-                    "ignore", 2, "ignore"
-                ]
-            }
-        );
-        require("fs").unlinkSync(file + ".autofix.old");
-        console.error(
-            "\u001b[1mjslint-autofix - modified and saved file " + file
-            + "\u001b[22m"
-        );
-    }
-    // print colorized errMsg to stderr
-    // https://github.com/kaizhu256/JSLint/blob/cli/cli.js#L99
-    errMsg = "";
-    errList.filter(function (warning) {
-        return warning && warning.message;
-    // print only first 10 warnings
-    }).slice(0, 10).forEach(function (err, ii) {
-        errMsg = errMsg || " \u001b[1mjslint " + file + "\u001b[22m\n";
-        errMsg += (
-            ("  " + String(ii + 1)).slice(-3)
-            + " \u001b[31m" + err.message + "\u001b[39m"
-            + " \u001b[90m\/\/ line " + err.line + ", column "
-            + (err.column + 1)
-            + "\u001b[39m\n"
-            + ("    " + String(err.evidence).trim()).slice(0, 80) + "\n"
-        );
-        if (!ii && err.stack && err.a !== "debug\u0049nline") {
-            tmp = err.stack;
-            Object.entries(err).forEach(function ([
-                key, val
-            ]) {
-                if ((typeof val === "object" && val) || key === "stack") {
-                    delete err[key];
-                }
-            });
-            errMsg += (
-                JSON.stringify(err, undefined, 4) + "\n" + tmp.trim() + "\n"
-            );
-        }
-    });
-    errMsg = errMsg.trim();
-    if (errMsg) {
-        // print err to stderr
-        console.error(errMsg);
-    }
-    return Object.assign(local.jslintResult, opt, result, {
-        code,
-        errList,
-        errMsg
-    }).code;
-};
-
-jslintUtility2 = function ({code, errList, fileType}) {
-/*
- * this function will jslint <code> with utiity2-specific rules
- */
-    let code2;
-    let err;
-    let indent;
-    let previous;
-    // jslintUtility2 - all
-    code2 = code;
-    // ignore start to end
-    code2 = code2.replace((
-        /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/$[\S\s]+?^\/\*\u0020jslint\u0020ignore:end\u0020\*\/$/gm
-    ), function (match0) {
-        // preserve lineno
-        return match0.replace((
-            /.+/g
-        ), "");
-    });
-    // lint whitespace
-    code2.replace((
-        /^\u0020+?(?:\*|\/\/!!)|^\u0020+|[\r\t]/gm
-    ), function (match0, ii) {
-        switch (match0.slice(-1)) {
-        case " ":
-            if (match0.length % 4 === 0) {
-                return "";
-            }
-            err = {
-                message: "non 4-space indent"
-            };
-            break;
-        case "\r":
-            err = {
-                message: "unexpected \\r"
-            };
-            break;
-        case "\t":
-            err = {
-                message: "unexpected \\t"
-            };
-            break;
-        default:
-            return "";
-        }
-        Object.assign(err, stringGetLineAndCol(code2, ii));
-        errList.push({
-            column: err.column,
-            evidence: JSON.stringify(err.evidence),
-            line: err.line + 1,
-            message: err.message
-        });
-        return "";
-    });
-    switch (fileType) {
-    // jslintUtility2 - .css
-    case ".css":
-        // ignore comment
-        code2 = code2.replace((
-            /^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm
-        ), function (match0) {
-            // preserve lineno
-            return match0.replace((
-                /.+/g
-            ), "");
-        });
-        code2.replace((
-            /\S\u0020{2}|\u0020,|^\S.*?,.|[;{}]./gm
-        ), function (match0, ii) {
-            switch (match0.slice(-2)) {
-            case "  ":
-                err = {
-                    colOffset: 2,
-                    message: "unexpected multi-whitespace"
-                };
-                break;
-            case " ,":
-                err = {
-                    colOffset: 1,
-                    message: "unexpected whitespace before comma"
-                };
-                break;
-            default:
-                err = {
-                    colOffset: match0.length,
-                    message: "unexpected multiline-statement"
-                };
-            }
-            Object.assign(err, stringGetLineAndCol(code2, ii));
-            errList.push({
-                column: err.column + err.colOffset,
-                evidence: JSON.stringify(err.evidence),
-                line: err.line + 1,
-                message: err.message
-            });
-            return "";
-        });
-        // validate line-sorted - css-selector
-        previous = "";
-        code2 = code2.replace((
-            /^.|[#.>]|[,}]$|\u0020\{$|\b\w/gm
-        ), function (match0) {
-            switch (match0) {
-            case " ":
-                return match0;
-            case " {":
-                return "\u0001" + match0;
-            case "#":
-                return "\u0002" + match0;
-            case ",":
-                return "\u0000" + match0;
-            case ".":
-                return "\u0001" + match0;
-            case ">":
-                return "\u0003" + match0;
-            case "}":
-                return match0;
-            default:
-                return "\u0000" + match0;
-            }
-        });
-        code2.replace((
-            /\n{2,}|^\u0000@|^\}\n\}|\}|^(?:\S.*?\n)+/gm
-        ), function (match0, ii) {
-            switch (match0.slice(0, 2)) {
-            case "\n\n":
-            case "\u0000@":
-            case "}\n":
-                previous = "";
-                return "";
-            case "}":
-                return "";
-            }
-            match0 = match0.trim();
-            err = (
-                !(previous < match0)
-                ? {
-                    message: "lines not sorted\n" + previous + "\n" + match0
-                }
-                : match0.split("\n").sort().join("\n") !== match0
-                ? {
-                    message: "lines not sorted\n" + match0
-                }
-                : undefined
-            );
-            if (err) {
-                Object.assign(err, stringGetLineAndCol(code2, ii));
-                errList.push({
-                    column: err.column,
-                    evidence: err.evidence,
-                    line: err.line + 1,
-                    message: err.message.replace((
-                        /[\u0000-\u0007]/g
-                    ), "")
-                });
-            }
-            previous = match0;
-            return "";
-        });
-        break;
-    // jslintUtility2 - .html
-    case ".html":
-        break;
-    // jslintUtility2 - .js
-    case ".js":
-        // validate line-sorted - "local.xxx = "
-        previous = "";
-        code2.replace((
-            /^\/\*\u0020validateLineSortedReset\u0020\*\/$|^\(function\u0020\(|(^local\.\S*?\u0020=\u0020.*?$)/gm
-        ), function (ignore, match1, ii) {
-            if (!match1) {
-                previous = "";
-                return;
-            }
-            if (match1.slice(-3) === "\\n\\") {
-                return;
-            }
-            if (!(previous < match1)) {
-                err = {
-                    message: "lines not sorted\n" + previous + "\n" + match1
-                };
-                Object.assign(err, stringGetLineAndCol(code2, ii));
-                errList.push({
-                    column: err.column,
-                    evidence: err.evidence,
-                    line: err.line + 1,
-                    message: err.message
-                });
-            }
-            previous = match1;
-        });
-        break;
-    // jslintUtility2 - .md
-    case ".md":
-        break;
-    // jslintUtility2 - .sh
-    case ".sh":
-        previous = "";
-        code2.replace((
-            /(^sh\w+?\(\)\u0020\{)|^sh\w+?\u0020*?\(\)\u0020*?\{/gm
-        ), function (ignore, match1, ii) {
-            err = undefined;
-            if (!match1) {
-                err = {
-                    message: "invalid whitespace"
-                };
-            } else {
-                if (!(previous < match1)) {
-                    err = {
-                        message: (
-                            "lines not sorted\n" + previous + "\n" + match1
-                        )
-                    };
-                }
-                previous = match1;
-            }
-            if (err) {
-                Object.assign(err, stringGetLineAndCol(code2, ii));
-                errList.push({
-                    column: err.column,
-                    evidence: err.evidence,
-                    line: err.line + 1,
-                    message: err.message
-                });
-            }
-            return "";
-        });
-        // validate line-sorted - case-esac-statement
-        previous = "";
-        code2.replace((
-            /^(\u0020+?)(case\u0020.+?\u0020in|esac|[^\u0020()]+?\))$/gm
-        ), function (ignore, match1, match2, ii) {
-            err = undefined;
-            match2 = match2.replace("*", "~*");
-            switch (match2.slice(0, 5)) {
-            case "case ":
-                indent = indent || match1;
-                break;
-            case "esac":
-                if (match1 === indent) {
-                    indent = "";
-                    previous = "";
-                }
-                break;
-            default:
-                if (match1 !== indent) {
-                    break;
-                }
-                if (!(previous < match2)) {
-                    err = {
-                        message: (
-                            "lines not sorted\n" + previous + "\n" + match2
-                        )
-                    };
-                }
-                previous = match2;
-            }
-            if (err) {
-                Object.assign(err, stringGetLineAndCol(code2, ii));
-                errList.push({
-                    column: err.column,
-                    evidence: err.evidence,
-                    line: err.line + 1,
-                    message: err.message
-                });
-            }
-            return "";
-        });
-        break;
-    }
-};
-
-stringGetLineAndCol = function (code, ii) {
-/*
- * this function will get line and column from <code> at <ii>
- */
-    let aa;
-    let bb;
-    let line;
-    // https://jsperf.com/regexp-counting-2/8
-    bb = 0;
-    line = 0;
-    while (true) {
-        aa = bb;
-        bb = code.indexOf("\n", bb) + 1;
-        if (bb === 0 || ii < bb) {
-            break;
-        }
-        line += 1;
-    }
-    return {
-        column: ii - aa,
-        evidence: code.slice(aa, Math.max((bb || code.length) - 1, 0)),
-        line
-    };
-};
-
-local.jslintAndPrint = function (code, file = "undefined", opt = {}) {
-/*
- * this function will jslint-autofix <code>
- */
-    return jslintRecurse(code, file, opt, {});
-};
-
-local.jslintAndPrintDir = function (dir, opt, onError) {
-/*
- * this function will jslint files in <dir>
- */
-    let errCnt;
-    errCnt = 0;
-    onError = onError || function (err) {
-        process.exit(Math.min((err && err.message) | 0, 127));
-    };
-    dir = require("path").resolve(dir) + require("path").sep;
-    require("fs").readdir(dir, function (err, fileList) {
-        local.onErrorThrow(err);
-        Promise.all(fileList.map(function (file) {
-            return new Promise(function (resolve) {
-                let timeStart;
-                timeStart = Date.now();
-                file = dir + file;
-                switch ((
-                    /\.\w+?$|$/m
-                ).exec(file)[0]) {
-                case ".css":
-                case ".html":
-                case ".js":
-                case ".json":
-                case ".md":
-                case ".sh":
-                    if ((
-                        /\b(?:assets\.app\.js|lock|min|raw|rollup)\b/
-                    ).test(file)) {
-                        resolve();
-                        return;
-                    }
-                    // jslint file
-                    require("fs").readFile(file, "utf8", function (err, data) {
-                        if (err) {
-                            return;
-                        }
-                        local.jslintAndPrint(data, file, opt);
-                        errCnt += local.jslintResult.errList.length;
-                        console.error(
-                            "jslint - " + (Date.now() - timeStart) + "ms - "
-                            + file
-                        );
-                        resolve();
-                    });
-                    return;
-                }
-                resolve();
-            });
-        })).then(function () {
-            onError(errCnt && new Error(errCnt));
-        });
-    });
-};
-
-local.jslintResult = {};
-}());
-
-
-/* istanbul ignore next */
-// run node js-env code - init-after
-(function () {
-if (!local.isEnvNode) {
-    return;
-}
-
-local.cliDict = {};
-
-local.cliDict._default = function () {
-/*
- * <file1> <file2> ...
- * will jslint <file1> <file2> ... and print errors to stderr
- */
-    // jslint files
-    process.argv.slice(2).forEach(function (file) {
-        if (file[0] === "-") {
-            return;
-        }
-        local.jslintAndPrint(
-            require("fs").readFileSync(require("path").resolve(file), "utf8"),
-            file,
-            {
-                modeAutofix: process.argv.indexOf("--autofix") >= 0,
-                modeConditional: process.argv.indexOf("--conditional") >= 0
-            }
-        );
-    });
-    // if err occurred, then exit with non-zero code
-    process.exit(Boolean(local.jslintResult.errList.length));
-};
-
-local.cliDict.dir = function () {
-/*
- * <dir>
- * will jslint files in shallow <dir>
- */
-    local.jslintAndPrintDir(process.argv[3], {
-        modeAutofix: process.argv.indexOf("--autofix") >= 0,
-        modeConditional: process.argv.indexOf("--conditional") >= 0
-    });
-};
-
-// run the cli
-if (module === require.main && !globalThis.utility2_rollup) {
-    local.cliRun({});
-}
-}());
-}());
