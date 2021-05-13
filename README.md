@@ -48,11 +48,11 @@ this zero-dependency package will provide high-level functions to to build, test
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
 #### changelog 2021.5.1
+- revamp lib.utility2.sh
 - remove shell-function shGitSquashShift
 - none
 
 #### todo
-- revamp lib.utility2.sh
 - part 2 - migrate ci from travis-ci.com to github.com
 - reimplement timerTimeout in function testRunDefault
 - fix broken auto-jslint for README.md
