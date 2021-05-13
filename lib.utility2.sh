@@ -1353,8 +1353,8 @@ shRmDsStore() {(set -e
 
 shSource() {
 # this function will source .bashrc
-    # . "$HOME/.bashrc"
-    . lib.utility2.sh
+    . "$HOME/.bashrc"
+    # . lib.utility2.sh
 }
 
 shUtility2FncStat() {(set -e
