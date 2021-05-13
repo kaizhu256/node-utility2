@@ -94,16 +94,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
 /*
 example.js
 
@@ -209,8 +199,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -235,8 +225,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -419,7 +409,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2020.12.3)</title>
+<title>utility2 (2021.5.1)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -499,7 +489,7 @@ pre {
 .button:hover {
     background: #bbb;
 }
-.colorError {
+.styleColorError {
     color: #d00;
 }
 .textarea {
@@ -580,7 +570,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2020.12.3)
+    utility2 (2021.5.1)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -661,7 +651,7 @@ pre {
     class="button"
     id="buttonJslintAutofix1"
 >jslint autofix</button><br>
-<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
+<pre class= "styleColorError" id="outputJslintPre1" tabindex="0"></pre>
 <label>instrumented-code</label>
 <textarea
     class="readonly textarea"
@@ -745,7 +735,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2020.12.3"
+npm_package_version: "2021.5.1"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>

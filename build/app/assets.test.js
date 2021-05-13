@@ -83,8 +83,8 @@
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -109,8 +109,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -465,7 +465,7 @@ local.testCase_replStart_default = function (opt, onError) {
         return;
     }
     local.replStart();
-    // hack-coverage - test replStart's muliple-call handling-behavior
+    // coverage-hack - test replStart's muliple-call handling-behavior
     local.replStart();
     local.testMock([
         [

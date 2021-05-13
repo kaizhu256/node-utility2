@@ -280,7 +280,7 @@
 <div class="header high">
 
     <h2 style="font-weight: bold;">
-        <a href="https://github.com/kaizhu256/node-utility2">utility2 (2020.12.3)</a>
+        <a href="https://github.com/kaizhu256/node-utility2">utility2 (2021.5.1)</a>
     </h2>
 
     <h2>Code coverage report for <span class="entity">test.js</span></h2>
@@ -1905,8 +1905,8 @@
     }
 <span class="fstat-skip" title="function not covered">    function documentQuerySelectorAll(selector) {</span>
     /*
-     * this function will return document.querySelectorAll(&lt;selector&gt;)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(&lt;selector&gt;) or
+     * empty list if function is not available
      */
 <span class="cstat-skip" title="statement not covered">        return Array.from(</span>
             (
@@ -1931,8 +1931,8 @@
     }
 <span class="fstat-skip" title="function not covered">    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {</span>
     /*
-     * this function will if items from &lt;tgt&gt; are null, undefined,
-     * or "", then overwrite them with items from &lt;src&gt;
+     * this function will if items from &lt;tgt&gt; are null, undefined, or
+     * "", then overwrite them with items from &lt;src&gt;
      */
 <span class="fstat-skip" title="function not covered">        function recurse(tgt, src, depth) {</span>
 <span class="cstat-skip" title="statement not covered">            Object.entries(src).forEach(<span class="fstat-skip" title="function not covered">function ([</span></span>
@@ -2287,7 +2287,7 @@ local.testCase_replStart_default = function (opt, onError) {
         return;
     }
     local.replStart();
-    // hack-coverage - test replStart's muliple-call handling-behavior
+    // coverage-hack - test replStart's muliple-call handling-behavior
     local.replStart();
     local.testMock([
         [
