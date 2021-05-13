@@ -336,10 +336,10 @@ shRawLibFetch
 -      | [ 1-9 ] [ 0-9 ]*
 -    )
 -) ( .* ) $ `;
--const rx_digits = /^[0-9]*/;
--const rx_hexs = /^[0-9A-F]*/i;
--const rx_octals = /^[0-7]*/;
--const rx_bits = /^[01]*/;
+-const rx_digits = /^[0-9]*\*\/;
+-const rx_hexs = /^[0-9A-F]*\*\/i;
+-const rx_octals = /^[0-7]*\*\/;
+-const rx_bits = /^[01]*\*\/;
 +  | (
 +        0 n?
 +      | [ 1-9 ] [ 0-9 ]* n?
@@ -369,7 +369,7 @@ shRawLibFetch
 +local.jslint0 = Object.freeze(function (
 
 -var CSSLint = (function(){
-+/* istanbul ignore next */
++/* istanbul ignore next *\*\/
 +var CSSLint = (function(){
 */
 

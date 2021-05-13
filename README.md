@@ -2,22 +2,22 @@
 this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
 
 # live web demo
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
+- [https://kaizhu256.github.io/node-utility2/build..beta..github.com/app](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/)
 
-[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/)
+[![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.deployGithub.browser.%252Fnode-utility2%252Fbuild%252Fapp.png)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/)
 
 
-[![travis-ci.com build-status](https://api.travis-ci.com/kaizhu256/node-utility2.svg)](https://travis-ci.com/kaizhu256/node-utility2) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
+[![github.com ci-status](https://github.com/kaizhu256/node-utility2/workflows/Node.js%20CI/badge.svg)](https://github.com/kaizhu256/node-utility2/actions) [![coverage](https://kaizhu256.github.io/node-utility2/build/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build/coverage/index.html)
 
-[![build commit status](https://kaizhu256.github.io/node-utility2/build/build.badge.svg)](https://travis-ci.com/kaizhu256/node-utility2)
+[![commit status](https://kaizhu256.github.io/node-utility2/build/commit.badge.svg)](https://github.com/kaizhu256/node-utility2/actions)
 
 | git-branch : | [master](https://github.com/kaizhu256/node-utility2/tree/master) | [beta](https://github.com/kaizhu256/node-utility2/tree/beta) | [alpha](https://github.com/kaizhu256/node-utility2/tree/alpha)|
 |--:|:--|:--|:--|
-| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/app)|
+| test-server-github : | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..master..github.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app) | [![github.com test-server](https://kaizhu256.github.io/node-utility2/GitHub-Mark-32px.png)](https://kaizhu256.github.io/node-utility2/build..alpha..github.com/app)|
 | test-server-heroku : | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-master.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-beta.herokuapp.com) | [![heroku.com test-server](https://kaizhu256.github.io/node-utility2/heroku-logo.75x25.png)](https://h1-utility2-alpha.herokuapp.com)|
-| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/test-report.html)|
-| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..travis-ci.com/coverage/index.html)|
-| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..travis-ci.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..travis-ci.com)|
+| test-report : | [![test-report](https://kaizhu256.github.io/node-utility2/build..master..github.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..github.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..beta..github.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/test-report.html) | [![test-report](https://kaizhu256.github.io/node-utility2/build..alpha..github.com/test-report.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..github.com/test-report.html)|
+| coverage : | [![coverage](https://kaizhu256.github.io/node-utility2/build..master..github.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..master..github.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..beta..github.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/coverage/index.html) | [![coverage](https://kaizhu256.github.io/node-utility2/build..alpha..github.com/coverage/coverage.badge.svg)](https://kaizhu256.github.io/node-utility2/build..alpha..github.com/coverage/index.html)|
+| build-artifacts : | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..master..github.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..beta..github.com) | [![build-artifacts](https://kaizhu256.github.io/node-utility2/glyphicons_144_folder_open.png)](https://github.com/kaizhu256/node-utility2/tree/gh-pages/build..alpha..github.com)|
 
 [![npmPackageListing](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageListing.svg)](https://github.com/kaizhu256/node-utility2)
 
@@ -35,35 +35,25 @@ this zero-dependency package will provide high-level functions to to build, test
 
 
 # cdn download
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.utility2.rollup.js)
+- [https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/assets.utility2.rollup.js](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/assets.utility2.rollup.js)
 
 
 # documentation
 #### api doc
-- [https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
+- [https://kaizhu256.github.io/node-utility2/build..beta..github.com/apidoc.html](https://kaizhu256.github.io/node-utility2/build..beta..github.com/apidoc.html)
 
-[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/apidoc.html)
+[![apidoc](https://kaizhu256.github.io/node-utility2/build/screenshot.ci.browser.%252F.tmp%252Fbuild%252Fapidoc.html.png)](https://kaizhu256.github.io/node-utility2/build..beta..github.com/apidoc.html)
 
 #### cli help
 ![screenshot](https://kaizhu256.github.io/node-utility2/build/screenshot.npmPackageCliHelp.svg)
 
-#### changelog 2020.12.3
-- pre - migrate ci from travis-ci.com to github.com
-- remove shell-functions shBuildInsideDocker, shChromeSocks5, shCryptoTravisEncrypt, shMacAddressSpoof, shNpmDeprecateAlias, shNpmPublishAlias, shTravisRepoCreate, shTravisRepoTrigger
-- init shell-var \$CI_xxx in shell-function shCiInit instead of shCiMain
-- rename shBuildXxx to shCiXxx
-- merge shell-function shIstanbulCover into shNpmTest
-- update shell-function shRunWithScreenshotTxt with fixed \$EXIT_CODE
-- replace var isBrowser with isEnvNode and remove unused var isWebWorker
-- merge state modeTest into npm_config_mode_test, modeTestCase into npm_config_mode_test_case, timeoutDefault into npm_config_timeout
-- add functions documentQuerySelectorAll
-- remove functions middlewareXxx, onParallelXxx, streamCleanup
-- add file .windows_terminals_settings.json
-- in shell-functions remove whitespace between "shXxx ()"
+#### changelog 2021.5.1
+- remove shell-function shGitSquashShift
 - none
 
 #### todo
-- migrate ci from travis-ci.com to github.com
+- revamp lib.utility2.sh
+- part 2 - migrate ci from travis-ci.com to github.com
 - reimplement timerTimeout in function testRunDefault
 - fix broken auto-jslint for README.md
 - fix test-report bug with duplicate github and heroku tests
@@ -77,14 +67,14 @@ this zero-dependency package will provide high-level functions to to build, test
 
 # quickstart standalone app
 #### to run this example, follow instruction in script below
-- [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.app.js)
+- [assets.app.js](https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/assets.app.js)
 ```shell
 # example.sh
 
 # this shell script will download and run web-demo of utility2 as standalone app
 
 # 1. download standalone app
-curl -O https://kaizhu256.github.io/node-utility2/build..beta..travis-ci.com/app/assets.app.js
+curl -O https://kaizhu256.github.io/node-utility2/build..beta..github.com/app/assets.app.js
 # 2. run standalone app
 PORT=8081 node ./assets.app.js
 # 3. open browser to http://127.0.0.1:8081 and play with web-demo
@@ -209,8 +199,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>)
-     * or empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>) or
+     * empty list if function is not available
      */
         return Array.from(
             (
@@ -235,8 +225,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined,
-     * or "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined, or
+     * "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -419,7 +409,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2020.12.3)</title>
+<title>utility2 (2021.1.1)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -499,7 +489,7 @@ pre {
 .button:hover {
     background: #bbb;
 }
-.colorError {
+.styleColorError {
     color: #d00;
 }
 .textarea {
@@ -580,7 +570,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2020.12.3)
+    utility2 (2021.1.1)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -661,7 +651,7 @@ pre {
     class="button"
     id="buttonJslintAutofix1"
 >jslint autofix</button><br>
-<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
+<pre class= "styleColorError" id="outputJslintPre1" tabindex="0"></pre>
 <label>instrumented-code</label>
 <textarea
     class="readonly textarea"
@@ -745,7 +735,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2020.12.3"
+npm_package_version: "2021.1.1"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>
@@ -966,9 +956,9 @@ require("http").createServer(function (req, res) {
         "2020.08.19 sqlite3-lite",
         "2020.10.27 jslint-lite",
         "2020.11.12 istanbul-lite",
-        "2020.12.01 utility2"
+        "2021.01.01 utility2"
     ],
-    "version": "2020.12.3"
+    "version": "2021.5.1"
 }
 ```
 
@@ -1009,7 +999,8 @@ RUN (set -e; \
         ca-certificates \
         curl \
         git \
-        gnupg; \
+        gnupg \
+        libnss3-tools; \
     (busybox --list | xargs -n1 /bin/sh -c \
         'ln -s /bin/busybox /bin/$0 2>/dev/null' || true); \
     curl -Lf https://deb.nodesource.com/setup_14.x | /bin/bash -; \
@@ -1130,7 +1121,6 @@ rm -rf \
         done
         ;;
     esac
-    # https://docs.travis-ci.com/user/docker/#Pushing-a-Docker-Image-to-a-Registry
     # docker push
     if [ "$DOCKER_PASSWORD" ]
     then
