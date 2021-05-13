@@ -801,31 +801,38 @@ if (!globalThis.debugInline) {
 )}
 
 shImageToDataUri() {(set -e
-# this function will convert image $FILE to data-uri string
-    case "$1" in
-    http://*)
-        FILE=/tmp/shImageToDataUri.png
-        curl -Lf -o "$FILE" "$1"
-        ;;
-    https://*)
-        FILE=/tmp/shImageToDataUri.png
-        curl -Lf -o "$FILE" "$1"
-        ;;
-    *)
-        FILE="$1"
-        ;;
-    esac
+# this function will convert image $1 to data-uri string
     node -e '
 (function () {
     "use strict";
-    console.log(
-        "data:image/" +
-        require("path").extname(process.argv[1]).slice(1) +
-        ";base64," +
-        require("fs").readFileSync(process.argv[1]).toString("base64")
-    );
+    let file;
+    let result;
+    file = process.argv[1];
+    if ((
+        /^https?:\/\//
+    ).test(file)) {
+        require(file.split(":")[0]).request(file, function (res) {
+            let chunkList;
+            chunkList = [];
+            res.on("data", function (chunk) {
+                chunkList.push(chunk);
+            }).on("end", function () {
+                result = Buffer.concat(chunkList);
+            });
+        }).end();
+    } else {
+        require("fs").readFile(file, function (ignore, data) {
+            result = data;
+        });
+    }
+    process.on("exit", function () {
+        console.log(
+            "data:image/" + require("path").extname(file).slice(1) +
+            ";base64," + result.toString("base64")
+        );
+    });
 }());
-' "$FILE" # '
+' "$1" # '
 )}
 
 shJsonNormalize() {(set -e
