@@ -92,8 +92,8 @@
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -118,8 +118,8 @@
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -11862,7 +11862,6 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
-                    "await",
                     "global",
                     "globalThis"
                 ).forEach(function (key) {
@@ -16304,6 +16303,13 @@ local.jslint0 = Object.freeze(function (
                 );
             }
             break;
+        // expected_a_before_b: "Expected '{a}' before '{b}'.",
+        case "expected_a_before_b":
+            bb = (
+                aa.slice(0, warning.column - 1) + warning.a
+                + aa.slice(warning.column - 1)
+            );
+            break;
         // expected_identifier_a:
         // "Expected an identifier and instead saw '{a}'.",
         case "expected_identifier_a":
@@ -16444,10 +16450,6 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
     let rgx1;
     let rgx2;
     let tmp;
-    // normalize carriage-return
-    code = code.replace((
-        /\r\n*/g
-    ), "\n");
     // autofix-all - normalize local-function
     if (
         globalThis.utility2

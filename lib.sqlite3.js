@@ -34,9 +34,9 @@
     }
     // init isBrowser
     isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
+        typeof globalThis.XMLHttpRequest === "function"
+        && globalThis.navigator
+        && typeof globalThis.navigator.userAgent === "string"
     );
     // init isWebWorker
     isWebWorker = (
@@ -81,9 +81,9 @@
         }
         throw (
             (
-                msg &&
-                typeof msg.message === "string" &&
-                typeof msg.stack === "string"
+                msg
+                && typeof msg.message === "string"
+                && typeof msg.stack === "string"
             )
             // if msg is err, then leave as is
             ? msg
@@ -141,9 +141,9 @@
                     return;
                 }
                 if (
-                    depth !== 0 &&
-                    typeof aa === "object" && aa && !Array.isArray(aa) &&
-                    typeof bb === "object" && bb && !Array.isArray(bb)
+                    depth !== 0
+                    && typeof aa === "object" && aa && !Array.isArray(aa)
+                    && typeof bb === "object" && bb && !Array.isArray(bb)
                 ) {
                     recurse(aa, bb, depth - 1);
                 }
@@ -162,9 +162,9 @@
     }
     // bug-workaround - throw unhandledRejections in node-process
     if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
+        typeof process === "object" && process
+        && typeof process.on === "function"
+        && process.unhandledRejections !== "strict"
     ) {
         process.unhandledRejections = "strict";
         process.on("unhandledRejection", function (err) {
@@ -222,9 +222,9 @@ if (local.isBrowser) {
     return;
 }
 if (
-    module === require.main &&
-    process.argv[2] === "install" &&
-    require("path").basename(process.argv[1]) === "lib.sqlite3.js"
+    module === require.main
+    && process.argv[2] === "install"
+    && require("path").basename(process.argv[1]) === "lib.sqlite3.js"
 ) {
     let dict;
     dict = {};
@@ -241,16 +241,16 @@ if (
             }
             dict[file] = true;
             console.error(
-                "sqlite3 - fetching " +
-                "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/" +
-                file + ".tar.gz"
+                "sqlite3 - fetching "
+                + "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/"
+                + file + ".tar.gz"
             );
             require("child_process").spawnSync((
-                "curl -A \"chrome\" -Lf " +
-                "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/" +
-                file + ".tar.gz " +
-                "| tar -O -xz " + file + "/node_sqlite3.node " +
-                "> .node_sqlite3-v5.0.0-" + file + ".node"
+                "curl -A \"chrome\" -Lf "
+                + "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/"
+                + file + ".tar.gz "
+                + "| tar -O -xz " + file + "/node_sqlite3.node "
+                + "> .node_sqlite3-v5.0.0-" + file + ".node"
             ), {
                 encoding: "utf8",
                 shell: true,
@@ -272,9 +272,9 @@ let exports_mapbox_node_sqlite3_lib_sqlite3 = {};
 let exports_mapbox_node_sqlite3_lib_sqlite3_binding = {};
 // hack-sqlite3 - require binding
 let sqlite3_binding_file = (
-    ".node_sqlite3-v5.0.0-napi-v3-" +
-    process.platform + "-" + process.arch +
-    ".node"
+    ".node_sqlite3-v5.0.0-napi-v3-"
+    + process.platform + "-" + process.arch
+    + ".node"
 );
 if (!require("fs").existsSync(__dirname + "/" + sqlite3_binding_file)) {
     return;

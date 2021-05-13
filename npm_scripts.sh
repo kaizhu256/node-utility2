@@ -4,7 +4,7 @@
 shMain() {(set -e
 # this function will run the main program
     local ARG1
-    printf "# start - 'npm run-script $*'\n" 1>&2
+    printf "# start run cmd 'npm run $*'\n" 1>&2
     UTILITY2_BIN=utility2
     if [ -f lib.utility2.sh ]
     then
@@ -47,7 +47,7 @@ shMain() {(set -e
         "$@"
         ;;
     esac
-    printf "# end - 'npm run-script $*'\n" 1>&2
+    printf "# end run cmd 'npm run $*'\n" 1>&2
 )}
 
 # run cmd

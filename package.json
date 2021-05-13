@@ -48,7 +48,7 @@
         "2020.08.19 sqlite3-lite",
         "2020.10.27 jslint-lite",
         "2020.11.12 istanbul-lite",
-        "2021.01.01 utility2"
+        "2020.12.01 utility2"
     ],
-    "version": "2021.1.1"
+    "version": "2020.12.3"
 }

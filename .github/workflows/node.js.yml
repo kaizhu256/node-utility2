@@ -32,8 +32,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        npm run-script build-ci
+        npm run build-ci
     # - run: npm ci
-    # - run: npm run-script build --if-present
+    # - run: npm run build --if-present
     # - run: npm test
-    # - run: npm run-script ci-github
+    # - run: npm run ci-github

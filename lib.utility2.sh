@@ -46,27 +46,22 @@ shBaseInit() {
         export PATH="$PATH_BIN:$PATH" || return "$?"
     fi
     # init $PATH_OS
-    if [ ! "$PATH_OS" ]
-    then
-        case "$(uname)" in
-        Darwin)
+    case "$(uname)" in
+    Darwin)
+        if [ ! "$PATH_OS" ]
+        then
             export PATH_OS="$HOME/bin/darwin" || return "$?"
             export PATH="$PATH_OS:$PATH" || return "$?"
-            ;;
-        Linux)
+        fi
+        ;;
+    Linux)
+        if [ ! "$PATH_OS" ]
+        then
             export PATH_OS="$HOME/bin/linux" || return "$?"
             export PATH="$PATH_OS:$PATH" || return "$?"
-            ;;
-        MINGW*)
-            export PATH_OS="$HOME/bin/win32" || return "$?"
-            export PATH="$PATH_OS:$PATH" || return "$?"
-            ;;
-        MSYS*)
-            export PATH_OS="$HOME/bin/win32" || return "$?"
-            export PATH="$PATH_OS:$PATH" || return "$?"
-            ;;
-        esac
-    fi
+        fi
+        ;;
+    esac
     # init lib.utility2.sh and .bashrc2
     for FILE in "$HOME/lib.utility2.sh" "$HOME/.bashrc2"
     do
@@ -231,7 +226,6 @@ shBashrcDebianInit() {
 
 shBrowserScreenshot() {(set -e
 # this function will screenshot url "$1" with headless-chrome
-    shCiInit
     node -e '
 /* jslint utility2:true */
 (function () {
@@ -264,7 +258,7 @@ shBrowserScreenshot() {(set -e
         encodeURIComponent(file.replace(
             "/build.." + CI_BRANCH + ".." + CI_HOST + "/",
             "/build/"
-        ))
+        )) + ".png"
     );
     process.on("exit", function (exitCode) {
         if (typeof exitCode === "object" && exitCode) {
@@ -272,71 +266,38 @@ shBrowserScreenshot() {(set -e
             exitCode = 1;
         }
         console.error(
-            "shBrowserScreenshot" +
-            "\n  - url - " + url +
-            "\n  - wrote - " + file + ".html" +
-            "\n  - wrote - " + file + ".png" +
-            "\n  - timeElapsed - " + (Date.now() - timeStart) + " ms" +
-            "\n  - EXIT_CODE=" + exitCode
+            "\nshBrowserScreenshot" + " - " + (Date.now() - timeStart) + " ms" +
+            " - EXIT_CODE=" + exitCode + " - " + url + " - " + file + "\n"
         );
     });
-    [
-        ".html", ".png"
-    ].forEach(function (extname) {
-        let argList;
-        let child;
-        argList = Array.from([
-            "--headless",
-            "--ignore-certificate-errors",
-            "--incognito",
-            "--timeout=30000",
-            "--user-data-dir=/dev/null",
-            "--window-size=800x600",
-            (
-                extname === ".html"
-                ? "--dump-dom"
-                : ""
-            ),
-            (
-                extname === ".png"
-                ? "--screenshot"
-                : ""
-            ),
-            (
-                extname === ".png"
-                ? "-screenshot=" + file + ".png"
-                : ""
-            ),
-            (
-                (process.getuid && process.getuid() === 0)
-                ? "--no-sandbox"
-                : ""
-            ),
-            url
-        ]).filter(function (elem) {
-            return elem;
-        });
-        // debug argList
-        // console.error(argList);
-        child = require("child_process").spawn((
-            process.platform === "darwin"
-            ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-            : process.platform === "win32"
-            ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-            : "/usr/bin/google-chrome-stable"
-        ), argList, {
-            stdio: [
-                "ignore", "pipe", 2
-            ]
-        });
-        child.stdout.pipe(
-            extname === ".html"
-            ? require("fs").createWriteStream(file + ".html")
-            : process.stdout
-        );
+    process.on("uncaughtException", process.exit);
+    process.on("unhandledRejection", process.exit);
+    require("child_process").spawn((
+        process.platform === "darwin"
+        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : process.platform === "win32"
+        ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+        : "/usr/bin/google-chrome-stable"
+    ), [
+        "--headless",
+        "--incognito",
+        "--screenshot",
+        "--timeout=30000",
+        "--window-size=800x600",
+        "-screenshot=" + file,
+        (
+            process.platform === "linux"
+            ? "--no-sandbox"
+            : ""
+        ),
+        url
+    ], {
+        stdio: [
+            "ignore", 1, 2
+        ]
     });
 }());
-' "$1" # '
+' "$1" "$2" # '
 )}
 
 shBrowserTest() {(set -e
@@ -405,7 +366,7 @@ shBuildApp() {(set -e
     ], ii) {
         // hardlink file $HOME/lib.utility2.sh synchronously to prevent
         // race-condition with hardlink file $HOME/bin/utility2
-        if (ii < 2) {
+        if (ii === 0) {
             try {
                 fs.unlinkSync(bb);
             } catch (ignore) {}
@@ -599,6 +560,12 @@ shCiInit() {
         export CI_BRANCH="$(printf "$GITHUB_REF" | grep -Eo "[^/]*$")"
         export CI_HOST=github.com
     fi
+    # init env - $TRAVIS
+    if [ "$TRAVIS" ]
+    then
+        export CI_BRANCH="$TRAVIS_BRANCH"
+        export CI_HOST=travis-ci.com
+    fi
     eval "$(node -e '
 /* jslint utility2:true */
 (function () {
@@ -714,7 +681,7 @@ shCiInit() {
     exportVar("NODE_OPTIONS", (
         NODE_OPTIONS.indexOf("--unhandled-rejections=") >= 0
         ? NODE_OPTIONS
-        : String(NODE_OPTIONS + " --unhandled-rejections=strict").trim()
+        : String(NODE_OPTIONS + " --unhandled-rejections=throw").trim()
     ));
     process.stderr.write(cmd);
     process.stdout.write(cmd);
@@ -849,6 +816,17 @@ shCiInternal() {(set -e
 shCiMain() {(set -e
 # this function will run main-ci
     export MODE_CI=ci
+    # init env - $TRAVIS
+    if [ "$TRAVIS" ]
+    then
+        git remote remove origin 2>/dev/null || true
+        git remote add origin "https://github.com/$GITHUB_FULLNAME"
+        # decrypt and exec encrypted data
+        if [ "$CRYPTO_AES_KEY" ]
+        then
+            eval "$(shCryptoTravisDecrypt)"
+        fi
+    fi
     # init env - $GITHUB_ACTIONS
     if [ "$GITHUB_ACTIONS" ]
     then
@@ -928,8 +906,8 @@ shCiPrint() {(set -e
 (function () {
     "use strict";
     process.stderr.write(
-        "\u001b[35m[MODE_CI=" + process.env.MODE_CI + "]\u001b[0m - " +
-        new Date().toISOString() + "\n  - " + process.argv[1] + "\n"
+        "\n\u001b[35m[MODE_CI=" + process.env.MODE_CI + "]\u001b[0m - " +
+        new Date().toISOString() + " - " + process.argv[1] + "\n\n"
     );
 }());
 ' "$1" # '
@@ -1089,6 +1067,31 @@ shCryptoAesXxxCbcRawDecrypt() {(set -e
 ' "$@" # '
 )}
 
+shCryptoTravisDecrypt() {(set -e
+# this function will use $CRYPTO_AES_KEY to decrypt $SH_ENCRYPTED to stdout
+    export MODE_CI=cryptoTravisDecrypt
+    if [ ! "$CRYPTO_AES_KEY" ]
+    then
+        eval "CRYPTO_AES_KEY=$(printf "\$CRYPTO_AES_KEY_$GITHUB_OWNER")"
+    fi
+    if [ ! "$CRYPTO_AES_KEY" ]
+    then
+        shCiPrint "no CRYPTO_AES_KEY"
+        return 1
+    fi
+    local FILE="$1"
+    if [ -f "$FILE" ]
+    then
+        cat "$FILE" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+        return
+    fi
+    # decrypt CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER
+    URL="https://raw.githubusercontent.com\
+/kaizhu256/node-utility2/gh-pages/.CRYPTO_AES_SH_ENCRYPTED_$GITHUB_OWNER"
+    shCiPrint "decrypting $URL ..."
+    curl -Lf "$URL" | shCryptoAesXxxCbcRawDecrypt "$CRYPTO_AES_KEY" base64
+)}
+
 shCryptoWithGithubOrg() {(set -e
 # this function will run "$@" with private $GITHUB_OWNER-env
     export GITHUB_OWNER="$1"
@@ -1109,7 +1112,7 @@ shDeployGithub() {(set -e
     export MODE_CI=deployGithub
     export TEST_URL="https://$(
         printf "$GITHUB_FULLNAME" | sed -e "s/\//.github.io\//"
-    )/build..$CI_BRANCH..$CI_HOST/app"
+    )/build..$CI_BRANCH..travis-ci.com/app"
     shCiPrint "deployed to $TEST_URL"
     # verify deployed app''s main-page returns status-code < 400
     shSleep 15
@@ -1915,11 +1918,9 @@ shJsonNormalize() {(set -e
     console.error("shJsonNormalize - " + process.argv[1]);
     require("fs").writeFileSync(
         process.argv[1],
-        JSON.stringify(objectDeepCopyWithKeysSorted(JSON.parse(
-            require("fs").readFileSync(process.argv[1], "utf8").replace((
-                /^\ufeff/
-            ), "")
-        )), undefined, 4) + "\n"
+        JSON.stringify(objectDeepCopyWithKeysSorted(
+            JSON.parse(require("fs").readFileSync(process.argv[1]))
+        ), undefined, 4) + "\n"
     );
 }());
 ' "$1" # '
@@ -2054,13 +2055,10 @@ shNpmTest() {(set -e
 shNpmTestPublished() {(set -e
 # this function will npm-test published npm-package $npm_package_name
     export MODE_CI=npmTestPublished
-    if [ "$GITHUB_ACTIONS" ] && (
-        [ ! "$NPM_TOKEN" ] ||
-        (
-            [ "$CI_BRANCH" = alpha ] &&
-            (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
-        )
-    )
+    if [ "$TRAVIS" ] && ([ ! "$NPM_TOKEN" ] || (
+        [ "$CI_BRANCH" = alpha ] &&
+        (printf "$CI_COMMIT_MESSAGE" | grep -q -E "^\[npm publish")
+    ))
     then
         shCiPrint "skip npm-test published-package $npm_package_name"
         return
@@ -2231,9 +2229,11 @@ shRawLibFetch() {(set -e
 /* jslint utility2:true */
 (function () {
     "use strict";
+    let fetchList;
     let footer;
     let header;
     let opt;
+    let replaceList;
     let repoDict;
     let requireDict;
     let result;
@@ -2276,37 +2276,31 @@ shRawLibFetch() {(set -e
     /*
      * this function will replace result with replaceList and write to file
      */
+        let aa;
+        let bb;
         let data;
         let result0;
         // replace from replaceList
-        replaceList.forEach(function ({
-            aa,
-            bb,
-            flags
-        }) {
+        replaceList.forEach(function (elem) {
             result0 = result;
-            result = result.replace(new RegExp(aa, flags), bb);
+            result = result.replace(new RegExp(elem.aa, elem.flags), elem.bb);
             if (result0 === result) {
                 throw new Error(
                     "shRawLibFetch - cannot find-and-replace snippet " +
-                    JSON.stringify(aa)
+                    JSON.stringify(elem.aa)
                 );
             }
         });
-        // replace from header-diff
+        // replace from header
         header.replace((
             /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
-        ), function (ignore, aa, bb) {
-            aa = "\n" + aa.replace((
+        ), function (ignore, match1, match2) {
+            aa = "\n" + match1.replace((
                 /^-/gm
-            ), "").replace((
-                /\*\\\*\\\//g
-            ), "*/");
-            bb = "\n" + bb.replace((
+            ), "");
+            bb = "\n" + match2.replace((
                 /^\+/gm
-            ), "").replace((
-                /\*\\\*\\\//g
-            ), "*/");
+            ), "");
             result0 = result;
             // disable $-escape in replacement-string
             result = result.replace(aa, function () {
@@ -2373,13 +2367,12 @@ shRawLibFetch() {(set -e
         }).sort().join("\n") + "*/\n\n\n"
     );
     // JSON.parse opt with comment
-    let {
-        fetchList,
-        isRollupCommonJs,
-        replaceList = []
-    } = JSON.parse(opt[1]);
+    opt = JSON.parse(opt[1]);
+    // init replaceList
+    replaceList = opt.replaceList || [];
     // init repoDict, fetchList
     repoDict = {};
+    fetchList = opt.fetchList;
     fetchList.forEach(function (elem) {
         if (!elem.url) {
             return;
@@ -2415,19 +2408,12 @@ shRawLibFetch() {(set -e
             }).stdout, elem, "data");
             return;
         }
-        require("https").get(elem.url2 || elem.url.replace(
+        require("https").request(elem.url2 || elem.url.replace(
             "https://github.com/",
             "https://raw.githubusercontent.com/"
         ).replace("/blob/", "/"), function (res) {
-            // http-redirect
-            if (res.statusCode === 302) {
-                require("https").get(res.headers.location, function (res) {
-                    onResponse(res, elem, "data");
-                });
-                return;
-            }
             onResponse(res, elem, "data");
-        });
+        }).end();
     });
     // parse fetched data
     process.on("exit", function () {
@@ -2472,7 +2458,7 @@ shRawLibFetch() {(set -e
             }
             // mangle module.exports
             data = elem.data.toString();
-            if (!isRollupCommonJs) {
+            if (!opt.isRollupCommonJs) {
                 result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
                 return;
             }
@@ -2503,7 +2489,7 @@ shRawLibFetch() {(set -e
         ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result);
-        if (!isRollupCommonJs) {
+        if (!opt.isRollupCommonJs) {
             result = (
                 header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
             );
@@ -2665,7 +2651,7 @@ shReadmeEval() {(set -e
         if [ "$CI_BRANCH" = alpha ]
         then
             sed -in \
--e "s|/build..beta..github.com/|/build..alpha..github.com/|g" \
+-e "s|/build..beta..travis-ci.com/|/build..alpha..travis-ci.com/|g" \
 -e "s|npm install $npm_package_name|npm install $GITHUB_FULLNAME#alpha|g" \
 -e "s| -b beta | -b alpha |g" \
                 "$FILE"
@@ -2732,7 +2718,7 @@ shReadmeLinkValidate() {(set -e
             /\bbeta\b|\bmaster\b/g
         ), "alpha").replace((
             /\/build\//g
-        ), "/build..alpha..github.com/");
+        ), "/build..alpha..travis-ci.com/");
         // ignore private-link
         if (
             process.env.npm_package_private &&
