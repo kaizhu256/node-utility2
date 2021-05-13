@@ -52,7 +52,7 @@
 
         href="https://github.com/kaizhu256/node-utility2"
 
-    >utility2 (2021.5.1)</a>
+    >utility2 (2020.12.3)</a>
 </h1>
 <h4>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h4>
 <div class="apidocSectionDiv"><a
@@ -1077,6 +1077,15 @@
 
             <a class="apidocElementLiA" href="#apidoc.elem.utility2.cliDict.utility2.browserTest">
             function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.browserTest
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.elem.utility2.cliDict.utility2.start">
+            function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.start
             <span class="apidocSignatureSpan">()</span>
             </a>
 
@@ -3789,8 +3798,8 @@ if (!(
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function documentQuerySelectorAll(selector) {
 <span class="apidocCodeCommentSpan">/*
- * this function will return document.querySelectorAll(&lt;selector&gt;) or
- * empty list if function is not available
+ * this function will return document.querySelectorAll(&lt;selector&gt;)
+ * or empty list if function is not available
  */
 </span>    return Array.from(
         (
@@ -3859,7 +3868,8 @@ local._testCase_webpage_default = async function (opt, onError) {
 </span>    let list;
     let rgx;
     rgx = (
-        /^0\u0020(?:(body\u0020&gt;\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020&gt;\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea
+|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
     documentQuerySelectorAll(&quot;style&quot;).forEach(function (elem, ii) {
@@ -4782,8 +4792,8 @@ committed 2020-03-09T10:38:41Z
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
 <span class="apidocCodeCommentSpan">/*
- * this function will if items from &lt;tgt&gt; are null, undefined, or
- * &quot;&quot;, then overwrite them with items from &lt;src&gt;
+ * this function will if items from &lt;tgt&gt; are null, undefined,
+ * or &quot;&quot;, then overwrite them with items from &lt;src&gt;
  */
 </span>    function recurse(tgt, src, depth) {
         Object.entries(src).forEach(function ([
@@ -5072,21 +5082,21 @@ function onTestRun({
                     match2 + &quot;[key]&amp;&amp;&quot; +
                     match2 + &q...</pre></li>
     <li>example use<pre class="apidocCodePre">...
+
+local.cliDict[&quot;utility2.start&quot;] = function () {
 /*
-* this function will test replStart&apos;s default handling-behavior
-*/
-   if (!isEnvNode) {
-       onError(undefined, opt);
-       return;
-   }
-   local.<span class="apidocCodeKeywordSpan">replStart</span>();
-   // coverage-hack - test replStart&apos;s muliple-call handling-behavior
-   local.replStart();
-   local.testMock([
-       [
-           require(&quot;child_process&quot;), {
-               spawn: function () {
-                   return {
+ * &lt;port&gt;
+ * will start utility2 http-server on given &lt;port&gt; (default 8081)
+ */
+    globalThis.local = local;
+    local.<span class="apidocCodeKeywordSpan">replStart</span>();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require(&quot;path&quot;).resolve(npm_config_runme));
+    }
+};
+
+local.cliDict[&quot;utility2.testReportCreate&quot;] = function () {
 ...</pre></li>
     </ul>
 
@@ -5124,9 +5134,6 @@ function onTestRun({
         require(&quot;fs&quot;).readdir(&quot;.&quot;, function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
-                if (file[0] === &quot;.&quot;) {
-                    return;
-                }
                 stats = await require(&quot;fs&quot;).promises.stat(file);
                 if (!stats.isFile()) {
                     return;
@@ -5213,7 +5220,9 @@ function onTestRun({
     exports._compile(code, file);
     // export example.js
     exports = exports.exports;
-    export...</pre></li>
+    exports.utility2 = local;
+    exports[npm_package_nameLib] = globalThis.utility2_moduleExports;
+    /...</pre></li>
     <li>example use<pre class="apidocCodePre">...
 &quot;\n&quot; +
 &quot;\n&quot; +
@@ -5261,16 +5270,14 @@ function onTestRun({
     /*
      * this function will hand &quot;close&quot; evt
      */
-        if (req.url.indexOf(&quot;/favicon.ico&quot;) !== 0) {
-            console.error(&quot;serverLog - &quot; + JSON.stringify({
-                time: new Date(timeStart).toISOString(),
-                type: &quot;serverResponse&quot;,
-                method: req.method,
-                url: urlParsed.pathname,
-                statusCode: res.statusCode | 0,
-                timeElapsed: Date.now() - timeStart
-            }) + &quot;\n&quot;);
-        }
+        console.error(&quot;serverLog - &quot; + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: &quot;serverResponse&quot;,
+            method: req.method,
+            url: urlParsed.pathname,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - timeStart
+        }) + &quot;\n&quot;);
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
@@ -5350,7 +5357,9 @@ function onTestRun({
     }
     async function middlewareServeAsset(ignore, res, next) {
     /*
-     * this func...</pre></li>
+     * this function will serve assets from &lt;assetsDict&gt;
+     */
+        if (!assetsDict.hasOwnProperty(urlParsed.p...</pre></li>
     <li>example use<pre class="apidocCodePre">n/a</pre></li>
     </ul>
 
@@ -5554,8 +5563,8 @@ local.testCase_stringXxx_default = function (opt, onError) {
 jslintAndPrint(html, &quot;test-report.html&quot;);
 // create test-report.html
 fileWrite(&quot;test-report.html&quot;, html);
-// create commit.badge.svg
-fileWrite(&quot;commit.badge.svg&quot;, local.<span class="apidocCodeKeywordSpan">svgBadgeCreate</span>({
+// create build.badge.svg
+fileWrite(&quot;build.badge.svg&quot;, local.<span class="apidocCodeKeywordSpan">svgBadgeCreate</span>({
     fill: &quot;#07f&quot;,
     str1: &quot;last build&quot;,
     str2: (
@@ -6249,8 +6258,8 @@ local.testCase_urlJoin_default = function (opt, onError) {
     <ul>
     <li>description and source-code<pre class="apidocCodePre">uuid4Create = function () {
 <span class="apidocCodeCommentSpan">/*
- * this function will create random uuid with format
- * &quot;xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx&quot;
+ * this function will create random uuid,
+ * with format &apos;xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx&apos;
  */
 </span>    // code derived from http://jsperf.com/uuid4
     let id;
@@ -6890,8 +6899,8 @@ if (module === require.main &amp;&amp; !globalThis.utility2_rollup) {
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function documentQuerySelectorAll(selector) {
 <span class="apidocCodeCommentSpan">/*
- * this function will return document.querySelectorAll(&lt;selector&gt;) or
- * empty list if function is not available
+ * this function will return document.querySelectorAll(&lt;selector&gt;)
+ * or empty list if function is not available
  */
 </span>    return Array.from(
         (
@@ -7038,8 +7047,8 @@ committed 2020-03-09T10:38:41Z
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
 <span class="apidocCodeCommentSpan">/*
- * this function will if items from &lt;tgt&gt; are null, undefined, or
- * &quot;&quot;, then overwrite them with items from &lt;src&gt;
+ * this function will if items from &lt;tgt&gt; are null, undefined,
+ * or &quot;&quot;, then overwrite them with items from &lt;src&gt;
  */
 </span>    function recurse(tgt, src, depth) {
         Object.entries(src).forEach(function ([
@@ -7449,6 +7458,30 @@ readExample = function (file) {
 </span>    local.browserTest({
         url: process.argv[3]
     });
+}</pre></li>
+    <li>example use<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.elem.utility2.cliDict.utility2.start" id="apidoc.elem.utility2.cliDict.utility2.start">
+        function <span class="apidocSignatureSpan">utility2.cliDict.</span>utility2.start
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">utility2.start = function () {
+<span class="apidocCodeCommentSpan">/*
+ * &lt;port&gt;
+ * will start utility2 http-server on given &lt;port&gt; (default 8081)
+ */
+</span>    globalThis.local = local;
+    local.replStart();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require(&quot;path&quot;).resolve(npm_config_runme));
+    }
 }</pre></li>
     <li>example use<pre class="apidocCodePre">n/a</pre></li>
     </ul>
@@ -7998,8 +8031,8 @@ if (!(
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function documentQuerySelectorAll(selector) {
 <span class="apidocCodeCommentSpan">/*
- * this function will return document.querySelectorAll(&lt;selector&gt;) or
- * empty list if function is not available
+ * this function will return document.querySelectorAll(&lt;selector&gt;)
+ * or empty list if function is not available
  */
 </span>    return Array.from(
         (
@@ -8282,8 +8315,8 @@ committed 2020-03-09T10:38:41Z
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
 <span class="apidocCodeCommentSpan">/*
- * this function will if items from &lt;tgt&gt; are null, undefined, or
- * &quot;&quot;, then overwrite them with items from &lt;src&gt;
+ * this function will if items from &lt;tgt&gt; are null, undefined,
+ * or &quot;&quot;, then overwrite them with items from &lt;src&gt;
  */
 </span>    function recurse(tgt, src, depth) {
         Object.entries(src).forEach(function ([
@@ -8444,8 +8477,8 @@ tgt = local.templateRenderMyApp(
 jslintAndPrint(html, &quot;test-report.html&quot;);
 // create test-report.html
 fileWrite(&quot;test-report.html&quot;, html);
-// create commit.badge.svg
-fileWrite(&quot;commit.badge.svg&quot;, local.<span class="apidocCodeKeywordSpan">svgBadgeCreate</span>({
+// create build.badge.svg
+fileWrite(&quot;build.badge.svg&quot;, local.<span class="apidocCodeKeywordSpan">svgBadgeCreate</span>({
     fill: &quot;#07f&quot;,
     str1: &quot;last build&quot;,
     str2: (
@@ -10192,8 +10225,8 @@ if (module === require.main &amp;&amp; !globalThis.utility2_rollup) {
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function documentQuerySelectorAll(selector) {
 <span class="apidocCodeCommentSpan">/*
- * this function will return document.querySelectorAll(&lt;selector&gt;) or
- * empty list if function is not available
+ * this function will return document.querySelectorAll(&lt;selector&gt;)
+ * or empty list if function is not available
  */
 </span>    return Array.from(
         (
@@ -10550,8 +10583,8 @@ committed 2020-03-09T10:38:41Z
     <ul>
     <li>description and source-code<pre class="apidocCodePre">function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
 <span class="apidocCodeCommentSpan">/*
- * this function will if items from &lt;tgt&gt; are null, undefined, or
- * &quot;&quot;, then overwrite them with items from &lt;src&gt;
+ * this function will if items from &lt;tgt&gt; are null, undefined,
+ * or &quot;&quot;, then overwrite them with items from &lt;src&gt;
  */
 </span>    function recurse(tgt, src, depth) {
         Object.entries(src).forEach(function ([
@@ -11234,21 +11267,21 @@ tgt = local.templateRenderMyApp(
     this.stats[name] = value;
 }</pre></li>
     <li>example use<pre class="apidocCodePre">...
-    if (npm_config_mode_auto_restart) {
-require(&quot;fs&quot;).readdir(&quot;.&quot;, function (ignore, fileList) {
-    fileList.concat(__filename).forEach(async function (file) {
-        let stats;
-        if (file[0] === &quot;.&quot;) {
-            return;
-        }
-        stats = await require(&quot;fs&quot;).promises.<span class="apidocCodeKeywordSpan">stat</span>(file);
-        if (!stats.isFile()) {
-            return;
-        }
-        require(&quot;fs&quot;).watchFile(file, {
-            interval: 1000,
-            persistent: false
-        }, function () {
+    return local;
+}
+// if file modified, then restart process
+if (npm_config_mode_auto_restart) {
+    require(&quot;fs&quot;).readdir(&quot;.&quot;, function (ignore, fileList) {
+        fileList.concat(__filename).forEach(async function (file) {
+            let stats;
+            stats = await require(&quot;fs&quot;).promises.<span class="apidocCodeKeywordSpan">stat</span>(file);
+            if (!stats.isFile()) {
+                return;
+            }
+            require(&quot;fs&quot;).watchFile(file, {
+                interval: 1000,
+                persistent: false
+            }, function () {
 ...</pre></li>
     </ul>
 
@@ -11265,7 +11298,24 @@ require(&quot;fs&quot;).readdir(&quot;.&quot;, function (ignore, fileList) {
     &quot;use strict&quot;;
     this.report(message, line, col, rule);
 }</pre></li>
-    <li>example use<pre class="apidocCodePre">n/a</pre></li>
+    <li>example use<pre class="apidocCodePre">...
+    options.source_map.add(
+        mapping.token.file,
+        mapping.line, mapping.col,
+        mapping.token.line, mapping.token.col,
+        !mapping.name &amp;&amp; mapping.token.type == &quot;name&quot; ? mapping.token.value : mapping.name
+    );
+} catch(ex) {
+    mapping.token.file != null &amp;&amp; AST_Node.<span class="apidocCodeKeywordSpan">warn</span>(&quot;Couldn&apos;t figure out
+ mapping for {file}:{line},{col} → {cline},{ccol} [{name}]&quot;, {
+        file: mapping.token.file,
+        line: mapping.token.line,
+        col: mapping.token.col,
+        cline: mapping.line,
+        ccol: mapping.col,
+        name: mapping.name || &quot;&quot;
+    });
+...</pre></li>
     </ul>
 
 

@@ -101,8 +101,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -127,8 +127,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -286,8 +286,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -312,8 +312,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -473,8 +473,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -499,8 +499,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -1392,7 +1392,7 @@ vendor\\)s\\{0,1\\}\\(\\b\\|_\\)\
             tmp = function () {
                 return;
             };
-            // coverage-hack
+            // hack-coverage
             tmp();
             Object.defineProperties(tmp, {
                 toString: {
@@ -1789,8 +1789,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -1815,8 +1815,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -13702,8 +13702,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -13728,8 +13728,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -25472,7 +25472,6 @@ function tokenize(source) {
                 [].concat(
                     allowed_option.browser,
                     allowed_option.node,
-                    "await",
                     "global",
                     "globalThis"
                 ).forEach(function (key) {
@@ -29914,6 +29913,13 @@ local.jslint0 = Object.freeze(function (
                 );
             }
             break;
+        // expected_a_before_b: "Expected '{a}' before '{b}'.",
+        case "expected_a_before_b":
+            bb = (
+                aa.slice(0, warning.column - 1) + warning.a
+                + aa.slice(warning.column - 1)
+            );
+            break;
         // expected_identifier_a:
         // "Expected an identifier and instead saw '{a}'.",
         case "expected_identifier_a":
@@ -30054,10 +30060,6 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {
     let rgx1;
     let rgx2;
     let tmp;
-    // normalize carriage-return
-    code = code.replace((
-        /\r\n*/g
-    ), "\n");
     // autofix-all - normalize local-function
     if (
         globalThis.utility2
@@ -31128,8 +31130,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -31154,8 +31156,8 @@ if (module === require.main && !globalThis.utility2_rollup) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -31447,7 +31449,7 @@ if (local.isEnvNode) {
 /* script-begin /assets.utility2.js */
 // usr/bin/env node
 /*
- * lib.utility2.js (2021.5.1)
+ * lib.utility2.js (2020.12.3)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -31539,8 +31541,8 @@ if (local.isEnvNode) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -31565,8 +31567,8 @@ if (local.isEnvNode) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -31776,6 +31778,7 @@ globalThis.utility2 = local;
         "npm_config_mode_test",
         "npm_config_mode_test_case",
         "npm_config_mode_test_report_merge",
+        "npm_config_runme",
         "npm_config_timeout",
         "npm_config_timeout_exit",
         "npm_package_description",
@@ -31819,6 +31822,7 @@ let {
     npm_config_mode_test,
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
+    npm_config_runme,
     npm_config_timeout,
     npm_config_timeout_exit,
     npm_package_description,
@@ -31923,9 +31927,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function documentQuerySelectorAll(selector) {\n" +
     "    /*\n" +
-    "     * this function will return document.querySelectorAll(<selector>) " +
-    "or\n" +
-    "     * empty list if function is not available\n" +
+    "     * this function will return document.querySelectorAll(<selector>)\n" +
+    "     * or empty list if function is not available\n" +
     "     */\n" +
     "        return Array.from(\n" +
     "            (\n" +
@@ -31950,8 +31953,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
     "    /*\n" +
-    "     * this function will if items from <tgt> are null, undefined, or\n" +
-    "     * \"\", then overwrite them with items from <src>\n" +
+    "     * this function will if items from <tgt> are null, undefined,\n" +
+    "     * or \"\", then overwrite them with items from <src>\n" +
     "     */\n" +
     "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
@@ -32092,7 +32095,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ".button:hover {\n" +
     "    background: #bbb;\n" +
     "}\n" +
-    ".styleColorError {\n" +
+    ".colorError {\n" +
     "    color: #d00;\n" +
     "}\n" +
     ".textarea {\n" +
@@ -32493,19 +32496,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "the greatest app in the world!\n" +
     "\n" +
     "# live web demo\n" +
-    "- [{{app.io}}/build..beta..github.com/app]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app]" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "[![screenshot]" +
     "({{app.io}}/build/screenshot.deployGithub.{{app.png}})]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "\n" +
-    "[![github.com ci-status]" +
-    "(https://github.com/kaizhu256/node-my-app/workflows/" +
-    "Node.js%20CI/badge.svg)]" +
-    "(https://github.com/kaizhu256/node-my-app/actions) " +
-    "[![coverage]" +
+    "[![travis-ci.com build-status]" +
+    "(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]" +
     "({{app.io}}/build/coverage/coverage.badge.svg)]" +
     "({{app.io}}/build/coverage/index.html)\n" +
     "\n" +
@@ -32513,9 +32514,9 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://nodei.co/npm/my-app.png?downloads=true)]" +
     "(https://www.npmjs.com/package/my-app)\n" +
     "\n" +
-    "[![commit status]" +
-    "({{app.io}}/build/commit.badge.svg)]" +
-    "(https://github.com/kaizhu256/node-my-app/actions)\n" +
+    "[![build commit status]" +
+    "({{app.io}}/build/build.badge.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app)\n" +
     "\n" +
     "| git-branch : | " +
     "[master]" +
@@ -32528,13 +32529,13 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "| test-server-github : | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..master..github.com/app) | " +
+    "({{app.io}}/build..master..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..beta..github.com/app) | " +
+    "({{app.io}}/build..beta..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..alpha..github.com/app)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/app)|\n" +
     "| test-server-heroku : | " +
     "[![heroku.com test-server]" +
     "({{app.io}}/heroku-logo.75x25.png)]" +
@@ -32547,34 +32548,34 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://h1-my-app-alpha.herokuapp.com)|\n" +
     "| test-report : | " +
     "[![test-report]" +
-    "({{app.io}}/build..master..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/test-report.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..beta..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/test-report.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..alpha..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/test-report.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.html)|\n" +
     "| coverage : | " +
     "[![coverage]" +
-    "({{app.io}}/build..master..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..beta..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..alpha..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/coverage/index.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/index.html)|\n" +
     "| build-artifacts : | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..master..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..master..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..beta..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..beta..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..alpha..github.com)|\n" +
+    "({{app.com}}/tree/gh-pages/build..alpha..travis-ci.com)|\n" +
     "\n" +
     "[![npmPackageListing]" +
     "({{app.io}}/build/screenshot.npmPackageListing.svg)]" +
@@ -32588,18 +32589,18 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "\n" +
     "# cdn download\n" +
-    "- [{{app.io}}/build..beta..github.com/app/assets.my_app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.my_app.js)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js)\n" +
     "\n" +
     "\n" +
     "# documentation\n" +
     "#### api doc\n" +
-    "- [{{app.io}}/build..beta..github.com/apidoc.html]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/apidoc.html]" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "[![apidoc]" +
     "({{app.io}}/build/{{screenshot}}apidoc.html.png)]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "#### cli help\n" +
     "![screenshot]" +
@@ -32616,7 +32617,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "# quickstart standalone app\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [assets.app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.app.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.app.js)\n" +
     "```shell\n" +
     "# example.sh\n" +
     "\n" +
@@ -32624,7 +32625,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "as standalone app\n" +
     "\n" +
     "# 1. download standalone app\n" +
-    "curl -O {{app.io}}/build..beta..github.com/app/assets.app.js\n" +
+    "curl -O {{app.io}}/build..beta..travis-ci.com/app/assets.app.js\n" +
     "# 2. run standalone app\n" +
     "PORT=8081 node ./assets.app.js\n" +
     "# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
@@ -32648,7 +32649,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [example.js]" +
-    "({{app.io}}/build..beta..github.com/example.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/example.js)\n" +
     "```javascript\n" +
     local.assetsDict["/assets.example.template.js"] +
     "```\n" +
@@ -34517,7 +34518,7 @@ local.domStyleValidate = function () {
     let list;
     let rgx;
     rgx = (
-        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
     documentQuerySelectorAll("style").forEach(function (elem, ii) {
@@ -35097,9 +35098,6 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
-                if (file[0] === ".") {
-                    return;
-                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;
@@ -35346,16 +35344,14 @@ local.serverRequestListener = function (req, res) {
     /*
      * this function will hand "close" evt
      */
-        if (req.url.indexOf("/favicon.ico") !== 0) {
-            console.error("serverLog - " + JSON.stringify({
-                time: new Date(timeStart).toISOString(),
-                type: "serverResponse",
-                method: req.method,
-                url: urlParsed.pathname,
-                statusCode: res.statusCode | 0,
-                timeElapsed: Date.now() - timeStart
-            }) + "\n");
-        }
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "serverResponse",
+            method: req.method,
+            url: urlParsed.pathname,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - timeStart
+        }) + "\n");
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
@@ -35465,7 +35461,7 @@ local.serverRequestListener = function (req, res) {
             file.indexOf(process.cwd() + require("path").sep) !== 0 ||
             // security - ignore file with non-alphanumeric-first-character
             !(
-                /[.0-9A-Za-z]/
+                /[0-9A-Za-z]/
             ).test(require("path").basename(file)[0])
         ) {
             await next();
@@ -36068,8 +36064,8 @@ local.testReportMerge = function (
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
     fileWrite("test-report.html", html);
-    // create commit.badge.svg
-    fileWrite("commit.badge.svg", local.svgBadgeCreate({
+    // create build.badge.svg
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -36433,8 +36429,8 @@ local.urlJoin = function (aa, bb) {
 
 local.uuid4Create = function () {
 /*
- * this function will create random uuid with format
- * "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+ * this function will create random uuid,
+ * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
  */
     // code derived from http://jsperf.com/uuid4
     let id;
@@ -36552,6 +36548,19 @@ local.cliDict["utility2.browserTest"] = async function () {
     local.browserTest({
         url: process.argv[3]
     });
+};
+
+local.cliDict["utility2.start"] = function () {
+/*
+ * <port>
+ * will start utility2 http-server on given <port> (default 8081)
+ */
+    globalThis.local = local;
+    local.replStart();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require("path").resolve(npm_config_runme));
+    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {
@@ -36873,8 +36882,8 @@ instruction\n\
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>) or\n\
-     * empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>)\n\
+     * or empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -36899,8 +36908,8 @@ instruction\n\
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined, or\n\
-     * \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined,\n\
+     * or \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -37083,7 +37092,7 @@ local.assetsDict[\"/\"] = `<!doctype html>\n\
     name=\"viewport\"\n\
 >\n\
 <!-- \"assets.utility2.template.html\" -->\n\
-<title>utility2 (2021.5.1)</title>\n\
+<title>utility2 (2020.12.3)</title>\n\
 <style>\n\
 /* jslint utility2:true */\n\
 /*csslint\n\
@@ -37163,7 +37172,7 @@ pre {\n\
 .button:hover {\n\
     background: #bbb;\n\
 }\n\
-.styleColorError {\n\
+.colorError {\n\
     color: #d00;\n\
 }\n\
 .textarea {\n\
@@ -37244,7 +37253,7 @@ pre {\n\
 </script>\n\
 <h1>\n\
 <a href=\"https://github.com/kaizhu256/node-utility2\" target=\"_blank\">\n\
-    utility2 (2021.5.1)\n\
+    utility2 (2020.12.3)\n\
 </a>\n\
 </h1>\n\
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>\n\
@@ -37325,7 +37334,7 @@ pre {\n\
     class=\"button\"\n\
     id=\"buttonJslintAutofix1\"\n\
 >jslint autofix</button><br>\n\
-<pre class= \"styleColorError\" id=\"outputJslintPre1\" tabindex=\"0\"></pre>\n\
+<pre class= \"colorError\" id=\"outputJslintPre1\" tabindex=\"0\"></pre>\n\
 <label>instrumented-code</label>\n\
 <textarea\n\
     class=\"readonly textarea\"\n\
@@ -37409,7 +37418,7 @@ npm_package_description: \"this zero-dependency package will provide high-level 
 npm_package_homepage: \"https://github.com/kaizhu256/node-utility2\",\n\
 npm_package_name: \"utility2\",\n\
 npm_package_nameLib: \"utility2\",\n\
-npm_package_version: \"2021.5.1\"\n\
+npm_package_version: \"2020.12.3\"\n\
 }\n\
 </script>\n\
 <script src=\"assets.utility2.lib.istanbul.js\"></script>\n\
@@ -37659,8 +37668,8 @@ local.assetsDict["/assets.utility2.lib.jslint.js"] = (
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>) or\n\
-     * empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>)\n\
+     * or empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -37685,8 +37694,8 @@ local.assetsDict["/assets.utility2.lib.jslint.js"] = (
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined, or\n\
-     * \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined,\n\
+     * or \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -49429,7 +49438,6 @@ function tokenize(source) {\n\
                 [].concat(\n\
                     allowed_option.browser,\n\
                     allowed_option.node,\n\
-                    \"await\",\n\
                     \"global\",\n\
                     \"globalThis\"\n\
                 ).forEach(function (key) {\n\
@@ -53871,6 +53879,13 @@ local.jslint0 = Object.freeze(function (\n\
                 );\n\
             }\n\
             break;\n\
+        // expected_a_before_b: \"Expected '{a}' before '{b}'.\",\n\
+        case \"expected_a_before_b\":\n\
+            bb = (\n\
+                aa.slice(0, warning.column - 1) + warning.a\n\
+                + aa.slice(warning.column - 1)\n\
+            );\n\
+            break;\n\
         // expected_identifier_a:\n\
         // \"Expected an identifier and instead saw '{a}'.\",\n\
         case \"expected_identifier_a\":\n\
@@ -54011,10 +54026,6 @@ function jslintAutofix(code, file, opt, {fileType, globalList, iiLine}) {\n\
     let rgx1;\n\
     let rgx2;\n\
     let tmp;\n\
-    // normalize carriage-return\n\
-    code = code.replace((\n\
-        /\\r\\n*/g\n\
-    ), \"\\n\");\n\
     // autofix-all - normalize local-function\n\
     if (\n\
         globalThis.utility2\n\
@@ -55091,8 +55102,8 @@ local.assetsDict["/assets.utility2.test.js"] = (
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>) or\n\
-     * empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>)\n\
+     * or empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -55117,8 +55128,8 @@ local.assetsDict["/assets.utility2.test.js"] = (
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined, or\n\
-     * \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined,\n\
+     * or \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -55473,7 +55484,7 @@ local.testCase_replStart_default = function (opt, onError) {\n\
         return;\n\
     }\n\
     local.replStart();\n\
-    // coverage-hack - test replStart's muliple-call handling-behavior\n\
+    // hack-coverage - test replStart's muliple-call handling-behavior\n\
     local.replStart();\n\
     local.testMock([\n\
         [\n\
@@ -55861,8 +55872,8 @@ if (process.env.npm_config_runme) {\n\
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -55887,8 +55898,8 @@ if (process.env.npm_config_runme) {\n\
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -55974,7 +55985,7 @@ local.assetsDict["/assets.utility2.css"] = (
 local.assetsDict["/assets.utility2.js"] = (
 "// usr/bin/env node\n\
 /*\n\
- * lib.utility2.js (2021.5.1)\n\
+ * lib.utility2.js (2020.12.3)\n\
  * https://github.com/kaizhu256/node-utility2\n\
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps\n\
  *\n\
@@ -56066,8 +56077,8 @@ local.assetsDict["/assets.utility2.js"] = (
     }\n\
     function documentQuerySelectorAll(selector) {\n\
     /*\n\
-     * this function will return document.querySelectorAll(<selector>) or\n\
-     * empty list if function is not available\n\
+     * this function will return document.querySelectorAll(<selector>)\n\
+     * or empty list if function is not available\n\
      */\n\
         return Array.from(\n\
             (\n\
@@ -56092,8 +56103,8 @@ local.assetsDict["/assets.utility2.js"] = (
     }\n\
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n\
     /*\n\
-     * this function will if items from <tgt> are null, undefined, or\n\
-     * \"\", then overwrite them with items from <src>\n\
+     * this function will if items from <tgt> are null, undefined,\n\
+     * or \"\", then overwrite them with items from <src>\n\
      */\n\
         function recurse(tgt, src, depth) {\n\
             Object.entries(src).forEach(function ([\n\
@@ -56303,6 +56314,7 @@ globalThis.utility2 = local;\n\
         \"npm_config_mode_test\",\n\
         \"npm_config_mode_test_case\",\n\
         \"npm_config_mode_test_report_merge\",\n\
+        \"npm_config_runme\",\n\
         \"npm_config_timeout\",\n\
         \"npm_config_timeout_exit\",\n\
         \"npm_package_description\",\n\
@@ -56346,6 +56358,7 @@ let {\n\
     npm_config_mode_test,\n\
     npm_config_mode_test_case,\n\
     npm_config_mode_test_report_merge,\n\
+    npm_config_runme,\n\
     npm_config_timeout,\n\
     npm_config_timeout_exit,\n\
     npm_package_description,\n\
@@ -56450,9 +56463,8 @@ local.assetsDict[\"/assets.utility2.header.js\"] = (\n\
     \"    }\\n\" +\n\
     \"    function documentQuerySelectorAll(selector) {\\n\" +\n\
     \"    /*\\n\" +\n\
-    \"     * this function will return document.querySelectorAll(<selector>) \" +\n\
-    \"or\\n\" +\n\
-    \"     * empty list if function is not available\\n\" +\n\
+    \"     * this function will return document.querySelectorAll(<selector>)\\n\" +\n\
+    \"     * or empty list if function is not available\\n\" +\n\
     \"     */\\n\" +\n\
     \"        return Array.from(\\n\" +\n\
     \"            (\\n\" +\n\
@@ -56477,8 +56489,8 @@ local.assetsDict[\"/assets.utility2.header.js\"] = (\n\
     \"    }\\n\" +\n\
     \"    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\\n\" +\n\
     \"    /*\\n\" +\n\
-    \"     * this function will if items from <tgt> are null, undefined, or\\n\" +\n\
-    \"     * \\\"\\\", then overwrite them with items from <src>\\n\" +\n\
+    \"     * this function will if items from <tgt> are null, undefined,\\n\" +\n\
+    \"     * or \\\"\\\", then overwrite them with items from <src>\\n\" +\n\
     \"     */\\n\" +\n\
     \"        function recurse(tgt, src, depth) {\\n\" +\n\
     \"            Object.entries(src).forEach(function ([\\n\" +\n\
@@ -56619,7 +56631,7 @@ local.assetsDict[\"/assets.utility2.template.html\"] = (\n\
     \".button:hover {\\n\" +\n\
     \"    background: #bbb;\\n\" +\n\
     \"}\\n\" +\n\
-    \".styleColorError {\\n\" +\n\
+    \".colorError {\\n\" +\n\
     \"    color: #d00;\\n\" +\n\
     \"}\\n\" +\n\
     \".textarea {\\n\" +\n\
@@ -57020,19 +57032,17 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"the greatest app in the world!\\n\" +\n\
     \"\\n\" +\n\
     \"# live web demo\\n\" +\n\
-    \"- [{{app.io}}/build..beta..github.com/app]\" +\n\
-    \"({{app.io}}/build..beta..github.com/app)\\n\" +\n\
+    \"- [{{app.io}}/build..beta..travis-ci.com/app]\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/app)\\n\" +\n\
     \"\\n\" +\n\
     \"[![screenshot]\" +\n\
     \"({{app.io}}/build/screenshot.deployGithub.{{app.png}})]\" +\n\
-    \"({{app.io}}/build..beta..github.com/app)\\n\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/app)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
-    \"[![github.com ci-status]\" +\n\
-    \"(https://github.com/kaizhu256/node-my-app/workflows/\" +\n\
-    \"Node.js%20CI/badge.svg)]\" +\n\
-    \"(https://github.com/kaizhu256/node-my-app/actions) \" +\n\
-    \"[![coverage]\" +\n\
+    \"[![travis-ci.com build-status]\" +\n\
+    \"(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]\" +\n\
+    \"(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]\" +\n\
     \"({{app.io}}/build/coverage/coverage.badge.svg)]\" +\n\
     \"({{app.io}}/build/coverage/index.html)\\n\" +\n\
     \"\\n\" +\n\
@@ -57040,9 +57050,9 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"(https://nodei.co/npm/my-app.png?downloads=true)]\" +\n\
     \"(https://www.npmjs.com/package/my-app)\\n\" +\n\
     \"\\n\" +\n\
-    \"[![commit status]\" +\n\
-    \"({{app.io}}/build/commit.badge.svg)]\" +\n\
-    \"(https://github.com/kaizhu256/node-my-app/actions)\\n\" +\n\
+    \"[![build commit status]\" +\n\
+    \"({{app.io}}/build/build.badge.svg)]\" +\n\
+    \"(https://travis-ci.com/kaizhu256/node-my-app)\\n\" +\n\
     \"\\n\" +\n\
     \"| git-branch : | \" +\n\
     \"[master]\" +\n\
@@ -57055,13 +57065,13 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"| test-server-github : | \" +\n\
     \"[![github.com test-server]\" +\n\
     \"({{app.io}}/GitHub-Mark-32px.png)]\" +\n\
-    \"({{app.io}}/build..master..github.com/app) | \" +\n\
+    \"({{app.io}}/build..master..travis-ci.com/app) | \" +\n\
     \"[![github.com test-server]\" +\n\
     \"({{app.io}}/GitHub-Mark-32px.png)]\" +\n\
-    \"({{app.io}}/build..beta..github.com/app) | \" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/app) | \" +\n\
     \"[![github.com test-server]\" +\n\
     \"({{app.io}}/GitHub-Mark-32px.png)]\" +\n\
-    \"({{app.io}}/build..alpha..github.com/app)|\\n\" +\n\
+    \"({{app.io}}/build..alpha..travis-ci.com/app)|\\n\" +\n\
     \"| test-server-heroku : | \" +\n\
     \"[![heroku.com test-server]\" +\n\
     \"({{app.io}}/heroku-logo.75x25.png)]\" +\n\
@@ -57074,34 +57084,34 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"(https://h1-my-app-alpha.herokuapp.com)|\\n\" +\n\
     \"| test-report : | \" +\n\
     \"[![test-report]\" +\n\
-    \"({{app.io}}/build..master..github.com/test-report.badge.svg)]\" +\n\
-    \"({{app.io}}/build..master..github.com/test-report.html) | \" +\n\
+    \"({{app.io}}/build..master..travis-ci.com/test-report.badge.svg)]\" +\n\
+    \"({{app.io}}/build..master..travis-ci.com/test-report.html) | \" +\n\
     \"[![test-report]\" +\n\
-    \"({{app.io}}/build..beta..github.com/test-report.badge.svg)]\" +\n\
-    \"({{app.io}}/build..beta..github.com/test-report.html) | \" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/test-report.badge.svg)]\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/test-report.html) | \" +\n\
     \"[![test-report]\" +\n\
-    \"({{app.io}}/build..alpha..github.com/test-report.badge.svg)]\" +\n\
-    \"({{app.io}}/build..alpha..github.com/test-report.html)|\\n\" +\n\
+    \"({{app.io}}/build..alpha..travis-ci.com/test-report.badge.svg)]\" +\n\
+    \"({{app.io}}/build..alpha..travis-ci.com/test-report.html)|\\n\" +\n\
     \"| coverage : | \" +\n\
     \"[![coverage]\" +\n\
-    \"({{app.io}}/build..master..github.com/coverage/coverage.badge.svg)]\" +\n\
-    \"({{app.io}}/build..master..github.com/coverage/index.html) | \" +\n\
+    \"({{app.io}}/build..master..travis-ci.com/coverage/coverage.badge.svg)]\" +\n\
+    \"({{app.io}}/build..master..travis-ci.com/coverage/index.html) | \" +\n\
     \"[![coverage]\" +\n\
-    \"({{app.io}}/build..beta..github.com/coverage/coverage.badge.svg)]\" +\n\
-    \"({{app.io}}/build..beta..github.com/coverage/index.html) | \" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/coverage/coverage.badge.svg)]\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/coverage/index.html) | \" +\n\
     \"[![coverage]\" +\n\
-    \"({{app.io}}/build..alpha..github.com/coverage/coverage.badge.svg)]\" +\n\
-    \"({{app.io}}/build..alpha..github.com/coverage/index.html)|\\n\" +\n\
+    \"({{app.io}}/build..alpha..travis-ci.com/coverage/coverage.badge.svg)]\" +\n\
+    \"({{app.io}}/build..alpha..travis-ci.com/coverage/index.html)|\\n\" +\n\
     \"| build-artifacts : | \" +\n\
     \"[![build-artifacts]\" +\n\
     \"({{app.io}}/glyphicons_144_folder_open.png)]\" +\n\
-    \"({{app.com}}/tree/gh-pages/build..master..github.com) | \" +\n\
+    \"({{app.com}}/tree/gh-pages/build..master..travis-ci.com) | \" +\n\
     \"[![build-artifacts]\" +\n\
     \"({{app.io}}/glyphicons_144_folder_open.png)]\" +\n\
-    \"({{app.com}}/tree/gh-pages/build..beta..github.com) | \" +\n\
+    \"({{app.com}}/tree/gh-pages/build..beta..travis-ci.com) | \" +\n\
     \"[![build-artifacts]\" +\n\
     \"({{app.io}}/glyphicons_144_folder_open.png)]\" +\n\
-    \"({{app.com}}/tree/gh-pages/build..alpha..github.com)|\\n\" +\n\
+    \"({{app.com}}/tree/gh-pages/build..alpha..travis-ci.com)|\\n\" +\n\
     \"\\n\" +\n\
     \"[![npmPackageListing]\" +\n\
     \"({{app.io}}/build/screenshot.npmPackageListing.svg)]\" +\n\
@@ -57115,18 +57125,18 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
     \"# cdn download\\n\" +\n\
-    \"- [{{app.io}}/build..beta..github.com/app/assets.my_app.js]\" +\n\
-    \"({{app.io}}/build..beta..github.com/app/assets.my_app.js)\\n\" +\n\
+    \"- [{{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js]\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js)\\n\" +\n\
     \"\\n\" +\n\
     \"\\n\" +\n\
     \"# documentation\\n\" +\n\
     \"#### api doc\\n\" +\n\
-    \"- [{{app.io}}/build..beta..github.com/apidoc.html]\" +\n\
-    \"({{app.io}}/build..beta..github.com/apidoc.html)\\n\" +\n\
+    \"- [{{app.io}}/build..beta..travis-ci.com/apidoc.html]\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/apidoc.html)\\n\" +\n\
     \"\\n\" +\n\
     \"[![apidoc]\" +\n\
     \"({{app.io}}/build/{{screenshot}}apidoc.html.png)]\" +\n\
-    \"({{app.io}}/build..beta..github.com/apidoc.html)\\n\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/apidoc.html)\\n\" +\n\
     \"\\n\" +\n\
     \"#### cli help\\n\" +\n\
     \"![screenshot]\" +\n\
@@ -57143,7 +57153,7 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"# quickstart standalone app\\n\" +\n\
     \"#### to run this example, follow instruction in script below\\n\" +\n\
     \"- [assets.app.js]\" +\n\
-    \"({{app.io}}/build..beta..github.com/app/assets.app.js)\\n\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/app/assets.app.js)\\n\" +\n\
     \"```shell\\n\" +\n\
     \"# example.sh\\n\" +\n\
     \"\\n\" +\n\
@@ -57151,7 +57161,7 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"as standalone app\\n\" +\n\
     \"\\n\" +\n\
     \"# 1. download standalone app\\n\" +\n\
-    \"curl -O {{app.io}}/build..beta..github.com/app/assets.app.js\\n\" +\n\
+    \"curl -O {{app.io}}/build..beta..travis-ci.com/app/assets.app.js\\n\" +\n\
     \"# 2. run standalone app\\n\" +\n\
     \"PORT=8081 node ./assets.app.js\\n\" +\n\
     \"# 3. open browser to http://127.0.0.1:8081 and play with web-demo\\n\" +\n\
@@ -57175,7 +57185,7 @@ local.assetsDict[\"/assets.readme.template.md\"] = String(\n\
     \"\\n\" +\n\
     \"#### to run this example, follow instruction in script below\\n\" +\n\
     \"- [example.js]\" +\n\
-    \"({{app.io}}/build..beta..github.com/example.js)\\n\" +\n\
+    \"({{app.io}}/build..beta..travis-ci.com/example.js)\\n\" +\n\
     \"```javascript\\n\" +\n\
     local.assetsDict[\"/assets.example.template.js\"] +\n\
     \"```\\n\" +\n\
@@ -59044,7 +59054,7 @@ local.domStyleValidate = function () {\n\
     let list;\n\
     let rgx;\n\
     rgx = (\n\
-        /^0\\u0020(?:(body\\u0020>\\u0020)?(?:\\.test-report-div\\u0020.+|\\.x-istanbul\\u0020.+|\\.button|\\.styleColorError|\\.readonly|\\.textarea|\\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\\u0020\\{))|^[1-9]\\d*?\\u0020#/m\n\
+        /^0\\u0020(?:(body\\u0020>\\u0020)?(?:\\.test-report-div\\u0020.+|\\.x-istanbul\\u0020.+|\\.button|\\.colorError|\\.readonly|\\.textarea|\\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\\u0020\\{))|^[1-9]\\d*?\\u0020#/m\n\
     );\n\
     list = [];\n\
     documentQuerySelectorAll(\"style\").forEach(function (elem, ii) {\n\
@@ -59624,9 +59634,6 @@ local.requireReadme = function () {\n\
         require(\"fs\").readdir(\".\", function (ignore, fileList) {\n\
             fileList.concat(__filename).forEach(async function (file) {\n\
                 let stats;\n\
-                if (file[0] === \".\") {\n\
-                    return;\n\
-                }\n\
                 stats = await require(\"fs\").promises.stat(file);\n\
                 if (!stats.isFile()) {\n\
                     return;\n\
@@ -59873,16 +59880,14 @@ local.serverRequestListener = function (req, res) {\n\
     /*\n\
      * this function will hand \"close\" evt\n\
      */\n\
-        if (req.url.indexOf(\"/favicon.ico\") !== 0) {\n\
-            console.error(\"serverLog - \" + JSON.stringify({\n\
-                time: new Date(timeStart).toISOString(),\n\
-                type: \"serverResponse\",\n\
-                method: req.method,\n\
-                url: urlParsed.pathname,\n\
-                statusCode: res.statusCode | 0,\n\
-                timeElapsed: Date.now() - timeStart\n\
-            }) + \"\\n\");\n\
-        }\n\
+        console.error(\"serverLog - \" + JSON.stringify({\n\
+            time: new Date(timeStart).toISOString(),\n\
+            type: \"serverResponse\",\n\
+            method: req.method,\n\
+            url: urlParsed.pathname,\n\
+            statusCode: res.statusCode | 0,\n\
+            timeElapsed: Date.now() - timeStart\n\
+        }) + \"\\n\");\n\
         isDone = true;\n\
         clearTimeout(timerTimeout);\n\
         req.destroy();\n\
@@ -59992,7 +59997,7 @@ local.serverRequestListener = function (req, res) {\n\
             file.indexOf(process.cwd() + require(\"path\").sep) !== 0 ||\n\
             // security - ignore file with non-alphanumeric-first-character\n\
             !(\n\
-                /[.0-9A-Za-z]/\n\
+                /[0-9A-Za-z]/\n\
             ).test(require(\"path\").basename(file)[0])\n\
         ) {\n\
             await next();\n\
@@ -60595,8 +60600,8 @@ local.testReportMerge = function (\n\
     jslintAndPrint(html, \"test-report.html\");\n\
     // create test-report.html\n\
     fileWrite(\"test-report.html\", html);\n\
-    // create commit.badge.svg\n\
-    fileWrite(\"commit.badge.svg\", local.svgBadgeCreate({\n\
+    // create build.badge.svg\n\
+    fileWrite(\"build.badge.svg\", local.svgBadgeCreate({\n\
         fill: \"#07f\",\n\
         str1: \"last build\",\n\
         str2: (\n\
@@ -60960,8 +60965,8 @@ local.urlJoin = function (aa, bb) {\n\
 \n\
 local.uuid4Create = function () {\n\
 /*\n\
- * this function will create random uuid with format\n\
- * \"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx\"\n\
+ * this function will create random uuid,\n\
+ * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'\n\
  */\n\
     // code derived from http://jsperf.com/uuid4\n\
     let id;\n\
@@ -61079,6 +61084,19 @@ local.cliDict[\"utility2.browserTest\"] = async function () {\n\
     local.browserTest({\n\
         url: process.argv[3]\n\
     });\n\
+};\n\
+\n\
+local.cliDict[\"utility2.start\"] = function () {\n\
+/*\n\
+ * <port>\n\
+ * will start utility2 http-server on given <port> (default 8081)\n\
+ */\n\
+    globalThis.local = local;\n\
+    local.replStart();\n\
+    local.testRunDefault({});\n\
+    if (npm_config_runme) {\n\
+        require(require(\"path\").resolve(npm_config_runme));\n\
+    }\n\
 };\n\
 \n\
 local.cliDict[\"utility2.testReportCreate\"] = function () {\n\
@@ -61289,7 +61307,7 @@ local.assetsDict[\"/assets.utility2.rollup.js\"] = [\n\
 ");
 // usr/bin/env node
 /*
- * lib.utility2.js (2021.5.1)
+ * lib.utility2.js (2020.12.3)
  * https://github.com/kaizhu256/node-utility2
  * this zero-dependency package will provide high-level functions to to build, test, and deploy webapps
  *
@@ -61381,8 +61399,8 @@ local.assetsDict[\"/assets.utility2.rollup.js\"] = [\n\
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -61407,8 +61425,8 @@ local.assetsDict[\"/assets.utility2.rollup.js\"] = [\n\
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -61618,6 +61636,7 @@ globalThis.utility2 = local;
         "npm_config_mode_test",
         "npm_config_mode_test_case",
         "npm_config_mode_test_report_merge",
+        "npm_config_runme",
         "npm_config_timeout",
         "npm_config_timeout_exit",
         "npm_package_description",
@@ -61661,6 +61680,7 @@ let {
     npm_config_mode_test,
     npm_config_mode_test_case,
     npm_config_mode_test_report_merge,
+    npm_config_runme,
     npm_config_timeout,
     npm_config_timeout_exit,
     npm_package_description,
@@ -61765,9 +61785,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function documentQuerySelectorAll(selector) {\n" +
     "    /*\n" +
-    "     * this function will return document.querySelectorAll(<selector>) " +
-    "or\n" +
-    "     * empty list if function is not available\n" +
+    "     * this function will return document.querySelectorAll(<selector>)\n" +
+    "     * or empty list if function is not available\n" +
     "     */\n" +
     "        return Array.from(\n" +
     "            (\n" +
@@ -61792,8 +61811,8 @@ local.assetsDict["/assets.utility2.header.js"] = (
     "    }\n" +
     "    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {\n" +
     "    /*\n" +
-    "     * this function will if items from <tgt> are null, undefined, or\n" +
-    "     * \"\", then overwrite them with items from <src>\n" +
+    "     * this function will if items from <tgt> are null, undefined,\n" +
+    "     * or \"\", then overwrite them with items from <src>\n" +
     "     */\n" +
     "        function recurse(tgt, src, depth) {\n" +
     "            Object.entries(src).forEach(function ([\n" +
@@ -61934,7 +61953,7 @@ local.assetsDict["/assets.utility2.template.html"] = (
     ".button:hover {\n" +
     "    background: #bbb;\n" +
     "}\n" +
-    ".styleColorError {\n" +
+    ".colorError {\n" +
     "    color: #d00;\n" +
     "}\n" +
     ".textarea {\n" +
@@ -62335,19 +62354,17 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "the greatest app in the world!\n" +
     "\n" +
     "# live web demo\n" +
-    "- [{{app.io}}/build..beta..github.com/app]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app]" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "[![screenshot]" +
     "({{app.io}}/build/screenshot.deployGithub.{{app.png}})]" +
-    "({{app.io}}/build..beta..github.com/app)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app)\n" +
     "\n" +
     "\n" +
-    "[![github.com ci-status]" +
-    "(https://github.com/kaizhu256/node-my-app/workflows/" +
-    "Node.js%20CI/badge.svg)]" +
-    "(https://github.com/kaizhu256/node-my-app/actions) " +
-    "[![coverage]" +
+    "[![travis-ci.com build-status]" +
+    "(https://api.travis-ci.com/kaizhu256/node-my-app.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app) [![coverage]" +
     "({{app.io}}/build/coverage/coverage.badge.svg)]" +
     "({{app.io}}/build/coverage/index.html)\n" +
     "\n" +
@@ -62355,9 +62372,9 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://nodei.co/npm/my-app.png?downloads=true)]" +
     "(https://www.npmjs.com/package/my-app)\n" +
     "\n" +
-    "[![commit status]" +
-    "({{app.io}}/build/commit.badge.svg)]" +
-    "(https://github.com/kaizhu256/node-my-app/actions)\n" +
+    "[![build commit status]" +
+    "({{app.io}}/build/build.badge.svg)]" +
+    "(https://travis-ci.com/kaizhu256/node-my-app)\n" +
     "\n" +
     "| git-branch : | " +
     "[master]" +
@@ -62370,13 +62387,13 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "| test-server-github : | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..master..github.com/app) | " +
+    "({{app.io}}/build..master..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..beta..github.com/app) | " +
+    "({{app.io}}/build..beta..travis-ci.com/app) | " +
     "[![github.com test-server]" +
     "({{app.io}}/GitHub-Mark-32px.png)]" +
-    "({{app.io}}/build..alpha..github.com/app)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/app)|\n" +
     "| test-server-heroku : | " +
     "[![heroku.com test-server]" +
     "({{app.io}}/heroku-logo.75x25.png)]" +
@@ -62389,34 +62406,34 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "(https://h1-my-app-alpha.herokuapp.com)|\n" +
     "| test-report : | " +
     "[![test-report]" +
-    "({{app.io}}/build..master..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/test-report.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..beta..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/test-report.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/test-report.html) | " +
     "[![test-report]" +
-    "({{app.io}}/build..alpha..github.com/test-report.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/test-report.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/test-report.html)|\n" +
     "| coverage : | " +
     "[![coverage]" +
-    "({{app.io}}/build..master..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..master..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..master..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..master..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..beta..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..beta..github.com/coverage/index.html) | " +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..beta..travis-ci.com/coverage/index.html) | " +
     "[![coverage]" +
-    "({{app.io}}/build..alpha..github.com/coverage/coverage.badge.svg)]" +
-    "({{app.io}}/build..alpha..github.com/coverage/index.html)|\n" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/coverage.badge.svg)]" +
+    "({{app.io}}/build..alpha..travis-ci.com/coverage/index.html)|\n" +
     "| build-artifacts : | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..master..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..master..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..beta..github.com) | " +
+    "({{app.com}}/tree/gh-pages/build..beta..travis-ci.com) | " +
     "[![build-artifacts]" +
     "({{app.io}}/glyphicons_144_folder_open.png)]" +
-    "({{app.com}}/tree/gh-pages/build..alpha..github.com)|\n" +
+    "({{app.com}}/tree/gh-pages/build..alpha..travis-ci.com)|\n" +
     "\n" +
     "[![npmPackageListing]" +
     "({{app.io}}/build/screenshot.npmPackageListing.svg)]" +
@@ -62430,18 +62447,18 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "\n" +
     "# cdn download\n" +
-    "- [{{app.io}}/build..beta..github.com/app/assets.my_app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.my_app.js)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js]" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.my_app.js)\n" +
     "\n" +
     "\n" +
     "# documentation\n" +
     "#### api doc\n" +
-    "- [{{app.io}}/build..beta..github.com/apidoc.html]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "- [{{app.io}}/build..beta..travis-ci.com/apidoc.html]" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "[![apidoc]" +
     "({{app.io}}/build/{{screenshot}}apidoc.html.png)]" +
-    "({{app.io}}/build..beta..github.com/apidoc.html)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/apidoc.html)\n" +
     "\n" +
     "#### cli help\n" +
     "![screenshot]" +
@@ -62458,7 +62475,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "# quickstart standalone app\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [assets.app.js]" +
-    "({{app.io}}/build..beta..github.com/app/assets.app.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/app/assets.app.js)\n" +
     "```shell\n" +
     "# example.sh\n" +
     "\n" +
@@ -62466,7 +62483,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "as standalone app\n" +
     "\n" +
     "# 1. download standalone app\n" +
-    "curl -O {{app.io}}/build..beta..github.com/app/assets.app.js\n" +
+    "curl -O {{app.io}}/build..beta..travis-ci.com/app/assets.app.js\n" +
     "# 2. run standalone app\n" +
     "PORT=8081 node ./assets.app.js\n" +
     "# 3. open browser to http://127.0.0.1:8081 and play with web-demo\n" +
@@ -62490,7 +62507,7 @@ local.assetsDict["/assets.readme.template.md"] = String(
     "\n" +
     "#### to run this example, follow instruction in script below\n" +
     "- [example.js]" +
-    "({{app.io}}/build..beta..github.com/example.js)\n" +
+    "({{app.io}}/build..beta..travis-ci.com/example.js)\n" +
     "```javascript\n" +
     local.assetsDict["/assets.example.template.js"] +
     "```\n" +
@@ -64359,7 +64376,7 @@ local.domStyleValidate = function () {
     let list;
     let rgx;
     rgx = (
-        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
+        /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.colorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
     documentQuerySelectorAll("style").forEach(function (elem, ii) {
@@ -64939,9 +64956,6 @@ local.requireReadme = function () {
         require("fs").readdir(".", function (ignore, fileList) {
             fileList.concat(__filename).forEach(async function (file) {
                 let stats;
-                if (file[0] === ".") {
-                    return;
-                }
                 stats = await require("fs").promises.stat(file);
                 if (!stats.isFile()) {
                     return;
@@ -65188,16 +65202,14 @@ local.serverRequestListener = function (req, res) {
     /*
      * this function will hand "close" evt
      */
-        if (req.url.indexOf("/favicon.ico") !== 0) {
-            console.error("serverLog - " + JSON.stringify({
-                time: new Date(timeStart).toISOString(),
-                type: "serverResponse",
-                method: req.method,
-                url: urlParsed.pathname,
-                statusCode: res.statusCode | 0,
-                timeElapsed: Date.now() - timeStart
-            }) + "\n");
-        }
+        console.error("serverLog - " + JSON.stringify({
+            time: new Date(timeStart).toISOString(),
+            type: "serverResponse",
+            method: req.method,
+            url: urlParsed.pathname,
+            statusCode: res.statusCode | 0,
+            timeElapsed: Date.now() - timeStart
+        }) + "\n");
         isDone = true;
         clearTimeout(timerTimeout);
         req.destroy();
@@ -65307,7 +65319,7 @@ local.serverRequestListener = function (req, res) {
             file.indexOf(process.cwd() + require("path").sep) !== 0 ||
             // security - ignore file with non-alphanumeric-first-character
             !(
-                /[.0-9A-Za-z]/
+                /[0-9A-Za-z]/
             ).test(require("path").basename(file)[0])
         ) {
             await next();
@@ -65910,8 +65922,8 @@ local.testReportMerge = function (
     jslintAndPrint(html, "test-report.html");
     // create test-report.html
     fileWrite("test-report.html", html);
-    // create commit.badge.svg
-    fileWrite("commit.badge.svg", local.svgBadgeCreate({
+    // create build.badge.svg
+    fileWrite("build.badge.svg", local.svgBadgeCreate({
         fill: "#07f",
         str1: "last build",
         str2: (
@@ -66275,8 +66287,8 @@ local.urlJoin = function (aa, bb) {
 
 local.uuid4Create = function () {
 /*
- * this function will create random uuid with format
- * "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+ * this function will create random uuid,
+ * with format 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
  */
     // code derived from http://jsperf.com/uuid4
     let id;
@@ -66394,6 +66406,19 @@ local.cliDict["utility2.browserTest"] = async function () {
     local.browserTest({
         url: process.argv[3]
     });
+};
+
+local.cliDict["utility2.start"] = function () {
+/*
+ * <port>
+ * will start utility2 http-server on given <port> (default 8081)
+ */
+    globalThis.local = local;
+    local.replStart();
+    local.testRunDefault({});
+    if (npm_config_runme) {
+        require(require("path").resolve(npm_config_runme));
+    }
 };
 
 local.cliDict["utility2.testReportCreate"] = function () {
@@ -66715,8 +66740,8 @@ instruction
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -66741,8 +66766,8 @@ instruction
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -66925,7 +66950,7 @@ local.assetsDict["/"] = `<!doctype html>
     name="viewport"
 >
 <!-- "assets.utility2.template.html" -->
-<title>utility2 (2021.5.1)</title>
+<title>utility2 (2020.12.3)</title>
 <style>
 /* jslint utility2:true */
 /*csslint
@@ -67005,7 +67030,7 @@ pre {
 .button:hover {
     background: #bbb;
 }
-.styleColorError {
+.colorError {
     color: #d00;
 }
 .textarea {
@@ -67086,7 +67111,7 @@ pre {
 </script>
 <h1>
 <a href="https://github.com/kaizhu256/node-utility2" target="_blank">
-    utility2 (2021.5.1)
+    utility2 (2020.12.3)
 </a>
 </h1>
 <h3>this zero-dependency package will provide high-level functions to to build, test, and deploy webapps</h3>
@@ -67167,7 +67192,7 @@ pre {
     class="button"
     id="buttonJslintAutofix1"
 >jslint autofix</button><br>
-<pre class= "styleColorError" id="outputJslintPre1" tabindex="0"></pre>
+<pre class= "colorError" id="outputJslintPre1" tabindex="0"></pre>
 <label>instrumented-code</label>
 <textarea
     class="readonly textarea"
@@ -67251,7 +67276,7 @@ npm_package_description: "this zero-dependency package will provide high-level f
 npm_package_homepage: "https://github.com/kaizhu256/node-utility2",
 npm_package_name: "utility2",
 npm_package_nameLib: "utility2",
-npm_package_version: "2021.5.1"
+npm_package_version: "2020.12.3"
 }
 </script>
 <script src="assets.utility2.lib.istanbul.js"></script>
@@ -67469,8 +67494,8 @@ require("http").createServer(function (req, res) {
     }
     function documentQuerySelectorAll(selector) {
     /*
-     * this function will return document.querySelectorAll(<selector>) or
-     * empty list if function is not available
+     * this function will return document.querySelectorAll(<selector>)
+     * or empty list if function is not available
      */
         return Array.from(
             (
@@ -67495,8 +67520,8 @@ require("http").createServer(function (req, res) {
     }
     function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
     /*
-     * this function will if items from <tgt> are null, undefined, or
-     * "", then overwrite them with items from <src>
+     * this function will if items from <tgt> are null, undefined,
+     * or "", then overwrite them with items from <src>
      */
         function recurse(tgt, src, depth) {
             Object.entries(src).forEach(function ([
@@ -67851,7 +67876,7 @@ local.testCase_replStart_default = function (opt, onError) {
         return;
     }
     local.replStart();
-    // coverage-hack - test replStart's muliple-call handling-behavior
+    // hack-coverage - test replStart's muliple-call handling-behavior
     local.replStart();
     local.testMock([
         [

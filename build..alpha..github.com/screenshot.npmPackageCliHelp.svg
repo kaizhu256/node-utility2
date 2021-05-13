@@ -1,5 +1,5 @@
-<svg height="1054px" width="720px" xmlns="http://www.w3.org/2000/svg">
-<rect height="1054px" fill="#555" width="720px"></rect>
+<svg height="1118px" width="720px" xmlns="http://www.w3.org/2000/svg">
+<rect height="1118px" fill="#555" width="720px"></rect>
 <text fill="#7f7" font-family="Consolas, Menlo, monospace" font-size="12" xml:space="preserve">
 <tspan x="10" y="26">shCiInit - mkdir - /home/runner/work/node-utility2/node-utility2/.tmp/build</tspan>
 <tspan x="10" y="42"># shCiInit env</tspan>
@@ -11,7 +11,7 @@
 <tspan x="10" y="154">export npm_package_nameLib='utility2'</tspan>
 <tspan x="10" y="170">export npm_package_nameOriginal='utility2'</tspan>
 <tspan x="10" y="186">export npm_package_private=''</tspan>
-<tspan x="10" y="202">export npm_package_version='2021.5.1'</tspan>
+<tspan x="10" y="202">export npm_package_version='2020.12.3'</tspan>
 <tspan x="10" y="218">export GITHUB_FULLNAME='kaizhu256/node-utility2'</tspan>
 <tspan x="10" y="234">export GITHUB_OWNER='kaizhu256'</tspan>
 <tspan x="10" y="250">export GITHUB_REPO='node-utility2'</tspan>
@@ -20,18 +20,18 @@
 <tspan x="10" y="298">export UTILITY2_DIR_BUILD='/home/runner/work/node-utility2/node-utility2/.tmp/build'</tspan>
 <tspan x="10" y="314">export PATH="$PATH:/home/runner/work/node-utility2/node-utility2:/home/runner/work/node-utility2\</tspan><tspan x="10" y="330">/.bin"</tspan>
 <tspan x="10" y="346">export CI_BRANCH='alpha'</tspan>
-<tspan x="10" y="362">export CI_COMMIT_ID='0d55f82e5934b70eb979ee5fb5abf5c50273ef5b'</tspan>
-<tspan x="10" y="378">export CI_COMMIT_MESSAGE='comment'</tspan>
-<tspan x="10" y="394">export NODE_OPTIONS='--unhandled-rejections=strict'</tspan>
+<tspan x="10" y="362">export CI_COMMIT_ID='c0f10b4f7bf246f70719ac3ba36a8a01bd06f022'</tspan>
+<tspan x="10" y="378">export CI_COMMIT_MESSAGE='- revert last commit'</tspan>
+<tspan x="10" y="394">export NODE_OPTIONS='--unhandled-rejections=throw'</tspan>
 <tspan x="10" y="410">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.sh</tspan>
 <tspan x="10" y="426">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.base</tspan>
 <tspan x="10" y="442">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.latest</tspan>
 <tspan x="10" y="458">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.Dockerfile.tmp</tspan>
-<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
-<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="474">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.example.js</tspan>
+<tspan x="10" y="490">shCiInit - wrote - /home/runner/work/node-utility2/node-utility2/.tmp/README.build_ci.sh</tspan>
 <tspan x="10" y="506"></tspan>
 <tspan x="10" y="522">npmPackageCliHelp - merged test-report from file /home/runner/work/node-utility2/node-utility2/.\</tspan><tspan x="10" y="538">tmp/build/test-report.json</tspan>
-<tspan x="10" y="554">utility2 (2021.5.1)</tspan>
+<tspan x="10" y="554">utility2 (2020.12.3)</tspan>
 <tspan x="10" y="570"></tspan>
 <tspan x="10" y="586">usage:</tspan>
 <tspan x="10" y="602">  lib.utility2.js  &lt;arg1&gt;  &lt;arg2&gt;  ...</tspan>
@@ -59,8 +59,12 @@
 <tspan x="10" y="954"># will browser-test in parallel, comma-separated &lt;urlList&gt; with given &lt;mode&gt;</tspan>
 <tspan x="10" y="970">  lib.utility2.js  utility2.browserTest  &lt;urlList&gt;  &lt;mode&gt;</tspan>
 <tspan x="10" y="986"></tspan>
-<tspan x="10" y="1002"># CMD utility2.testReportCreate</tspan>
-<tspan x="10" y="1018"># will create test-report</tspan>
-<tspan x="10" y="1034">  lib.utility2.js  utility2.testReportCreate</tspan>
+<tspan x="10" y="1002"># CMD utility2.start</tspan>
+<tspan x="10" y="1018"># will start utility2 http-server on given &lt;port&gt; (default 8081)</tspan>
+<tspan x="10" y="1034">  lib.utility2.js  utility2.start  &lt;port&gt;</tspan>
+<tspan x="10" y="1050"></tspan>
+<tspan x="10" y="1066"># CMD utility2.testReportCreate</tspan>
+<tspan x="10" y="1082"># will create test-report</tspan>
+<tspan x="10" y="1098">  lib.utility2.js  utility2.testReportCreate</tspan>
 </text>
 </svg>
