@@ -1402,10 +1402,16 @@ shRmDsStore() {(set -e
 
 shSource() {
 # this function will source .bashrc
-    if [ -d "$HOME/Documents/utility2/" ] && [ -f "$HOME/lib.utility2.sh" ]
+    if [ -d "$HOME/Documents/utility2/" ]
     then
-        rm -f "$HOME/Documents/utility2/lib.utility2.sh"
-        ln "$HOME/lib.utility2.sh" "$HOME/Documents/utility2/lib.utility2.sh"
+        for FILE in lib.utility2.sh lib.utility2_jslint.js
+        do
+            if [ -f "$HOME/$FILE" ]
+            then
+                rm -f "$HOME/Documents/utility2/$FILE"
+                ln "$HOME/$FILE" "$HOME/Documents/utility2/$FILE"
+            fi
+        done
     fi
     . "$HOME/.bashrc"
     # . lib.utility2.sh
