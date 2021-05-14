@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* jslint utility2:true */
+/* jslint ignore:start */
 /*
 shRawLibFetch
 {

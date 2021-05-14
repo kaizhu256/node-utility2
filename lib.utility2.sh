@@ -986,7 +986,7 @@ shRawLibFetch() {(set -e
     }
     // init matchObj
     matchObj = (
-        /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
+        /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
     ).exec(require("fs").readFileSync(process.argv[1], "utf8"));
     // JSON.parse match1 with comment
     let {
@@ -1115,7 +1115,8 @@ shRawLibFetch() {(set -e
         });
         // init header
         header = (
-            matchObj.input.slice(0, matchObj.index) + "/*\nshRawLibFetch\n" +
+            matchObj.input.slice(0, matchObj.index) +
+            "/* jslint ignore:start */\n/*\nshRawLibFetch\n" +
             JSON.stringify(JSON.parse(matchObj[1]), undefined, 4) + "\n" +
             matchObj[2].split("\n\n").filter(function (elem) {
                 return elem.trim();
