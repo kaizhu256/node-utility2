@@ -89,6 +89,15 @@ shRawLibFetch
 +        line,
 +        name: "JSLintError"
 
+-        warnings: warnings.sort(function (a, b) {
+-            return a.line - b.line || a.column - b.column;
+-        })
++        // hack-jslint - sort by early_stop
++        warnings: warnings.sort(function (a, b) {
++            return Boolean(b.early_stop) - Boolean(a.early_stop) ||
++            a.line - b.line || a.column - b.column;
++        })
+
 -        })
 -    };
 -});
@@ -212,6 +221,7 @@ shRawLibFetch
 -    }
 +    } catch (e) {
 +        // hack-jslint - early_stop
++        e.early_stop = true;
 +        e.column = e.column || -1;
 +        e.line = e.line || -1;
 +        if (e.name !== "JSLintError") {
@@ -16139,6 +16149,7 @@ function jslint(
         early_stop = false;
     } catch (e) {
         // hack-jslint - early_stop
+        e.early_stop = true;
         e.column = e.column || -1;
         e.line = e.line || -1;
         if (e.name !== "JSLintError") {
@@ -16167,8 +16178,10 @@ function jslint(
         stop: early_stop,
         tokens,
         tree,
+        // hack-jslint - sort by early_stop
         warnings: warnings.sort(function (a, b) {
-            return a.line - b.line || a.column - b.column;
+            return Boolean(b.early_stop) - Boolean(a.early_stop) ||
+            a.line - b.line || a.column - b.column;
         })
     };
 }
