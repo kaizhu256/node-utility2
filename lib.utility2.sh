@@ -938,8 +938,22 @@ shRawLibFetch() {(set -e
     let header;
     let opt;
     let repoDict;
-    let requireDict;
     let result;
+    // init debugInline
+    if (!globalThis.debugInline) {
+        let consoleError;
+        consoleError = console.error;
+        globalThis.debugInline = function (...argList) {
+        /*
+         * this function will both print <argList> to stderr and
+         * return <argList>[0]
+         */
+            consoleError("\n\ndebugInline");
+            consoleError(...argList);
+            consoleError("\n");
+            return argList[0];
+        };
+    }
     function normalizeWhitespace(str) {
     /*
      * this function will normalize whitespace
@@ -1086,7 +1100,6 @@ shRawLibFetch() {(set -e
     // JSON.parse opt with comment
     let {
         fetchList,
-        isRollupCommonJs,
         replaceList = []
     } = JSON.parse(opt[1]);
     // init repoDict, fetchList
@@ -1143,7 +1156,6 @@ shRawLibFetch() {(set -e
     // parse fetched data
     process.on("exit", function () {
         result = "";
-        requireDict = {};
         fetchList.forEach(function (elem) {
             let data;
             let prefix;
@@ -1183,30 +1195,7 @@ shRawLibFetch() {(set -e
             }
             // mangle module.exports
             data = elem.data.toString();
-            if (!isRollupCommonJs) {
-                result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
-                return;
-            }
-            data = data.replace((
-                /\bmodule\.exports\b|(^\u0020*?)exports\b/gm
-            ), "$1" + elem.exports);
-            // inline require(...)
-            data = data.replace((
-                /\brequire\(.\.[.\/]*?\/(\w.*?).\)/gm
-            ), function (ignore, match1) {
-                return prefix + "_" + match1.replace((
-                    /\.js$/
-                ), "").replace((
-                    /\W/g
-                ), "_");
-            });
-            result += "\n\n\n/*\nfile " + elem.url + "\n*/\n";
-            if ((
-                /\bpackage\.json$/
-            ).test(elem.url)) {
-                result += elem.exports + " = ";
-            }
-            result += data.trim();
+            result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
         });
         // comment #!
         result = result.replace((
@@ -1214,126 +1203,9 @@ shRawLibFetch() {(set -e
         ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result);
-        if (!isRollupCommonJs) {
-            result = (
-                header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
-            );
-            replaceAndWriteFile();
-            return;
-        }
-        // comment ... = require(...)
-        result = result.replace((
-            /^\u0020*?[$A-Z_a-z].*?\brequire\(.*$/gm
-        ), function (match0) {
-            requireDict[match0.replace((
-                /\bconst\b|\bvar\b/
-            ), "let").trim()] = "";
-            return "// " + match0;
-        });
-        result = result.replace((
-            /^\u0020*?(?:const|let|var)\u0020(?:\w+?|\{[^}]+?\})\u0020=\u0020exports_.*$/gm
-        ), function (match0) {
-            requireDict[match0.replace((
-                /\bconst\b|\bvar\b/
-            ), "let").trim()] = "";
-            return match0.replace((
-                /^/gm
-            ), "// ");
-        });
-        // normalize whitespace
-        result = normalizeWhitespace(result);
-        // normalize requireDict - let exports_... = {}
-        result.replace((
-            /\bexports_\w+/g
-        ), function (match0) {
-            requireDict["let " + match0 + " = {};"] = "";
-            return "";
-        });
-        // normalize requireDict - let {...} = exports_...
-        Object.keys(requireDict).forEach(function (key) {
-            if (key.indexOf("let {") === 0) {
-                delete requireDict[key];
-                key = key.split(" = ");
-                key[1] = key[1].trim().replace(";", "");
-                key[0].split("{")[1].replace((
-                    /\w+/g
-                ), function (match0) {
-                    requireDict[`let ${match0} = ${key[1]}.${match0};`] = "";
-                    return "";
-                });
-                return;
-            }
-            if (key.slice(-1) !== ";") {
-                delete requireDict[key];
-                requireDict[key + ";"] = "";
-            }
-        });
-        // normalize requireDict - collate let
-        Object.keys(requireDict).forEach(function (key, val) {
-            val = key;
-            key = key.split(" ")[1];
-            requireDict[key] = requireDict[key] || [];
-            requireDict[key].push(val);
-        });
-        // normalize requireDict - comment duplicate in code
-        result.replace((
-            /^\u0020*?(?:class|const|function|let|var)\u0020(\w+?)\b/gm
-        ), function (ignore, match1) {
-            Array.from(requireDict[match1] || []).forEach(function (key) {
-                requireDict[key] = "// ";
-            });
-            delete requireDict[match1];
-            return "";
-        });
-        // normalize requireDict - comment duplicate in let
-        Object.entries(requireDict).forEach(function ([
-            key, val
-        ]) {
-            if (Array.isArray(val)) {
-                delete requireDict[key];
-                val.sort().slice(1).forEach(function (key) {
-                    requireDict[key] = "// ";
-                });
-            }
-        });
-        header += "(function () {\n\"use strict\";\n";
-        Object.keys(requireDict).map(function (key) {
-            return (
-                key.indexOf(" = exports_") >= 0
-                ? ""
-                : key.indexOf(" = require(") >= 0
-                ? "1\u0000" + key
-                : "2\u0000" + key
-            );
-        }).filter(function (elem) {
-            return elem;
-        }).sort().forEach(function (key) {
-            key = key.split("\u0000")[1];
-            header += requireDict[key] + key + "\n";
-        });
-        result = header + result.trim() + "\n";
-        Object.keys(requireDict).map(function (key) {
-            return (
-                key.indexOf(" = exports_") >= 0
-                ? key.replace((
-                    /(.*?)\u0020=\u0020(.*?)$/gm
-                ), function (ignore, match1, match2) {
-                    return (
-                        match2 + "\u0000" +
-                        match1.padEnd(19, " ") + " = " + match2
-                    );
-                })
-                : ""
-            );
-        }).filter(function (elem) {
-            return elem;
-        }).sort().forEach(function (key) {
-            key = key.split("\u0000")[1];
-            result += requireDict[key.replace((
-                /\u0020{2,}/
-            ), " ")] + key + "\n";
-        });
-        result += "}());\n\n\n/*\nfile none\n*/\n";
+        result = (
+            header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
+        );
         replaceAndWriteFile();
     });
 }());
