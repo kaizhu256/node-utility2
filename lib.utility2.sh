@@ -977,12 +977,12 @@ shRawLibFetch() {(set -e
      * this function will concat data from <res> to <dict>[<key>]
      */
         let data;
-        data = "";
+        data = [];
         res.on("data", function (chunk) {
-            data += chunk;
+            data.push(chunk);
         }).on("end", function () {
-            dict[key] = data;
-        }).setEncoding("utf8");
+            dict[key] = Buffer.from(data);
+        });
     }
     // init matchObj
     matchObj = (
@@ -1050,7 +1050,7 @@ shRawLibFetch() {(set -e
         let result0;
         let result;
         result = "";
-        fetchList.forEach(function (elem) {
+        fetchList.forEach(function (elem, ii, list) {
             let prefix;
             if (!elem.url) {
                 return;
@@ -1066,7 +1066,7 @@ shRawLibFetch() {(set -e
             ), "_").replace((
                 /(_)_+|_+$/g
             ), "$1");
-            elem.exports = prefix + "_" + require("path").basename(
+            list[ii].exports = prefix + "_" + require("path").basename(
                 elem.url
             ).replace((
                 /\.js$/
