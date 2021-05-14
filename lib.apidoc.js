@@ -9,7 +9,7 @@
 
 /* istanbul instrument in package apidoc */
 // assets.utility2.header.js - start
-/* jslint utility2:true */
+/* jslint utility2:\true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
 (function () {

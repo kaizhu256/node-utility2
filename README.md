@@ -116,7 +116,7 @@ instruction
 
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
-/* jslint utility2:true */
+/* jslint utility2:\true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
 (function () {
@@ -276,7 +276,7 @@ instruction
 // assets.utility2.header.js - end
 
 
-/* jslint utility2:true */
+/* jslint utility2:\true */
 (function (local) {
 "use strict";
 
@@ -411,7 +411,7 @@ local.assetsDict["/"] = `<!doctype html>
 <!-- "assets.utility2.template.html" -->
 <title>utility2 (2021.1.1)</title>
 <style>
-/* jslint utility2:true */
+/* jslint utility2:\true */
 /*csslint
 */
 /* csslint ignore:start */
@@ -521,7 +521,7 @@ pre {
     width: 25px;
 "></div>
 <script>
-/* jslint utility2:true */
+/* jslint utility2:\true */
 (function () {
     "use strict";
     // polyfill globalThis
@@ -667,7 +667,7 @@ pre {
 ></textarea>
 <div id="htmlCoverageReport1"></div>
 <script>
-/* jslint utility2:true */
+/* jslint utility2:\true */
 /*jslint eval*/
 window.addEventListener("load", function () {
     "use strict";
@@ -743,7 +743,7 @@ npm_package_version: "2021.1.1"
 <script src="assets.utility2.lib.marked.js"></script>
 <script src="assets.utility2.js"></script>
 <script>
-/* jslint utility2:true */
+/* jslint utility2:\true */
 window.utility2.onReadyIncrement();
 window.addEventListener("load", function () {
     "use strict";

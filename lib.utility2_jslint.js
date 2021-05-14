@@ -12,20 +12,6 @@ shRawLibFetch
         }
     ]
 }
--    } catch (e) {
--        if (e.name !== "JSLintError") {
--            warnings.push(e);
--        }
--    }
-+    } catch (e) {
-+        // hack-jslint - early_stop
-+        e.column = e.column || -1;
-+        e.line = e.line || -1;
-+        if (e.name !== "JSLintError") {
-+            warnings.push(e);
-+        }
-+    }
-
 -                    parent: global,
 -                    id: thing.id,
 -                    init: true,
@@ -217,6 +203,20 @@ shRawLibFetch
 +        warnings.push(warning);
 +    }
 +    return warning;
+
+-    } catch (e) {
+-        if (e.name !== "JSLintError") {
+-            warnings.push(e);
+-        }
+-    }
++    } catch (e) {
++        // hack-jslint - early_stop
++        e.column = e.column || -1;
++        e.line = e.line || -1;
++        if (e.name !== "JSLintError") {
++            warnings.push(e);
++        }
++    }
 
 -  | (
 -        0
@@ -11625,7 +11625,6 @@ function warn_at(code, line, column, a, b, c, d) {
     warning.message = supplant(bundle[code] || code, warning);
     // hack-jslint - ignore warning
     if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
-        warning.stack = new Error().stack;
         warnings.push(warning);
     }
     return warning;
@@ -16137,6 +16136,9 @@ function jslint(
         }
         early_stop = false;
     } catch (e) {
+        // hack-jslint - early_stop
+        e.column = e.column || -1;
+        e.line = e.line || -1;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
