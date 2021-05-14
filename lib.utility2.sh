@@ -929,8 +929,6 @@ shRawLibDiff() {(set -e
 
 shRawLibFetch() {(set -e
 # this function will fetch raw-lib from $1
-    export DIR=".tmp/raw.lib"
-    rm -rf "$DIR" && mkdir -p "$DIR"
     node -e '
 (function () {
     "use strict";
@@ -1048,7 +1046,6 @@ shRawLibFetch() {(set -e
     });
     // parse fetched data
     process.on("exit", function () {
-        let footer;
         let header;
         let result0;
         let result;
@@ -1095,38 +1092,12 @@ shRawLibFetch() {(set -e
                 elem.data.toString().trim()
             );
         });
-        // comment #!
-        result = result.replace((
-            /^#!/gm
-        ), "// $&");
+        //!! // comment #!
+        //!! result = result.replace((
+            //!! /^#!/gm
+        //!! ), "// $&");
         // normalize whitespace
-        result = normalizeWhitespace(result);
-        // init footer
-        footer = (
-            /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
-        ).exec(match.input);
-        footer = String(
-            (footer && footer[1].trim())
-            ? "\n\n\n" + footer[1].trim() + "\n"
-            : ""
-        );
-        // init header
-        header = (
-            match.input.slice(0, match.index) + "/*\nshRawLibFetch\n" +
-            JSON.stringify(JSON.parse(match[1]), undefined, 4) + "\n" +
-            match[2].split("\n\n").filter(function (elem) {
-                return elem.trim();
-            }).map(function (elem) {
-                return elem.trim().replace((
-                    /\*\//g
-                ), "*\\\\/").replace((
-                    /\/\*/g
-                ), "/\\\\*") + "\n";
-            }).sort().join("\n") + "*/\n\n\n"
-        );
-        result = (
-            header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
-        );
+        result = normalizeWhitespace(result) + "\n\n\n/*\nfile none\n*/\n";
         // replace from replaceList
         replaceList.forEach(function ({
             aa,
@@ -1142,6 +1113,20 @@ shRawLibFetch() {(set -e
                 );
             }
         });
+        // init header
+        header = (
+            match.input.slice(0, match.index) + "/*\nshRawLibFetch\n" +
+            JSON.stringify(JSON.parse(match[1]), undefined, 4) + "\n" +
+            match[2].split("\n\n").filter(function (elem) {
+                return elem.trim();
+            }).map(function (elem) {
+                return elem.trim().replace((
+                    /\*\//g
+                ), "*\\\\/").replace((
+                    /\/\*/g
+                ), "/\\\\*") + "\n";
+            }).sort().join("\n") + "*/\n\n\n"
+        );
         // replace from header-diff
         header.replace((
             /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
@@ -1201,6 +1186,13 @@ shRawLibFetch() {(set -e
                     JSON.stringify(exports)
                 );
             }
+        });
+        // init footer
+        result = header + result;
+        match.input.replace((
+            /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
+        ), function (match0) {
+            result += "\n\n" + match0.trim() + "\n";
         });
         // write to file
         require("fs").writeFileSync(
