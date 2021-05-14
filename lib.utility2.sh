@@ -1198,7 +1198,7 @@ shRawLibFetch() {(set -e
         // write to file
         require("fs").writeFileSync(
             process.argv[1],
-            normalizeWhitespace(result)
+            normalizeWhitespace(result) + "\n"
         );
     });
 }());
