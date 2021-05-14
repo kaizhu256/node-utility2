@@ -1074,11 +1074,9 @@ shRawLibFetch() {(set -e
     });
     // parse fetched data
     process.on("exit", function () {
-        let data;
         let result0;
         result = "";
         fetchList.forEach(function (elem) {
-            let data;
             let prefix;
             if (!elem.url) {
                 return;
@@ -1115,8 +1113,9 @@ shRawLibFetch() {(set -e
                 );
             }
             // mangle module.exports
-            data = elem.data.toString();
-            result += "\n\n\n/*\nfile " + elem.url + "\n*/\n" + data.trim();
+            result += (
+                "\n\n\n/*\nfile " + elem.url + "\n*/\n" + elem.data.trim()
+            );
         });
         // comment #!
         result = result.replace((
