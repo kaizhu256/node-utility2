@@ -949,29 +949,6 @@ shRawLibFetch() {(set -e
             return argList[0];
         };
     }
-    function normalizeWhitespace(str) {
-    /*
-     * this function will normalize whitespace
-     */
-        // normalize newline
-        str = str.replace((
-            /\r\n|\r/g
-        ), "\n");
-        // remove trailing-whitespace
-        str = str.replace((
-            /[\t\u0020]+$/gm
-        ), "");
-        // remove leading-newline before ket
-        str = str.replace((
-            /\n+?(\n\u0020*?\})/g
-        ), "$1");
-        // eslint - no-multiple-empty-lines
-        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
-        str = str.replace((
-            /\n{4,}/g
-        ), "\n\n\n");
-        return str.trim() + "\n";
-    }
     function onResponse(res, dict, key) {
     /*
      * this function will concat data from <res> to <dict>[<key>]
@@ -1092,12 +1069,28 @@ shRawLibFetch() {(set -e
                 elem.data.toString().trim()
             );
         });
+        result = result.trim() + "\n\n/*\nfile none\n*/\n";
         // comment #!
         result = result.replace((
             /^#!/gm
         ), "// $&");
-        // normalize whitespace
-        result = normalizeWhitespace(result) + "\n\n/*\nfile none\n*/\n";
+        // normalize newline
+        result = result.replace((
+            /\r\n|\r/g
+        ), "\n");
+        // remove trailing-whitespace
+        result = result.replace((
+            /[\t\u0020]+$/gm
+        ), "");
+        // remove leading-newline before ket
+        result = result.replace((
+            /\n+?(\n\u0020*?\})/g
+        ), "$1");
+        // eslint - no-multiple-empty-lines
+        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
+        result = result.replace((
+            /\n{4,}/g
+        ), "\n\n\n");
         // replace from replaceList
         replaceList.forEach(function ({
             aa,
