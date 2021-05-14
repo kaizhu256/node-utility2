@@ -981,7 +981,7 @@ shRawLibFetch() {(set -e
         res.on("data", function (chunk) {
             data.push(chunk);
         }).on("end", function () {
-            dict[key] = Buffer.from(data);
+            dict[key] = Buffer.concat(data);
         });
     }
     // init matchObj
@@ -1082,7 +1082,7 @@ shRawLibFetch() {(set -e
                     "repo " + elem.prefix.replace("/blob/", "/tree/") + "\n" +
                     "committed " + (
                         /\b\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\dZ\b/
-                    ).exec(elem.dateCommitted)[0] + "\n" +
+                    ).exec(elem.dateCommitted.toString())[0] + "\n" +
                     "*/"
                 );
             }
