@@ -16,7 +16,7 @@ shRawLibFetch
 -                    parent: global,
 -                    id: thing.id,
 -                    init: true,
-+                    // hack-jslint - validate sorted-object-keys
++                    // hack-jslint - sort object-keys
 +                    id: thing.id,
 +                    init: true,
 +                    parent: global,
@@ -36,7 +36,7 @@ shRawLibFetch
 -            body: true,
 -            context: empty(),
 -            from: 0,
-+            // hack-jslint - validate sorted-object-keys
++            // hack-jslint - sort object-keys
 +            body: true,
 +            context: empty(),
 +            from: 0,
@@ -83,7 +83,7 @@ shRawLibFetch
 -        column,
 -        line,
 -        code
-+        // hack-jslint - validate sorted-object-keys
++        // hack-jslint - sort object-keys
 +        code,
 +        column,
 +        line,
@@ -109,7 +109,7 @@ shRawLibFetch
 -    "[": "]",       // bracket
 -    "{": "}",       // brace
 -    "${": "}"       // mega
-+    // hack-jslint - validate sorted-object-keys
++    // hack-jslint - sort object-keys
 +    "${": "}",      // mega
 +    "(": ")",       // paren
 +    "[": "]",       // bracket
@@ -120,7 +120,7 @@ shRawLibFetch
 -        "require", "send", "start", "sum", "toJSON"
 -    ],
 -    convert: true,
-+    // hack-jslint - validate sorted-object-keys
++    // hack-jslint - sort object-keys
 +    convert: true,
 +    couch: [
 +        "emit", "getRow", "isArray", "log", "provides", "registerType",
@@ -11229,7 +11229,7 @@ const allowed_option = {
         "TextDecoder", "TextEncoder", "URL", "window", "Worker",
         "XMLHttpRequest"
     ],
-    // hack-jslint - validate sorted-object-keys
+    // hack-jslint - sort object-keys
     convert: true,
     couch: [
         "emit", "getRow", "isArray", "log", "provides", "registerType",
@@ -11274,7 +11274,7 @@ const opener = {
 
 // The open and close pairs.
 
-    // hack-jslint - validate sorted-object-keys
+    // hack-jslint - sort object-keys
     "${": "}",      // mega
     "(": ")",       // paren
     "[": "]",       // bracket
@@ -11616,7 +11616,7 @@ function warn_at(code, line, column, a, b, c, d) {
 // resembles an exception.
 
     const warning = {         // ~~
-        // hack-jslint - validate sorted-object-keys
+        // hack-jslint - sort object-keys
         code,
         column,
         line,
@@ -15081,7 +15081,7 @@ function lookup(thing) {
                 }
                 the_variable = {
                     dead: false,
-                    // hack-jslint - validate sorted-object-keys
+                    // hack-jslint - sort object-keys
                     id: thing.id,
                     init: true,
                     parent: global,
@@ -16068,7 +16068,7 @@ function jslint(
         );
         functions = [];
         global = {
-            // hack-jslint - validate sorted-object-keys
+            // hack-jslint - sort object-keys
             body: true,
             context: empty(),
             from: 0,
