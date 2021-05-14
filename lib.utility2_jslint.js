@@ -95,9 +95,9 @@ shRawLibFetch
 +}
 +// hack-jslint - cli
 +function stringLineCount(data) {
-+/\*\*
++/\\*
 + * this function will count number of newlines in <data>
-+ *\*\/
++ *\\/
 +    let cnt;
 +    let ii;
 +    // https://jsperf.com/regexp-counting-2/8
@@ -273,9 +273,9 @@ shRawLibFetch
 +    });
 +}
 +// hack-jslint - global-function-scope
-+/\*\* jslint ignore:start *\*\/
++/\\* jslint ignore:start *\\/
 +}());
-+/\*\* jslint ignore:end *\*\/
++/\\* jslint ignore:end *\\/
 
 -    "(": ")",       // paren
 -    "[": "]",       // bracket
@@ -391,10 +391,10 @@ shRawLibFetch
 -      | [ 1-9 ] [ 0-9 ]*
 -    )
 -) ( .* ) $ `;
--const rx_digits = /^[0-9]*\*\/;
--const rx_hexs = /^[0-9A-F]*\*\/i;
--const rx_octals = /^[0-7]*\*\/;
--const rx_bits = /^[01]*\*\/;
+-const rx_digits = /^[0-9]*\\/;
+-const rx_hexs = /^[0-9A-F]*\\/i;
+-const rx_octals = /^[0-7]*\\/;
+-const rx_bits = /^[01]*\\/;
 +  | (
 +        0 n?
 +      | [ 1-9 ] [ 0-9 ]* n?
@@ -406,12 +406,12 @@ shRawLibFetch
 +const rx_octals = /^[0-7]*n?/;
 +const rx_bits = /^[01]*n?/;
 
--/\*\*property
+-/\\*property
 +// hack-jslint - global-function-scope
-+/\*\* jslint ignore:end *\*\/
++/\\* jslint ignore:end *\\/
 +let lines_extra;
 +// hack-jslint - disable property-check
-+/\*\*\property
++/\\*\property
 
 -const rx_bad_property = tag_regexp `
 -    ^_
@@ -428,18 +428,18 @@ shRawLibFetch
 
 -var CSSLint = (function(){
 +// hack-csslint - global-function-scope
-+/\*\* jslint utility2:true *\*\/
-+/\*\* jslint ignore:start *\*\/
++/\\* jslint utility2:true *\\/
++/\\* jslint ignore:start *\\/
 +(function () {
 +// init debugInline
 +if (!globalThis.debugInline) {
 +    let consoleError;
 +    consoleError = console.error;
 +    globalThis.debugInline = function (...argList) {
-+    /\*\*
++    /\\*
 +     * this function will both print <argList> to stderr and
 +     * return <argList>[0]
-+     *\*\/
++     *\\/
 +        consoleError("\n\ndebugInline");
 +        consoleError(...argList);
 +        consoleError("\n");

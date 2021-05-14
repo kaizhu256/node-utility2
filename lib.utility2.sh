@@ -1003,16 +1003,16 @@ shRawLibFetch() {(set -e
             aa = "\n" + aa.replace((
                 /^-/gm
             ), "").replace((
-                /\*\\\*\\\//g
+                /\*\\\\\//g
             ), "*/").replace((
-                /\/\\\*\\\*/g
+                /\/\\\\\*/g
             ), "/*");
             bb = "\n" + bb.replace((
                 /^\+/gm
             ), "").replace((
-                /\*\\\*\\\//g
+                /\\\*\\\//g
             ), "*/").replace((
-                /\/\\\*\\\*/g
+                /\/\\\\\*/g
             ), "/*");
             result0 = result;
             // disable $-escape in replacement-string
@@ -1078,9 +1078,9 @@ shRawLibFetch() {(set -e
         }).map(function (elem) {
             return elem.trim().replace((
                 /\*\//g
-            ), "*\\*\\/").replace((
+            ), "*\\\\/").replace((
                 /\/\*/g
-            ), "/\\*\\*") + "\n";
+            ), "/\\\\*") + "\n";
         }).sort().join("\n") + "*/\n\n\n"
     );
     // JSON.parse opt with comment
