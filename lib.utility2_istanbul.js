@@ -14,7 +14,7 @@ shRawLibFetch
             "url": "https://github.com/estools/esutils/blob/2.0.3/lib/code.js"
         },
         {
-            "url": "https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js"
+            "url": "https://github.com/estools/escodegen/blob/v1.14.3/escodegen.js"
         },
         {
             "url": "https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js"
@@ -121,9 +121,9 @@ shRawLibFetch
 +/\\* jslint ignore:start *\\/
 +(function () { let exports, module; exports = module = esprima;
 
--file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
+-file https://github.com/estools/escodegen/blob/v1.14.3/escodegen.js
 -*\\/
-+file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
++file https://github.com/estools/escodegen/blob/v1.14.3/escodegen.js
 +*\\/
 +// hack-istanbul - inline-require
 +/\\* istanbul ignore next *\\/
@@ -6334,13 +6334,13 @@ esutils = { code: module.exports }; }());
 
 
 /*
-repo https://github.com/estools/escodegen/tree/v1.12.0
-committed 2019-08-13T02:08:40Z
+repo https://github.com/estools/escodegen/tree/v1.14.3
+committed 2020-06-22T23:14:32Z
 */
 
 
 /*
-file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
+file https://github.com/estools/escodegen/blob/v1.14.3/escodegen.js
 */
 // hack-istanbul - inline-require
 /* istanbul ignore next */
@@ -6444,14 +6444,15 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         BitwiseSHIFT: 10,
         Additive: 11,
         Multiplicative: 12,
-        Await: 13,
-        Unary: 13,
-        Postfix: 14,
-        Call: 15,
-        New: 16,
-        TaggedTemplate: 17,
-        Member: 18,
-        Primary: 19
+        Exponentiation: 13,
+        Await: 14,
+        Unary: 14,
+        Postfix: 15,
+        Call: 16,
+        New: 17,
+        TaggedTemplate: 18,
+        Member: 19,
+        Primary: 20
     };
 
     BinaryPrecedence = {
@@ -6479,7 +6480,8 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         '-': Precedence.Additive,
         '*': Precedence.Multiplicative,
         '%': Precedence.Multiplicative,
-        '/': Precedence.Multiplicative
+        '/': Precedence.Multiplicative,
+        '**': Precedence.Exponentiation
     };
 
     //Flags
@@ -7302,7 +7304,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
     };
 
     CodeGenerator.prototype.generateIterationForStatement = function (operator, stmt, flags) {
-        var result = ['for' + space + (stmt.await ? 'await' + space : '') + '('], that = this;
+        var result = ['for' + (stmt.await ? noEmptySpace() + 'await' : '') + space + '('], that = this;
         withIndent(function () {
             if (stmt.left.type === Syntax.VariableDeclaration) {
                 withIndent(function () {
@@ -7330,7 +7332,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             result.push('[');
         }
 
-        result.push(this.generateExpression(expr, Precedence.Sequence, E_TTT));
+        result.push(this.generateExpression(expr, Precedence.Assignment, E_TTT));
 
         if (computed) {
             result.push(']');
@@ -7494,7 +7496,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
                 result = join(result, this.generateExpression(stmt.id, Precedence.Sequence, E_TTT));
             }
             if (stmt.superClass) {
-                fragment = join('extends', this.generateExpression(stmt.superClass, Precedence.Assignment, E_TTT));
+                fragment = join('extends', this.generateExpression(stmt.superClass, Precedence.Unary, E_TTT));
                 result = join(result, fragment);
             }
             result.push(space);
@@ -7525,15 +7527,19 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             withIndent(function () {
                 var guard;
 
-                result = [
-                    'catch' + space + '(',
-                    that.generateExpression(stmt.param, Precedence.Sequence, E_TTT),
-                    ')'
-                ];
+                if (stmt.param) {
+                    result = [
+                        'catch' + space + '(',
+                        that.generateExpression(stmt.param, Precedence.Sequence, E_TTT),
+                        ')'
+                    ];
 
-                if (stmt.guard) {
-                    guard = that.generateExpression(stmt.guard, Precedence.Sequence, E_TTT);
-                    result.splice(2, 0, ' if ', guard);
+                    if (stmt.guard) {
+                        guard = that.generateExpression(stmt.guard, Precedence.Sequence, E_TTT);
+                        result.splice(2, 0, ' if ', guard);
+                    }
+                } else {
+                    result = ['catch'];
                 }
             });
             result.push(this.maybeBlock(stmt.body, S_TFFF));
@@ -8175,14 +8181,16 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
         },
 
         BinaryExpression: function (expr, precedence, flags) {
-            var result, currentPrecedence, fragment, leftSource;
+            var result, leftPrecedence, rightPrecedence, currentPrecedence, fragment, leftSource;
             currentPrecedence = BinaryPrecedence[expr.operator];
+            leftPrecedence = expr.operator === '**' ? Precedence.Postfix : currentPrecedence;
+            rightPrecedence = expr.operator === '**' ? currentPrecedence : currentPrecedence + 1;
 
             if (currentPrecedence < precedence) {
                 flags |= F_ALLOW_IN;
             }
 
-            fragment = this.generateExpression(expr.left, currentPrecedence, flags);
+            fragment = this.generateExpression(expr.left, leftPrecedence, flags);
 
             leftSource = fragment.toString();
 
@@ -8192,7 +8200,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
                 result = join(fragment, expr.operator);
             }
 
-            fragment = this.generateExpression(expr.right, currentPrecedence + 1, flags);
+            fragment = this.generateExpression(expr.right, rightPrecedence, flags);
 
             if (expr.operator === '/' && fragment.toString().charAt(0) === '/' ||
             expr.operator.slice(-1) === '<' && fragment.toString().slice(0, 3) === '!--') {
@@ -8439,7 +8447,7 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
                 result = join(result, this.generateExpression(expr.id, Precedence.Sequence, E_TTT));
             }
             if (expr.superClass) {
-                fragment = join('extends', this.generateExpression(expr.superClass, Precedence.Assignment, E_TTT));
+                fragment = join('extends', this.generateExpression(expr.superClass, Precedence.Unary, E_TTT));
                 result = join(result, fragment);
             }
             result.push(space);
@@ -8563,13 +8571,19 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
             multiline = false;
             if (expr.properties.length === 1) {
                 property = expr.properties[0];
-                if (property.value.type !== Syntax.Identifier) {
+                if (
+                    property.type === Syntax.Property
+                    && property.value.type !== Syntax.Identifier
+                ) {
                     multiline = true;
                 }
             } else {
                 for (i = 0, iz = expr.properties.length; i < iz; ++i) {
                     property = expr.properties[i];
-                    if (!property.shorthand) {
+                    if (
+                        property.type === Syntax.Property
+                        && !property.shorthand
+                    ) {
                         multiline = true;
                         break;
                     }
@@ -8656,6 +8670,10 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
                 }
             }
 
+            if (expr.regex) {
+              return '/' + expr.regex.pattern + '/' + expr.regex.flags;
+            }
+
             if (expr.value === null) {
                 return 'null';
             }
@@ -8672,9 +8690,6 @@ file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
                 return expr.value ? 'true' : 'false';
             }
 
-            if (expr.regex) {
-              return '/' + expr.regex.pattern + '/' + expr.regex.flags;
-            }
             return generateRegExp(expr.value);
         },
 
