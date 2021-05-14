@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+/* jslint ignore:start */
 /*
 shRawLibFetch
 {
@@ -22,46 +24,46 @@ shRawLibFetch
 }
 -
 -
--/*
+-/\\*
 -file none
 +// hack-istanbul - inline-require
 +}());
 +
 +
-+/*
++/\\*
 +file none
 
 -
 -
--/*
+-/\\*
 -repo https://github.com/estools/estraverse/tree/4.2.0
 +// hack-istanbul - inline-require
 +}());
 +
 +
-+/*
++/\\*
 +repo https://github.com/estools/estraverse/tree/4.2.0
 
 -
 -
--/*
+-/\\*
 -repo https://github.com/estools/esutils/tree/2.0.3
 +// hack-istanbul - inline-require
 +}());
 +
 +
-+/*
++/\\*
 +repo https://github.com/estools/esutils/tree/2.0.3
 
 -
 -
--/*
+-/\\*
 -repo https://github.com/gotwarlost/istanbul/tree/v0.4.5
 +// hack-istanbul - inline-require
 +}());
 +
 +
-+/*
++/\\*
 +repo https://github.com/gotwarlost/istanbul/tree/v0.4.5
 
 -                SourceNode = require('source-map').SourceNode;
@@ -116,53 +118,54 @@ shRawLibFetch
 +    exports.version = {};
 
 -file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
--*/
+-*\\/
 +file https://github.com/acornjs/acorn/blob/6.4.1/acorn/dist/acorn.js
-+*/
++*\\/
 +// hack-istanbul - inline-require
-+/* istanbul ignore next */
-+/* jslint ignore:start */
++/\\* istanbul ignore next *\\/
++/\\* jslint ignore:start *\\/
 +(function () { let exports, module; exports = module = esprima;
 
 -file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
--*/
+-*\\/
 +file https://github.com/estools/escodegen/blob/v1.12.0/escodegen.js
-+*/
++*\\/
 +// hack-istanbul - inline-require
-+/* istanbul ignore next */
++/\\* istanbul ignore next *\\/
 +(function () { let exports; exports = escodegen;
 
 -file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
--*/
+-*\\/
 +file https://github.com/estools/estraverse/blob/4.2.0/estraverse.js
-+*/
++*\\/
 +// hack-istanbul - inline-require
-+/* istanbul ignore next */
++/\\* istanbul ignore next *\\/
 +(function () { let exports; exports = estraverse;
 
 -file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
--*/
+-*\\/
 +file https://github.com/estools/esutils/blob/2.0.3/lib/code.js
-+*/
++*\\/
 +// hack-istanbul - inline-require
-+/* istanbul ignore next */
++/\\* istanbul ignore next *\\/
 +(function () { let module; module = {};
 
 -file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
--*/
+-*\\/
 +file https://github.com/gotwarlost/istanbul/blob/v0.4.5/lib/instrumenter.js
-+*/
++*\\/
 +// hack-istanbul - inline-require
-+/* istanbul ignore next */
++/\\* istanbul ignore next *\\/
 +(function () { let module, window; module = undefined; window = local;
 
 -}());
--/* vim: set sw=4 ts=4 et tw=80 : */
+-/\\* vim: set sw=4 ts=4 et tw=80 : *\\/
 +}());
-+/* vim: set sw=4 ts=4 et tw=80 : */
++/\\* vim: set sw=4 ts=4 et tw=80 : *\\/
 +// hack-istanbul - inline-require
 +esutils = { code: module.exports }; }());
 */
+/* jslint ignore:end */
 
 
 /*
