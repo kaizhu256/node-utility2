@@ -1010,7 +1010,7 @@ shRawLibFetch() {(set -e
             bb = "\n" + bb.replace((
                 /^\+/gm
             ), "").replace((
-                /\\\*\\\//g
+                /\*\\\\\//g
             ), "*/").replace((
                 /\/\\\\\*/g
             ), "/*");
