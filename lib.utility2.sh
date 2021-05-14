@@ -932,7 +932,7 @@ shRawLibFetch() {(set -e
     node -e '
 (function () {
     "use strict";
-    let match;
+    let matchObj;
     let repoDict;
     // init debugInline
     if (!globalThis.debugInline) {
@@ -984,15 +984,15 @@ shRawLibFetch() {(set -e
             dict[key] = data;
         }).setEncoding("utf8");
     }
-    // init match
-    match = (
+    // init matchObj
+    matchObj = (
         /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
     ).exec(require("fs").readFileSync(process.argv[1], "utf8"));
-    // JSON.parse match with comment
+    // JSON.parse match1 with comment
     let {
         fetchList,
         replaceList = []
-    } = JSON.parse(match[1]);
+    } = JSON.parse(matchObj[1]);
     // init repoDict, fetchList
     repoDict = {};
     fetchList.forEach(function (elem) {
@@ -1092,10 +1092,10 @@ shRawLibFetch() {(set -e
                 elem.data.toString().trim()
             );
         });
-        //!! // comment #!
-        //!! result = result.replace((
-            //!! /^#!/gm
-        //!! ), "// $&");
+        // comment #!
+        result = result.replace((
+            /^#!/gm
+        ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result) + "\n\n\n/*\nfile none\n*/\n";
         // replace from replaceList
@@ -1115,9 +1115,9 @@ shRawLibFetch() {(set -e
         });
         // init header
         header = (
-            match.input.slice(0, match.index) + "/*\nshRawLibFetch\n" +
-            JSON.stringify(JSON.parse(match[1]), undefined, 4) + "\n" +
-            match[2].split("\n\n").filter(function (elem) {
+            matchObj.input.slice(0, matchObj.index) + "/*\nshRawLibFetch\n" +
+            JSON.stringify(JSON.parse(matchObj[1]), undefined, 4) + "\n" +
+            matchObj[2].split("\n\n").filter(function (elem) {
                 return elem.trim();
             }).map(function (elem) {
                 return elem.trim().replace((
@@ -1189,7 +1189,7 @@ shRawLibFetch() {(set -e
         });
         // init footer
         result = header + result;
-        match.input.replace((
+        matchObj.input.replace((
             /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
         ), function (ignore, match1) {
             result += "\n\n" + match1.trim() + "\n";
