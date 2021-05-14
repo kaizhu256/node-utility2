@@ -1191,8 +1191,8 @@ shRawLibFetch() {(set -e
         result = header + result;
         match.input.replace((
             /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
-        ), function (match0) {
-            result += "\n\n" + match0.trim() + "\n";
+        ), function (ignore, match1) {
+            result += "\n\n" + match1.trim() + "\n";
         });
         // write to file
         require("fs").writeFileSync(
