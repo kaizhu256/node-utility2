@@ -989,87 +989,6 @@ shRawLibFetch() {(set -e
             dict[key] = Buffer.concat(data);
         });
     }
-    function replaceAndWriteFile() {
-    /*
-     * this function will replace result with replaceList and write to file
-     */
-        let data;
-        let result0;
-        // replace from replaceList
-        replaceList.forEach(function ({
-            aa,
-            bb,
-            flags
-        }) {
-            result0 = result;
-            result = result.replace(new RegExp(aa, flags), bb);
-            if (result0 === result) {
-                throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet " +
-                    JSON.stringify(aa)
-                );
-            }
-        });
-        // replace from header-diff
-        header.replace((
-            /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
-        ), function (ignore, aa, bb) {
-            aa = "\n" + aa.replace((
-                /^-/gm
-            ), "").replace((
-                /\*\\\\\//g
-            ), "*/").replace((
-                /\/\\\\\*/g
-            ), "/*");
-            bb = "\n" + bb.replace((
-                /^\+/gm
-            ), "").replace((
-                /\*\\\\\//g
-            ), "*/").replace((
-                /\/\\\\\*/g
-            ), "/*");
-            result0 = result;
-            // disable $-escape in replacement-string
-            result = result.replace(aa, function () {
-                return bb;
-            });
-            if (result0 === result) {
-                throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet " +
-                    JSON.stringify(aa)
-                );
-            }
-            return "";
-        });
-        // replace from fetchList
-        fetchList.forEach(function (elem) {
-            if (elem.type !== "dataUri") {
-                return;
-            }
-            data = (
-                "data:" + elem.contentType + ";base64," +
-                elem.data.toString("base64")
-            );
-            result0 = result;
-            result = result.replace(
-                new RegExp("^" + elem.exports + "$", "gm"),
-                // disable $-escape in replacement-string
-                function () {
-                    return data;
-                }
-            );
-            if (result0 === result) {
-                throw new Error(
-                    "shRawLibFetch - cannot find-and-replace snippet " +
-                    JSON.stringify(elem.exports)
-                );
-            }
-        });
-        require("fs").writeFileSync(
-            process.argv[1],
-            normalizeWhitespace(result)
-        );
-    }
     // init opt
     opt = (
         /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
@@ -1155,6 +1074,8 @@ shRawLibFetch() {(set -e
     });
     // parse fetched data
     process.on("exit", function () {
+        let data;
+        let result0;
         result = "";
         fetchList.forEach(function (elem) {
             let data;
@@ -1206,7 +1127,86 @@ shRawLibFetch() {(set -e
         result = (
             header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
         );
-        replaceAndWriteFile();
+        // replace from replaceList
+        replaceList.forEach(function ({
+            aa,
+            bb,
+            flags
+        }) {
+            result0 = result;
+            result = result.replace(new RegExp(aa, flags), bb);
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(aa)
+                );
+            }
+        });
+        // replace from header-diff
+        header.replace((
+            /((?:^-.*?\n)+?)((?:^\+.*?\n)+)/gm
+        ), function (ignore, aa, bb) {
+            aa = "\n" + aa.replace((
+                /^-/gm
+            ), "").replace((
+                /\*\\\\\//g
+            ), "*/").replace((
+                /\/\\\\\*/g
+            ), "/*");
+            bb = "\n" + bb.replace((
+                /^\+/gm
+            ), "").replace((
+                /\*\\\\\//g
+            ), "*/").replace((
+                /\/\\\\\*/g
+            ), "/*");
+            result0 = result;
+            // disable $-escape in replacement-string
+            result = result.replace(aa, function () {
+                return bb;
+            });
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(aa)
+                );
+            }
+            return "";
+        });
+        // replace from fetchList
+        fetchList.forEach(function ({
+            contentType,
+            data,
+            exports,
+            type
+        }) {
+            if (type !== "dataUri") {
+                return;
+            }
+            data = (
+                "data:" + contentType + ";base64," +
+                data.toString("base64")
+            );
+            result0 = result;
+            result = result.replace(
+                new RegExp("^" + exports + "$", "gm"),
+                // disable $-escape in replacement-string
+                function () {
+                    return data;
+                }
+            );
+            if (result0 === result) {
+                throw new Error(
+                    "shRawLibFetch - cannot find-and-replace snippet " +
+                    JSON.stringify(exports)
+                );
+            }
+        });
+        // write to file
+        require("fs").writeFileSync(
+            process.argv[1],
+            normalizeWhitespace(result)
+        );
     });
 }());
 ' "$@" # '
