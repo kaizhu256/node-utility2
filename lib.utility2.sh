@@ -1097,7 +1097,7 @@ shRawLibFetch() {(set -e
             /^#!/gm
         ), "// $&");
         // normalize whitespace
-        result = normalizeWhitespace(result) + "\n\n\n/*\nfile none\n*/\n";
+        result = normalizeWhitespace(result) + "\n\n/*\nfile none\n*/\n";
         // replace from replaceList
         replaceList.forEach(function ({
             aa,
@@ -1198,7 +1198,7 @@ shRawLibFetch() {(set -e
         // write to file
         require("fs").writeFileSync(
             process.argv[1],
-            normalizeWhitespace(result) + "\n"
+            normalizeWhitespace(result)
         );
     });
 }());
