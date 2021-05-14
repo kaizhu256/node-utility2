@@ -624,10 +624,12 @@ if (!globalThis.debugInline) {
  * this function will jslint current-directory
  */
     "use strict";
-    require("fs").stat("lib.jslint.js", function (ignore, exists) {
+    require("fs").stat((
+        process.env.HOME + "/lib.utility2_jslint.js"
+    ), function (ignore, exists) {
         if (exists) {
             require("child_process").spawn("node", [
-                "lib.jslint.js", "."
+                process.env.HOME + "/lib.utility2_jslint.js", "."
             ], {
                 stdio: [
                     "ignore", 1, 2
