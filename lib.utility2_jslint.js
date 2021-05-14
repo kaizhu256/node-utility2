@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* jslint utility2:true */
 /*
 shRawLibFetch
 {
@@ -245,7 +246,6 @@ shRawLibFetch
 
 -var CSSLint = (function(){
 +// hack-csslint - global-function-scope
-+/\\* jslint utility2:true *\\/
 +/\\* jslint ignore:start *\\/
 +(function () {
 +// init debugInline
@@ -301,7 +301,6 @@ THE SOFTWARE.
 */
 
 // hack-csslint - global-function-scope
-/* jslint utility2:true */
 /* jslint ignore:start */
 (function () {
 // init debugInline
