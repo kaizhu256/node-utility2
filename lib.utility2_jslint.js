@@ -210,6 +210,7 @@ shRawLibFetch
 -    return warning;
 +    // hack-jslint - ignore warning
 +    if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
++        warning.stack = new Error().stack;
 +        warnings.push(warning);
 +    }
 +    return warning;
@@ -221,9 +222,10 @@ shRawLibFetch
 -    }
 +    } catch (e) {
 +        // hack-jslint - early_stop
-+        e.early_stop = true;
 +        e.column = e.column || -1;
++        e.early_stop = true;
 +        e.line = e.line || -1;
++        e.message = "[JSLint was unable to finish] - " + e.message;
 +        if (e.name !== "JSLintError") {
 +            warnings.push(e);
 +        }
