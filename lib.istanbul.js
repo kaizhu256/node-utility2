@@ -231,16 +231,16 @@ local.cliRun = function ({
         cmdList = [
             {
                 argList: "<arg2>  ...",
-                description: "usage:",
                 cmd: [
                     "<arg1>"
-                ]
+                ],
+                description: "usage:"
             }, {
                 argList: "'console.log(\"hello world\")'",
-                description: "example:",
                 cmd: [
                     "--eval"
-                ]
+                ],
+                description: "example:"
             }
         ];
         file = __filename.replace((
@@ -11421,34 +11421,34 @@ local.coverageReportCreate = function ({
      */
         return {
             children: [],
-            pathname,
             metrics: {
                 branches: {
-                    total: 0,
                     covered: 0,
+                    pct: "Unknown",
                     skipped: 0,
-                    pct: "Unknown"
+                    total: 0
                 },
                 functions: {
-                    total: 0,
                     covered: 0,
+                    pct: "Unknown",
                     skipped: 0,
-                    pct: "Unknown"
+                    total: 0
                 },
                 lines: {
-                    total: 0,
                     covered: 0,
+                    pct: "Unknown",
                     skipped: 0,
-                    pct: "Unknown"
+                    total: 0
                 },
                 statements: {
-                    total: 0,
                     covered: 0,
+                    pct: "Unknown",
                     skipped: 0,
-                    pct: "Unknown"
+                    total: 0
                 }
             },
-            name: pathname
+            name: pathname,
+            pathname
         };
     }
     function nodeNormalize(node, level, filePrefix, parent) {
@@ -11625,9 +11625,9 @@ local.coverageReportCreate = function ({
             ]) {
                 map = fileCoverage[keyMap];
                 metric = {
-                    total: 0,
                     covered: 0,
-                    skipped: 0
+                    skipped: 0,
+                    total: 0
                 };
                 Object.entries(fileCoverage[keyCovered]).forEach(function ([
                     key,
@@ -11642,9 +11642,9 @@ local.coverageReportCreate = function ({
             });
             // computeBranchTotals
             metric = {
-                total: 0,
                 covered: 0,
-                skipped: 0
+                skipped: 0,
+                total: 0
             };
             Object.entries(fileCoverage.b).forEach(function ([
                 key,

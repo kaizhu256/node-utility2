@@ -2914,16 +2914,16 @@ local.cliRun = function ({
         cmdList = [
             {
                 argList: "<arg2>  ...",
-                description: "usage:",
                 cmd: [
                     "<arg1>"
-                ]
+                ],
+                description: "usage:"
             }, {
                 argList: "'console.log(\"hello world\")'",
-                description: "example:",
                 cmd: [
                     "--eval"
-                ]
+                ],
+                description: "example:"
             }
         ];
         file = __filename.replace((

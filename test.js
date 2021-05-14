@@ -1,6 +1,6 @@
 /* istanbul instrument in package utility2 */
 // assets.utility2.header.js - start
-/* jslint utility2:true */
+/* jslint utility2:\true */
 /* istanbul ignore next */
 // run shared js-env code - init-local
 (function () {
@@ -160,7 +160,7 @@
 // assets.utility2.header.js - end
 
 
-/* jslint utility2:true */
+/* jslint utility2:\true */
 (function (local) {
 "use strict";
 

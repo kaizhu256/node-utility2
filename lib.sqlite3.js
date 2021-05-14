@@ -1,268 +1,82 @@
-#!/usr/bin/env node
 /*
- * lib.sqlite3.js (2020.8.19)
- * https://github.com/kaizhu256/node-sqlite3-lite
- * this zero-dependency package will provide pre-built version of node-sqlite3 (v5.0.0)
- *
- */
-
-
-/* istanbul instrument in package sqlite3 */
-// assets.utility2.header.js - start
-/* jslint utility2:true */
-/* istanbul ignore next */
-// run shared js-env code - init-local
-(function () {
-    "use strict";
-    let isBrowser;
-    let isWebWorker;
-    let local;
-    // init debugInline
-    if (!globalThis.debugInline) {
-        let consoleError;
-        consoleError = console.error;
-        globalThis.debugInline = function (...argList) {
-        /*
-         * this function will both print <argList> to stderr
-         * and return <argList>[0]
-         */
-            consoleError("\n\ndebugInline");
-            consoleError(...argList);
-            consoleError("\n");
-            return argList[0];
-        };
-    }
-    // init isBrowser
-    isBrowser = (
-        typeof globalThis.XMLHttpRequest === "function" &&
-        globalThis.navigator &&
-        typeof globalThis.navigator.userAgent === "string"
-    );
-    // init isWebWorker
-    isWebWorker = (
-        isBrowser && typeof globalThis.importScripts === "function"
-    );
-    // init function
-    function assertJsonEqual(aa, bb) {
-    /*
-     * this function will assert JSON.stringify(<aa>) === JSON.stringify(<bb>)
-     */
-        function objectDeepCopyWithKeysSorted(obj) {
-        /*
-         * this function will recursively deep-copy <obj> with keys sorted
-         */
-            let sorted;
-            if (typeof obj !== "object" || !obj) {
-                return obj;
-            }
-            // recursively deep-copy list with child-keys sorted
-            if (Array.isArray(obj)) {
-                return obj.map(objectDeepCopyWithKeysSorted);
-            }
-            // recursively deep-copy obj with keys sorted
-            sorted = {};
-            Object.keys(obj).sort().forEach(function (key) {
-                sorted[key] = objectDeepCopyWithKeysSorted(obj[key]);
-            });
-            return sorted;
+shRawLibFetch
+{
+    "fetchList": [
+        {
+            "url": "https://github.com/mapbox/node-sqlite3/blob/v5.0.2/lib/trace.js"
+        },
+        {
+            "url": "https://github.com/mapbox/node-sqlite3/blob/v5.0.2/lib/sqlite3.js"
         }
-        aa = JSON.stringify(objectDeepCopyWithKeysSorted(aa));
-        bb = JSON.stringify(objectDeepCopyWithKeysSorted(bb));
-        if (aa !== bb) {
-            throw new Error(JSON.stringify(aa) + " !== " + JSON.stringify(bb));
-        }
-    }
-    function assertOrThrow(passed, msg) {
-    /*
-     * this function will throw <msg> if <passed> is falsy
-     */
-        if (passed) {
-            return;
-        }
-        throw (
-            (
-                msg &&
-                typeof msg.message === "string" &&
-                typeof msg.stack === "string"
-            )
-            // if msg is err, then leave as is
-            ? msg
-            : new Error(
-                typeof msg === "string"
-                // if msg is string, then leave as is
-                ? msg
-                // else JSON.stringify(msg)
-                : JSON.stringify(msg, undefined, 4)
-            )
-        );
-    }
-    function coalesce(...argList) {
-    /*
-     * this function will coalesce null, undefined, or "" in <argList>
-     */
-        let arg;
-        let ii;
-        ii = 0;
-        while (ii < argList.length) {
-            arg = argList[ii];
-            if (arg !== undefined && arg !== null && arg !== "") {
-                return arg;
-            }
-            ii += 1;
-        }
-        return arg;
-    }
-    function identity(val) {
-    /*
-     * this function will return <val>
-     */
-        return val;
-    }
-    function noop() {
-    /*
-     * this function will do nothing
-     */
-        return;
-    }
-    function objectAssignDefault(tgt = {}, src = {}, depth = 0) {
-    /*
-     * this function will if items from <tgt> are null, undefined, or "",
-     * then overwrite them with items from <src>
-     */
-        let recurse;
-        recurse = function (tgt, src, depth) {
-            Object.entries(src).forEach(function ([
-                key, bb
-            ]) {
-                let aa;
-                aa = tgt[key];
-                if (aa === undefined || aa === null || aa === "") {
-                    tgt[key] = bb;
-                    return;
-                }
-                if (
-                    depth !== 0 &&
-                    typeof aa === "object" && aa && !Array.isArray(aa) &&
-                    typeof bb === "object" && bb && !Array.isArray(bb)
-                ) {
-                    recurse(aa, bb, depth - 1);
-                }
-            });
-        };
-        recurse(tgt, src, depth | 0);
-        return tgt;
-    }
-    function onErrorThrow(err) {
-    /*
-     * this function will throw <err> if exists
-     */
-        if (err) {
-            throw err;
-        }
-    }
-    // bug-workaround - throw unhandledRejections in node-process
-    if (
-        typeof process === "object" && process &&
-        typeof process.on === "function" &&
-        process.unhandledRejections !== "strict"
-    ) {
-        process.unhandledRejections = "strict";
-        process.on("unhandledRejection", function (err) {
-            throw err;
-        });
-    }
-    // init local
-    local = {};
-    local.local = local;
-    globalThis.globalLocal = local;
-    local.assertJsonEqual = assertJsonEqual;
-    local.assertOrThrow = assertOrThrow;
-    local.coalesce = coalesce;
-    local.identity = identity;
-    local.isBrowser = isBrowser;
-    local.isWebWorker = isWebWorker;
-    local.noop = noop;
-    local.objectAssignDefault = objectAssignDefault;
-    local.onErrorThrow = onErrorThrow;
-}());
-// assets.utility2.header.js - end
-
-
-(function (local) {
-"use strict";
-
-
-/* istanbul ignore next */
-// run shared js-env code - init-before
-(function () {
-// init local
-local = (
-    globalThis.utility2_rollup
-    // || globalThis.utility2_rollup_old
-    // || require("./assets.utility2.rollup.js")
-    || globalThis.globalLocal
-);
-// init exports
-if (local.isBrowser) {
-    globalThis.utility2_sqlite3 = local;
-} else {
-    module.exports = local;
-    module.exports.__dirname = __dirname;
+    ],
+    "isRollupCommonJs": true
 }
-// init lib main
-local.sqlite3 = local;
+-//         var trace = exports_mapbox_node_sqlite3_lib_trace;
++// hack-sqlite3 - require module
++        var trace = exports_mapbox_node_sqlite3_lib_trace;
+
+-exports_mapbox_node_sqlite3_lib_sqlite3 = exports = sqlite3;
++// hack-sqlite3 - init exports
++let sqlite3 = exports_mapbox_node_sqlite3_lib_sqlite3_binding;
+
+-function extendTrace(object, property, pos) {
++function extendTrace(object, property, pos) {
++    if (!Object.getOwnPropertyDescriptor(object, property).writable) {
++        return;
++    }
+
+-let exports_mapbox_node_sqlite3_lib_sqlite3_binding = {};
++let exports_mapbox_node_sqlite3_lib_sqlite3_binding = {};
++// hack-sqlite3 - install
++// e.g. node lib.sqlite3.js install
++if (
++    module === require.main &&
++    process.argv[2] === "install" &&
++    require("path").basename(__filename) === "lib.sqlite3.js"
++) {
++    let file;
++    file = "napi-v3-" + process.platform + "-" + process.arch;
++    console.error(
++        "sqlite3 - fetching " +
++        "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.2/" +
++        file + ".tar.gz"
++    );
++    require("child_process").spawnSync((
++        "curl -A \"chrome\" -Lf " +
++        "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.2/" +
++        file + ".tar.gz " +
++        "| tar -O -xz " + file + "/node_sqlite3.node " +
++        "> .node_sqlite3-v5.0.2-" + file + ".node"
++    ), {
++        encoding: "utf8",
++        shell: true,
++        stdio: [
++            "ignore", 1, 2
++        ]
++    });
++    return;
++}
++// hack-sqlite3 - require binding
++let sqlite3_binding_file = (
++    ".node_sqlite3-v5.0.2-napi-v3-" +
++    process.platform + "-" + process.arch +
++    ".node"
++);
++if (!require("fs").existsSync(sqlite3_binding_file)) {
++    return;
++}
++exports_mapbox_node_sqlite3_lib_sqlite3_binding = require(
++    "./" + sqlite3_binding_file
++);
+
+-let sqlite3         = exports_mapbox_node_sqlite3_lib_sqlite3_binding;
+-let trace           = exports_mapbox_node_sqlite3_lib_trace;
++// hack-sqlite3 - init exports
++let trace           = exports_mapbox_node_sqlite3_lib_trace;
++module.exports = Object.assign(sqlite3, { sqlite3_binding_file }, trace);
+*/
 
 
-/* validateLineSortedReset */
-/*
- * shell-command to download-and-install prebuilt-binary:
-node lib.sqlite3.js install
- */
-if (local.isBrowser) {
-    return;
-}
-if (
-    module === require.main &&
-    process.argv[2] === "install" &&
-    require("path").basename(process.argv[1]) === "lib.sqlite3.js"
-) {
-    let dict;
-    dict = {};
-    [
-        "x64", process.arch
-    ].forEach(function (arch) {
-        [
-            "darwin", "linux", "win32", process.platform
-        ].forEach(function (platform) {
-            let file;
-            file = "napi-v3-" + platform + "-" + arch;
-            if (dict.hasOwnProperty(file)) {
-                return;
-            }
-            dict[file] = true;
-            console.error(
-                "sqlite3 - fetching " +
-                "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/" +
-                file + ".tar.gz"
-            );
-            require("child_process").spawnSync((
-                "curl -A \"chrome\" -Lf " +
-                "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.0/" +
-                file + ".tar.gz " +
-                "| tar -O -xz " + file + "/node_sqlite3.node " +
-                "> .node_sqlite3-v5.0.0-" + file + ".node"
-            ), {
-                encoding: "utf8",
-                shell: true,
-                stdio: [
-                    "ignore", 1, 2
-                ]
-            });
-        });
-    });
-    return;
-}
-/* jslint ignore:start */
 (function () {
 "use strict";
 let EventEmitter = require('events').EventEmitter;
@@ -270,13 +84,42 @@ let path = require('path');
 let util = require('util');
 let exports_mapbox_node_sqlite3_lib_sqlite3 = {};
 let exports_mapbox_node_sqlite3_lib_sqlite3_binding = {};
+// hack-sqlite3 - install
+// e.g. node lib.sqlite3.js install
+if (
+    module === require.main &&
+    process.argv[2] === "install" &&
+    require("path").basename(__filename) === "lib.sqlite3.js"
+) {
+    let file;
+    file = "napi-v3-" + process.platform + "-" + process.arch;
+    console.error(
+        "sqlite3 - fetching " +
+        "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.2/" +
+        file + ".tar.gz"
+    );
+    require("child_process").spawnSync((
+        "curl -A \"chrome\" -Lf " +
+        "https://mapbox-node-binary.s3.amazonaws.com/sqlite3/v5.0.2/" +
+        file + ".tar.gz " +
+        "| tar -O -xz " + file + "/node_sqlite3.node " +
+        "> .node_sqlite3-v5.0.2-" + file + ".node"
+    ), {
+        encoding: "utf8",
+        shell: true,
+        stdio: [
+            "ignore", 1, 2
+        ]
+    });
+    return;
+}
 // hack-sqlite3 - require binding
 let sqlite3_binding_file = (
-    ".node_sqlite3-v5.0.0-napi-v3-" +
+    ".node_sqlite3-v5.0.2-napi-v3-" +
     process.platform + "-" + process.arch +
     ".node"
 );
-if (!require("fs").existsSync(__dirname + "/" + sqlite3_binding_file)) {
+if (!require("fs").existsSync(sqlite3_binding_file)) {
     return;
 }
 exports_mapbox_node_sqlite3_lib_sqlite3_binding = require(
@@ -284,13 +127,13 @@ exports_mapbox_node_sqlite3_lib_sqlite3_binding = require(
 );
 let exports_mapbox_node_sqlite3_lib_trace = {};
 /*
-repo https://github.com/mapbox/node-sqlite3/tree/v5.0.0
-committed 2020-06-02T12:27:30Z
+repo https://github.com/mapbox/node-sqlite3/tree/v5.0.2
+committed 2021-02-15T14:42:52Z
 */
 
 
 /*
-file https://github.com/mapbox/node-sqlite3/blob/v5.0.0/lib/trace.js
+file https://github.com/mapbox/node-sqlite3/blob/v5.0.2/lib/trace.js
 */
 // Inspired by https://github.com/tlrobinson/long-stack-traces
 // var util = require('util');
@@ -336,7 +179,7 @@ function filter(error) {
 
 
 /*
-file https://github.com/mapbox/node-sqlite3/blob/v5.0.0/lib/sqlite3.js
+file https://github.com/mapbox/node-sqlite3/blob/v5.0.2/lib/sqlite3.js
 */
 // var path = require('path');
 // var sqlite3 = exports_mapbox_node_sqlite3_lib_sqlite3_binding;
@@ -547,13 +390,10 @@ sqlite3.verbose = function() {
 };
 // hack-sqlite3 - init exports
 let trace           = exports_mapbox_node_sqlite3_lib_trace;
-Object.assign(local, sqlite3, { sqlite3_binding_file });
+module.exports = Object.assign(sqlite3, { sqlite3_binding_file }, trace);
 }());
 
 
 /*
 file none
 */
-/* jslint ignore:end */
-}());
-}());
