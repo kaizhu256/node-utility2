@@ -982,12 +982,12 @@ shRawLibFetch() {(set -e
      * this function will concat data from <res> to <dict>[<key>]
      */
         let data;
-        data = [];
+        data = "";
         res.on("data", function (chunk) {
-            data.push(chunk);
+            data += chunk;
         }).on("end", function () {
-            dict[key] = Buffer.concat(data);
-        });
+            dict[key] = data;
+        }).setEncoding("utf8");
     }
     // init opt
     opt = (
@@ -1114,7 +1114,8 @@ shRawLibFetch() {(set -e
             }
             // mangle module.exports
             result += (
-                "\n\n\n/*\nfile " + elem.url + "\n*/\n" + elem.data.trim()
+                "\n\n\n/*\nfile " + elem.url + "\n*/\n" +
+                elem.data.toString().trim()
             );
         });
         // comment #!
