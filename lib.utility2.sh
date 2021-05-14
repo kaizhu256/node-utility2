@@ -1196,13 +1196,11 @@ shRawLibFetch() {(set -e
             result += "\n\n" + match1.trim() + "\n";
         });
         // write to file
-        require("fs").writeFileSync(
-            process.argv[1],
-            normalizeWhitespace(result)
-        );
+        require("fs").writeFileSync(process.argv[1], result);
     });
 }());
 ' "$@" # '
+    git diff 2>/dev/null || true
 )}
 
 shReadmeLinkValidate() {(set -e
