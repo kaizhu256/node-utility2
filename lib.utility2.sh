@@ -934,11 +934,8 @@ shRawLibFetch() {(set -e
     node -e '
 (function () {
     "use strict";
-    let footer;
-    let header;
-    let opt;
+    let match;
     let repoDict;
-    let result;
     // init debugInline
     if (!globalThis.debugInline) {
         let consoleError;
@@ -989,38 +986,15 @@ shRawLibFetch() {(set -e
             dict[key] = data;
         }).setEncoding("utf8");
     }
-    // init opt
-    opt = (
+    // init match
+    match = (
         /^\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
     ).exec(require("fs").readFileSync(process.argv[1], "utf8"));
-    // init footer
-    footer = (
-        /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
-    ).exec(opt.input);
-    footer = String(
-        (footer && footer[1].trim())
-        ? "\n\n\n" + footer[1].trim() + "\n"
-        : ""
-    );
-    // init header
-    header = (
-        opt.input.slice(0, opt.index) + "/*\nshRawLibFetch\n" +
-        JSON.stringify(JSON.parse(opt[1]), undefined, 4) + "\n" +
-        opt[2].split("\n\n").filter(function (elem) {
-            return elem.trim();
-        }).map(function (elem) {
-            return elem.trim().replace((
-                /\*\//g
-            ), "*\\\\/").replace((
-                /\/\*/g
-            ), "/\\\\*") + "\n";
-        }).sort().join("\n") + "*/\n\n\n"
-    );
-    // JSON.parse opt with comment
+    // JSON.parse match with comment
     let {
         fetchList,
         replaceList = []
-    } = JSON.parse(opt[1]);
+    } = JSON.parse(match[1]);
     // init repoDict, fetchList
     repoDict = {};
     fetchList.forEach(function (elem) {
@@ -1074,7 +1048,10 @@ shRawLibFetch() {(set -e
     });
     // parse fetched data
     process.on("exit", function () {
+        let footer;
+        let header;
         let result0;
+        let result;
         result = "";
         fetchList.forEach(function (elem) {
             let prefix;
@@ -1124,6 +1101,29 @@ shRawLibFetch() {(set -e
         ), "// $&");
         // normalize whitespace
         result = normalizeWhitespace(result);
+        // init footer
+        footer = (
+            /\n\/\*\nfile\u0020none\n\*\/\n([\S\s]+)/
+        ).exec(match.input);
+        footer = String(
+            (footer && footer[1].trim())
+            ? "\n\n\n" + footer[1].trim() + "\n"
+            : ""
+        );
+        // init header
+        header = (
+            match.input.slice(0, match.index) + "/*\nshRawLibFetch\n" +
+            JSON.stringify(JSON.parse(match[1]), undefined, 4) + "\n" +
+            match[2].split("\n\n").filter(function (elem) {
+                return elem.trim();
+            }).map(function (elem) {
+                return elem.trim().replace((
+                    /\*\//g
+                ), "*\\\\/").replace((
+                    /\/\*/g
+                ), "/\\\\*") + "\n";
+            }).sort().join("\n") + "*/\n\n\n"
+        );
         result = (
             header + result.trim() + "\n\n\n/*\nfile none\n*/\n" + footer
         );
