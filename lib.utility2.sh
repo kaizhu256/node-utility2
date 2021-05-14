@@ -949,7 +949,7 @@ shRawLibFetch() {(set -e
             return argList[0];
         };
     }
-    function onResponse(res, dict, key) {
+    function pipeToBuffer(res, dict, key) {
     /*
      * this function will concat data from <res> to <dict>[<key>]
      */
@@ -984,12 +984,12 @@ shRawLibFetch() {(set -e
                 "/blob/",
                 "/commits/"
             ), function (res) {
-                onResponse(res, elem, "dateCommitted");
+                pipeToBuffer(res, elem, "dateCommitted");
             }).end();
         }
         // fetch file
         if (elem.node) {
-            onResponse(require("child_process").spawn("node", [
+            pipeToBuffer(require("child_process").spawn("node", [
                 "-e", elem.node
             ], {
                 stdio: [
@@ -999,7 +999,7 @@ shRawLibFetch() {(set -e
             return;
         }
         if (elem.sh) {
-            onResponse(require("child_process").spawn(elem.sh, {
+            pipeToBuffer(require("child_process").spawn(elem.sh, {
                 shell: true,
                 stdio: [
                     "ignore", "pipe", 2
@@ -1014,11 +1014,11 @@ shRawLibFetch() {(set -e
             // http-redirect
             if (res.statusCode === 302) {
                 require("https").get(res.headers.location, function (res) {
-                    onResponse(res, elem, "data");
+                    pipeToBuffer(res, elem, "data");
                 });
                 return;
             }
-            onResponse(res, elem, "data");
+            pipeToBuffer(res, elem, "data");
         });
     });
     // parse fetched data
@@ -1050,7 +1050,7 @@ shRawLibFetch() {(set -e
             ), "").replace((
                 /\W/g
             ), "_");
-            if (elem.type === "dataUri") {
+            if (elem.dataUriType) {
                 return;
             }
             if (elem.dateCommitted) {
@@ -1152,18 +1152,17 @@ shRawLibFetch() {(set -e
             }
             return "";
         });
-        // replace from fetchList
+        // inline dataUri
         fetchList.forEach(function ({
-            contentType,
             data,
-            exports,
-            type
+            dataUriType,
+            exports
         }) {
-            if (type !== "dataUri") {
+            if (!dataUriType) {
                 return;
             }
             data = (
-                "data:" + contentType + ";base64," +
+                "data:" + dataUriType + ";base64," +
                 data.toString("base64")
             );
             result0 = result;
