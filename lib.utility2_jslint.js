@@ -16280,10 +16280,11 @@ async function jslint2({
         });
         return;
     default:
-        errMsg = jslint(code, {
+        errMsg = jslint("\n".repeat(lineOffset) + code, {
             bitwise: true,
             browser: true,
             debug: true,
+            fudge: true,
             node: true,
             this: true
         }, [
@@ -16313,7 +16314,6 @@ async function jslint2({
             column += 1;
             line += 1;
         }
-        line += lineOffset;
         return (
             String(ii + 1).padStart(3, " ") +
             " \u001b[31m" + message + "\u001b[39m" +
