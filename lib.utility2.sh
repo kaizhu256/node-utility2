@@ -1126,7 +1126,7 @@ shRawLibFetch() {(set -e
                 ), "*\\\\/").replace((
                     /\/\*/g
                 ), "/\\\\*") + "\n";
-            }).sort().join("\n") + "*/\n\n\n"
+            }).sort().join("\n") + "*/\n/* jslint ignore:end */\n\n\n"
         );
         // replace from header-diff
         header.replace((
