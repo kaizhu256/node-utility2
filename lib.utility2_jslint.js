@@ -11637,6 +11637,7 @@ function warn_at(code, line, column, a, b, c, d) {
     warning.message = supplant(bundle[code] || code, warning);
     // hack-jslint - ignore warning
     if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
+        warning.stack = new Error().stack;
         warnings.push(warning);
     }
     return warning;
@@ -16149,9 +16150,10 @@ function jslint(
         early_stop = false;
     } catch (e) {
         // hack-jslint - early_stop
-        e.early_stop = true;
         e.column = e.column || -1;
+        e.early_stop = true;
         e.line = e.line || -1;
+        e.message = "[JSLint was unable to finish] - " + e.message;
         if (e.name !== "JSLintError") {
             warnings.push(e);
         }
@@ -16299,7 +16301,8 @@ async function jslint2({
         evidence,
         line,
         message,
-        source_line
+        source_line,
+        stack
     }, ii) {
         // mode csslint
         if (col !== undefined) {
@@ -16316,7 +16319,8 @@ async function jslint2({
             " \u001b[31m" + message + "\u001b[39m" +
             " \u001b[90m\/\/ line " + line + ", column " + column +
             "\u001b[39m\n" +
-            ("    " + String(source_line).trim()).slice(0, 72)
+            ("    " + String(source_line).trim()).slice(0, 72) +
+            ((ii === 0 && stack) || "")
         );
     }).join("\n");
     if (errMsg) {
