@@ -1069,7 +1069,7 @@ shRawLibFetch() {(set -e
                 elem.data.toString().trim()
             );
         });
-        result = result.trim() + "\n\n/*\nfile none\n*/\n";
+        result = result.trim() + "\n\n\n/*\nfile none\n*/\n";
         // comment #!
         result = result.replace((
             /^#!/gm
