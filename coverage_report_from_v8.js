@@ -139,42 +139,29 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
-body {
-    /*!! overflow: auto; */
+.coverage pre {
+    margin: 5px;
 }
-.coverageCode a {
-    display: none;
-    text-decoration: none;
+.coverage pre span {
+    display: inline-block;
 }
-.coverageCode pre {
-    margin: 0;
-    padding: 2px;
+.coverage pre .linecount {
+    background: #beb;
+    margin: 0 5px;
 }
-.coverageCode .code {
-    background: #dfd;
-    /*!! display: inline-block; */
-    /*!! min-width: 80rem; */
-}
-.coverageCode .linecount {
-    background: #dfd;
-    padding: 0 2px;
-}
-.coverageCode .lineno {
+.coverage pre .lineno {
     background: #fff;
 }
-.coverageCode .uncovered {
+.coverage pre .uncovered {
     background: #ebb;
 }
-.coverageCode pre:hover {
-    background: #99d;
-}
-.coverageCode pre:hover span {
-    background: #99d;
+.coverage pre:hover span {
+    background: #99d !important;
 }
 </style>
 </head>
             `).trim();
-            html += "<div class=\"coverageCode\">\n";
+            html += "<div class=\"coverage\">\n";
             lineList.forEach(function ({
                 count,
                 holeList,
@@ -183,14 +170,12 @@ body {
             }, ii) {
                 let chunk;
                 let inHole;
-                let lineId;
-                lineId = "line_" + (ii + 1);
                 html += "<pre>";
-                //!! html += `<a href="#${lineId}" id="${lineId}">`;
                 html += "<span class=\"lineno\">";
+                html += "<a href=\"#\">";
                 html += String(ii + 1).padStart(5, " ");
+                html += "</a>";
                 html += "</span>";
-                //!! html += "</a>\n";
                 html += (
                     count <= 0
                     ? "<span class=\"linecount uncovered\">"
@@ -198,7 +183,6 @@ body {
                 );
                 html += String(count).padStart(7, " ") + " ";
                 html += "</span>";
-                html += "<span class=\"code\">";
                 html += "<span>";
                 switch (count) {
                 case -1:
@@ -207,6 +191,7 @@ body {
                         html += "</span>";
                         html += "<span class=\"uncovered\">";
                         html += stringHtmlSafe(line);
+                        html += "</span>";
                         break;
                     }
                     line = line.split("").map(function (chr) {
@@ -243,13 +228,13 @@ body {
                         chunk += chr;
                     });
                     html += stringHtmlSafe(chunk);
+                    html += "</span>";
                     break;
                 default:
                     html += stringHtmlSafe(line);
+                    html += "</span>";
                 }
-                html += "</span>";
-                html += "</span>";
-                html += "</pre>";
+                html += "</pre>\n";
             });
             html += "</div>\n";
             html += "</html>\n";
