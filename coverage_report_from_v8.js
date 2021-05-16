@@ -143,11 +143,12 @@ body {
     /*!! overflow: auto; */
 }
 .coverageCode a {
-    display: inline-block;
+    display: none;
     text-decoration: none;
 }
 .coverageCode pre {
-    /*!! padding: 2px; */
+    margin: 0;
+    padding: 2px;
 }
 .coverageCode .code {
     background: #dfd;
@@ -156,7 +157,7 @@ body {
 }
 .coverageCode .linecount {
     background: #dfd;
-    /*!! padding: 0 2px; */
+    padding: 0 2px;
 }
 .coverageCode .lineno {
     background: #fff;
@@ -185,11 +186,11 @@ body {
                 let lineId;
                 lineId = "line_" + (ii + 1);
                 html += "<pre>";
+                //!! html += `<a href="#${lineId}" id="${lineId}">`;
                 html += "<span class=\"lineno\">";
-                html += `<a href="#${lineId}" id="${lineId}">`;
                 html += String(ii + 1).padStart(5, " ");
-                html += "</a>\n";
                 html += "</span>";
+                //!! html += "</a>\n";
                 html += (
                     count <= 0
                     ? "<span class=\"linecount uncovered\">"
