@@ -139,29 +139,32 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
-.coverage pre {
+.coverageCode pre {
     margin: 5px;
 }
-.coverage pre span {
-    display: inline-block;
+.coverageCode a {
+    text-decoration: none;
 }
-.coverage pre .linecount {
-    background: #beb;
+.coverageCode .count {
+    background: #bdb;
     margin: 0 5px;
+    padding: 0 5px;
 }
-.coverage pre .lineno {
+.coverageCode .lineno {
     background: #fff;
 }
-.coverage pre .uncovered {
-    background: #ebb;
+.coverageCode .uncovered {
+    background: #dbb;
 }
-.coverage pre:hover span {
+.coverageCode pre:hover span {
     background: #99d !important;
 }
 </style>
 </head>
+<body>
+<div class="coverageCode">
+<pre><span> line</span><span class="count">  count</span><span>code</span></pre>
             `).trim();
-            html += "<div class=\"coverage\">\n";
             lineList.forEach(function ({
                 count,
                 holeList,
@@ -170,18 +173,20 @@ if (!globalThis.debugInline) {
             }, ii) {
                 let chunk;
                 let inHole;
+                let lineId;
+                lineId = "line_" + (ii + 1);
                 html += "<pre>";
                 html += "<span class=\"lineno\">";
-                html += "<a href=\"#\">";
+                html += `<a href="#${lineId}" id="${lineId}">`;
                 html += String(ii + 1).padStart(5, " ");
                 html += "</a>";
                 html += "</span>";
                 html += (
                     count <= 0
-                    ? "<span class=\"linecount uncovered\">"
-                    : "<span class=\"linecount\">"
+                    ? "<span class=\"count uncovered\">"
+                    : "<span class=\"count\">"
                 );
-                html += String(count).padStart(7, " ") + " ";
+                html += String(count).padStart(7, " ");
                 html += "</span>";
                 html += "<span>";
                 switch (count) {
@@ -236,8 +241,7 @@ if (!globalThis.debugInline) {
                 }
                 html += "</pre>\n";
             });
-            html += "</div>\n";
-            html += "</html>\n";
+            html += "</div>\n</body>\n</html>\n";
             require("fs").writeFileSync(".tmp/zz.html", html);
         });
         //!! debugInline(JSON.stringify(fileDict, undefined, 4));
