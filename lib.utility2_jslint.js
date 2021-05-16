@@ -16217,9 +16217,11 @@ function stringLineCount(data) {
 }
 async function jslint2({
     code,
+    err,
     errMsg = [],
     file,
-    lineOffset = 0
+    lineOffset = 0,
+    previous
 }) {
     switch ((
         /\.\w+?$|$/m
@@ -16233,6 +16235,102 @@ async function jslint2({
                 + "\n    " + err.rule.desc
             );
             return err;
+        });
+        // ignore comment
+        code = code.replace((
+            /^\u0020*?\/\*[\S\s]*?\*\/\u0020*?$/gm
+        ), function (match0) {
+            // preserve lineno
+            return match0.replace((
+                /.+/g
+            ), "");
+        });
+        code.replace((
+            /\S\u0020{2}|\u0020,|^\S.*?,.|[;{}]./gm
+        ), function (match0, ii) {
+            switch (match0.slice(-2)) {
+            case "  ":
+                err = {
+                    message: "unexpected multi-whitespace"
+                };
+                break;
+            case " ,":
+                err = {
+                    message: "unexpected whitespace before comma"
+                };
+                break;
+            default:
+                err = {
+                    message: "unexpected multiline-statement"
+                };
+            }
+            errMsg.push(Object.assign(err, {
+                col: 1,
+                evidence: match0,
+                line: stringLineCount(code.slice(0, ii))
+            }));
+            return "";
+        });
+        // validate line-sorted - css-selector
+        previous = "";
+        code = code.replace((
+            /^.|[#.>]|[,}]$|\u0020\{$|\b\w/gm
+        ), function (match0) {
+            switch (match0) {
+            case " ":
+                return match0;
+            case " {":
+                return "\u0001" + match0;
+            case "#":
+                return "\u0002" + match0;
+            case ",":
+                return "\u0000" + match0;
+            case ".":
+                return "\u0001" + match0;
+            case ">":
+                return "\u0003" + match0;
+            case "}":
+                return match0;
+            default:
+                return "\u0000" + match0;
+            }
+        });
+        code.replace((
+            /\n{2,}|^\u0000@|^\}\n\}|\}|^(?:\S.*?\n)+/gm
+        ), function (match0, ii) {
+            switch (match0.slice(0, 2)) {
+            case "\n\n":
+            case "\u0000@":
+            case "}\n":
+                previous = "";
+                return "";
+            case "}":
+                return "";
+            }
+            match0 = match0.trim();
+            err = (
+                !(previous < match0)
+                ? {
+                    message: "lines not sorted\n" + previous + "\n" + match0
+                }
+                : match0.split("\n").sort().join("\n") !== match0
+                ? {
+                    message: "lines not sorted\n" + match0
+                }
+                : undefined
+            );
+            if (err) {
+                errMsg.push(Object.assign(err, {
+                    col: 1,
+                    evidence: match0,
+                    line: stringLineCount(code.slice(0, ii)),
+                    message: err.message.replace((
+                        /[\u0000-\u0007]/g
+                    ), "")
+                }));
+            }
+            previous = match0;
+            return "";
         });
         break;
     case ".html":

@@ -160,28 +160,17 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
+/* csslint ignore:start */
 * {
     box-sizing: border-box;
     font-family: consolas, menlo, monospace;
 }
+/* csslint ignore:end */
 body {
     margin: 0;
 }
-.coverage .content {
-    padding: 20px;
-}
-.coverage .content a {
-    text-decoration: none;
-}
 .coverage pre {
     margin: 5px 0;
-}
-.coverage .count {
-    margin: 0 5px;
-    padding: 0 5px;
-}
-.coverage .header {
-    padding: 20px;
 }
 .coverage table {
     border-collapse: collapse;
@@ -191,16 +180,30 @@ body {
 .coverage table:nth-child(1) {
     margin-top: 0;
 }
-.coverage td span {
-    display: inline-block;
-    width: 100%;
-}
 .coverage td,
 .coverage th {
     border: 5px solid #bbb;
     margin: 0;
     padding: 5px;
 }
+.coverage td span {
+    display: inline-block;
+    width: 100%;
+}
+.coverage .content {
+    padding: 20px;
+}
+.coverage .content a {
+    text-decoration: none;
+}
+.coverage .count {
+    margin: 0 5px;
+    padding: 0 5px;
+}
+.coverage .header {
+    padding: 20px;
+}
+
 .coverage td,
 .coverage th {
     background: #fff;
@@ -208,24 +211,25 @@ body {
 .coverage .count {
     background: #9d9;
 }
+.coverage .coverageHigh{
+    background: #9d9;
+}
+.coverage .coverageLow{
+    background: #d99;
+}
+.coverage .coverageMedium{
+    background: #fd7;
+}
+.coverage .header {
+    background: #eee;
+}
 .coverage .lineno {
     background: #fff;
 }
 .coverage .uncovered {
     background: #d99;
 }
-.coverage .header {
-    background: #eee;
-}
-.coverage .coverageHigh{
-    background: #9d9;
-}
-.coverage .coverageMedium{
-    background: #fd7;
-}
-.coverage .coverageLow{
-    background: #d99;
-}
+
 .coverage pre:hover span {
     background: #bbd;
 }
