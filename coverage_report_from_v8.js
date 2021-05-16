@@ -139,20 +139,24 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
+body {
+    /*!! overflow: auto; */
+}
 .coverageCode a {
+    display: inline-block;
     text-decoration: none;
 }
 .coverageCode pre {
-    margin: 2px;
+    /*!! padding: 2px; */
 }
 .coverageCode .code {
     background: #dfd;
     /*!! display: inline-block; */
-    min-width: 80rem;
+    /*!! min-width: 80rem; */
 }
 .coverageCode .linecount {
     background: #dfd;
-    margin: 0 2px;
+    /*!! padding: 0 2px; */
 }
 .coverageCode .lineno {
     background: #fff;
