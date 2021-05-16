@@ -1,5 +1,5 @@
 /* jslint utility2:true */
-function originalPositionTryBoth (sourceMap, line, column) {
+function originalPositionTryBoth(sourceMap, line, column) {
     let original = sourceMap.originalPositionFor({
         //!! bias: GREATEST_LOWER_BOUND,
         column,
@@ -53,7 +53,7 @@ function originalPositionTryBoth (sourceMap, line, column) {
  *    that generated range.
  * 3. Find the _end_ location of that original range.
  */
-function originalEndPositionFor (sourceMap, line, column) {
+function originalEndPositionFor(sourceMap, line, column) {
     // Given the generated location, find the original location of the mapping
     // that corresponds to a range on the generated file that overlaps the
     // generated file end location. Note however that this position on its
@@ -82,11 +82,11 @@ function originalEndPositionFor (sourceMap, line, column) {
     // If this is null, it means that we've hit the end of the file,
     // so we can use Infinity as the end column.
         afterEndMapping.line === null ||
-            // If these don't match, it means that the call to
-            // 'generatedPositionFor' didn't find any other original mappings on
-            // the line we gave, so consider the binding to extend to infinity.
-            sourceMap.originalPositionFor(afterEndMapping).line !==
-                    beforeEndMapping.line
+        // If these don't match, it means that the call to
+        // 'generatedPositionFor' didn't find any other original mappings on
+        // the line we gave, so consider the binding to extend to infinity.
+        sourceMap.originalPositionFor(afterEndMapping).line !==
+        beforeEndMapping.line
     ) {
         return {
             column: Infinity,
@@ -99,8 +99,8 @@ function originalEndPositionFor (sourceMap, line, column) {
 }
 // given a start column and end column in absolute offsets within
 // a source file (0 - EOF), returns the relative line column positions.
-function offsetToOriginalRelative (sourceMap, startCol, endCol) {
-    const lines = this.lines.filter(function (line, i) {
+function offsetToOriginalRelative(sourceMap, startCol, endCol) {
+    const lines = this.lines.filter(function (line) {
         return startCol <= line.endCol && endCol >= line.startCol;
     });
     if (!lines.length) {
@@ -141,3 +141,4 @@ function offsetToOriginalRelative (sourceMap, startCol, endCol) {
         startLine: start.line
     };
 }
+offsetToOriginalRelative();
