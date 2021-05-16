@@ -232,7 +232,7 @@ if (!globalThis.debugInline) {
                 html += "</pre>\n";
             });
             html += "</div>\n";
-            html += "</html\n";
+            html += "</html>\n";
             require("fs").writeFileSync(".tmp/zz.html", html);
         });
         //!! debugInline(JSON.stringify(fileDict, undefined, 4));
