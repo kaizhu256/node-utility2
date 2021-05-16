@@ -49,8 +49,11 @@ if (!globalThis.debugInline) {
             functions,
             url
         }) {
+            let coveragePct;
             let html;
             let lineList;
+            let linesTotal;
+            let linesUncovered;
             let pathname;
             let src;
             if (url.indexOf("file:///") !== 0) {
@@ -131,8 +134,21 @@ if (!globalThis.debugInline) {
                     });
                 });
             });
+            linesTotal = lineList.length;
+            linesUncovered = lineList.filter(function ({
+                count
+            }) {
+                return count <= 0;
+            }).length;
+            coveragePct = String(
+                Math.floor(10000 - 10000 * linesUncovered / linesTotal)
+            ).replace((
+                /..$/m
+            ), ".$&") + "%";
             fileDict[pathname] = {
                 lineList,
+                linesTotal,
+                linesUncovered,
                 src
             };
             html = String(`
@@ -143,9 +159,9 @@ if (!globalThis.debugInline) {
 <style>
 * {
     box-sizing: border-box;
+    font-family: consolas, menlo, monospace;
 }
 body {
-    font-family: consolas, menlo, monospace;
     margin: 0;
 }
 .coverageCode {
@@ -154,7 +170,8 @@ body {
 .coverageCode a {
     text-decoration: none;
 }
-.coverageCode pre {
+.coverageCode pre,
+.coverageHeader pre {
     margin: 5px 0;
 }
 .coverageCode .count {
@@ -165,11 +182,12 @@ body {
 .coverageCode .lineno {
     background: #fff;
 }
-.coverageCode .uncovered {
+.coverageCode .uncovered,
+.coverageHeader .uncovered {
     background: #dbb;
 }
 .coverageHeader {
-    background: #bbd;
+    background: #ddf;
     padding: 5px;
     width: 100%;
 }
@@ -180,10 +198,13 @@ body {
 </head>
 <body>
 <div class="coverageHeader">
-<div>
-    file:
-    <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
-</div>
+    <div>
+        file:
+        <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+    </div>
+    <pre>% coverage     : ${coveragePct}</pre>
+    <pre>lines total    : ${linesTotal}</pre>
+    <pre>lines uncovered: <span class="uncovered">${linesUncovered}</span></pre>
 </div>
 <div class="coverageCode">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
