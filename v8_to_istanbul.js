@@ -1,8 +1,8 @@
 /* jslint utility2:true */
 // given a start column and end column in absolute offsets within
 // a source file (0 - EOF), returns the relative line column positions.
-offsetToOriginalRelative (sourceMap, startCol, endCol) {
-    const lines = this.lines.filter((line, i) => {
+function offsetToOriginalRelative (sourceMap, startCol, endCol) {
+    const lines = this.lines.filter(function (line, i) {
         return startCol <= line.endCol && endCol >= line.startCol;
     });
     if (!lines.length) {
@@ -10,9 +10,9 @@ offsetToOriginalRelative (sourceMap, startCol, endCol) {
     }
 
     const start = originalPositionTryBoth(
-        sourceMap,
+        Math.max(0, startCol - lines[0].startCol),
         lines[0].line,
-        Math.max(0, startCol - lines[0].startCol)
+        sourceMap
     );
     let end = originalEndPositionFor(
         sourceMap,
@@ -34,18 +34,18 @@ offsetToOriginalRelative (sourceMap, startCol, endCol) {
 
     if (start.line === end.line && start.column === end.column) {
         end = sourceMap.originalPositionFor({
-            line: lines[lines.length - 1].line,
+            bias: LEAST_UPPER_BOUND,
             column: endCol - lines[lines.length - 1].startCol,
-            bias: LEAST_UPPER_BOUND
+            line: lines[lines.length - 1].line
         });
         end.column -= 1;
     }
 
     return {
-        source: start.source,
-        startLine: start.line,
-        relStartCol: start.column,
         endLine: end.line,
-        relEndCol: end.column
+        relEndCol: end.column,
+        relStartCol: start.column,
+        source: start.source,
+        startLine: start.line
     };
 }
