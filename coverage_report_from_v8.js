@@ -45,7 +45,7 @@ if (!globalThis.debugInline) {
         cwd = process.cwd().replace((
             /\\/g
         ), "/") + "/";
-        result.forEach(function ({
+        result.forEach(async function ({
             functions,
             url
         }) {
@@ -67,7 +67,7 @@ if (!globalThis.debugInline) {
                 return;
             }
             pathname = pathname.replace(cwd, "");
-            src = require("fs").readFileSync(pathname, "utf8");
+            src = await require("fs").promises.readFile(pathname, "utf8");
             lineList = [{}];
             src.replace((
                 /^.*$/gm
@@ -191,7 +191,7 @@ body {
     width: 100%;
 }
 .coverage .content {
-    padding: 20px;
+    padding: 0 5px;
 }
 .coverage .content a {
     text-decoration: none;
@@ -210,6 +210,7 @@ body {
 }
 .coverage .count {
     background: #9d9;
+    color: #777;
 }
 .coverage .coverageHigh{
     background: #9d9;
@@ -224,7 +225,7 @@ body {
     background: #eee;
 }
 .coverage .lineno {
-    background: #fff;
+    background: #ddd;
 }
 .coverage .uncovered {
     background: #d99;
@@ -240,9 +241,9 @@ body {
 <table>
 <thead>
 <tr>
-    <th>file</th>
     <th>
-        <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+        coverage report for file
+        <a href="..">./</a>${stringHtmlSafe(pathname)}
     </th>
 </tr>
 </thead>
@@ -253,7 +254,7 @@ body {
     <th>% coverage</th>
     <th># lines total</th>
     <th># lines not covered</th>
-    <th>lineno not covered</th>
+    <th>lines not covered</th>
 </tr>
 </thead>
 <tbody>
@@ -267,7 +268,6 @@ body {
 </table>
 </div>
 <div class="content">
-<pre><span> line</span><span class="count">  count</span><span>code</span></pre>
             `).trim() + "\n";
             lineList.forEach(function ({
                 count,
@@ -332,7 +332,7 @@ body {
                 html += String(`
 <pre>
 <span class="lineno">
-<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}</a>
+<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}.</a>
 </span>
 <span class="count
                 ${(
@@ -356,7 +356,9 @@ ${String(count).padStart(7, " ")}
 </body>
 </html>
             `).trim() + "\n";
-            require("fs").writeFileSync(".tmp/zz.html", html);
+            await require("fs").promises.writeFile((
+                ".coverage/" + pathname + ".html"
+            ), html);
             fileDict[pathname] = {
                 lineList,
                 linesTotal,
@@ -365,8 +367,19 @@ ${String(count).padStart(7, " ")}
             };
         });
     }
-    coverageReportCreate(JSON.parse(require("fs").readFileSync(
-        ".tmp/" + require("fs").readdirSync(".tmp/")[0],
-        "utf8"
-    )));
+    (async function () {
+        let data;
+        data = await require("fs").promises.readdir(".coverage");
+        data.forEach(async function (file) {
+            if ((
+                /^coverage-.*?\.json$/
+            ).test(file)) {
+                coverageReportCreate(JSON.parse(
+                    await require("fs").promises.readFile((
+                        ".coverage/" + file
+                    ), "utf8")
+                ));
+            }
+        });
+    }());
 }());
