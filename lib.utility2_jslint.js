@@ -210,7 +210,7 @@ shRawLibFetch
 -    return warning;
 +    // hack-jslint - ignore warning
 +    if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
-+        warning.stack = new Error().stack;
++        warning.stack = "\n" + new Error().stack;
 +        warnings.push(warning);
 +    }
 +    return warning;
@@ -11639,7 +11639,7 @@ function warn_at(code, line, column, a, b, c, d) {
     warning.message = supplant(bundle[code] || code, warning);
     // hack-jslint - ignore warning
     if (!Object.assign(warning, lines_extra[warning.line]).ignore) {
-        warning.stack = new Error().stack;
+        warning.stack = "\n" + new Error().stack;
         warnings.push(warning);
     }
     return warning;

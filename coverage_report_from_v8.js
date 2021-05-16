@@ -16,11 +16,31 @@ if (!globalThis.debugInline) {
 }
 (function () {
     "use strict";
+    function stringHtmlSafe(str) {
+    /*
+     * this function will make <str> html-safe
+     * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
+     */
+        return str.replace((
+            /&/gu
+        ), "&amp;").replace((
+            /"/gu
+        ), "&quot;").replace((
+            /'/gu
+        ), "&apos;").replace((
+            /</gu
+        ), "&lt;").replace((
+            />/gu
+        ), "&gt;").replace((
+            /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+        ), "&$1");
+    }
+
     function coverageReportCreate({
         result
     }) {
         let cwd;
-        let tmp;
+        //!! let fileDict;
         //!! fileDict = {};
         cwd = process.cwd().replace((
             /\\/g
@@ -29,6 +49,7 @@ if (!globalThis.debugInline) {
             functions,
             url
         }) {
+            let html;
             let lineList;
             let src;
             if (url.indexOf("file:///") !== 0) {
@@ -43,7 +64,7 @@ if (!globalThis.debugInline) {
             src = require("fs").readFileSync(url, "utf8");
             lineList = [{}];
             src.replace((
-                /^.*(?:\r\n|\n|$)/gm
+                /^.*$/gm
             ), function (line, startOffset) {
                 lineList[lineList.length - 1].endOffset = startOffset - 1;
                 lineList.push({
@@ -106,8 +127,89 @@ if (!globalThis.debugInline) {
                     });
                 });
             });
-            debugInline(lineList);
+            //!! fileDict[url.replace(cwd, "")] = {
+                //!! lineList,
+                //!! src
+            //!! };
+            html = "";
+            html += (`
+<style>
+pre {
+}
+.uncovered {
+    background: #f77;
+}
+</style>
+            `);
+            html += "<div>\n";
+            lineList.forEach(function ({
+                count,
+                holeList,
+                line,
+                startOffset
+            }) {
+                let chunk;
+                let inHole;
+                switch (count) {
+                case -1:
+                case 0:
+                    if (holeList.length === 0) {
+                        html += (
+                            "<pre><span class=\"uncovered\">" +
+                            stringHtmlSafe(line) +
+                            "</span></pre>\n"
+                        );
+                        break;
+                    }
+                    line = line.split("").map(function (chr) {
+                        return {
+                            chr,
+                            isHole: undefined
+                        };
+                    });
+                    holeList.forEach(function ([
+                        aa, bb
+                    ]) {
+                        aa = aa - startOffset;
+                        bb = Math.min(bb - startOffset, line.length);
+                        while (aa < bb) {
+                            line[aa].isHole = true;
+                            aa += 1;
+                        }
+                    });
+                    chunk = "";
+                    html += "<pre>";
+                    line.forEach(function ({
+                        chr,
+                        isHole
+                    }) {
+                        if (inHole !== isHole) {
+                            html += stringHtmlSafe(chunk);
+                            html += (
+                                isHole
+                                ? "<span class=\"uncovered\">"
+                                : "</span>"
+                            );
+                            chunk = "";
+                            inHole = isHole;
+                        }
+                        chunk += chr;
+                    });
+                    html += stringHtmlSafe(chunk);
+                    html += "</pre>\n";
+                    break;
+                default:
+                    html += "<pre>" + stringHtmlSafe(line) + "</pre>\n";
+                }
+            });
+            html += "</div>\n";
+            require("fs").writeFileSync(".tmp/zz.html", html);
         });
+        //!! debugInline(JSON.stringify(fileDict, undefined, 4));
+        //!! Object.entries(fileDict).forEach(function ([
+            //!! file, val
+        //!! ]) {
+        //!! });
     }
     coverageReportCreate(JSON.parse(require("fs").readFileSync(
         ".tmp/" + require("fs").readdirSync(".tmp/")[0],
