@@ -136,8 +136,14 @@ if (!globalThis.debugInline) {
 <style>
 pre {
 }
+.lineno {
+    /*!! background: #777; */
+}
 .uncovered {
     background: #f77;
+}
+pre:hover {
+    background: #bdf;
 }
 </style>
             `);
@@ -147,18 +153,20 @@ pre {
                 holeList,
                 line,
                 startOffset
-            }) {
+            }, ii) {
                 let chunk;
                 let inHole;
+                html += "<pre>";
+                html += "<span class=\"lineno\">";
+                html += String(ii + 1).padStart(5, " ") + " ";
+                html += "</span>";
                 switch (count) {
                 case -1:
                 case 0:
                     if (holeList.length === 0) {
-                        html += (
-                            "<pre><span class=\"uncovered\">" +
-                            stringHtmlSafe(line) +
-                            "</span></pre>\n"
-                        );
+                        html += "<span class=\"uncovered\">";
+                        html += stringHtmlSafe(line);
+                        html += "</span></pre>\n";
                         break;
                     }
                     line = line.split("").map(function (chr) {
@@ -170,7 +178,7 @@ pre {
                     holeList.forEach(function ([
                         aa, bb
                     ]) {
-                        aa = aa - startOffset;
+                        aa = Math.max(aa - startOffset, 0);
                         bb = Math.min(bb - startOffset, line.length);
                         while (aa < bb) {
                             line[aa].isHole = true;
@@ -178,7 +186,6 @@ pre {
                         }
                     });
                     chunk = "";
-                    html += "<pre>";
                     line.forEach(function ({
                         chr,
                         isHole
@@ -196,10 +203,14 @@ pre {
                         chunk += chr;
                     });
                     html += stringHtmlSafe(chunk);
+                    if (inHole) {
+                        html += "</span>";
+                    }
                     html += "</pre>\n";
                     break;
                 default:
-                    html += "<pre>" + stringHtmlSafe(line) + "</pre>\n";
+                    html += stringHtmlSafe(line);
+                    html += "</pre>\n";
                 }
             });
             html += "</div>\n";
