@@ -40,8 +40,8 @@ if (!globalThis.debugInline) {
         result
     }) {
         let cwd;
-        //!! let fileDict;
-        //!! fileDict = {};
+        let fileDict;
+        fileDict = {};
         cwd = process.cwd().replace((
             /\\/g
         ), "/") + "/";
@@ -87,12 +87,14 @@ if (!globalThis.debugInline) {
                     startOffset
                 }, ii, list) {
                     lineList.forEach(function (elem) {
-                        //!! debugInline(
-                            //!! count,
-                            //!! [startOffset, elem.startOffset],
-                            //!! [elem.endOffset, endOffset],
-                            //!! elem.line
-                        //!! );
+                        /*
+                        debugInline(
+                            count,
+                            [elem.startOffset, startOffset],
+                            [elem.endOffset, endOffset],
+                            elem.line
+                        );
+                        */
                         if (!(
                             (
                                 elem.startOffset <= startOffset &&
@@ -127,27 +129,25 @@ if (!globalThis.debugInline) {
                     });
                 });
             });
-            //!! fileDict[url.replace(cwd, "")] = {
-                //!! lineList,
-                //!! src
-            //!! };
+            fileDict[url.replace(cwd, "")] = {
+                lineList,
+                src
+            };
             html = "";
             html += (`
 <style>
-pre {
+.coverage .linecount {
+    background: #bbb;
 }
-.lineno {
-    /*!! background: #777; */
-}
-.uncovered {
+.coverage .uncovered {
     background: #f77;
 }
-pre:hover {
+.coverage pre:hover {
     background: #bdf;
 }
 </style>
             `);
-            html += "<div>\n";
+            html += "<div class=\"coverage\">\n";
             lineList.forEach(function ({
                 count,
                 holeList,
@@ -160,13 +160,17 @@ pre:hover {
                 html += "<span class=\"lineno\">";
                 html += String(ii + 1).padStart(5, " ") + " ";
                 html += "</span>";
+                html += "<span class=\"linecount\">";
+                html += String(count).padStart(7, " ") + " ";
+                html += "</span>";
                 switch (count) {
                 case -1:
                 case 0:
                     if (holeList.length === 0) {
                         html += "<span class=\"uncovered\">";
                         html += stringHtmlSafe(line);
-                        html += "</span></pre>\n";
+                        html += "</span>";
+                        html += "</pre>\n";
                         break;
                     }
                     line = line.split("").map(function (chr) {
@@ -206,12 +210,11 @@ pre:hover {
                     if (inHole) {
                         html += "</span>";
                     }
-                    html += "</pre>\n";
                     break;
                 default:
                     html += stringHtmlSafe(line);
-                    html += "</pre>\n";
                 }
+                html += "</pre>\n";
             });
             html += "</div>\n";
             require("fs").writeFileSync(".tmp/zz.html", html);
