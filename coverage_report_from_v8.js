@@ -26,6 +26,7 @@ if (!globalThis.debugInline) {
             /\\/g
         ), "/") + "/";
         result.forEach(function ({
+            functions,
             url
         }) {
             let lineList;
@@ -51,12 +52,34 @@ if (!globalThis.debugInline) {
                 /.*/g
             ), function (line, offset) {
                 lineList.push({
-                    chunkList: [
-                        line
-                    ],
-                    offset
+                    count: 0,
+                    line,
+                    offset,
+                    uncoveredList: []
                 });
                 return "";
+            });
+            functions.forEach(function ({
+                ranges
+            }) {
+                ranges.forEach(function ({
+                    count,
+                    endOffset,
+                    startOffset
+                }) {
+                    lineList.forEach(function (elem) {
+                        if (
+                            elem.offset < startOffset ||
+                            elem.offset > endOffset
+                        ) {
+                            return;
+                        }
+                        elem.count = Math.max(count, elem.count);
+                        if (count === 0) {
+                            elem.count = 0;
+                        }
+                    });
+                });
             });
             debugInline(lineList);
         });
