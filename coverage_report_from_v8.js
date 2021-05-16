@@ -140,7 +140,8 @@ if (!globalThis.debugInline) {
 <title>coverage</title>
 <style>
 .coverageCode pre {
-    margin: 5px;
+    margin: 0;
+    /*!! padding: 2px; */
 }
 .coverageCode a {
     text-decoration: none;
@@ -157,7 +158,7 @@ if (!globalThis.debugInline) {
     background: #dbb;
 }
 .coverageCode pre:hover span {
-    background: #99d !important;
+    background: #99d;
 }
 </style>
 </head>
