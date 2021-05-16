@@ -49,6 +49,7 @@ if (!globalThis.debugInline) {
             functions,
             url
         }) {
+            let coverageLevel;
             let coveragePct;
             let html;
             let lineList;
@@ -140,9 +141,17 @@ if (!globalThis.debugInline) {
             }) {
                 return count <= 0;
             }).length;
-            coveragePct = String(
-                Math.floor(10000 - 10000 * linesUncovered / linesTotal)
-            ).replace((
+            coveragePct = Math.floor(
+                10000 - 10000 * linesUncovered / linesTotal
+            );
+            coverageLevel = (
+                coveragePct >= 80
+                ? "coverageHigh"
+                : coveragePct >= 50
+                ? "coverageMedium"
+                : "coverageLow"
+            );
+            coveragePct = String(coveragePct).replace((
                 /..$/m
             ), ".$&") + "%";
             fileDict[pathname] = {
@@ -175,7 +184,7 @@ body {
     margin: 5px 0;
 }
 .coverageCode .count {
-    background: #bdb;
+    background: #9d9;
     margin: 0 5px;
     padding: 0 5px;
 }
@@ -184,12 +193,35 @@ body {
 }
 .coverageCode .uncovered,
 .coverageHeader .uncovered {
-    background: #dbb;
+    background: #d99;
+}
+.coverageHeader table {
+    border-collapse: collapse;
+    text-align: right;
+}
+.coverageHeader td span {
+    display: inline-block;
+    width: 100%;
+}
+.coverageHeader td,
+.coverageHeader th {
+    border: 1px solid #777;
+    margin: 0;
+    padding: 5px;
 }
 .coverageHeader {
-    background: #ddf;
+    background: #ddd;
     padding: 5px;
     width: 100%;
+}
+.coverageHeader .coverageHigh{
+    background: #9d9;
+}
+.coverageHeader .coverageMedium{
+    background: #9d9;
+}
+.coverageHeader .coverageLow{
+    background: #d99;
 }
 .coverageCode pre:hover span {
     background: #bbd;
@@ -198,13 +230,26 @@ body {
 </head>
 <body>
 <div class="coverageHeader">
-    <div>
-        file:
-        <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
-    </div>
-    <pre>% coverage     : ${coveragePct}</pre>
-    <pre>lines total    : ${linesTotal}</pre>
-    <pre>lines uncovered: <span class="uncovered">${linesUncovered}</span></pre>
+<div>
+file:
+<span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+</div>
+<table>
+<thead>
+<tr>
+    <th>coverage %</th>
+    <th>lines total</th>
+    <th>lines uncovered</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+    <td class="${coverageLevel}">${coveragePct}</td>
+    <td>${linesTotal}</td>
+    <td class="uncovered">${linesUncovered}</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="coverageCode">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
