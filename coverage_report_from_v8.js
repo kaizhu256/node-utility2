@@ -154,12 +154,6 @@ if (!globalThis.debugInline) {
             coveragePct = String(coveragePct).replace((
                 /..$/m
             ), ".$&") + "%";
-            fileDict[pathname] = {
-                lineList,
-                linesTotal,
-                linesUncovered,
-                src
-            };
             html = String(`
 <!doctype html>
 <html lang="en">
@@ -173,72 +167,72 @@ if (!globalThis.debugInline) {
 body {
     margin: 0;
 }
-.coverageCode,
-.coverageHeader {
+.coverage .content {
     padding: 20px;
 }
-.coverageCode a {
+.coverage .content a {
     text-decoration: none;
 }
-.coverageCode pre,
-.coverageHeader pre {
+.coverage pre {
     margin: 5px 0;
 }
-.coverageCode .count {
+.coverage .count {
     margin: 0 5px;
     padding: 0 5px;
 }
-.coverageHeader table {
+.coverage .header {
+    padding: 20px;
+}
+.coverage table {
     border-collapse: collapse;
     margin-top: 20px;
     text-align: right;
 }
-.coverageHeader table:nth-child(1) {
+.coverage table:nth-child(1) {
     margin-top: 0;
 }
-.coverageHeader td span {
+.coverage td span {
     display: inline-block;
     width: 100%;
 }
-.coverageHeader td,
-.coverageHeader th {
+.coverage td,
+.coverage th {
     border: 5px solid #bbb;
     margin: 0;
     padding: 5px;
 }
-.coverageHeader td,
-.coverageHeader th {
+.coverage td,
+.coverage th {
     background: #fff;
 }
-.coverageCode .count {
+.coverage .count {
     background: #9d9;
 }
-.coverageCode .lineno {
+.coverage .lineno {
     background: #fff;
 }
-.coverageCode .uncovered,
-.coverageHeader .uncovered {
+.coverage .uncovered {
     background: #d99;
 }
-.coverageHeader {
-    background: #ddd;
+.coverage .header {
+    background: #eee;
 }
-.coverageHeader .coverageHigh{
+.coverage .coverageHigh{
     background: #9d9;
 }
-.coverageHeader .coverageMedium{
+.coverage .coverageMedium{
     background: #fd7;
 }
-.coverageHeader .coverageLow{
+.coverage .coverageLow{
     background: #d99;
 }
-.coverageCode pre:hover span {
+.coverage pre:hover span {
     background: #bbd;
 }
 </style>
 </head>
-<body>
-<div class="coverageHeader">
+<body class="coverage">
+<div class="header">
 <table>
 <thead>
 <tr>
@@ -249,13 +243,13 @@ body {
 </tr>
 </thead>
 </table>
-
 <table>
 <thead>
 <tr>
-    <th>coverage %</th>
-    <th>lines total</th>
-    <th>lines not covered</th>
+    <th>% coverage</th>
+    <th># lines total</th>
+    <th># lines not covered</th>
+    <th>lineno not covered</th>
 </tr>
 </thead>
 <tbody>
@@ -263,11 +257,12 @@ body {
     <td class="${coverageLevel}">${coveragePct}</td>
     <td>${linesTotal}</td>
     <td class="uncovered">${linesUncovered}</td>
+    <td></td>
 </tr>
 </tbody>
 </table>
 </div>
-<div class="coverageCode">
+<div class="content">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
             `).trim();
             lineList.forEach(function ({
@@ -280,20 +275,24 @@ body {
                 let inHole;
                 let lineId;
                 lineId = "line_" + (ii + 1);
-                html += "<pre>";
-                html += "<span class=\"lineno\">";
-                html += `<a href="#${lineId}" id="${lineId}">`;
-                html += String(ii + 1).padStart(5, " ");
-                html += "</a>";
-                html += "</span>";
-                html += (
+                html += String(`
+<pre>
+<span class="lineno">
+<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}</a>
+</span>
+<span class="count
+                ${(
                     count <= 0
-                    ? "<span class=\"count uncovered\">"
-                    : "<span class=\"count\">"
-                );
-                html += String(count).padStart(7, " ");
-                html += "</span>";
-                html += "<span>";
+                    ? "uncovered"
+                    : ""
+                )}"
+>
+${String(count).padStart(7, " ")}
+</span>
+<span>
+                `).trim().replace((
+                    /\n/g
+                ), "");
                 switch (count) {
                 case -1:
                 case 0:
@@ -338,22 +337,28 @@ body {
                         chunk += chr;
                     });
                     html += stringHtmlSafe(chunk);
-                    html += "</span>";
                     break;
                 default:
                     html += stringHtmlSafe(line);
-                    html += "</span>";
                 }
+                html += "</span>";
                 html += "</pre>\n";
             });
-            html += "</div>\n</body>\n</html>\n";
+            html += String(`
+</div>
+<div class="coverageFooter">
+</div>
+</body>
+</html>
+            `).trim();
             require("fs").writeFileSync(".tmp/zz.html", html);
+            fileDict[pathname] = {
+                lineList,
+                linesTotal,
+                linesUncovered,
+                src
+            };
         });
-        //!! debugInline(JSON.stringify(fileDict, undefined, 4));
-        //!! Object.entries(fileDict).forEach(function ([
-            //!! file, val
-        //!! ]) {
-        //!! });
     }
     coverageReportCreate(JSON.parse(require("fs").readFileSync(
         ".tmp/" + require("fs").readdirSync(".tmp/")[0],

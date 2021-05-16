@@ -16225,7 +16225,15 @@ async function jslint2({
         /\.\w+?$|$/m
     ).exec(file)[0]) {
     case ".css":
-        errMsg = CSSLint.verify(code).messages; // jslint ignore:line
+        errMsg = CSSLint.verify( // jslint ignore:line
+            code
+        ).messages.map(function (err) {
+            err.message = (
+                err.type + " - " + err.rule.id + " - " + err.message
+                + "\n    " + err.rule.desc
+            );
+            return err;
+        });
         break;
     case ".html":
         // recurse
