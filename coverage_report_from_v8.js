@@ -133,20 +133,31 @@ if (!globalThis.debugInline) {
                 lineList,
                 src
             };
-            html = "";
-            html += (`
+            html = String(`
+<!doctype html>
+<html lang="en">
+<head>
+<title>coverage</title>
 <style>
-.coverage .linecount {
-    background: #bbb;
+.coverage pre {
+    margin: 5px;
 }
-.coverage .uncovered {
-    background: #f77;
+.coverage pre .linecount {
+    background: #beb;
+    margin: 0 5px;
 }
-.coverage pre:hover {
-    background: #bdf;
+.coverage pre .lineno {
+    background: #fff;
+}
+.coverage pre .uncovered {
+    background: #ebb;
+}
+.coverage pre:hover span {
+    background: #99d !important;
 }
 </style>
-            `);
+</head>
+            `).trim();
             html += "<div class=\"coverage\">\n";
             lineList.forEach(function ({
                 count,
@@ -158,19 +169,24 @@ if (!globalThis.debugInline) {
                 let inHole;
                 html += "<pre>";
                 html += "<span class=\"lineno\">";
-                html += String(ii + 1).padStart(5, " ") + " ";
+                html += String(ii + 1).padStart(5, " ");
                 html += "</span>";
-                html += "<span class=\"linecount\">";
+                html += "<span class=\"linecount" + (
+                    count <= 0
+                    ? " uncovered"
+                    : ""
+                ) + "\">";
                 html += String(count).padStart(7, " ") + " ";
                 html += "</span>";
+                html += "<span>";
                 switch (count) {
                 case -1:
                 case 0:
                     if (holeList.length === 0) {
+                        html += "</span>";
                         html += "<span class=\"uncovered\">";
                         html += stringHtmlSafe(line);
                         html += "</span>";
-                        html += "</pre>\n";
                         break;
                     }
                     line = line.split("").map(function (chr) {
@@ -198,8 +214,8 @@ if (!globalThis.debugInline) {
                             html += stringHtmlSafe(chunk);
                             html += (
                                 isHole
-                                ? "<span class=\"uncovered\">"
-                                : "</span>"
+                                ? "</span><span class=\"uncovered\">"
+                                : "</span><span>"
                             );
                             chunk = "";
                             inHole = isHole;
@@ -213,10 +229,12 @@ if (!globalThis.debugInline) {
                     break;
                 default:
                     html += stringHtmlSafe(line);
+                    html += "</span>";
                 }
                 html += "</pre>\n";
             });
             html += "</div>\n";
+            html += "</html\n";
             require("fs").writeFileSync(".tmp/zz.html", html);
         });
         //!! debugInline(JSON.stringify(fileDict, undefined, 4));
