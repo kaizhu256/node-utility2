@@ -169,7 +169,7 @@ body {
     background: #dbb;
 }
 .coverageHeader {
-    background: #eef;
+    background: #bbd;
     padding: 5px;
     width: 100%;
 }
@@ -180,8 +180,10 @@ body {
 </head>
 <body>
 <div class="coverageHeader">
+<div>
     file:
     <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+</div>
 </div>
 <div class="coverageCode">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
