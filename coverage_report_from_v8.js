@@ -147,7 +147,7 @@ if (!globalThis.debugInline) {
 }
 .coverageCode .code {
     background: #dfd;
-    display: inline-block;
+    /*!! display: inline-block; */
     min-width: 80rem;
 }
 .coverageCode .linecount {
@@ -160,10 +160,10 @@ if (!globalThis.debugInline) {
 .coverageCode .uncovered {
     background: #ebb;
 }
-.coverageCode a:hover {
+.coverageCode pre:hover {
     background: #99d;
 }
-.coverageCode a:hover span {
+.coverageCode pre:hover span {
     background: #99d;
 }
 </style>
