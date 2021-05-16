@@ -268,7 +268,7 @@ body {
 </div>
 <div class="content">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
-            `).trim();
+            `).trim() + "\n";
             lineList.forEach(function ({
                 count,
                 holeList,
@@ -278,33 +278,17 @@ body {
                 let chunk;
                 let inHole;
                 let lineId;
+                let lineHtml;
+                lineHtml = "";
                 lineId = "line_" + (ii + 1);
-                html += String(`
-<pre>
-<span class="lineno">
-<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}</a>
-</span>
-<span class="count
-                ${(
-                    count <= 0
-                    ? "uncovered"
-                    : ""
-                )}"
->
-${String(count).padStart(7, " ")}
-</span>
-<span>
-                `).trim().replace((
-                    /\n/g
-                ), "");
                 switch (count) {
                 case -1:
                 case 0:
                     if (holeList.length === 0) {
-                        html += "</span>";
-                        html += "<span class=\"uncovered\">";
-                        html += stringHtmlSafe(line);
-                        html += "</span>";
+                        lineHtml += "</span>";
+                        lineHtml += "<span class=\"uncovered\">";
+                        lineHtml += stringHtmlSafe(line);
+                        lineHtml += "</span>";
                         break;
                     }
                     line = line.split("").map(function (chr) {
@@ -329,8 +313,8 @@ ${String(count).padStart(7, " ")}
                         isHole
                     }) {
                         if (inHole !== isHole) {
-                            html += stringHtmlSafe(chunk);
-                            html += (
+                            lineHtml += stringHtmlSafe(chunk);
+                            lineHtml += (
                                 isHole
                                 ? "</span><span class=\"uncovered\">"
                                 : "</span><span>"
@@ -340,13 +324,30 @@ ${String(count).padStart(7, " ")}
                         }
                         chunk += chr;
                     });
-                    html += stringHtmlSafe(chunk);
+                    lineHtml += stringHtmlSafe(chunk);
                     break;
                 default:
-                    html += stringHtmlSafe(line);
+                    lineHtml += stringHtmlSafe(line);
                 }
-                html += "</span>";
-                html += "</pre>\n";
+                html += String(`
+<pre>
+<span class="lineno">
+<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}</a>
+</span>
+<span class="count
+                ${(
+                    count <= 0
+                    ? "uncovered"
+                    : ""
+                )}"
+>
+${String(count).padStart(7, " ")}
+</span>
+<span>${lineHtml}</span>
+</pre>
+                `).replace((
+                    /\n/g
+                ), "").trim() + "\n";
             });
             html += String(`
 </div>
@@ -354,7 +355,7 @@ ${String(count).padStart(7, " ")}
 </div>
 </body>
 </html>
-            `).trim();
+            `).trim() + "\n";
             require("fs").writeFileSync(".tmp/zz.html", html);
             fileDict[pathname] = {
                 lineList,
