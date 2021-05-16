@@ -173,8 +173,9 @@ if (!globalThis.debugInline) {
 body {
     margin: 0;
 }
-.coverageCode {
-    padding: 5px;
+.coverageCode,
+.coverageHeader {
+    padding: 20px;
 }
 .coverageCode a {
     text-decoration: none;
@@ -184,9 +185,33 @@ body {
     margin: 5px 0;
 }
 .coverageCode .count {
-    background: #9d9;
     margin: 0 5px;
     padding: 0 5px;
+}
+.coverageHeader table {
+    border-collapse: collapse;
+    margin-top: 20px;
+    text-align: right;
+}
+.coverageHeader table:nth-child(1) {
+    margin-top: 0;
+}
+.coverageHeader td span {
+    display: inline-block;
+    width: 100%;
+}
+.coverageHeader td,
+.coverageHeader th {
+    border: 5px solid #bbb;
+    margin: 0;
+    padding: 5px;
+}
+.coverageHeader td,
+.coverageHeader th {
+    background: #fff;
+}
+.coverageCode .count {
+    background: #9d9;
 }
 .coverageCode .lineno {
     background: #fff;
@@ -195,30 +220,14 @@ body {
 .coverageHeader .uncovered {
     background: #d99;
 }
-.coverageHeader table {
-    border-collapse: collapse;
-    text-align: right;
-}
-.coverageHeader td span {
-    display: inline-block;
-    width: 100%;
-}
-.coverageHeader td,
-.coverageHeader th {
-    border: 1px solid #777;
-    margin: 0;
-    padding: 5px;
-}
 .coverageHeader {
     background: #ddd;
-    padding: 5px;
-    width: 100%;
 }
 .coverageHeader .coverageHigh{
     background: #9d9;
 }
 .coverageHeader .coverageMedium{
-    background: #9d9;
+    background: #fd7;
 }
 .coverageHeader .coverageLow{
     background: #d99;
@@ -230,16 +239,23 @@ body {
 </head>
 <body>
 <div class="coverageHeader">
-<div>
-file:
-<span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
-</div>
+<table>
+<thead>
+<tr>
+    <th>file</th>
+    <th>
+        <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+    </th>
+</tr>
+</thead>
+</table>
+
 <table>
 <thead>
 <tr>
     <th>coverage %</th>
     <th>lines total</th>
-    <th>lines uncovered</th>
+    <th>lines not covered</th>
 </tr>
 </thead>
 <tbody>
