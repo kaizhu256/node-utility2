@@ -51,17 +51,19 @@ if (!globalThis.debugInline) {
         }) {
             let html;
             let lineList;
+            let pathname;
             let src;
             if (url.indexOf("file:///") !== 0) {
                 return;
             }
-            url = url.replace("file:///", "").replace((
+            pathname = url.replace("file:///", "").replace((
                 /\\\\/g
             ), "/");
-            if (url.indexOf(cwd) !== 0) {
+            if (pathname.indexOf(cwd) !== 0) {
                 return;
             }
-            src = require("fs").readFileSync(url, "utf8");
+            pathname = pathname.replace(cwd, "");
+            src = require("fs").readFileSync(pathname, "utf8");
             lineList = [{}];
             src.replace((
                 /^.*$/gm
@@ -129,7 +131,7 @@ if (!globalThis.debugInline) {
                     });
                 });
             });
-            fileDict[url.replace(cwd, "")] = {
+            fileDict[pathname] = {
                 lineList,
                 src
             };
@@ -141,6 +143,13 @@ if (!globalThis.debugInline) {
 <style>
 * {
     box-sizing: border-box;
+}
+body {
+    font-family: consolas, menlo, monospace;
+    margin: 0;
+}
+.coverageCode {
+    padding: 5px;
 }
 .coverageCode a {
     text-decoration: none;
@@ -159,12 +168,21 @@ if (!globalThis.debugInline) {
 .coverageCode .uncovered {
     background: #dbb;
 }
+.coverageHeader {
+    background: #eef;
+    padding: 5px;
+    width: 100%;
+}
 .coverageCode pre:hover span {
     background: #bbd;
 }
 </style>
 </head>
 <body>
+<div class="coverageHeader">
+    file:
+    <span><a href="..">./</a></span><span>${stringHtmlSafe(pathname)}</span>
+</div>
 <div class="coverageCode">
 <pre><span> line</span><span class="count">  count</span><span>code</span></pre>
             `).trim();
