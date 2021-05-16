@@ -223,9 +223,7 @@ if (!globalThis.debugInline) {
                         chunk += chr;
                     });
                     html += stringHtmlSafe(chunk);
-                    if (inHole) {
-                        html += "</span>";
-                    }
+                    html += "</span>";
                     break;
                 default:
                     html += stringHtmlSafe(line);
