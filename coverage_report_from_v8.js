@@ -40,43 +40,68 @@ if (!globalThis.debugInline) {
             if (url.indexOf(cwd) !== 0) {
                 return;
             }
-            debugInline(url);
             src = require("fs").readFileSync(url, "utf8");
-            //!! src.replace((
-                //!! /^.*?(?:\r\n|\n)
-            //!! lineList = src.matchAll((
-                //!! /\r\n|\n/g
-            //!! )).map(function (ignore, line;
-            lineList = [];
+            lineList = [{}];
             src.replace((
-                /.*/g
-            ), function (line, offset) {
+                /^.*(?:\r\n|\n|$)/gm
+            ), function (line, startOffset) {
+                lineList[lineList.length - 1].endOffset = startOffset - 1;
                 lineList.push({
-                    count: 0,
+                    count: -1,
+                    endOffset: 0,
+                    holeList: [],
                     line,
-                    offset,
-                    uncoveredList: []
+                    startOffset
                 });
                 return "";
             });
-            functions.forEach(function ({
+            lineList.shift();
+            lineList[lineList.length - 1].endOffset = src.length;
+            functions.reverse().forEach(function ({
                 ranges
             }) {
-                ranges.forEach(function ({
+                ranges.reverse().forEach(function ({
                     count,
                     endOffset,
                     startOffset
-                }) {
+                }, ii, list) {
                     lineList.forEach(function (elem) {
-                        if (
-                            elem.offset < startOffset ||
-                            elem.offset > endOffset
-                        ) {
+                        //!! debugInline(
+                            //!! count,
+                            //!! [startOffset, elem.startOffset],
+                            //!! [elem.endOffset, endOffset],
+                            //!! elem.line
+                        //!! );
+                        if (!(
+                            (
+                                elem.startOffset <= startOffset &&
+                                startOffset <= elem.endOffset
+                            ) || (
+                                elem.startOffset <= endOffset &&
+                                endOffset <= elem.endOffset
+                            ) || (
+                                startOffset <= elem.startOffset &&
+                                elem.endOffset <= endOffset
+                            )
+                        )) {
                             return;
                         }
-                        elem.count = Math.max(count, elem.count);
+                        // handle root-range
+                        if (ii + 1 === list.length) {
+                            if (elem.count === -1) {
+                                elem.count = count;
+                            }
+                            return;
+                        }
+                        // handle non-root-range
+                        if (elem.count !== 0) {
+                            elem.count = Math.max(count, elem.count);
+                        }
                         if (count === 0) {
                             elem.count = 0;
+                            elem.holeList.push([
+                                startOffset, endOffset
+                            ]);
                         }
                     });
                 });
