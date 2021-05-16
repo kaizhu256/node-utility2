@@ -110,7 +110,7 @@ if (!globalThis.debugInline) {
         });
     }
     coverageReportCreate(JSON.parse(require("fs").readFileSync(
-        ".tmp/coverage-5068-1621146746713-0.json",
+        ".tmp/" + require("fs").readdirSync(".tmp/")[0],
         "utf8"
     )));
 }());
