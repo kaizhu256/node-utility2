@@ -19,6 +19,7 @@ if (!globalThis.debugInline) {
     let cwd;
     let data;
     let fileDict;
+    let htmlStyle;
     function stringHtmlSafe(str) {
     /*
      * this function will make <str> html-safe
@@ -38,6 +39,82 @@ if (!globalThis.debugInline) {
             /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
         ), "&$1");
     }
+    htmlStyle = String(`
+/* csslint ignore:start */
+* {
+box-sizing: border-box;
+font-family: consolas, menlo, monospace;
+}
+/* csslint ignore:end */
+body {
+margin: 0;
+}
+.coverage pre {
+margin: 5px 0;
+}
+.coverage table {
+border-collapse: collapse;
+margin-top: 20px;
+text-align: right;
+}
+.coverage table:nth-child(1) {
+margin-top: 0;
+}
+.coverage td,
+.coverage th {
+border: 5px solid #bbb;
+margin: 0;
+padding: 5px;
+}
+.coverage td span {
+display: inline-block;
+width: 100%;
+}
+.coverage .content {
+padding: 0 5px;
+}
+.coverage .content a {
+text-decoration: none;
+}
+.coverage .count {
+margin: 0 5px;
+padding: 0 5px;
+}
+.coverage .header {
+padding: 20px;
+}
+
+.coverage td,
+.coverage th {
+background: #fff;
+}
+.coverage .count {
+background: #9d9;
+color: #777;
+}
+.coverage .coverageHigh{
+background: #9d9;
+}
+.coverage .coverageLow{
+background: #d99;
+}
+.coverage .coverageMedium{
+background: #fd7;
+}
+.coverage .header {
+background: #eee;
+}
+.coverage .lineno {
+background: #ddd;
+}
+.coverage .uncovered {
+background: #d99;
+}
+
+.coverage pre:hover span {
+background: #bbd;
+}
+    `).trim();
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
         if ((
@@ -52,7 +129,7 @@ if (!globalThis.debugInline) {
     cwd = process.cwd().replace((
         /\\/g
     ), "/") + "/";
-    await JSON.parse(data).result.map(async function ({
+    await Promise.all(JSON.parse(data).result.map(async function ({
         functions,
         url
     }) {
@@ -167,80 +244,7 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
-/* csslint ignore:start */
-* {
-box-sizing: border-box;
-font-family: consolas, menlo, monospace;
-}
-/* csslint ignore:end */
-body {
-margin: 0;
-}
-.coverage pre {
-margin: 5px 0;
-}
-.coverage table {
-border-collapse: collapse;
-margin-top: 20px;
-text-align: right;
-}
-.coverage table:nth-child(1) {
-margin-top: 0;
-}
-.coverage td,
-.coverage th {
-border: 5px solid #bbb;
-margin: 0;
-padding: 5px;
-}
-.coverage td span {
-display: inline-block;
-width: 100%;
-}
-.coverage .content {
-padding: 0 5px;
-}
-.coverage .content a {
-text-decoration: none;
-}
-.coverage .count {
-margin: 0 5px;
-padding: 0 5px;
-}
-.coverage .header {
-padding: 20px;
-}
-
-.coverage td,
-.coverage th {
-background: #fff;
-}
-.coverage .count {
-background: #9d9;
-color: #777;
-}
-.coverage .coverageHigh{
-background: #9d9;
-}
-.coverage .coverageLow{
-background: #d99;
-}
-.coverage .coverageMedium{
-background: #fd7;
-}
-.coverage .header {
-background: #eee;
-}
-.coverage .lineno {
-background: #ddd;
-}
-.coverage .uncovered {
-background: #d99;
-}
-
-.coverage pre:hover span {
-background: #bbd;
-}
+${htmlStyle}
 </style>
 </head>
 <body class="coverage">
@@ -250,7 +254,7 @@ background: #bbd;
 <tr>
 <th>
     coverage report for file
-    <a href="..">./</a>${stringHtmlSafe(pathname)}
+    <a href="index.html">./</a>${stringHtmlSafe(pathname)}
 </th>
 </tr>
 </thead>
@@ -372,5 +376,36 @@ ${String(count).padStart(7, " ")}
             linesUncovered,
             src
         };
-    });
+    }));
+    await require("fs").promises.writeFile(".coverage/index.html", String(`
+<!doctype html>
+<html lang="en">
+<head>
+<title>coverage</title>
+<style>
+${htmlStyle}
+</style>
+<body>
+coverage report for all files
+<table>
+<thead>
+<tr>
+<th>file</th>
+<th>lines</th>
+</tr>
+</thead>
+<tbody>
+` +
+    Object.keys(fileDict).sort().map(function (pathname) {
+        return (`
+<tr>
+    <td>stringHtmlSafe(${pathname})</td>
+</tr>
+        `);
+    }).join("") + `
+</tbody>
+</table>
+</body>
+</html>
+    `).trim() + "\n");
 }());
