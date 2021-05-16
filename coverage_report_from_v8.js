@@ -139,12 +139,14 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage</title>
 <style>
-.coverageCode pre {
-    margin: 0;
-    /*!! padding: 2px; */
+* {
+    box-sizing: border-box;
 }
 .coverageCode a {
     text-decoration: none;
+}
+.coverageCode pre {
+    margin: 5px 0;
 }
 .coverageCode .count {
     background: #bdb;
@@ -158,7 +160,7 @@ if (!globalThis.debugInline) {
     background: #dbb;
 }
 .coverageCode pre:hover span {
-    background: #99d;
+    background: #bbd;
 }
 </style>
 </head>
