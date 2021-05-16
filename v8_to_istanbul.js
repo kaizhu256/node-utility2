@@ -1,4 +1,4 @@
-/* jslint utility2:true */
+/\\* jslint utility2:true */
 function originalPositionTryBoth(sourceMap, line, column) {
     let original = sourceMap.originalPositionFor({
         //!! bias: GREATEST_LOWER_BOUND,
@@ -193,13 +193,16 @@ function originalPositionFor(aArgs) {
 
     let mapping;
     this._wasm.withMappingCallback(
-        m => (mapping = m),
-        () => {
+        function (m) {
+            mapping = m;
+            return m;
+        },
+        function () {
             this._wasm.exports.original_location_for(
-                this._getMappingsPtr(),
-                needle.generatedLine - 1,
+                bias,
                 needle.generatedColumn,
-                bias
+                needle.generatedLine - 1,
+                this._getMappingsPtr()
             );
         }
     );
@@ -217,10 +220,10 @@ function originalPositionFor(aArgs) {
             }
 
             return {
-                source,
-                line: util.getArg(mapping, "originalLine", null),
                 column: util.getArg(mapping, "originalColumn", null),
-                name
+                line: util.getArg(mapping, "originalLine", null),
+                name,
+                source
             };
         }
     }
