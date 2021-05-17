@@ -1328,25 +1328,6 @@ if (!globalThis.debugInline) {
     let cwd;
     let data;
     let fileDict;
-    function stringHtmlSafe(str) {
-    /*
-     * this function will make <str> html-safe
-     * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
-     */
-        return str.replace((
-            /&/gu
-        ), "&amp;").replace((
-            /"/gu
-        ), "&quot;").replace((
-            /'"'"'/gu
-        ), "&apos;").replace((
-            /</gu
-        ), "&lt;").replace((
-            />/gu
-        ), "&gt;").replace((
-            /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
-        ), "&$1");
-    }
     function htmlRender({
         fileList,
         lineList
@@ -1356,6 +1337,25 @@ if (!globalThis.debugInline) {
         let padPathname;
         let txt;
         let txtBorder;
+        function stringHtmlSafe(str) {
+        /*
+         * this function will make <str> html-safe
+         * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
+         */
+            return str.replace((
+                /&/gu
+            ), "&amp;").replace((
+                /"/gu
+            ), "&quot;").replace((
+                /'"'"'/gu
+            ), "&apos;").replace((
+                /</gu
+            ), "&lt;").replace((
+                />/gu
+            ), "&gt;").replace((
+                /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
+            ), "&$1");
+        }
         html = "";
         html += `<!doctype html>
 <html lang="en">
