@@ -16488,7 +16488,7 @@ if (file === ".") {
         file
     });
 }
-process.exit(Boolean(errMsg));
+process.exit(Boolean(errMsg) | 0);
 // hack-jslint - global-function-scope
 /* jslint ignore:start */
 }());
