@@ -194,7 +194,6 @@ margin-top: 20px;
                     lineHtml += "</span>";
                     lineHtml += "<span class=\"uncovered\">";
                     lineHtml += stringHtmlSafe(line);
-                    lineHtml += "</span>";
                     break;
                 }
                 line = line.split("").map(function (chr) {
@@ -253,7 +252,7 @@ ${String(count).padStart(7, " ")}
 </pre>
             `).replace((
                 /\n/g
-            ), "").trim();
+            ), "").trim() + "\n";
         });
         html += `
 </div>
