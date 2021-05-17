@@ -19,7 +19,7 @@ if (!globalThis.debugInline) {
     let cwd;
     let data;
     let fileDict;
-    let htmlStyle;
+    let templateHeader;
     function stringHtmlSafe(str) {
     /*
      * this function will make <str> html-safe
@@ -39,82 +39,126 @@ if (!globalThis.debugInline) {
             /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
         ), "&$1");
     }
-    htmlStyle = String(`
+    templateHeader = String(`
+<!doctype html>
+<html lang="en">
+<head>
+<title>coverage report</title>
+<style>
 /* csslint ignore:start */
 * {
 box-sizing: border-box;
-font-family: consolas, menlo, monospace;
+    font-family: consolas, menlo, monospace;
 }
 /* csslint ignore:end */
 body {
-margin: 0;
+    margin: 0;
 }
 .coverage pre {
-margin: 5px 0;
+    margin: 5px 0;
 }
 .coverage table {
 border-collapse: collapse;
 margin-top: 20px;
-text-align: right;
+/*!! text-align: right; */
 }
 .coverage table:nth-child(1) {
-margin-top: 0;
+    margin-top: 0;
 }
 .coverage td,
 .coverage th {
-border: 5px solid #bbb;
-margin: 0;
-padding: 5px;
+    border: 1px solid #999;
+    margin: 0;
+    padding: 5px;
 }
 .coverage td span {
-display: inline-block;
-width: 100%;
+    display: inline-block;
+    width: 100%;
+}
+.coverage .bar {
+    background: #bbb;
+    height: 10px;
 }
 .coverage .content {
-padding: 0 5px;
+    padding: 0 5px;
 }
 .coverage .content a {
-text-decoration: none;
+    text-decoration: none;
 }
 .coverage .count {
-margin: 0 5px;
-padding: 0 5px;
+    margin: 0 5px;
+    padding: 0 5px;
 }
 .coverage .header {
-padding: 20px;
+    padding: 20px;
 }
 
 .coverage td,
 .coverage th {
-background: #fff;
+    background: #fff;
 }
 .coverage .count {
-background: #9d9;
-color: #777;
+    background: #9d9;
+    color: #777;
 }
 .coverage .coverageHigh{
-background: #9d9;
+    background: #9d9;
 }
 .coverage .coverageLow{
-background: #d99;
+    background: #d99;
 }
 .coverage .coverageMedium{
-background: #fd7;
+    background: #fd7;
 }
 .coverage .header {
-background: #eee;
+    background: #eee;
 }
 .coverage .lineno {
-background: #ddd;
+    background: #ddd;
 }
 .coverage .uncovered {
-background: #d99;
+    background: #d99;
 }
 
 .coverage pre:hover span {
-background: #bbd;
+    background: #bbd;
 }
+</style>
+</head>
+<body class="coverage">
+<div class="header">
+<span>coverage report<span><br>
     `).trim();
+    function templateFile({
+        coverageLevel,
+        coveragePct,
+        isIndex,
+        linesCovered,
+        linesTotal,
+        pathname
+    }) {
+        pathname = stringHtmlSafe(pathname);
+        return String(`
+<tr>
+    <td class="${coverageLevel}">
+        ${(
+            isIndex
+            ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
+            : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
+        )}
+        <span class="bar"
+            style="background: #777; width: ${(coveragePct | 0)}px;"
+        ></span><span class="bar"
+            style="width: ${100 - (coveragePct | 0)}px;"
+        ></span>
+    </td>
+    <td>
+        ${coveragePct}%<br>
+        (${linesCovered} / ${linesTotal})
+    </td>
+</tr>
+        `).trim() + "\n";
+    }
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
         if ((
@@ -137,8 +181,8 @@ background: #bbd;
         let coveragePct;
         let html;
         let lineList;
+        let linesCovered;
         let linesTotal;
-        let linesUncovered;
         let pathname;
         let src;
         if (url.indexOf("file:///") !== 0) {
@@ -220,62 +264,39 @@ background: #bbd;
             });
         });
         linesTotal = lineList.length;
-        linesUncovered = lineList.filter(function ({
+        linesCovered = lineList.filter(function ({
             count
         }) {
-            return count <= 0;
+            return count > 0;
         }).length;
-        coveragePct = Math.floor(
-            10000 - 10000 * linesUncovered / linesTotal
-        );
+        coveragePct = Math.floor(10000 * linesCovered / linesTotal);
         coverageLevel = (
-            coveragePct >= 80
+            coveragePct >= 8000
             ? "coverageHigh"
-            : coveragePct >= 50
+            : coveragePct >= 5000
             ? "coverageMedium"
             : "coverageLow"
         );
         coveragePct = String(coveragePct).replace((
             /..$/m
-        ), ".$&") + "%";
+        ), ".$&");
         html = String(`
-<!doctype html>
-<html lang="en">
-<head>
-<title>coverage</title>
-<style>
-${htmlStyle}
-</style>
-</head>
-<body class="coverage">
-<div class="header">
+${templateHeader}
 <table>
 <thead>
 <tr>
-<th>
-    coverage report for file
-    <a href="index.html">./</a>${stringHtmlSafe(pathname)}
-</th>
+<th>file</th>
+<th>lines</th>
 </tr>
 </thead>
-</table>
-<table>
-<thead>
-<tr>
-<th>% coverage</th>
-<th># lines total</th>
-<th># lines not covered</th>
-<th>lines not covered</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="${coverageLevel}">${coveragePct}</td>
-<td>${linesTotal}</td>
-<td class="uncovered">${linesUncovered}</td>
-<td></td>
-</tr>
-</tbody>
+<tbody> ` + templateFile({
+            coverageLevel,
+            coveragePct,
+            isIndex: true,
+            linesCovered,
+            linesTotal,
+            pathname
+        }) + `</tbody>
 </table>
 </div>
 <div class="content">
@@ -371,22 +392,17 @@ ${String(count).padStart(7, " ")}
             ".coverage/" + pathname + ".html"
         ), html);
         fileDict[pathname] = {
+            coverageLevel,
+            coveragePct,
             lineList,
+            linesCovered,
             linesTotal,
-            linesUncovered,
+            pathname,
             src
         };
     }));
     await require("fs").promises.writeFile(".coverage/index.html", String(`
-<!doctype html>
-<html lang="en">
-<head>
-<title>coverage</title>
-<style>
-${htmlStyle}
-</style>
-<body>
-coverage report for all files
+${templateHeader}
 <table>
 <thead>
 <tr>
@@ -394,17 +410,11 @@ coverage report for all files
 <th>lines</th>
 </tr>
 </thead>
-<tbody>
-` +
-    Object.keys(fileDict).sort().map(function (pathname) {
-        return (`
-<tr>
-    <td>stringHtmlSafe(${pathname})</td>
-</tr>
-        `);
-    }).join("") + `
-</tbody>
+<tbody>` + Object.keys(fileDict).sort().map(function (pathname) {
+        return templateFile(fileDict[pathname]);
+    }).join("") + `</tbody>
 </table>
+</div>
 </body>
 </html>
     `).trim() + "\n");
