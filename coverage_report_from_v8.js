@@ -42,8 +42,9 @@ if (!globalThis.debugInline) {
         fileList,
         isIndexHtml
     }) {
-        return String(`
-<!doctype html>
+        let html;
+        html = "";
+        html += `<!doctype html>
 <html lang="en">
 <head>
 <title>coverage report</title>
@@ -137,7 +138,8 @@ margin-top: 20px;
 <th>lines</th>
 </tr>
 </thead>
-<tbody>` + fileList.map(function ({
+<tbody>`;
+        fileList.forEach(function ({
             coverageLevel,
             coveragePct,
             linesCovered,
@@ -145,28 +147,26 @@ margin-top: 20px;
             pathname
         }) {
             pathname = stringHtmlSafe(pathname);
-            return String(`
-<tr>
-    <td class="${coverageLevel}">` + (
+            html += `<tr><td class="${coverageLevel}">` + (
                 isIndexHtml
                 ? "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
                 : "<a href=\"index.html\">./</a>" + pathname + "<br>"
             ) + `<span class="bar"
-            style="background: #777; width: ${(coveragePct | 0)}px;"
-        ></span><span class="bar"
-            style="width: ${100 - (coveragePct | 0)}px;"
-        ></span>
-    </td>
-    <td style="text-align: right;">
+    style="background: #777; width: ${(coveragePct | 0)}px;"
+></span><span class="bar"
+    style="width: ${100 - (coveragePct | 0)}px;"
+></span>
+</td>
+<td style="text-align: right;">
         ${coveragePct}%<br>
         (${linesCovered} / ${linesTotal})
     </td>
-</tr>
-            `).trim() + "\n";
-        }).join("") + `</tbody>
+</tr>`;
+        });
+        html += `</tbody>
 </table>
-</div>
-        `).trim() + "\n";
+</div>`;
+        return html;
     }
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
