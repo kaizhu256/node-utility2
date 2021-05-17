@@ -1352,6 +1352,10 @@ if (!globalThis.debugInline) {
         lineList
     }) {
         let html;
+        let padLines;
+        let padPathname;
+        let txt;
+        let txtBorder;
         html = "";
         html += `<!doctype html>
 <html lang="en">
@@ -1446,12 +1450,14 @@ body {
 <table>
 <thead>
 <tr>
-<th>file</th>
+<th>files covered</th>
 <th>lines</th>
 </tr>
 </thead>
 <tbody>`;
         if (!lineList) {
+            padLines = String("100.00 %").length;
+            padPathname = String("files covered").length;
             fileList.unshift({
                 linesCovered: 0,
                 linesTotal: 0,
@@ -1459,12 +1465,29 @@ body {
             });
             fileList.slice(1).forEach(function ({
                 linesCovered,
-                linesTotal
+                linesTotal,
+                pathname
             }) {
                 fileList[0].linesCovered += linesCovered;
                 fileList[0].linesTotal += linesTotal;
+                padPathname = Math.max(padPathname, pathname.length + 2);
+                padLines = Math.max(
+                    padLines,
+                    String(linesCovered + " / " + linesTotal).length
+                );
             });
         }
+        txtBorder = (
+            "+" + "-".repeat(padPathname + 2) + "+" +
+            "-".repeat(padLines + 2) + "+\n"
+        );
+        txt = "";
+        txt += txtBorder;
+        txt += (
+            "| " + String("files covered").padEnd(padPathname, " ") + " | " +
+            String("lines").padStart(padLines, " ") + " |\n"
+        );
+        txt += txtBorder;
         fileList.forEach(function ({
             linesCovered,
             linesTotal,
@@ -1483,11 +1506,24 @@ body {
             coveragePct = String(coveragePct).replace((
                 /..$/m
             ), ".$&");
-            pathname = (
-                (!lineList && ii === 0)
-                ? ""
-                : stringHtmlSafe(pathname)
+            if (!lineList && ii === 0) {
+                pathname = "";
+            }
+            txt += (
+                "| " +
+                String("./" + pathname).padEnd(padPathname, " ") + " | " +
+                String(coveragePct + " %").padStart(padLines, " ") + " |\n"
             );
+            txt += (
+                "| " + "#".repeat(
+                    Math.round(0.01 * coveragePct * padPathname)
+                ).padEnd(padPathname, "_") + " | " +
+                String(
+                    linesCovered + " / " + linesTotal
+                ).padStart(padLines, " ") + " |\n"
+            );
+            txt += txtBorder;
+            pathname = stringHtmlSafe(pathname);
             html += `<tr><td class="${coverageLevel}">` + (
                 lineList
                 ? (
@@ -1505,8 +1541,8 @@ body {
 ></span>
 </td>
 <td style="text-align: right;">
-        ${coveragePct}%<br>
-        (${linesCovered} / ${linesTotal})
+        ${coveragePct} %<br>
+        ${linesCovered} / ${linesTotal}
     </td>
 </tr>`;
         });
@@ -1603,6 +1639,9 @@ ${String(count).padStart(7, " ")}
 </body>
 </html>`;
         html += "\n";
+        if (!lineList) {
+            console.error("\n" + txt);
+        }
         return html;
     }
     data = await require("fs").promises.readdir(".coverage/");
@@ -1716,6 +1755,11 @@ ${String(count).padStart(7, " ")}
         }) {
             return count > 0;
         }).length;
+        await require("fs").promises.mkdir((
+            require("path").dirname(".coverage/" + pathname)
+        ), {
+            recursive: true
+        });
         await require("fs").promises.writeFile((
             ".coverage/" + pathname + ".html"
         ), htmlRender({
