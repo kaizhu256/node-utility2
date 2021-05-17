@@ -38,7 +38,7 @@ if (!globalThis.debugInline) {
             /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
         ), "&$1");
     }
-    function templateHeader({
+    function htmlRender({
         fileList,
         lineList = []
     }) {
@@ -131,7 +131,7 @@ margin-top: 20px;
 </head>
 <body class="coverage">
 <div class="header">
-<span>coverage report<span><br>
+<span>coverage report</span><br>
 <table>
 <thead>
 <tr>
@@ -386,7 +386,7 @@ ${String(count).padStart(7, " ")}
         ), ".$&");
         await require("fs").promises.writeFile((
             ".coverage/" + pathname + ".html"
-        ), templateHeader({
+        ), htmlRender({
             fileList: [
                 {
                     coverageLevel,
@@ -410,13 +410,9 @@ ${String(count).padStart(7, " ")}
     }));
     await require("fs").promises.writeFile((
         ".coverage/index.html"
-    ), templateHeader({
+    ), htmlRender({
         fileList: Object.keys(fileDict).sort().map(function (pathname) {
             return fileDict[pathname];
         })
-    }) + String(`
-</div>
-</body>
-</html>
-    `).trim() + "\n");
+    }));
 }());
