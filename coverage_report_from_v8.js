@@ -49,6 +49,7 @@ if (!globalThis.debugInline) {
 <head>
 <title>coverage report</title>
 <style>
+/* jslint utility2:true */
 /* csslint ignore:start */
 * {
 box-sizing: border-box;
@@ -62,8 +63,8 @@ body {
     margin: 5px 0;
 }
 .coverage table {
-border-collapse: collapse;
-margin-top: 20px;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 .coverage table:nth-child(1) {
     margin-top: 0;
@@ -114,7 +115,7 @@ margin-top: 20px;
     background: #fd7;
 }
 .coverage .header {
-    background: #eee;
+    background: #ddd;
 }
 .coverage .lineno {
     background: #ddd;

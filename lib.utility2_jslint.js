@@ -16464,7 +16464,7 @@ if (file === ".") {
                 code.length < 1048576 &&
                 (
                     /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$/m
-                ).test(code)
+                ).test(code.slice(0, 65536))
             )) {
                 return;
             }
