@@ -555,7 +555,10 @@ shGrepReplace() {(set -e
     "use strict";
     let dict;
     dict = {};
-    require("fs").readFileSync("/tmp/shGrep.txt", "utf8").replace((
+    require("fs").readFileSync(
+        require("os").tmpdir() + "/shGrep.txt",
+        "utf8"
+    ).replace((
         /^(.+?):(\d+?):(.*?)$/gm
     ), function (ignore, file, lineno, str) {
         dict[file] = dict[file] || require("fs").readFileSync(
