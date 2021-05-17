@@ -1330,7 +1330,8 @@ if (!globalThis.debugInline) {
     let fileDict;
     function htmlRender({
         fileList,
-        lineList
+        lineList,
+        pathname
     }) {
         let html;
         let padLines;
@@ -1377,10 +1378,6 @@ body {
 }
 .coverage table {
     border-collapse: collapse;
-    margin-top: 20px;
-}
-.coverage table:nth-child(1) {
-    margin-top: 0;
 }
 .coverage td,
 .coverage th {
@@ -1409,12 +1406,18 @@ body {
 .coverage .percentbar {
     height: 12px;
     margin: 2px 0;
+    min-width: 200px;
     position: relative;
     width: 100%;
 }
 .coverage .percentbar div {
     height: 100%;
     position: absolute;
+}
+.coverage .title {
+    font-size: large;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
 .coverage td,
@@ -1458,7 +1461,7 @@ body {
 </head>
 <body class="coverage">
 <div class="header">
-<span>coverage report</span><br>
+<div class="title">coverage report</div>
 <table>
 <thead>
 <tr>
@@ -1469,7 +1472,7 @@ body {
 <tbody>`;
         if (!lineList) {
             padLines = String("100.00 %").length;
-            padPathname = String("files covered").length;
+            padPathname = 32;
             fileList.unshift({
                 linesCovered: 0,
                 linesTotal: 0,
@@ -1494,6 +1497,7 @@ body {
             "-".repeat(padLines + 2) + "+\n"
         );
         txt = "";
+        txt += "coverage report\n";
         txt += txtBorder;
         txt += (
             "| " + String("files covered").padEnd(padPathname, " ") + " | " +
@@ -1527,7 +1531,7 @@ body {
                 String(coveragePct + " %").padStart(padLines, " ") + " |\n"
             );
             txt += (
-                "| " + "#".repeat(
+                "| " + "*".repeat(
                     Math.round(0.01 * coveragePct * padPathname)
                 ).padEnd(padPathname, "_") + " | " +
                 String(
@@ -1652,10 +1656,16 @@ ${String(count).padStart(7, " ")}
 </body>
 </html>`;
         html += "\n";
+        await require("fs").promises.mkdir(require("path").dirname(pathname), {
+            recursive: true
+        });
         if (!lineList) {
             console.error("\n" + txt);
+            await require("fs").promises.writeFile((
+                "./coverage/coverage.txt"
+            ), txt);
         }
-        return html;
+        await require("fs").promises.writeFile(pathname + ".html", html);
     }
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
@@ -1780,9 +1790,7 @@ ${String(count).padStart(7, " ")}
         ), {
             recursive: true
         });
-        await require("fs").promises.writeFile((
-            ".coverage/" + pathname + ".html"
-        ), htmlRender({
+        await htmlRender({
             fileList: [
                 {
                     linesCovered,
@@ -1790,8 +1798,9 @@ ${String(count).padStart(7, " ")}
                     pathname
                 }
             ],
-            lineList
-        }));
+            lineList,
+            pathname: ".coverage/" + pathname
+        });
         fileDict[pathname] = {
             lineList,
             linesCovered,
@@ -1800,13 +1809,12 @@ ${String(count).padStart(7, " ")}
             src
         };
     }));
-    await require("fs").promises.writeFile((
-        ".coverage/index.html"
-    ), htmlRender({
+    await htmlRender({
         fileList: Object.keys(fileDict).sort().map(function (pathname) {
             return fileDict[pathname];
-        })
-    }));
+        }),
+        pathname: ".coverage/index"
+    });
 }());
 ' # '
 )}
