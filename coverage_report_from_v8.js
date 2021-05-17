@@ -40,7 +40,7 @@ if (!globalThis.debugInline) {
     }
     function templateHeader({
         fileList,
-        isIndexHtml
+        lineList = []
     }) {
         let html;
         html = "";
@@ -70,7 +70,7 @@ margin-top: 20px;
 }
 .coverage td,
 .coverage th {
-    border: 1px solid #999;
+    border: 1px solid #777;
     margin: 0;
     padding: 5px;
 }
@@ -79,7 +79,7 @@ margin-top: 20px;
     width: 100%;
 }
 .coverage .bar {
-    background: #bbb;
+    background: #999;
     height: 10px;
 }
 .coverage .content {
@@ -108,7 +108,7 @@ margin-top: 20px;
     background: #9d9;
 }
 .coverage .coverageLow{
-    background: #d99;
+    background: #ebb;
 }
 .coverage .coverageMedium{
     background: #fd7;
@@ -120,11 +120,12 @@ margin-top: 20px;
     background: #ddd;
 }
 .coverage .uncovered {
-    background: #d99;
+    background: #dbb;
 }
 
-.coverage pre:hover span {
-    background: #bbd;
+.coverage pre:hover span,
+.coverage tr:hover td {
+    background: #bbe;
 }
 </style>
 </head>
@@ -148,11 +149,17 @@ margin-top: 20px;
         }) {
             pathname = stringHtmlSafe(pathname);
             html += `<tr><td class="${coverageLevel}">` + (
-                isIndexHtml
-                ? "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
-                : "<a href=\"index.html\">./</a>" + pathname + "<br>"
+                lineList
+                ? (
+                    "<a href=\"index.html\">./ </a>" +
+                    pathname + "<br>"
+                )
+                : (
+                    "<a href=\"" + pathname + ".html\">./ " +
+                    pathname + "</a><br>"
+                )
             ) + `<span class="bar"
-    style="background: #777; width: ${(coveragePct | 0)}px;"
+    style="background: #333; width: ${(coveragePct | 0)}px;"
 ></span><span class="bar"
     style="width: ${100 - (coveragePct | 0)}px;"
 ></span>
@@ -165,7 +172,96 @@ margin-top: 20px;
         });
         html += `</tbody>
 </table>
-</div>`;
+</div>
+<div class="content">
+`;
+        lineList.forEach(function ({
+            count,
+            holeList,
+            line,
+            startOffset
+        }, ii) {
+            let chunk;
+            let inHole;
+            let lineId;
+            let lineHtml;
+            lineHtml = "";
+            lineId = "line_" + (ii + 1);
+            switch (count) {
+            case -1:
+            case 0:
+                if (holeList.length === 0) {
+                    lineHtml += "</span>";
+                    lineHtml += "<span class=\"uncovered\">";
+                    lineHtml += stringHtmlSafe(line);
+                    lineHtml += "</span>";
+                    break;
+                }
+                line = line.split("").map(function (chr) {
+                    return {
+                        chr,
+                        isHole: undefined
+                    };
+                });
+                holeList.forEach(function ([
+                    aa, bb
+                ]) {
+                    aa = Math.max(aa - startOffset, 0);
+                    bb = Math.min(bb - startOffset, line.length);
+                    while (aa < bb) {
+                        line[aa].isHole = true;
+                        aa += 1;
+                    }
+                });
+                chunk = "";
+                line.forEach(function ({
+                    chr,
+                    isHole
+                }) {
+                    if (inHole !== isHole) {
+                        lineHtml += stringHtmlSafe(chunk);
+                        lineHtml += (
+                            isHole
+                            ? "</span><span class=\"uncovered\">"
+                            : "</span><span>"
+                        );
+                        chunk = "";
+                        inHole = isHole;
+                    }
+                    chunk += chr;
+                });
+                lineHtml += stringHtmlSafe(chunk);
+                break;
+            default:
+                lineHtml += stringHtmlSafe(line);
+            }
+            html += String(`
+<pre>
+<span class="lineno">
+<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}.</a>
+</span>
+<span class="count
+            ${(
+                count <= 0
+                ? "uncovered"
+                : ""
+            )}"
+>
+${String(count).padStart(7, " ")}
+</span>
+<span>${lineHtml}</span>
+</pre>
+            `).replace((
+                /\n/g
+            ), "").trim();
+        });
+        html += `
+</div>
+<div class="coverageFooter">
+</div>
+</body>
+</html>`;
+        html += "\n";
         return html;
     }
     data = await require("fs").promises.readdir(".coverage/");
@@ -188,7 +284,6 @@ margin-top: 20px;
     }) {
         let coverageLevel;
         let coveragePct;
-        let html;
         let lineList;
         let linesCovered;
         let linesTotal;
@@ -289,7 +384,9 @@ margin-top: 20px;
         coveragePct = String(coveragePct).replace((
             /..$/m
         ), ".$&");
-        html = templateHeader({
+        await require("fs").promises.writeFile((
+            ".coverage/" + pathname + ".html"
+        ), templateHeader({
             fileList: [
                 {
                     coverageLevel,
@@ -298,100 +395,9 @@ margin-top: 20px;
                     linesTotal,
                     pathname
                 }
-            ]
-        }) + String(`
-<div class="content">
-        `).trim() + "\n";
-        lineList.forEach(function ({
-            count,
-            holeList,
-            line,
-            startOffset
-        }, ii) {
-            let chunk;
-            let inHole;
-            let lineId;
-            let lineHtml;
-            lineHtml = "";
-            lineId = "line_" + (ii + 1);
-            switch (count) {
-            case -1:
-            case 0:
-                if (holeList.length === 0) {
-                    lineHtml += "</span>";
-                    lineHtml += "<span class=\"uncovered\">";
-                    lineHtml += stringHtmlSafe(line);
-                    lineHtml += "</span>";
-                    break;
-                }
-                line = line.split("").map(function (chr) {
-                    return {
-                        chr,
-                        isHole: undefined
-                    };
-                });
-                holeList.forEach(function ([
-                    aa, bb
-                ]) {
-                    aa = Math.max(aa - startOffset, 0);
-                    bb = Math.min(bb - startOffset, line.length);
-                    while (aa < bb) {
-                        line[aa].isHole = true;
-                        aa += 1;
-                    }
-                });
-                chunk = "";
-                line.forEach(function ({
-                    chr,
-                    isHole
-                }) {
-                    if (inHole !== isHole) {
-                        lineHtml += stringHtmlSafe(chunk);
-                        lineHtml += (
-                            isHole
-                            ? "</span><span class=\"uncovered\">"
-                            : "</span><span>"
-                        );
-                        chunk = "";
-                        inHole = isHole;
-                    }
-                    chunk += chr;
-                });
-                lineHtml += stringHtmlSafe(chunk);
-                break;
-            default:
-                lineHtml += stringHtmlSafe(line);
-            }
-            html += String(`
-<pre>
-<span class="lineno">
-<a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}.</a>
-</span>
-<span class="count
-            ${(
-                count <= 0
-                ? "uncovered"
-                : ""
-            )}"
->
-${String(count).padStart(7, " ")}
-</span>
-<span>${lineHtml}</span>
-</pre>
-            `).replace((
-                /\n/g
-            ), "").trim() + "\n";
-        });
-        html += String(`
-</div>
-<div class="coverageFooter">
-</div>
-</body>
-</html>
-        `).trim() + "\n";
-        await require("fs").promises.writeFile((
-            ".coverage/" + pathname + ".html"
-        ), html);
+            ],
+            lineList
+        }));
         fileDict[pathname] = {
             coverageLevel,
             coveragePct,
@@ -407,8 +413,7 @@ ${String(count).padStart(7, " ")}
     ), templateHeader({
         fileList: Object.keys(fileDict).sort().map(function (pathname) {
             return fileDict[pathname];
-        }),
-        isIndexHtml: true
+        })
     }) + String(`
 </div>
 </body>
