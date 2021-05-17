@@ -1306,7 +1306,7 @@ shV8CoverageReport() {(set -e
 # this function will create coverage-report .coverage/index.html from
 # nodejs command "$@"
     rm -rf .coverage/
-    NODE_V8_COVERAGE=.coverage/ "$@"
+    NODE_V8_COVERAGE=.coverage/ "$@" || true
     node -e '
 // init debugInline
 if (!globalThis.debugInline) {
