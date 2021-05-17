@@ -68,7 +68,9 @@ if (!globalThis.debugInline) {
 </tr>
         `).trim() + "\n";
     }
-    function templateHeader() {
+    function templateHeader({
+        fileList
+    }) {
         return String(`
 <!doctype html>
 <html lang="en">
@@ -90,7 +92,6 @@ body {
 .coverage table {
 border-collapse: collapse;
 margin-top: 20px;
-/*!! text-align: right; */
 }
 .coverage table:nth-child(1) {
     margin-top: 0;
@@ -158,6 +159,13 @@ margin-top: 20px;
 <body class="coverage">
 <div class="header">
 <span>coverage report<span><br>
+<table>
+<thead>
+<tr>
+<th>file</th>
+<th>lines</th>
+</tr>
+</thead>
         `).trim();
     }
     data = await require("fs").promises.readdir(".coverage/");
@@ -283,13 +291,6 @@ margin-top: 20px;
         ), ".$&");
         html = String(`
 ${templateHeader()}
-<table>
-<thead>
-<tr>
-<th>file</th>
-<th>lines</th>
-</tr>
-</thead>
 <tbody> ` + templateFile({
             coverageLevel,
             coveragePct,
@@ -404,13 +405,6 @@ ${String(count).padStart(7, " ")}
     }));
     await require("fs").promises.writeFile(".coverage/index.html", String(`
 ${templateHeader()}
-<table>
-<thead>
-<tr>
-<th>file</th>
-<th>lines</th>
-</tr>
-</thead>
 <tbody>` + Object.keys(fileDict).sort().map(function (pathname) {
         return templateFile(fileDict[pathname]);
     }).join("") + `</tbody>
