@@ -19,7 +19,6 @@ if (!globalThis.debugInline) {
     let cwd;
     let data;
     let fileDict;
-    let templateHeader;
     function stringHtmlSafe(str) {
     /*
      * this function will make <str> html-safe
@@ -39,7 +38,38 @@ if (!globalThis.debugInline) {
             /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
         ), "&$1");
     }
-    templateHeader = String(`
+    function templateFile({
+        coverageLevel,
+        coveragePct,
+        isIndex,
+        linesCovered,
+        linesTotal,
+        pathname
+    }) {
+        pathname = stringHtmlSafe(pathname);
+        return String(`
+<tr>
+    <td class="${coverageLevel}">
+        ${(
+            isIndex
+            ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
+            : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
+        )}
+        <span class="bar"
+            style="background: #777; width: ${(coveragePct | 0)}px;"
+        ></span><span class="bar"
+            style="width: ${100 - (coveragePct | 0)}px;"
+        ></span>
+    </td>
+    <td>
+        ${coveragePct}%<br>
+        (${linesCovered} / ${linesTotal})
+    </td>
+</tr>
+        `).trim() + "\n";
+    }
+    function templateHeader() {
+        return String(`
 <!doctype html>
 <html lang="en">
 <head>
@@ -128,36 +158,7 @@ margin-top: 20px;
 <body class="coverage">
 <div class="header">
 <span>coverage report<span><br>
-    `).trim();
-    function templateFile({
-        coverageLevel,
-        coveragePct,
-        isIndex,
-        linesCovered,
-        linesTotal,
-        pathname
-    }) {
-        pathname = stringHtmlSafe(pathname);
-        return String(`
-<tr>
-    <td class="${coverageLevel}">
-        ${(
-            isIndex
-            ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
-            : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
-        )}
-        <span class="bar"
-            style="background: #777; width: ${(coveragePct | 0)}px;"
-        ></span><span class="bar"
-            style="width: ${100 - (coveragePct | 0)}px;"
-        ></span>
-    </td>
-    <td>
-        ${coveragePct}%<br>
-        (${linesCovered} / ${linesTotal})
-    </td>
-</tr>
-        `).trim() + "\n";
+        `).trim();
     }
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
@@ -281,7 +282,7 @@ margin-top: 20px;
             /..$/m
         ), ".$&");
         html = String(`
-${templateHeader}
+${templateHeader()}
 <table>
 <thead>
 <tr>
@@ -402,7 +403,7 @@ ${String(count).padStart(7, " ")}
         };
     }));
     await require("fs").promises.writeFile(".coverage/index.html", String(`
-${templateHeader}
+${templateHeader()}
 <table>
 <thead>
 <tr>
