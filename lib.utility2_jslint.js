@@ -274,7 +274,7 @@ shRawLibFetch
 -var CSSLint = (function(){
 +// hack-csslint - global-function-scope
 +/\\* jslint ignore:start *\\/
-+(function () {
++(async function () {
 +// init debugInline
 +if (!globalThis.debugInline) {
 +    let consoleError;
@@ -330,7 +330,7 @@ THE SOFTWARE.
 
 // hack-csslint - global-function-scope
 /* jslint ignore:start */
-(function () {
+(async function () {
 // init debugInline
 if (!globalThis.debugInline) {
     let consoleError;
@@ -16197,6 +16197,7 @@ file none
 
 
 // hack-jslint - cli
+let errMsg;
 function stringLineCount(data) {
 /*
  * this function will count number of newlines in <data>
@@ -16218,7 +16219,7 @@ function stringLineCount(data) {
 async function jslint2({
     code,
     err,
-    errMsg = [],
+    errList = [],
     file,
     lineOffset = 0,
     previous
@@ -16227,7 +16228,7 @@ async function jslint2({
         /\.\w+?$|$/m
     ).exec(file)[0]) {
     case ".css":
-        errMsg = CSSLint.verify( // jslint ignore:line
+        errList = CSSLint.verify( // jslint ignore:line
             code
         ).messages.map(function (err) {
             err.message = (
@@ -16264,7 +16265,7 @@ async function jslint2({
                     message: "unexpected multiline-statement"
                 };
             }
-            errMsg.push(Object.assign(err, {
+            errList.push(Object.assign(err, {
                 col: 1,
                 evidence: match0,
                 line: stringLineCount(code.slice(0, ii))
@@ -16320,7 +16321,7 @@ async function jslint2({
                 : undefined
             );
             if (err) {
-                errMsg.push(Object.assign(err, {
+                errList.push(Object.assign(err, {
                     col: 1,
                     evidence: match0,
                     line: stringLineCount(code.slice(0, ii)),
@@ -16388,7 +16389,7 @@ async function jslint2({
         });
         return;
     default:
-        errMsg = jslint("\n".repeat(lineOffset) + code, {
+        errList = jslint("\n".repeat(lineOffset) + code, {
             bitwise: true,
             browser: true,
             debug: true,
@@ -16399,7 +16400,7 @@ async function jslint2({
             "global", "globalThis"
         ]).warnings;
     }
-    errMsg = errMsg.filter(function ({
+    errMsg = errList.filter(function ({
         message
     }) {
         return message;
@@ -16439,7 +16440,8 @@ async function jslint2({
 let file;
 file = process.argv[2];
 if (file === ".") {
-    require("fs").readdirSync(".").forEach(function (file) {
+    await Promise.all(require("fs").readdirSync(".").map(async function (file) {
+        let code;
         let timeStart;
         timeStart = Date.now();
         switch ((
@@ -16455,34 +16457,38 @@ if (file === ".") {
         default:
             return;
         }
-        require("fs").readFile(file, "utf8", function (err, code) {
-            if (err || !(
-                !(
-                    /\b(?:assets\.app\.js|lock|min|raw|rollup)\b/
-                ).test(file) &&
-                code &&
-                code.length < 1048576 &&
-                (
-                    /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$/m
-                ).test(code.slice(0, 65536))
-            )) {
-                return;
-            }
-            jslint2({
-                code,
-                file
-            });
-            console.error(
-                "jslint - " + (Date.now() - timeStart) + "ms - " + file
-            );
+        try {
+            code = await require("fs").promises.readFile(file, "utf8");
+        } catch (ignore) {
+            return;
+        }
+        if (!(
+            !(
+                /\b(?:assets\.app\.js|lock|min|raw|rollup)\b/
+            ).test(file) &&
+            code &&
+            code.length < 1048576 &&
+            (
+                /^\/\*\u0020jslint\u0020utility2:true\u0020\*\/$/m
+            ).test(code.slice(0, 65536))
+        )) {
+            return;
+        }
+        jslint2({
+            code,
+            file
         });
-    });
+        console.error(
+            "jslint - " + (Date.now() - timeStart) + "ms - " + file
+        );
+    }));
 } else {
     jslint2({
         code: require("fs").readFileSync(file, "utf8"),
         file
     });
 }
+process.exit(Boolean(errMsg));
 // hack-jslint - global-function-scope
 /* jslint ignore:start */
 }());

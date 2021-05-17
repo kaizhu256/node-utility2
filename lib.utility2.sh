@@ -1584,6 +1584,10 @@ ${String(count).padStart(7, " ")}
             data = await require("fs").promises.readFile((
                 ".coverage/" + file
             ), "utf8");
+            require("fs").promises.rename(
+                ".coverage/" + file,
+                ".coverage/coverage.json"
+            );
         }
     }));
     fileDict = {};
@@ -1607,7 +1611,7 @@ ${String(count).padStart(7, " ")}
         pathname = url.replace("file:///", "").replace((
             /\\\\/g
         ), "/");
-        if (pathname.indexOf(cwd) !== 0) {
+        if (pathname.indexOf(cwd) !== 0 || pathname.indexOf(cwd + "[") === 0) {
             return;
         }
         pathname = pathname.replace(cwd, "");
