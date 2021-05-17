@@ -1392,10 +1392,6 @@ body {
     display: inline-block;
     width: 100%;
 }
-.coverage .bar {
-    background: #999;
-    height: 10px;
-}
 .coverage .content {
     padding: 0 5px;
 }
@@ -1409,6 +1405,16 @@ body {
 .coverage .footer,
 .coverage .header {
     padding: 20px;
+}
+.coverage .percentbar {
+    height: 12px;
+    margin: 2px 0;
+    position: relative;
+    width: 100%;
+}
+.coverage .percentbar div {
+    height: 100%;
+    position: absolute;
 }
 
 .coverage td,
@@ -1433,6 +1439,12 @@ body {
 }
 .coverage .lineno {
     background: #ddd;
+}
+.coverage .percentbar {
+    background: #999;
+}
+.coverage .percentbar div {
+    background: #666;
 }
 .coverage .uncovered {
     background: #dbb;
@@ -1524,7 +1536,9 @@ body {
             );
             txt += txtBorder;
             pathname = stringHtmlSafe(pathname);
-            html += `<tr><td class="${coverageLevel}">` + (
+            html += `<tr>
+<td class="${coverageLevel}">
+            ${(
                 lineList
                 ? (
                     "<a href=\"index.html\">./ </a>" +
@@ -1534,16 +1548,15 @@ body {
                     "<a href=\"" + (pathname || "index") + ".html\">./ " +
                     pathname + "</a><br>"
                 )
-            ) + `<span class="bar"
-    style="background: #333; width: ${(coveragePct | 0)}px;"
-></span><span class="bar"
-    style="width: ${100 - (coveragePct | 0)}px;"
-></span>
+            )}
+<div class="percentbar">
+    <div style="width: ${coveragePct}%;"></div>
+</div>
 </td>
 <td style="text-align: right;">
-        ${coveragePct} %<br>
-        ${linesCovered} / ${linesTotal}
-    </td>
+    ${coveragePct} %<br>
+    ${linesCovered} / ${linesTotal}
+</td>
 </tr>`;
         });
         if (lineList) {
