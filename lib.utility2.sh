@@ -1263,8 +1263,8 @@ shSource() {
         do
             if [ -f "$HOME/$FILE" ]
             then
-                rm -f "$HOME/Documents/utility2/$FILE"
-                ln "$HOME/$FILE" "$HOME/Documents/utility2/$FILE"
+                rm -f "$HOME/$FILE"
+                ln "$HOME/Documents/utility2/$FILE" "$HOME/$FILE"
             fi
         done
     fi
