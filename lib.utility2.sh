@@ -1328,7 +1328,7 @@ if (!globalThis.debugInline) {
     let cwd;
     let data;
     let fileDict;
-    function htmlRender({
+    async function htmlRender({
         fileList,
         lineList,
         pathname
@@ -1662,7 +1662,7 @@ ${String(count).padStart(7, " ")}
         if (!lineList) {
             console.error("\n" + txt);
             await require("fs").promises.writeFile((
-                "./coverage/coverage.txt"
+                ".coverage/coverage.txt"
             ), txt);
         }
         await require("fs").promises.writeFile(pathname + ".html", html);
