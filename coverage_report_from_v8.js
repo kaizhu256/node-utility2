@@ -38,39 +38,9 @@ if (!globalThis.debugInline) {
             /&amp;(amp;|apos;|gt;|lt;|quot;)/igu
         ), "&$1");
     }
-    function templateFile({
-        coverageLevel,
-        coveragePct,
-        isIndex,
-        linesCovered,
-        linesTotal,
-        pathname
-    }) {
-        pathname = stringHtmlSafe(pathname);
-        return String(`
-<tr>
-    <td class="${coverageLevel}">
-        ${(
-            isIndex
-            ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
-            : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
-        )}
-        <span class="bar"
-            style="background: #777; width: ${(coveragePct | 0)}px;"
-        ></span><span class="bar"
-            style="width: ${100 - (coveragePct | 0)}px;"
-        ></span>
-    </td>
-    <td>
-        ${coveragePct}%<br>
-        (${linesCovered} / ${linesTotal})
-    </td>
-</tr>
-        `).trim() + "\n";
-    }
     function templateHeader({
         fileList,
-        isIndex
+        isIndexHtml
     }) {
         return String(`
 <!doctype html>
@@ -178,16 +148,16 @@ margin-top: 20px;
             return String(`
 <tr>
     <td class="${coverageLevel}">` + (
-                isIndex
-                ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
-                : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
+                isIndexHtml
+                ? "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
+                : "<a href=\"index.html\">./</a>" + pathname + "<br>"
             ) + `<span class="bar"
             style="background: #777; width: ${(coveragePct | 0)}px;"
         ></span><span class="bar"
             style="width: ${100 - (coveragePct | 0)}px;"
         ></span>
     </td>
-    <td>
+    <td style="text-align: right;">
         ${coveragePct}%<br>
         (${linesCovered} / ${linesTotal})
     </td>
@@ -324,7 +294,6 @@ margin-top: 20px;
                 {
                     coverageLevel,
                     coveragePct,
-                    isIndex: true,
                     linesCovered,
                     linesTotal,
                     pathname
@@ -437,9 +406,9 @@ ${String(count).padStart(7, " ")}
         ".coverage/index.html"
     ), templateHeader({
         fileList: Object.keys(fileDict).sort().map(function (pathname) {
-            return templateFile(fileDict[pathname]);
+            return fileDict[pathname];
         }),
-        isIndex: true
+        isIndexHtml: true
     }) + String(`
 </div>
 </body>
