@@ -93,6 +93,7 @@ body {
     margin: 0 5px;
     padding: 0 5px;
 }
+.coverage .footer,
 .coverage .header {
     padding: 20px;
 }
