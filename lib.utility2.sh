@@ -1451,14 +1451,43 @@ body {
 </tr>
 </thead>
 <tbody>`;
+        if (!lineList) {
+            fileList.unshift({
+                linesCovered: 0,
+                linesTotal: 0,
+                pathname: "./"
+            });
+            fileList.slice(1).forEach(function ({
+                linesCovered,
+                linesTotal
+            }) {
+                fileList[0].linesCovered += linesCovered;
+                fileList[0].linesTotal += linesTotal;
+            });
+        }
         fileList.forEach(function ({
-            coverageLevel,
-            coveragePct,
             linesCovered,
             linesTotal,
             pathname
-        }) {
-            pathname = stringHtmlSafe(pathname);
+        }, ii) {
+            let coverageLevel;
+            let coveragePct;
+            coveragePct = Math.floor(10000 * linesCovered / linesTotal);
+            coverageLevel = (
+                coveragePct >= 8000
+                ? "coverageHigh"
+                : coveragePct >= 5000
+                ? "coverageMedium"
+                : "coverageLow"
+            );
+            coveragePct = String(coveragePct).replace((
+                /..$/m
+            ), ".$&");
+            pathname = (
+                (!lineList && ii === 0)
+                ? ""
+                : stringHtmlSafe(pathname)
+            );
             html += `<tr><td class="${coverageLevel}">` + (
                 lineList
                 ? (
@@ -1466,7 +1495,7 @@ body {
                     pathname + "<br>"
                 )
                 : (
-                    "<a href=\"" + pathname + ".html\">./ " +
+                    "<a href=\"" + (pathname || "index") + ".html\">./ " +
                     pathname + "</a><br>"
                 )
             ) + `<span class="bar"
@@ -1598,8 +1627,6 @@ ${String(count).padStart(7, " ")}
         functions,
         url
     }) {
-        let coverageLevel;
-        let coveragePct;
         let lineList;
         let linesCovered;
         let linesTotal;
@@ -1689,24 +1716,11 @@ ${String(count).padStart(7, " ")}
         }) {
             return count > 0;
         }).length;
-        coveragePct = Math.floor(10000 * linesCovered / linesTotal);
-        coverageLevel = (
-            coveragePct >= 8000
-            ? "coverageHigh"
-            : coveragePct >= 5000
-            ? "coverageMedium"
-            : "coverageLow"
-        );
-        coveragePct = String(coveragePct).replace((
-            /..$/m
-        ), ".$&");
         await require("fs").promises.writeFile((
             ".coverage/" + pathname + ".html"
         ), htmlRender({
             fileList: [
                 {
-                    coverageLevel,
-                    coveragePct,
                     linesCovered,
                     linesTotal,
                     pathname
@@ -1715,8 +1729,6 @@ ${String(count).padStart(7, " ")}
             lineList
         }));
         fileDict[pathname] = {
-            coverageLevel,
-            coveragePct,
             lineList,
             linesCovered,
             linesTotal,
