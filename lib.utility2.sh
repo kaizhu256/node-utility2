@@ -1822,5 +1822,12 @@ ${String(count).padStart(7, " ")}
 ' # '
 )}
 
+shWinpty() {(set -e
+# this function will run "$@" in utility2-env with winpty
+    winpty -Xallow-non-tty -Xplain sh "$HOME/lib.utility2.sh" "$@"
+)}
+
 # run main-program
 export UTILITY2_GIT_BASE_ID=9fe8c2255f4ac330c86af7f624d381d768304183
+
+"$@"
