@@ -1615,7 +1615,7 @@ ${String(count).padStart(7, " ")}
             ), "utf8");
             require("fs").promises.rename(
                 ".coverage/" + file,
-                ".coverage/coverage.json"
+                ".coverage/coverage_v8.json"
             );
         }
     }));
