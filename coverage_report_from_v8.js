@@ -69,7 +69,8 @@ if (!globalThis.debugInline) {
         `).trim() + "\n";
     }
     function templateHeader({
-        fileList
+        fileList,
+        isIndex
     }) {
         return String(`
 <!doctype html>
@@ -166,7 +167,36 @@ margin-top: 20px;
 <th>lines</th>
 </tr>
 </thead>
-        `).trim();
+<tbody>` + fileList.map(function ({
+            coverageLevel,
+            coveragePct,
+            linesCovered,
+            linesTotal,
+            pathname
+        }) {
+            pathname = stringHtmlSafe(pathname);
+            return String(`
+<tr>
+    <td class="${coverageLevel}">` + (
+                isIndex
+                ? "<a href=\"index.html>./\"</a>" + pathname + "<br>"
+                : "<a href=\"" + pathname + ".html\">./" + pathname + "</a><br>"
+            ) + `<span class="bar"
+            style="background: #777; width: ${(coveragePct | 0)}px;"
+        ></span><span class="bar"
+            style="width: ${100 - (coveragePct | 0)}px;"
+        ></span>
+    </td>
+    <td>
+        ${coveragePct}%<br>
+        (${linesCovered} / ${linesTotal})
+    </td>
+</tr>
+            `).trim() + "\n";
+        }).join("") + `</tbody>
+</table>
+</div>
+        `).trim() + "\n";
     }
     data = await require("fs").promises.readdir(".coverage/");
     await Promise.all(data.map(async function (file) {
@@ -289,18 +319,18 @@ margin-top: 20px;
         coveragePct = String(coveragePct).replace((
             /..$/m
         ), ".$&");
-        html = String(`
-${templateHeader()}
-<tbody> ` + templateFile({
-            coverageLevel,
-            coveragePct,
-            isIndex: true,
-            linesCovered,
-            linesTotal,
-            pathname
-        }) + `</tbody>
-</table>
-</div>
+        html = templateHeader({
+            fileList: [
+                {
+                    coverageLevel,
+                    coveragePct,
+                    isIndex: true,
+                    linesCovered,
+                    linesTotal,
+                    pathname
+                }
+            ]
+        }) + String(`
 <div class="content">
         `).trim() + "\n";
         lineList.forEach(function ({
@@ -403,12 +433,14 @@ ${String(count).padStart(7, " ")}
             src
         };
     }));
-    await require("fs").promises.writeFile(".coverage/index.html", String(`
-${templateHeader()}
-<tbody>` + Object.keys(fileDict).sort().map(function (pathname) {
-        return templateFile(fileDict[pathname]);
-    }).join("") + `</tbody>
-</table>
+    await require("fs").promises.writeFile((
+        ".coverage/index.html"
+    ), templateHeader({
+        fileList: Object.keys(fileDict).sort().map(function (pathname) {
+            return templateFile(fileDict[pathname]);
+        }),
+        isIndex: true
+    }) + String(`
 </div>
 </body>
 </html>
