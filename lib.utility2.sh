@@ -1349,7 +1349,7 @@ if (!globalThis.debugInline) {
     }
     function htmlRender({
         fileList,
-        lineList = []
+        lineList
     }) {
         let html;
         html = "";
@@ -1481,90 +1481,92 @@ body {
     </td>
 </tr>`;
         });
-        html += `</tbody>
+        if (lineList) {
+            html += `</tbody>
 </table>
 </div>
 <div class="content">
 `;
-        lineList.forEach(function ({
-            count,
-            holeList,
-            line,
-            startOffset
-        }, ii) {
-            let chunk;
-            let inHole;
-            let lineId;
-            let lineHtml;
-            lineHtml = "";
-            lineId = "line_" + (ii + 1);
-            switch (count) {
-            case -1:
-            case 0:
-                if (holeList.length === 0) {
-                    lineHtml += "</span>";
-                    lineHtml += "<span class=\"uncovered\">";
-                    lineHtml += stringHtmlSafe(line);
-                    break;
-                }
-                line = line.split("").map(function (chr) {
-                    return {
+            lineList.forEach(function ({
+                count,
+                holeList,
+                line,
+                startOffset
+            }, ii) {
+                let chunk;
+                let inHole;
+                let lineId;
+                let lineHtml;
+                lineHtml = "";
+                lineId = "line_" + (ii + 1);
+                switch (count) {
+                case -1:
+                case 0:
+                    if (holeList.length === 0) {
+                        lineHtml += "</span>";
+                        lineHtml += "<span class=\"uncovered\">";
+                        lineHtml += stringHtmlSafe(line);
+                        break;
+                    }
+                    line = line.split("").map(function (chr) {
+                        return {
+                            chr,
+                            isHole: undefined
+                        };
+                    });
+                    holeList.forEach(function ([
+                        aa, bb
+                    ]) {
+                        aa = Math.max(aa - startOffset, 0);
+                        bb = Math.min(bb - startOffset, line.length);
+                        while (aa < bb) {
+                            line[aa].isHole = true;
+                            aa += 1;
+                        }
+                    });
+                    chunk = "";
+                    line.forEach(function ({
                         chr,
-                        isHole: undefined
-                    };
-                });
-                holeList.forEach(function ([
-                    aa, bb
-                ]) {
-                    aa = Math.max(aa - startOffset, 0);
-                    bb = Math.min(bb - startOffset, line.length);
-                    while (aa < bb) {
-                        line[aa].isHole = true;
-                        aa += 1;
-                    }
-                });
-                chunk = "";
-                line.forEach(function ({
-                    chr,
-                    isHole
-                }) {
-                    if (inHole !== isHole) {
-                        lineHtml += stringHtmlSafe(chunk);
-                        lineHtml += (
-                            isHole
-                            ? "</span><span class=\"uncovered\">"
-                            : "</span><span>"
-                        );
-                        chunk = "";
-                        inHole = isHole;
-                    }
-                    chunk += chr;
-                });
-                lineHtml += stringHtmlSafe(chunk);
-                break;
-            default:
-                lineHtml += stringHtmlSafe(line);
-            }
-            html += String(`
+                        isHole
+                    }) {
+                        if (inHole !== isHole) {
+                            lineHtml += stringHtmlSafe(chunk);
+                            lineHtml += (
+                                isHole
+                                ? "</span><span class=\"uncovered\">"
+                                : "</span><span>"
+                            );
+                            chunk = "";
+                            inHole = isHole;
+                        }
+                        chunk += chr;
+                    });
+                    lineHtml += stringHtmlSafe(chunk);
+                    break;
+                default:
+                    lineHtml += stringHtmlSafe(line);
+                }
+                html += String(`
 <pre>
 <span class="lineno">
 <a href="#${lineId}" id="${lineId}">${String(ii + 1).padStart(5, " ")}.</a>
 </span>
 <span class="count
-            ${(
-                count <= 0
-                ? "uncovered"
-                : ""
-            )}"
+                ${(
+                    count <= 0
+                    ? "uncovered"
+                    : ""
+                )}"
 >
 ${String(count).padStart(7, " ")}
 </span>
 <span>${lineHtml}</span>
 </pre>
-            `).replace((
-                /\n/g
-            ), "").trim() + "\n";
-        });
+                `).replace((
+                    /\n/g
+                ), "").trim() + "\n";
+            });
+        }
         html += `
 </div>
 <div class="coverageFooter">
@@ -1726,7 +1728,7 @@ ${String(count).padStart(7, " ")}
         })
     }));
 }());
-    ' # '
+' # '
 )}
 
 # run main-program
