@@ -1677,7 +1677,14 @@ ${String(count).padStart(7, " ")}
         pathname = url.replace("file:///", "").replace((
             /\\\\/g
         ), "/");
-        if (pathname.indexOf(cwd) !== 0 || pathname.indexOf(cwd + "[") === 0) {
+        if (
+            pathname.indexOf(cwd) !== 0 ||
+            pathname.indexOf(cwd + "[") === 0 ||
+            (
+                process.env.npm_config_mode_coverage !== "all" &&
+                pathname.indexOf("/node_modules/") >= 0
+            )
+        ) {
             return;
         }
         pathname = pathname.replace(cwd, "");
