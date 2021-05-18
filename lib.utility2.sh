@@ -123,6 +123,7 @@ shBaseInstall() {
 # lib.utility2.sh in $HOME
 # example use:
 # curl -Lf -o "$HOME/lib.utility2.sh" https://raw.githubusercontent.com/kaizhu256/node-utility2/alpha/lib.utility2.sh && . "$HOME/lib.utility2.sh" && shBaseInstall
+    local FILE
     for FILE in .screenrc .vimrc lib.utility2.sh
     do
         curl -Lf -o "$HOME/$FILE" \
@@ -1252,6 +1253,7 @@ shReadmeLinkValidate() {(set -e
 shRmDsStore() {(set -e
 # this function will recursively rm .DS_Store from current-dir
 # http://stackoverflow.com/questions/2016844/bash-recursively-remove-files
+    local NAME
     for NAME in "._*" ".DS_Store" "desktop.ini" "npm-debug.log" "*~"
     do
         find . -iname "$NAME" -print0 | xargs -0 rm -f || true
@@ -1260,6 +1262,7 @@ shRmDsStore() {(set -e
 
 shSource() {
 # this function will source .bashrc
+    local FILE
     if [ -d "$HOME/Documents/utility2/" ]
     then
         for FILE in lib.utility2.sh lib.utility2_jslint.js
@@ -1514,7 +1517,7 @@ body {
         }, ii) {
             let coverageLevel;
             let coveragePct;
-            coveragePct = Math.floor(10000 * linesCovered / linesTotal);
+            coveragePct = Math.floor(10000 * linesCovered / linesTotal | 0);
             coverageLevel = (
                 coveragePct >= 8000
                 ? "coverageHigh"
@@ -1823,7 +1826,7 @@ ${String(count).padStart(7, " ")}
 )}
 
 shWinpty() {(set -e
-# this function will run "$@" in utility2-env with winpty
+# this function will run "$@" in current-env with winpty
     winpty -Xallow-non-tty -Xplain sh "$HOME/lib.utility2.sh" "$@"
 )}
 
