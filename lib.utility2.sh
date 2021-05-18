@@ -1312,7 +1312,7 @@ shV8CoverageReport() {(set -e
 # this function will create coverage-report .coverage/index.html from
 # nodejs command "$@"
     rm -rf .coverage/
-    NODE_V8_COVERAGE=.coverage/ "$@" || true
+    (export NODE_V8_COVERAGE=.coverage/ && "$@" || true)
     node -e '
 // init debugInline
 if (!globalThis.debugInline) {
@@ -1367,7 +1367,7 @@ if (!globalThis.debugInline) {
         html += `<!doctype html>
 <html lang="en">
 <head>
-<title>coverage report</title>
+<title>coverage-report</title>
 <style>
 /* jslint utility2:true */
 /* csslint ignore:start */
@@ -1467,7 +1467,7 @@ body {
 </head>
 <body class="coverage">
 <div class="header">
-<div class="title">coverage report</div>
+<div class="title">coverage-report</div>
 <table>
 <thead>
 <tr>
@@ -1503,7 +1503,7 @@ body {
             "-".repeat(padLines + 2) + "+\n"
         );
         txt = "";
-        txt += "coverage report\n";
+        txt += "coverage-report\n";
         txt += txtBorder;
         txt += (
             "| " + String("files covered").padEnd(padPathname, " ") + " | " +
@@ -1703,7 +1703,11 @@ ${String(count).padStart(7, " ")}
         if (url.indexOf("file:///") !== 0) {
             return;
         }
-        pathname = url.replace("file:///", "").replace((
+        pathname = url.replace((
+            process.platform === "win32"
+            ? "file:///"
+            : "file://"
+        ), "").replace((
             /\\\\/g
         ), "/");
         if (
