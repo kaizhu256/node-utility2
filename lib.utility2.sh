@@ -647,6 +647,30 @@ if (!globalThis.debugInline) {
  * this function will start http-file-server
  */
     "use strict";
+    let contentTypeDict = {
+        // application
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".mjs": "application/javascript; charset=utf-8",
+        ".pdf": "application/pdf",
+        ".wasm": "application/wasm",
+        ".xml": "application/xml; charset=utf-8",
+        // image
+        ".bmp": "image/bmp",
+        ".gif": "image/gif",
+        ".jpe": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".jpg": "image/jpeg",
+        ".png": "image/png",
+        ".svg": "image/svg+xml; charset=utf-8",
+        // text
+        ".css": "text/css; charset=utf-8",
+        ".htm": "text/html; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
+        ".md": "text/markdown; charset=utf-8",
+        ".txt": "text/plain; charset=utf-8",
+        "/": "text/html; charset=utf-8"
+    };
     if (process.argv[1]) {
         require(require("path").resolve(process.argv[1]));
     }
@@ -696,17 +720,11 @@ if (!globalThis.debugInline) {
                 res.end();
                 return;
             }
-            switch (require("path").extname(file)) {
-            case ".js":
-            case ".mjs":
-                res.setHeader(
-                    "content-type",
-                    "application/javascript; charset=utf-8"
-                );
-                break;
-            case ".wasm":
-                res.setHeader("content-type", "application/wasm");
-                break;
+            let contentType = contentTypeDict[(
+                /^\/$|\.[^.]*?$|$/m
+            ).exec(file)[0]];
+            if (contentType) {
+                res.setHeader("content-type", contentType);
             }
             res.end(data);
         });
