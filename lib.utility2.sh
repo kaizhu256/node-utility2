@@ -518,9 +518,7 @@ shGitSquashPop() {(set -e
 )}
 
 shGrep() {(set -e
-# this function will recursively grep $DIR for $REGEXP
-    DIR="$1"
-    shift
+# this function will recursively grep . for $REGEXP
     REGEXP="$1"
     shift
     FILE_FILTER="\
@@ -542,7 +540,7 @@ swp|\
 tmp|\
 vendor)s{0,1}(\\b|_)\
 "
-    find "$DIR" -type f |
+    find . -type f |
         grep -v -E "$FILE_FILTER" |
         tr "\n" "\000" |
         xargs -0 grep -HIn -E "$REGEXP" "$@" |
