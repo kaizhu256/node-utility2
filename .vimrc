@@ -85,13 +85,13 @@ function! MyStringifyRegion(...)
 " this function will js-stringify-add selected-region
     " un-stringify
     if a:1 == 'u'
-        '<,'>s/^\s*"\(.*\)\(" +\|"\)$/\1/e
+        '<,'>s/^\s*\(+ "\|"\)\(.*\)\(" +\|"\)$/\2/e
         '<,'>s/\\n\\*$//e
         '<,'>s/\\\(["'\\]\)/\1/eg
-    " stringify "..." +
+    " stringify + "..."
     elseif a:1 == '+'
         '<,'>s/["\\]/\\&/eg
-        '<,'>s/.*/    "&\\n" +/e
+        '<,'>s/.*/    + "&\\n"/e
     " stringify ...\n\
     elseif a:1 == '\'
         '<,'>s/['\\]/\\&/eg
