@@ -543,7 +543,7 @@ vendor)s{0,1}(\\b|_)\
     find . -type f |
         grep -v -E "$FILE_FILTER" |
         tr "\n" "\000" |
-        xargs -0 grep -HIn -E "$REGEXP" "$@" |
+        xargs -0 grep -HIin -E "$REGEXP" "$@" |
         tee /tmp/shGrep.txt || true
 )}
 
