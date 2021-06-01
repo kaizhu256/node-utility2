@@ -983,7 +983,7 @@ shRawLibFetch() {(set -e
     }
     // init matchObj
     matchObj = (
-        /^\/\*\u0020jslint\u0020ignore:start\u0020\*\/\n\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
+        /^\/\*jslint-disable\*\/\n\/\*\nshRawLibFetch\n(\{\n[\S\s]*?\n\})([\S\s]*?)\n\*\/\n/m
     ).exec(require("fs").readFileSync(process.argv[1], "utf8"));
     // JSON.parse match1 with comment
     let {
@@ -1129,7 +1129,7 @@ shRawLibFetch() {(set -e
         // init header
         header = (
             matchObj.input.slice(0, matchObj.index) +
-            "/* jslint ignore:start */\n/*\nshRawLibFetch\n" +
+            "/*jslint-disable*/\n/*\nshRawLibFetch\n" +
             JSON.stringify(JSON.parse(matchObj[1]), undefined, 4) + "\n" +
             matchObj[2].split("\n\n").filter(function (elem) {
                 return elem.trim();
@@ -1139,7 +1139,7 @@ shRawLibFetch() {(set -e
                 ), "*\\\\/").replace((
                     /\/\*/g
                 ), "/\\\\*") + "\n";
-            }).sort().join("\n") + "*/\n/* jslint ignore:end */\n\n\n"
+            }).sort().join("\n") + "*/\n/*jslint-enable*/\n\n\n"
         );
         // replace from header-diff
         header.replace((
