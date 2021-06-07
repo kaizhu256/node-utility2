@@ -11,6 +11,7 @@
 // assets.utility2.header.js - start
 /* jslint utility2:\true */
 /* istanbul ignore next */
+/*jslint bitwise, browser, devel, node, unordered*/
 // run shared js-env code - init-local
 (function () {
     "use strict";
@@ -169,13 +170,18 @@
 // assets.utility2.header.js - end
 
 
+/*jslint-disable*/
 (function (local) {
 "use strict";
+/*jslint-enable*/
+let local = {};
 
 
 /* istanbul ignore next */
 // run shared js-env code - init-before
+/*jslint-disable*/
 (function () {
+/*jslint-enable*/
 // init local
 local = (
     globalThis.utility2_rollup ||
@@ -206,10 +212,14 @@ if (
         throw err;
     });
 }
+/*jslint-disable*/
 }());
+/*jslint-enable*/
 
 
+/*jslint-disable*/
 (function () {
+/*jslint-enable*/
 // init lib utility2
 globalThis.utility2 = local;
 
@@ -2186,7 +2196,7 @@ local.buildApp = function ({
         });
         tgt = tgt.replace("\n# table of contents\n", toc);
         // eslint - no-multiple-empty-lines
-        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
+        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md //jslint-quiet
         tgt = tgt.replace((
             /\n{4,}/g
         ), "\n\n\n");
@@ -2635,7 +2645,7 @@ local.chromeDevtoolsClientCreate = async function ({
     /*
      * this function will construct <chromeClient>
      */
-        chromeClient = this;
+        chromeClient = this; //jslint-quiet
         require("util").inherits(ChromeClient, require("stream").Duplex);
         require("stream").Duplex.call(chromeClient);
         Object.assign(chromeClient.__proto__, {
@@ -2733,7 +2743,7 @@ Application data: y bytes
     /*
      * this function will construct <wsReader>
      */
-        wsReader = this;
+        wsReader = this; //jslint-quiet
         require("util").inherits(WsReader, require("stream").Transform);
         require("stream").Transform.call(wsReader);
         Object.assign(wsReader.__proto__, {
@@ -2771,7 +2781,7 @@ Application data: y bytes
         // On non-windows platforms, `detached: false` makes child process
         // a leader of a new process group, making it possible to kill
         // child process tree with `.kill(-pid)` cmd.
-        // https://nodejs.org/api/child_process.html#child_process_options_detached
+        // https://nodejs.org/api/child_process.html#child_process_options_detached //jslint-quiet
         detached: process.platform !== "win32",
         stdio: [
             "ignore", (
@@ -3387,7 +3397,7 @@ local.jslintAutofixLocalFunction = function (code, file) {
         dictFnc[key] = true;
         match3 = local.functionAllDict[key] || "";
         // make shell-safe
-        // https://unix.stackexchange.com/questions/57794/shell-escape-characters-for-sh-c
+        // https://unix.stackexchange.com/questions/57794/shell-escape-characters-for-sh-c //jslint-quiet
         if (file.slice(-3) === ".sh") {
             match3 = match3.replace((
                 /'/g
@@ -3600,7 +3610,7 @@ local.replStart = function () {
                 script = "\n";
                 break;
             // syntax-sugar - list obj-keys, sorted by item-type
-            // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) // jslint ignore:line
+            // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='object'&&global[key]&&global[key]===global[key]?'global':typeof global[key])+' '+key;}).sort().join('\n')) //jslint-quiet
             case "keys":
                 script = (
                     "console.error(Object.keys(" + match2 +
@@ -4086,7 +4096,7 @@ local.setTimeoutOnError = function (onError, timeout, err, data) {
 local.stringHtmlSafe = function (str) {
 /*
  * this function will make <str> html-safe
- * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
+ * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html //jslint-quiet
  */
     return str.replace((
         /&/gu
@@ -4106,7 +4116,7 @@ local.stringHtmlSafe = function (str) {
 local.stringRegexpEscape = function (str) {
 /*
  * this function will regexp-escape <str>
- * https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript
+ * https://stackoverflow.com/questions/3561493/is-there-a-regexp-escape-function-in-javascript //jslint-quiet
  */
     return str.replace((
         /[\-\/\\\^$*+?.()|\[\]{}]/g
@@ -5071,244 +5081,247 @@ local.stringHelloEmoji = "hello \ud83d\ude01\n";
 /* istanbul ignore next */
 // run node js-env code - init-after
 (function () {
-if (!isEnvNode) {
-    return;
-}
-// exit after $npm_config_timeout_exit
-if (!npm_config_mode_lib && npm_config_timeout_exit) {
-    setTimeout(process.exit.bind(undefined, 15), npm_config_timeout_exit);
-}
-// merge previous test-report
-if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
-    local.testReportMerge(
-        globalThis.utility2_testReport,
-        local.fsReadFileOrDefaultSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            "json",
-            {}
-        )
-    );
-    if (process.argv[2] !== "--help") {
-        console.error(
-            "\n" + MODE_CI + " - merged test-report from file " +
-            UTILITY2_DIR_BUILD + "/test-report.json"
-        );
+    if (!isEnvNode) {
+        return;
     }
-}
-// init cli
-local.cliDict = {};
-local.cliDict["utility2.browserTest"] = async function () {
-/*
- * <urlList> <mode>
- * will browser-test in parallel, comma-separated <urlList> with given <mode>
- */
-    local.browserTest({
-        url: process.argv[3]
-    });
-};
-
-local.cliDict["utility2.testReportCreate"] = function () {
-/*
- *
- * will create test-report
- */
-    let testReport;
-    try {
-        testReport = JSON.parse(require("fs").readFileSync(
-            UTILITY2_DIR_BUILD + "/test-report.json",
-            "utf8"
-        ));
-    } catch (ignore) {}
-    local.testReportMerge(testReport, {}, "modeWrite");
-};
-
-if (module === require.main && (!globalThis.utility2_rollup || (
-    process.argv[2] &&
-    local.cliDict[process.argv[2]] &&
-    process.argv[2].indexOf("utility2.") === 0
-))) {
-    local.cliRun({});
-    if (local.cliDict[process.argv[2]]) {
-        switch (process.argv[2]) {
-        case "--interactive":
-        case "-i":
-        case "utility2.start":
-            break;
-        default:
-            return;
+    // exit after $npm_config_timeout_exit
+    if (!npm_config_mode_lib && npm_config_timeout_exit) {
+        setTimeout(process.exit.bind(undefined, 15), npm_config_timeout_exit);
+    }
+    // merge previous test-report
+    if (!npm_config_mode_lib && npm_config_mode_test_report_merge) {
+        local.testReportMerge(
+            globalThis.utility2_testReport,
+            local.fsReadFileOrDefaultSync(
+                UTILITY2_DIR_BUILD + "/test-report.json",
+                "json",
+                {}
+            )
+        );
+        if (process.argv[2] !== "--help") {
+            console.error(
+                "\n" + MODE_CI + " - merged test-report from file " +
+                UTILITY2_DIR_BUILD + "/test-report.json"
+            );
         }
     }
-}
-// override assets
-if (globalThis.utility2_rollup) {
-    local.assetsDict["/assets.utility2.rollup.js"] = (
-        require("fs").readFileSync(
-            __filename,
-            "utf8"
-        ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0] +
-        "\n/* script-end /assets.utility2.rollup.end.js */\n"
-    );
-    return;
-}
-// init assets
-[
-    "/assets.utility2.example.js",
-    "/assets.utility2.html",
-    "/assets.utility2.test.js",
-    "lib.apidoc.js",
-    "lib.istanbul.js",
-    "lib.jslint.js",
-    "lib.marked.js",
-    "lib.utility2.js",
-    "test.js"
-].forEach(function (key) {
-    switch (key) {
-    case "/assets.utility2.example.js":
-        local.assetsDict[key] = "";
-        local.fsReadFileOrDefaultSync(
-            __dirname + "/README.md",
-            "utf8",
-            ""
-        ).replace((
-            /```javascript([\S\s]*?)```/
-        ), function (ignore, match1) {
-            local.assetsDict[key] = match1.trim() + "\n";
-            return "";
+    // init cli
+    local.cliDict = {};
+    local.cliDict["utility2.browserTest"] = function () {
+    /*
+     * <urlList> <mode>
+     * will browser-test in parallel, comma-separated <urlList> with given
+     * <mode>
+     */
+        local.browserTest({
+            url: process.argv[3]
         });
-        break;
-    case "/assets.utility2.html":
-        local.assetsDict[key] = "";
-        local.fsReadFileOrDefaultSync(
-            __dirname + "/README.md",
-            "utf8",
-            ""
-        ).replace((
-            /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
-        ), function (match0) {
-            match0 = match0.replace((
-                /\\n\\$|\\(.)/gm
-            ), function (ignore, match1) {
-                return match1 || "";
-            });
-            match0 = match0.replace(
-                "<script src=\"assets.app.js\"></script>\n",
-                (
-                    "<script " +
-                    "src=\"assets.utility2.rollup.js\"></script>\n" +
-                    "<script " +
-                    "src=\"assets.utility2.example.js\"></script>\n" +
-                    "<script " +
-                    "src=\"assets.utility2.test.js\"></script>\n"
-                )
-            );
-            match0 = match0.replace(
-                "assets.example.js",
-                "assets.utility2.example.js"
-            );
-            match0 = match0.replace(
-                "assets.test.js",
-                "assets.utility2.test.js"
-            );
-            match0 = match0.replace((
-                /npm_package_/g
-            ), "");
-            match0 = match0.replace((
-                /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
-            ), "$1");
-            return "";
-        });
-        break;
-    case "/assets.utility2.test.js":
-        local.assetsDict[key] = local.fsReadFileOrDefaultSync(
-            __dirname + "/test.js",
-            "utf8",
-            ""
+    };
+
+    local.cliDict["utility2.testReportCreate"] = function () {
+    /*
+     *
+     * will create test-report
+     */
+        let testReport;
+        try {
+            testReport = JSON.parse(require("fs").readFileSync(
+                UTILITY2_DIR_BUILD + "/test-report.json",
+                "utf8"
+            ));
+        } catch (ignore) {}
+        local.testReportMerge(testReport, {}, "modeWrite");
+    };
+
+    if (module === require.main && (!globalThis.utility2_rollup || (
+        process.argv[2] &&
+        local.cliDict[process.argv[2]] &&
+        process.argv[2].indexOf("utility2.") === 0
+    ))) {
+        local.cliRun({});
+        if (local.cliDict[process.argv[2]]) {
+            switch (process.argv[2]) {
+            case "--interactive":
+            case "-i":
+            case "utility2.start":
+                break;
+            default:
+                return;
+            }
+        }
+    }
+    // override assets
+    if (globalThis.utility2_rollup) {
+        local.assetsDict["/assets.utility2.rollup.js"] = (
+            require("fs").readFileSync(
+                __filename,
+                "utf8"
+            ).split("\n/* script-end /assets.utility2.rollup.end.js */")[0] +
+            "\n/* script-end /assets.utility2.rollup.end.js */\n"
         );
-        break;
-    case "lib.utility2.js":
-        key = key.replace("lib.", "");
-        local.assetsDict["/assets." + key] = local.fsReadFileOrDefaultSync(
-            __dirname + "/lib." + key,
-            "utf8",
-            ""
-        ).replace((
-            /^#!\//
-        ), "// ");
-        break;
-    default:
-        local.assetsDict["/assets.utility2." + key] = (
+        return;
+    }
+    // init assets
+    [
+        "/assets.utility2.example.js",
+        "/assets.utility2.html",
+        "/assets.utility2.test.js",
+        "lib.apidoc.js",
+        "lib.istanbul.js",
+        "lib.jslint.js",
+        "lib.marked.js",
+        "lib.utility2.js",
+        "test.js"
+    ].forEach(function (key) {
+        switch (key) {
+        case "/assets.utility2.example.js":
+            local.assetsDict[key] = "";
             local.fsReadFileOrDefaultSync(
-                __dirname + "/" + key,
+                __dirname + "/README.md",
+                "utf8",
+                ""
+            ).replace((
+                /```javascript([\S\s]*?)```/
+            ), function (ignore, match1) {
+                local.assetsDict[key] = match1.trim() + "\n";
+                return "";
+            });
+            break;
+        case "/assets.utility2.html":
+            local.assetsDict[key] = "";
+            local.fsReadFileOrDefaultSync(
+                __dirname + "/README.md",
+                "utf8",
+                ""
+            ).replace((
+                /<!doctype\u0020html>[\S\s]*?<\/html>\\n\\\n/
+            ), function (match0) {
+                match0 = match0.replace((
+                    /\\n\\$|\\(.)/gm
+                ), function (ignore, match1) {
+                    return match1 || "";
+                });
+                match0 = match0.replace(
+                    "<script src=\"assets.app.js\"></script>\n",
+                    (
+                        "<script " +
+                        "src=\"assets.utility2.rollup.js\"></script>\n" +
+                        "<script " +
+                        "src=\"assets.utility2.example.js\"></script>\n" +
+                        "<script " +
+                        "src=\"assets.utility2.test.js\"></script>\n"
+                    )
+                );
+                match0 = match0.replace(
+                    "assets.example.js",
+                    "assets.utility2.example.js"
+                );
+                match0 = match0.replace(
+                    "assets.test.js",
+                    "assets.utility2.test.js"
+                );
+                match0 = match0.replace((
+                    /npm_package_/g
+                ), "");
+                match0 = match0.replace((
+                    /<!--\u0020utility2-comment\b([\S\s]*?)\butility2-comment\u0020-->/g
+                ), "$1");
+                return "";
+            });
+            break;
+        case "/assets.utility2.test.js":
+            local.assetsDict[key] = local.fsReadFileOrDefaultSync(
+                __dirname + "/test.js",
+                "utf8",
+                ""
+            );
+            break;
+        case "lib.utility2.js":
+            key = key.replace("lib.", "");
+            local.assetsDict["/assets." + key] = local.fsReadFileOrDefaultSync(
+                __dirname + "/lib." + key,
                 "utf8",
                 ""
             ).replace((
                 /^#!\//
-            ), "// ")
-        );
-    }
-});
-/* validateLineSortedReset */
-local.assetsDict["/assets.utility2.rollup.js"] = [
-    "header",
-    "/assets.utility2.rollup.start.js",
-    "lib.apidoc.js",
-    "lib.istanbul.js",
-    "lib.jslint.js",
-    "lib.marked.js",
-    "lib.utility2.js",
-    "/assets.utility2.example.js",
-    "/assets.utility2.html",
-    "/assets.utility2.lib.jslint.js",
-    "/assets.utility2.test.js",
-    "/assets.utility2.rollup.end.js"
-].map(function (key) {
-    let code;
-    switch (key) {
-    case "/assets.utility2.example.js":
-    case "/assets.utility2.html":
-    case "/assets.utility2.lib.jslint.js":
-    case "/assets.utility2.test.js":
-        // disable $-escape in replacement-string
-        code = local.assetsDict[
-            "/assets.utility2.rollup.content.js"
-        ].replace("/* utility2.rollup.js content */", function () {
-            return (
-                "local.assetsDict[\"" + key + "\"] = (\n" +
-                JSON.stringify(local.assetsDict[key]).replace((
-                    /\\\\/g
-                ), "\u0000").replace((
-                    /\\n/g
-                ), "\\n\\\n").replace((
-                    /\u0000/g
-                ), "\\\\") +
-                ");\n"
+            ), "// ");
+            break;
+        default:
+            local.assetsDict["/assets.utility2." + key] = (
+                local.fsReadFileOrDefaultSync(
+                    __dirname + "/" + key,
+                    "utf8",
+                    ""
+                ).replace((
+                    /^#!\//
+                ), "// ")
             );
-        });
-        break;
-    case "/assets.utility2.rollup.start.js":
-    case "/assets.utility2.rollup.end.js":
-        code = local.assetsDict[key];
-        break;
-    case "header":
+        }
+    });
+    /* validateLineSortedReset */
+    local.assetsDict["/assets.utility2.rollup.js"] = [
+        "header",
+        "/assets.utility2.rollup.start.js",
+        "lib.apidoc.js",
+        "lib.istanbul.js",
+        "lib.jslint.js",
+        "lib.marked.js",
+        "lib.utility2.js",
+        "/assets.utility2.example.js",
+        "/assets.utility2.html",
+        "/assets.utility2.lib.jslint.js",
+        "/assets.utility2.test.js",
+        "/assets.utility2.rollup.end.js"
+    ].map(function (key) {
+        let code;
+        switch (key) {
+        case "/assets.utility2.example.js":
+        case "/assets.utility2.html":
+        case "/assets.utility2.lib.jslint.js":
+        case "/assets.utility2.test.js":
+            // disable $-escape in replacement-string
+            code = local.assetsDict[
+                "/assets.utility2.rollup.content.js"
+            ].replace("/* utility2.rollup.js content */", function () {
+                return (
+                    "local.assetsDict[\"" + key + "\"] = (\n" +
+                    JSON.stringify(local.assetsDict[key]).replace((
+                        /\\\\/g
+                    ), "\u0000").replace((
+                        /\\n/g
+                    ), "\\n\\\n").replace((
+                        /\u0000/g
+                    ), "\\\\") +
+                    ");\n"
+                );
+            });
+            break;
+        case "/assets.utility2.rollup.start.js":
+        case "/assets.utility2.rollup.end.js":
+            code = local.assetsDict[key];
+            break;
+        case "header":
+            return (
+                "/* this rollup was created with utility2\n" +
+                " * https://github.com/kaizhu256/node-utility2\n" +
+                " */\n"
+            );
+        case "lib.utility2.js":
+            key = "/assets." + key.replace("lib.", "");
+            code = local.assetsDict[key];
+            break;
+        default:
+            key = "/assets.utility2." + key;
+            code = local.assetsDict[key];
+        }
         return (
-            "/* this rollup was created with utility2\n" +
-            " * https://github.com/kaizhu256/node-utility2\n" +
-            " */\n"
+            "/* script-begin " + key + " */\n" +
+            code.trim() +
+            "\n/* script-end " + key + " */\n"
         );
-    case "lib.utility2.js":
-        key = "/assets." + key.replace("lib.", "");
-        code = local.assetsDict[key];
-        break;
-    default:
-        key = "/assets.utility2." + key;
-        code = local.assetsDict[key];
-    }
-    return (
-        "/* script-begin " + key + " */\n" +
-        code.trim() +
-        "\n/* script-end " + key + " */\n"
-    );
-}).join("\n\n\n");
+    }).join("\n\n\n");
+}());
+/*jslint-disable*/
 }());
 }());
-}());
+/*jslint-enable*/
