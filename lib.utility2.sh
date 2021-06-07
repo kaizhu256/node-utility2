@@ -336,6 +336,7 @@ shDockerSh() {
     # run inside vm
     # cd $HOST_PWD inside docker
     eval "$(node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let cmd;
@@ -435,6 +436,7 @@ shGitLsTree() {(set -e
 # shGitLsTree | sort -rk3 # sort by date
 # shGitLsTree | sort -rk4 # sort by size
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let result;
@@ -550,6 +552,7 @@ vendor)s{0,1}(\\b|_)\
 shGrepReplace() {(set -e
 # this function will inline grep-and-replace /tmp/shGrep.txt
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let dict;
@@ -606,6 +609,7 @@ shHttpFileServer() {(set -e
         return
     fi
     node -e '
+/*jslint bitwise, node, nomen*/
 // init debugInline
 if (!globalThis.debugInline) {
     let consoleError;
@@ -646,27 +650,24 @@ if (!globalThis.debugInline) {
  */
     "use strict";
     let contentTypeDict = {
-        // application
-        ".js": "application/javascript; charset=utf-8",
-        ".json": "application/json; charset=utf-8",
-        ".mjs": "application/javascript; charset=utf-8",
-        ".pdf": "application/pdf",
-        ".wasm": "application/wasm",
-        ".xml": "application/xml; charset=utf-8",
-        // image
         ".bmp": "image/bmp",
+        ".css": "text/css; charset=utf-8",
         ".gif": "image/gif",
+        ".htm": "text/html; charset=utf-8",
+        ".html": "text/html; charset=utf-8",
         ".jpe": "image/jpeg",
         ".jpeg": "image/jpeg",
         ".jpg": "image/jpeg",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".md": "text/markdown; charset=utf-8",
+        ".mjs": "application/javascript; charset=utf-8",
+        ".pdf": "application/pdf",
         ".png": "image/png",
         ".svg": "image/svg+xml; charset=utf-8",
-        // text
-        ".css": "text/css; charset=utf-8",
-        ".htm": "text/html; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".md": "text/markdown; charset=utf-8",
         ".txt": "text/plain; charset=utf-8",
+        ".wasm": "application/wasm",
+        ".xml": "application/xml; charset=utf-8",
         "/": "text/html; charset=utf-8"
     };
     if (process.argv[1]) {
@@ -812,18 +813,18 @@ if (!globalThis.debugInline) {
                 script = "\n";
                 break;
             // syntax-sugar - list obj-keys, sorted by item-type
-            // console.error(Object.keys(global).map(function(key){return(typeof global[key]==='"'"'object'"'"'&&global[key]&&global[key]===global[key]?'"'"'global'"'"':typeof global[key])+'"'"' '"'"'+key;}).sort().join('"'"'\n'"'"')) // jslint ignore:line
+            // console.error(Object.keys(global).map(function(key){return(typeof global[key]===\u0027object\u0027&&global[key]&&global[key]===global[key]?\u0027global\u0027:typeof global[key])+\u0027 \u0027+key;}).sort().join(\u0027\n\u0027)) //jslint-quiet
             case "keys":
                 script = (
                     "console.error(Object.keys(" + match2 +
                     ").map(function(key){return(" +
-                    "typeof " + match2 + "[key]==='"'"'object'"'"'&&" +
+                    "typeof " + match2 + "[key]===\u0027object\u0027&&" +
                     match2 + "[key]&&" +
                     match2 + "[key]===global[key]" +
-                    "?'"'"'global'"'"'" +
+                    "?\u0027global\u0027" +
                     ":typeof " + match2 + "[key]" +
-                    ")+'"'"' '"'"'+key;" +
-                    "}).sort().join('"'"'\\n'"'"'))\n"
+                    ")+\u0027 \u0027+key;" +
+                    "}).sort().join(\u0027\\n\u0027))\n"
                 );
                 break;
             // syntax-sugar - print String(val)
@@ -867,6 +868,7 @@ if (!globalThis.debugInline) {
 shImageToDataUri() {(set -e
 # this function will convert image $1 to data-uri string
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let file;
@@ -905,6 +907,7 @@ shJsonNormalize() {(set -e
 # 2. normalize json-data
 # 3. write normalized json-data back to file $1
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     function objectDeepCopyWithKeysSorted(obj) {
@@ -950,6 +953,7 @@ shRawLibDiff() {(set -e
 shRawLibFetch() {(set -e
 # this function will fetch raw-lib from $1
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let matchObj;
@@ -1107,7 +1111,7 @@ shRawLibFetch() {(set -e
             /\n+?(\n\u0020*?\})/g
         ), "$1");
         // eslint - no-multiple-empty-lines
-        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md
+        // https://github.com/eslint/eslint/blob/v7.2.0/docs/rules/no-multiple-empty-lines.md //jslint-quiet
         result = result.replace((
             /\n{4,}/g
         ), "\n\n\n");
@@ -1218,6 +1222,7 @@ shRawLibFetch() {(set -e
 shReadmeLinkValidate() {(set -e
 # this function will validate http-links embedded in README.md
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let set;
@@ -1298,6 +1303,7 @@ shUtility2FncStat() {(set -e
 # this function will print histogram of utility2-fnc code-frequency
 # in current dir
     node -e '
+/*jslint bitwise, node, nomen*/
 (function () {
     "use strict";
     let dict;
@@ -1330,6 +1336,7 @@ shV8CoverageReport() {(set -e
     rm -rf .coverage/
     (export NODE_V8_COVERAGE=.coverage/ && "$@" || true)
     node -e '
+/*jslint bitwise, node, nomen*/
 // init debugInline
 if (!globalThis.debugInline) {
     let consoleError;
@@ -1363,14 +1370,14 @@ if (!globalThis.debugInline) {
         function stringHtmlSafe(str) {
         /*
          * this function will make <str> html-safe
-         * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html
+         * https://stackoverflow.com/questions/7381974/which-characters-need-to-be-escaped-on-html //jslint-quiet
          */
             return str.replace((
                 /&/gu
             ), "&amp;").replace((
                 /"/gu
             ), "&quot;").replace((
-                /'"'"'/gu
+                /\u0027/gu
             ), "&apos;").replace((
                 /</gu
             ), "&lt;").replace((

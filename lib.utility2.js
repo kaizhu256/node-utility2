@@ -11,7 +11,7 @@
 // assets.utility2.header.js - start
 /* jslint utility2:\true */
 /* istanbul ignore next */
-/*jslint bitwise, browser, devel, node, unordered*/
+/*jslint bitwise, browser, devel, node, nomen, unordered*/
 // run shared js-env code - init-local
 (function () {
     "use strict";
