@@ -3083,7 +3083,7 @@ local.domStyleValidate = function () {
         /^0\u0020(?:(body\u0020>\u0020)?(?:\.test-report-div\u0020.+|\.x-istanbul\u0020.+|\.button|\.styleColorError|\.readonly|\.textarea|\.uiAnimateSlide|a|body|code|div|input|pre|textarea)(?:,|\u0020\{))|^[1-9]\d*?\u0020#/m
     );
     list = [];
-    documentQuerySelectorAll("style").forEach(function (elem, ii) {
+    Array.from(document.querySelectorAll("style")).forEach(function (elem, ii) {
         elem.innerHTML.replace((
             /\/\*[\S\s]*?\*\/|;|\}/g
         ), "\n").replace((
