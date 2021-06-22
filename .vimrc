@@ -32,6 +32,9 @@ autocmd!
 autocmd BufEnter * :syntax sync minlines=200
 " autochdir
 autocmd BufEnter * silent! lcd %:p:h
+" syntax=javascript
+autocmd BufNewFile,BufRead *.cjs set syntax=javascript
+autocmd BufNewFile,BufRead *.mjs set syntax=javascript
 " auto remove trailing whitespace
 autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
 filetype on
