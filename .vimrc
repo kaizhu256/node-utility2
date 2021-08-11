@@ -27,14 +27,14 @@ set tabstop=4
 
 augroup My
     autocmd!
-    "" syntax highlighting
-    "" autocmd BufEnter * :syntax sync fromstart
-    autocmd BufEnter * :syntax sync minlines=200
     "" autochdir
     autocmd BufEnter * silent! lcd %:p:h
     "" syntax=javascript
     autocmd BufNewFile,BufRead *.cjs,*.js,*.json,*.mjs
-    \ :setlocal filetype=javascript
+        \ :setlocal filetype=javascript
+    "" syntax highlighting
+    autocmd BufRead,BufWrite * :syntax sync fromstart
+    "" autocmd BufRead,BufWrite * :syntax sync minlines=200
     "" auto remove trailing whitespace
     autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
 augroup END
