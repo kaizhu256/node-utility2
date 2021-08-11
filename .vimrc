@@ -235,13 +235,13 @@ function! s:JslintFile()
         \ . fnamemodify(bufname("%"), ':p')
         \ . '" --mode-vim-plugin'
     let &l:errorformat = '%f:%n:%l:%c:%m'
-    :silent make!
+    silent make!
     cwindow
     redraw!
 endfunction
 
 "" init command JslintFile
-command! JslintFile :call s:JslintFile()
+command! JslintFile call s:JslintFile()
 
 "" auto-jslint file after saving
 augroup JslintFileAfterSave
