@@ -1,4 +1,4 @@
-"" :source ~/.vimrc
+"" source ~/.vimrc
 set autoindent
 set backspace=2
 "" https://stackoverflow.com/questions/1636297/how-to-change-the-folder-path-for-swp-files-in-vim
@@ -31,10 +31,10 @@ augroup My
     autocmd BufEnter * silent! lcd %:p:h
     "" syntax=javascript
     autocmd BufNewFile,BufRead *.cjs,*.js,*.json,*.mjs
-        \ :setlocal filetype=javascript
+        \ setlocal filetype=javascript
     "" syntax highlighting
-    autocmd BufRead,BufWrite * :syntax sync fromstart
-    "" autocmd BufRead,BufWrite * :syntax sync minlines=200
+    autocmd BufRead,BufWrite * syntax sync fromstart
+    "" autocmd BufRead,BufWrite * syntax sync minlines=200
     "" auto remove trailing whitespace
     autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
 augroup END
@@ -45,7 +45,7 @@ syntax on
 if !exists(":Vimrc")
     command! -nargs=* Vimrc call MyVimrc(<f-args>)
     function! MyVimrc(...)
-        :source ~/.vimrc
+        source ~/.vimrc
     endfunction
 endif
 
@@ -232,7 +232,7 @@ function! s:JslintFile()
     let &l:makeprg = 'node "'
         \ . expand('~')
         \ . '\jslint.mjs" "'
-        \ . fnamemodify(bufname("%"), ':p')
+        \ . fnamemodify(bufname('%'), ':p')
         \ . '" --mode-vim-plugin'
     let &l:errorformat = '%f:%n:%l:%c:%m'
     silent make!
