@@ -4,16 +4,19 @@ shRawLibFetch
 {
     "fetchList": [
         {
+            "description": "create ast",
             "sh": "curl https://registry.npmjs.org/acorn/-/acorn-7.4.1.tgz | tar -O -xz package/dist/acorn.js",
             "url": "https://github.com/acornjs/acorn/blob/7.4.1/acorn/dist/acorn.js"
         },
         {
+            "description": "traverse ast",
             "url": "https://github.com/estools/estraverse/blob/v5.2.0/estraverse.js"
         },
         {
             "url": "https://github.com/estools/esutils/blob/2.0.3/lib/code.js"
         },
         {
+            "description": "instrument/modify ast",
             "url": "https://github.com/estools/escodegen/blob/v1.14.3/escodegen.js"
         },
         {

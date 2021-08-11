@@ -26,17 +26,19 @@ set softtabstop=2
 set statusline=%F%m%r%h%w\ %y\ %l:%c\ %L\ 0x%B
 set tabstop=4
 
-autocmd!
-" syntax highlighting
-" autocmd BufEnter * :syntax sync fromstart
-autocmd BufEnter * :syntax sync minlines=200
-" autochdir
-autocmd BufEnter * silent! lcd %:p:h
-" syntax=javascript
-autocmd BufEnter *.cjs :setlocal filetype=javascript
-autocmd BufEnter *.mjs :setlocal filetype=javascript
-" auto remove trailing whitespace
-autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
+augroup My
+    autocmd!
+    " syntax highlighting
+    " autocmd BufEnter * :syntax sync fromstart
+    " autocmd BufEnter * :syntax sync minlines=200
+    autocmd BufNewFile,BufRead * :syntax sync minlines=200
+    " autochdir
+    autocmd BufEnter * silent! lcd %:p:h
+    " syntax=javascript
+    autocmd BufNewFile,BufRead *.cjs,*.js,*.json,*.mjs :setlocal filetype=javascript
+    " auto remove trailing whitespace
+    autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
+augroup END
 filetype on
 filetype plugin on
 syntax on
@@ -220,3 +222,26 @@ elseif has("gui_macvim")
 elseif has("gui_win32")
     set guifont=Consolas:h8
 endif
+
+"" init command JslintFileCurrent
+if !exists("*s:JslintFileCurrent")
+  function s:JslintFileCurrent()
+    let &l:makeprg = 'node "'
+      \ . expand('<sfile>:p:h')
+      \ . '\jslint.mjs" "'
+      \ . fnamemodify(bufname("%"), ':p')
+      \ . '" --mode-vim-plugin'
+    let &l:errorformat = '%f:%n:%l:%c:%m'
+    :silent make!
+    cw
+  endfunction
+endif
+if !exists(":JslintFileCurrent")
+  command JslintFileCurrent :call s:JslintFileCurrent()
+endif
+"" auto-jslint file after saving
+augroup Jslint
+  autocmd!
+  autocmd FileType *.cjs,*.js,*.json,*.mjs BufWritePost * JslintFileCurrent
+augroup END
+
