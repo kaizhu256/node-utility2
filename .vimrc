@@ -228,7 +228,7 @@ if filereadable(expand('~/.vimrc2'))
 endif
 
 function! s:JslintFile()
-"" this function will jslint file of current-buffer
+"" this function will jslint file of current buffer
     let &l:makeprg = 'node "'
         \ . expand('~')
         \ . '\jslint.mjs" "'
@@ -239,9 +239,11 @@ function! s:JslintFile()
     cwindow
     redraw!
 endfunction
-""  init command JslintFile
+
+"" init command JslintFile
 command! JslintFile :call s:JslintFile()
-""  auto-jslint file after saving
+
+"" auto-jslint file after saving
 augroup JslintFileAfterSave
     autocmd!
     autocmd BufWritePost *.cjs,*.js,*.json,*.mjs JslintFile
