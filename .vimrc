@@ -236,7 +236,7 @@ function! s:JslintFile()
         \ . '" --mode-vim-plugin'
     let &l:errorformat = '%f:%n:%l:%c:%m'
     :silent make!
-    cw
+    cwindow
     redraw!
 endfunction
 ""  init command JslintFile
