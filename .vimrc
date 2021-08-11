@@ -222,9 +222,13 @@ elseif has("gui_win32")
     set guifont=Consolas:h8
 endif
 
-""  init command JslintFileAfterSave
-function! s:JslintFileAfterSave()
-"" this function will jslint saved file of current-buffer
+"" source ~/.vimrc2
+if filereadable(expand('~/.vimrc2'))
+    source ~/.vimrc2
+endif
+
+function! s:JslintFile()
+"" this function will jslint file of current-buffer
     let &l:makeprg = 'node "'
         \ . expand('~')
         \ . '\jslint.mjs" "'
@@ -233,16 +237,12 @@ function! s:JslintFileAfterSave()
     let &l:errorformat = '%f:%n:%l:%c:%m'
     :silent make!
     cw
+    redraw!
 endfunction
-""  init command JslintFileAfterSave
-command! JslintFileAfterSave :call s:JslintFileAfterSave()
+""  init command JslintFile
+command! JslintFile :call s:JslintFile()
 ""  auto-jslint file after saving
-augroup Jslint
+augroup JslintFileAfterSave
     autocmd!
-    autocmd FileType *.cjs,*.js,*.json,*.mjs BufWritePost * JslintFileAfterSave
+    autocmd BufWritePost *.cjs,*.js,*.json,*.mjs JslintFile
 augroup END
-
-"" source ~/.vimrc2
-if filereadable(expand('~/.vimrc2'))
-    source ~/.vimrc2
-endif
