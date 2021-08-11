@@ -25,17 +25,19 @@ set softtabstop=2
 set statusline=%F%m%r%h%w\ %y\ %l:%c\ %L\ 0x%B
 set tabstop=4
 
-autocmd!
-"" syntax highlighting
-"" autocmd BufEnter * :syntax sync fromstart
-autocmd BufEnter * :syntax sync minlines=200
-"" autochdir
-autocmd BufEnter * silent! lcd %:p:h
-"" syntax=javascript
-autocmd BufEnter *.cjs :setlocal filetype=javascript
-autocmd BufEnter *.mjs :setlocal filetype=javascript
-"" auto remove trailing whitespace
-autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
+augroup My
+    autocmd!
+    "" syntax highlighting
+    "" autocmd BufEnter * :syntax sync fromstart
+    autocmd BufEnter * :syntax sync minlines=200
+    "" autochdir
+    autocmd BufEnter * silent! lcd %:p:h
+    "" syntax=javascript
+    autocmd BufNewFile,BufRead *.cjs,*.js,*.json,*.mjs
+    \ :setlocal filetype=javascript
+    "" auto remove trailing whitespace
+    autocmd BufRead,BufWrite * if ! &bin | silent! %s/\s\+$//e | endif
+augroup END
 filetype on
 filetype plugin on
 syntax on
@@ -106,49 +108,49 @@ endfunction
 function! MyRename(name, bang)
 "" this function will rename file <name> -> <bang>
 "" https://github.com/vim-scripts/Rename/blob/0.3/plugin/Rename.vim
-	let l:name    = a:name
-	let l:oldfile = expand('%:p')
-	if bufexists(fnamemodify(l:name, ':p'))
-		if (a:bang ==# '!')
-			silent exe bufnr(fnamemodify(l:name, ':p')) . 'bwipe!'
-		else
-			echohl ErrorMsg
-			echomsg 'A buffer with that name already exists (use ! to override).'
-			echohl None
-			return 0
-		endif
-	endif
-	let l:status = 1
-	let v:errmsg = ''
-	silent! exe 'saveas' . a:bang . ' ' . l:name
-	if v:errmsg =~# '^$\|^E329'
-		let l:lastbufnr = bufnr('$')
-		if expand('%:p') !=# l:oldfile && filewritable(expand('%:p'))
-			if fnamemodify(bufname(l:lastbufnr), ':p') ==# l:oldfile
-				silent exe l:lastbufnr . 'bwipe!'
-			else
-				echohl ErrorMsg
-				echomsg 'Could not wipe out the old buffer for some reason.'
-				echohl None
-				let l:status = 0
-			endif
-			if delete(l:oldfile) != 0
-				echohl ErrorMsg
-				echomsg 'Could not delete the old file: ' . l:oldfile
-				echohl None
-				let l:status = 0
-			endif
-		else
-			echohl ErrorMsg
-			echomsg 'Rename failed for some reason.'
-			echohl None
-			let l:status = 0
-		endif
-	else
-		echoerr v:errmsg
-		let l:status = 0
-	endif
-	return l:status
+    let l:name = a:name
+    let l:oldfile = expand('%:p')
+    if bufexists(fnamemodify(l:name, ':p'))
+        if (a:bang ==# '!')
+            silent exe bufnr(fnamemodify(l:name, ':p')) . 'bwipe!'
+        else
+            echohl ErrorMsg
+            echomsg 'A buffer with that name already exists (use ! to override).'
+            echohl None
+            return 0
+        endif
+    endif
+    let l:status = 1
+    let v:errmsg = ''
+    silent! exe 'saveas' . a:bang . ' ' . l:name
+    if v:errmsg =~# '^$\|^E329'
+        let l:lastbufnr = bufnr('$')
+        if expand('%:p') !=# l:oldfile && filewritable(expand('%:p'))
+            if fnamemodify(bufname(l:lastbufnr), ':p') ==# l:oldfile
+                silent exe l:lastbufnr . 'bwipe!'
+            else
+                echohl ErrorMsg
+                echomsg 'Could not wipe out the old buffer for some reason.'
+                echohl None
+                let l:status = 0
+            endif
+            if delete(l:oldfile) != 0
+                echohl ErrorMsg
+                echomsg 'Could not delete the old file: ' . l:oldfile
+                echohl None
+                let l:status = 0
+            endif
+        else
+            echohl ErrorMsg
+            echomsg 'Rename failed for some reason.'
+            echohl None
+            let l:status = 0
+        endif
+    else
+        echoerr v:errmsg
+        let l:status = 0
+    endif
+    return l:status
 endfunction
 command! -nargs=* -complete=file -bang MyRename call MyRename(<q-args>, '<bang>')
 
