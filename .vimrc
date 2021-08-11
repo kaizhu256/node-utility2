@@ -44,13 +44,13 @@ filetype plugin on
 syntax on
 
 if !exists(":Vimrc")
-  command! -nargs=* Vimrc call MyVimrc(<f-args>)
-  function! s:MyVimrc(...)
+  command! -nargs=* Vimrc :call MyVimrc(<f-args>)
+  function! MyVimrc(...)
     :source ~/.vimrc
   endfunction
 endif
 
-function! s:MyCommentRegion(...)
+function! MyCommentRegion(...)
 ""this function will comment selected-region
   ""un-comment
   if a:1 == 'u'
@@ -86,7 +86,7 @@ function! s:MyCommentRegion(...)
   call setpos('.', getpos("'<"))
 endfunction
 
-function! s:MyStringifyRegion(...)
+function! MyStringifyRegion(...)
 ""this function will js-stringify-add selected-region
   ""un-stringify
   if a:1 == 'u'
@@ -106,7 +106,7 @@ function! s:MyStringifyRegion(...)
   call setpos('.', getpos("'<"))
 endfunction
 
-function! s:MyRename(name, bang)
+function! MyRename(name, bang)
 ""this function will rename file <name> -> <bang>
 ""https://github.com/vim-scripts/Rename/blob/0.3/plugin/Rename.vim
   let l:name = a:name
@@ -153,7 +153,7 @@ function! s:MyRename(name, bang)
   endif
   return l:status
 endfunction
-command! -nargs=* -complete=file -bang MyRename call MyRename(<q-args>, '<bang>')
+command! -nargs=* -complete=file -bang MyRename :call MyRename(<q-args>, '<bang>')
 
 ""insert-mode remap
 inoremap <c-a> <c-o>^
@@ -224,17 +224,18 @@ elseif has("gui_win32")
 endif
 
 "" init command JslintFileCurrent
-function! s:JslintFileCurrent()
+function! JslintFileCurrent()
   let &l:makeprg = 'node "'
     \ . expand('<sfile>:p:h')
     \ . '\jslint.mjs" "'
     \ . fnamemodify(bufname("%"), ':p')
     \ . '" --mode-vim-plugin'
   let &l:errorformat = '%f:%n:%l:%c:%m'
-  :silent make!
+  ""!! :silent make!
+  make
   cw
 endfunction
-command! JslintFileCurrent :call s:JslintFileCurrent()
+command! JslintFileCurrent :call JslintFileCurrent()
 "" auto-jslint file after saving
 augroup Jslint
   autocmd!
