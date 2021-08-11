@@ -226,13 +226,12 @@ endif
 function! s:JslintFileAfterSave()
 "" this function will jslint saved file of current-buffer
     let &l:makeprg = 'node "'
-        \ . expand('<sfile>:p:h')
+        \ . expand('~')
         \ . '\jslint.mjs" "'
         \ . fnamemodify(bufname("%"), ':p')
         \ . '" --mode-vim-plugin'
     let &l:errorformat = '%f:%n:%l:%c:%m'
-    "" !! :silent make!
-    make
+    :silent make!
     cw
 endfunction
 ""  init command JslintFileAfterSave
