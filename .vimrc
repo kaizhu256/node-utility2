@@ -227,11 +227,33 @@ if filereadable(expand('~/.vimrc2'))
     source ~/.vimrc2
 endif
 
+function! s:CpplintFile()
+"" this function will cpplint file of current buffer
+    let &l:makeprg = 'python "'
+        \ . expand('~')
+        \ . '/cpplint.py" "'
+        \ . fnamemodify(bufname('%'), ':p')
+        \ . '"'
+    let &l:errorformat = '%A%f:%l:  %m [%t],%-G%.%#'
+    silent make!
+    cwindow
+    redraw!
+endfunction
+
+"" init command CpplintFile
+command! CpplintFile call s:CpplintFile()
+
+"" auto-cpplint file after saving
+augroup CpplintFileAfterSave
+    autocmd!
+    autocmd BufWritePost *.c,*.cc,*.cpp,*.h CpplintFile
+augroup END
+
 function! s:JslintFile()
 "" this function will jslint file of current buffer
     let &l:makeprg = 'node "'
         \ . expand('~')
-        \ . '\jslint.mjs" "'
+        \ . '/jslint.mjs" "'
         \ . fnamemodify(bufname('%'), ':p')
         \ . '" --mode-vim-plugin'
     let &l:errorformat = '%f:%n:%l:%c:%m'
