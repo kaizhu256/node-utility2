@@ -227,14 +227,13 @@ if filereadable(expand('~/.vimrc2'))
     source ~/.vimrc2
 endif
 
+"" curl -L https://raw.githubusercontent.com/cpplint/cpplint/1.5.5/cpplint.py > ~/.vim/cpplint.py
 function! s:CpplintFile()
 "" this function will cpplint file of current buffer
-    let &l:makeprg = 'python "'
-        \ . expand('~')
-        \ . '/cpplint.py" "'
-        \ . fnamemodify(bufname('%'), ':p')
-        \ . '"'
-    let &l:errorformat = '%A%f:%l:  %m [%t],%-G%.%#'
+    let &l:makeprg = "python"
+        \ . " \"$HOME/.vim/cpplint.py\""
+        \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
+    let &l:errorformat = "%A%f:%l:  %m [%t],%-G%.%#"
     silent make!
     cwindow
     redraw!
@@ -251,12 +250,11 @@ augroup END
 
 function! s:JslintFile()
 "" this function will jslint file of current buffer
-    let &l:makeprg = 'node "'
-        \ . expand('~')
-        \ . '/jslint.mjs" "'
-        \ . fnamemodify(bufname('%'), ':p')
-        \ . '" --mode-vim-plugin'
-    let &l:errorformat = '%f:%n:%l:%c:%m'
+    let &l:makeprg = "node"
+        \ . " \"$HOME/.vim/jslint.mjs\""
+        \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
+        \ . " --mode-vim-plugin"
+    let &l:errorformat = "%f:%n:%l:%c:%m"
     silent make!
     cwindow
     redraw!
