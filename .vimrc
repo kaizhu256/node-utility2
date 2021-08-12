@@ -160,33 +160,35 @@ inoremap <c-d> <c-o>x
 inoremap <c-e> <c-o>$
 inoremap <c-k> <c-o>D
 "" non-recursive remap
-nnoremap <f12> <esc>:syntax sync fromstart<cr>
+nnoremap <f12> <esc> :syntax sync fromstart<cr>
 nnoremap <silent> !bc :bprevious<bar>split<bar>bnext<bar>bwipeout!<cr>
-nnoremap <silent> "+ :call MyStringifyRegion('+')<cr>
-nnoremap <silent> "\ :call MyStringifyRegion('\')<cr>
-nnoremap <silent> "u :call MyStringifyRegion('u')<cr>
-nnoremap <silent> #" :call MyCommentRegion('"')<cr>
-nnoremap <silent> #% :call MyCommentRegion('%')<cr>
-nnoremap <silent> #* :call MyCommentRegion('*')<cr>
-nnoremap <silent> #- :call MyCommentRegion('-')<cr>
-nnoremap <silent> #/ :call MyCommentRegion('/')<cr>
-nnoremap <silent> #: :call MyCommentRegion(':')<cr>
-nnoremap <silent> #<char-0x23> :call MyCommentRegion('#')<cr>
-nnoremap <silent> #u :call MyCommentRegion('u')<cr>
+nnoremap <silent> "+ :call MyStringifyRegion("+")<cr>
+nnoremap <silent> "\ :call MyStringifyRegion("\\")<cr>
+nnoremap <silent> "u :call MyStringifyRegion("u")<cr>
+nnoremap <silent> #" :call MyCommentRegion("\"")<cr>
+nnoremap <silent> #% :call MyCommentRegion("%")<cr>
+nnoremap <silent> #* :call MyCommentRegion("*")<cr>
+nnoremap <silent> #- :call MyCommentRegion("-")<cr>
+nnoremap <silent> #/ :call MyCommentRegion("/")<cr>
+nnoremap <silent> #: :call MyCommentRegion(":")<cr>
+nnoremap <silent> #<char-0x23> :call MyCommentRegion("#")<cr>
+nnoremap <silent> #u :call MyCommentRegion("u")<cr>
+nnoremap <silent> <c-s><c-l> :call MyLintAfterSave("")<cr>
 "" visual-mode remap
-vnoremap <silent> "+ <esc>:call MyStringifyRegion('+')<cr>
-vnoremap <silent> "\ <esc>:call MyStringifyRegion('\')<cr>
-vnoremap <silent> "u <esc>:call MyStringifyRegion('u')<cr>
-vnoremap <silent> #" <esc>:call MyCommentRegion('"')<cr>
-vnoremap <silent> #% <esc>:call MyCommentRegion('%')<cr>
-vnoremap <silent> #* <esc>:call MyCommentRegion('*')<cr>
-vnoremap <silent> #- <esc>:call MyCommentRegion('-')<cr>
-vnoremap <silent> #/ <esc>:call MyCommentRegion('/')<cr>
-vnoremap <silent> #: <esc>:call MyCommentRegion(':')<cr>
-vnoremap <silent> #< <esc>:call MyCommentRegion('<')<cr>
-vnoremap <silent> #<char-0x23> <esc>:call MyCommentRegion('#')<cr>
-vnoremap <silent> #u <esc>:call MyCommentRegion('u')<cr>
+vnoremap <silent> "+ <esc> :call MyStringifyRegion("+")<cr>
+vnoremap <silent> "\ <esc> :call MyStringifyRegion("\\")<cr>
+vnoremap <silent> "u <esc> :call MyStringifyRegion("u")<cr>
+vnoremap <silent> #" <esc> :call MyCommentRegion("\"")<cr>
+vnoremap <silent> #% <esc> :call MyCommentRegion("%")<cr>
+vnoremap <silent> #* <esc> :call MyCommentRegion("*")<cr>
+vnoremap <silent> #- <esc> :call MyCommentRegion("-")<cr>
+vnoremap <silent> #/ <esc> :call MyCommentRegion("/")<cr>
+vnoremap <silent> #: <esc> :call MyCommentRegion(":")<cr>
+vnoremap <silent> #< <esc> :call MyCommentRegion("<")<cr>
+vnoremap <silent> #<char-0x23> <esc> :call MyCommentRegion("#")<cr>
+vnoremap <silent> #u <esc> :call MyCommentRegion("u")<cr>
 
+"" init gvim
 if has("gui_running")
     if exists("+columns")
         set columns=161
@@ -227,28 +229,27 @@ if filereadable(expand('~/.vimrc2'))
     source ~/.vimrc2
 endif
 
+
 "" this function will cpplint file of current buffer
 "" before using, please save cpplint.py to ~/.vim/cpplint.py, e.g.:
 "" curl -L https://raw.githubusercontent.com/cpplint/cpplint/1.5.5/cpplint.py > ~/.vim/cpplint.py
-function! s:CpplintFile()
+function! s:CpplintFileAfterSave(bang)
+    if a:bang == "!"
+        write!
+    else
+        write
+    endif
     let &l:makeprg = "python"
-        \ . " \"" . $HOME . "/.vim/cpplint.py\""
+        \ . " \"" . $home . "/.vim/cpplint.py\""
         \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
-    let &l:errorformat = "%A%f:%l:  %m [%t],%-G%.%#"
+    let &l:errorformat = "%a%f:%l:  %m [%t],%-g%.%#"
     silent make!
     cwindow
     redraw!
 endfunction
 
-"" init command CpplintFile
-command! CpplintFile call s:CpplintFile()
-
-"" auto-cpplint file after saving
-augroup CpplintFileAfterSave
-    autocmd!
-    "" uncomment code below to auto-cpplint file after saving
-    "" autocmd BufWritePost *.cjs,*.js,*.json,*.mjs CpplintFile
-augroup END
+"" init command :CpplintFileAfterSave
+command! -nargs=* -bang CpplintFileAfterSave call s:CpplintFileAfterSave("<bang>")
 
 
 
@@ -278,12 +279,37 @@ endfunction
 "" init command :JslintFileAfterSave
 command! -nargs=* -bang JslintFileAfterSave call s:JslintFileAfterSave("<bang>")
 
-""!! "" init command :
-""!! command! JslintFile call s:JslintFile()
 
-""!! "" auto-jslint file after saving
-""!! augroup JslintFileAfterSave
-    ""!! autocmd!
-    ""!! "" uncomment code below to auto-jslint file after saving
-    ""!! "" autocmd BufWritePost *.cjs,*.js,*.json,*.mjs JslintFile
-""!! augroup END
+
+"" init command :MySaveAndLint
+command! -nargs=* -bang MySaveAndLint call MySaveAndLint("<bang>")
+"" this function will jslint the file of current buffer after saving it.
+"" before using, please save jslint.mjs to ~/.vim/jslint.mjs, e.g.:
+"" curl -L https://www.jslint.com/jslint.mjs > ~/.vim/jslint.mjs
+function! MySaveAndLint(bang)
+    "" save buffer to file
+    if a:bang == "!"
+        write!
+    else
+        write
+    endif
+    "" init variables errorformat, makeprg
+    if &filetype == "c" || &filetype == "cpp"
+        let &l:errorformat = '%f:%l:  %m [%t]'
+        let &l:makeprg = "python"
+            \ . " \"" . $HOME . "/.vim/cpplint.py\""
+            \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
+        echo &l:makeprg
+    elseif &filetype == "javascript"
+        let &l:errorformat = "%f:%n:%l:%c:%m"
+        let &l:makeprg = "node"
+            \ . " \"" . $HOME . "/.vim/jslint.mjs\""
+            \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
+            \ . " --mode-vim-plugin"
+    else
+        return
+    endif
+    silent make!
+    cwindow
+    redraw!
+endfunction
