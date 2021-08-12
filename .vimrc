@@ -227,11 +227,12 @@ if filereadable(expand('~/.vimrc2'))
     source ~/.vimrc2
 endif
 
+"" this function will cpplint file of current buffer
+"" before using, please save cpplint.py to ~/.vim/cpplint.py, e.g.:
 "" curl -L https://raw.githubusercontent.com/cpplint/cpplint/1.5.5/cpplint.py > ~/.vim/cpplint.py
 function! s:CpplintFile()
-"" this function will cpplint file of current buffer
     let &l:makeprg = "python"
-        \ . " \"$HOME/.vim/cpplint.py\""
+        \ . " \"" . $HOME . "/.vim/cpplint.py\""
         \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
     let &l:errorformat = "%A%f:%l:  %m [%t],%-G%.%#"
     silent make!
@@ -245,13 +246,27 @@ command! CpplintFile call s:CpplintFile()
 "" auto-cpplint file after saving
 augroup CpplintFileAfterSave
     autocmd!
-    autocmd BufWritePost *.c,*.cc,*.cpp,*.h CpplintFile
+    "" uncomment code below to auto-cpplint file after saving
+    "" autocmd BufWritePost *.cjs,*.js,*.json,*.mjs CpplintFile
 augroup END
 
-function! s:JslintFile()
-"" this function will jslint file of current buffer
+
+
+"" colorscheme desert
+"" set columns=80
+"" set lines=40
+
+"" this function will jslint the file of current buffer after saving it.
+"" before using, please save jslint.mjs to ~/.vim/jslint.mjs, e.g.:
+"" curl -L https://www.jslint.com/jslint.mjs > ~/.vim/jslint.mjs
+function! s:JslintFileAfterSave(bang)
+    if a:bang == "!"
+        write!
+    else
+        write
+    endif
     let &l:makeprg = "node"
-        \ . " \"$HOME/.vim/jslint.mjs\""
+        \ . " \"" . $HOME . "/.vim/jslint.mjs\""
         \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
         \ . " --mode-vim-plugin"
     let &l:errorformat = "%f:%n:%l:%c:%m"
@@ -260,11 +275,15 @@ function! s:JslintFile()
     redraw!
 endfunction
 
-"" init command JslintFile
-command! JslintFile call s:JslintFile()
+"" init command :JslintFileAfterSave
+command! -nargs=* -bang JslintFileAfterSave call s:JslintFileAfterSave("<bang>")
 
-"" auto-jslint file after saving
-augroup JslintFileAfterSave
-    autocmd!
-    autocmd BufWritePost *.cjs,*.js,*.json,*.mjs JslintFile
-augroup END
+""!! "" init command :
+""!! command! JslintFile call s:JslintFile()
+
+""!! "" auto-jslint file after saving
+""!! augroup JslintFileAfterSave
+    ""!! autocmd!
+    ""!! "" uncomment code below to auto-jslint file after saving
+    ""!! "" autocmd BufWritePost *.cjs,*.js,*.json,*.mjs JslintFile
+""!! augroup END
