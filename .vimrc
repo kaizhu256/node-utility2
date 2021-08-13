@@ -173,7 +173,7 @@ nnoremap <silent> #/ :call MyCommentRegion("/")<cr>
 nnoremap <silent> #: :call MyCommentRegion(":")<cr>
 nnoremap <silent> #<char-0x23> :call MyCommentRegion("#")<cr>
 nnoremap <silent> #u :call MyCommentRegion("u")<cr>
-nnoremap <silent> <c-s><c-l> :call MyLintAfterSave("")<cr>
+nnoremap <silent> <c-s><c-l> :call MySaveAndLint("")<cr>
 "" visual-mode remap
 vnoremap <silent> "+ <esc> :call MyStringifyRegion("+")<cr>
 vnoremap <silent> "\ <esc> :call MyStringifyRegion("\\")<cr>
@@ -287,7 +287,7 @@ command! -nargs=* -bang MySaveAndLint call MySaveAndLint("<bang>")
 "" before using, please save jslint.mjs to ~/.vim/jslint.mjs, e.g.:
 "" curl -L https://www.jslint.com/jslint.mjs > ~/.vim/jslint.mjs
 function! MySaveAndLint(bang)
-    "" save buffer to file
+    "" save file
     if a:bang == "!"
         write!
     else
@@ -309,6 +309,7 @@ function! MySaveAndLint(bang)
     else
         return
     endif
+    "" lint file
     silent make!
     cwindow
     redraw!
