@@ -42,11 +42,12 @@ filetype on
 filetype plugin on
 syntax on
 
-"" init command Vimrc
-command! -nargs=* MyVimrc call MyVimrc(<f-args>)
-function! MyVimrc(...)
-    source ~/.vimrc
-endfunction
+if !exists(":Vimrc")
+    command! -nargs=* Vimrc call MyVimrc(<f-args>)
+    function! MyVimrc(...)
+        source ~/.vimrc
+    endfunction
+endif
 
 function! MyCommentRegion(...)
 "" this function will comment selected-region
@@ -296,29 +297,22 @@ function! MySaveAndLint(bang)
     let &l:makeprg = ""
     if &filetype == "c" || &filetype == "cpp"
         let &l:errorformat = '%f:%l:  %m [%t]'
-        if filereadable($HOME . "/.vim/indent")
-            let &l:makeprg = &l:makeprg
-                \ . " \"" . $HOME . "/.vim/indent\""
-                \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
-            return
-        endif
-        let &l:makeprg = &l:makeprg
-            \ "python"
+        let &l:makeprg = "python"
             \ . " \"" . $HOME . "/.vim/cpplint.py\""
             \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
     elseif &filetype == "javascript"
         let &l:errorformat = "%f:%n:%l:%c:%m"
-        let &l:makeprg = &l:makeprg
-            \ "node"
+        let &l:makeprg = "node"
             \ . " \"" . $HOME . "/.vim/jslint.mjs\""
             \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
             \ . " --mode-vim-plugin"
     else
         return
     endif
+    "" debug makeprg
     echo &l:makeprg
     "" lint file
-    silent make!
-    cwindow
+    ""!! silent make!
+    ""!! cwindow
     ""!! redraw!
 endfunction
