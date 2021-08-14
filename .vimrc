@@ -294,15 +294,49 @@ function! MySaveAndLint(bang)
         write
     endif
     "" init variables errorformat, makeprg
+    let &l:errorformat = ""
     let &l:makeprg = ""
+    let l:tmp = ""
+    let l:file0 = fnamemodify(bufname("%"), ":p")
+    let l:file = " \"" . fnamemodify(bufname("%"), ":p") . "\" "
     if &filetype == "c" || &filetype == "cpp"
+        \ && filereadable(expand("~/.vim/cpplint.py"))
+        "" indent file
+        if filereadable(expand("~/.vim/indent"))
+            \ || filereadable(expand("~/.vim/indent.exe"))
+            let l:tmp = ""
+                \ . " \"" . $HOME . "/.vim/indent\""
+                \ . " --no-tabs"
+                \ . " -bc"
+                \ . " -brf"
+                \ . " -kr"
+                \ . " -nlp"
+                \ . l:file
+            "" debug tmp
+            "" echo l:tmp
+            let l:tmp = system(l:tmp)
+            "" reload file, remove carriage-return, resave
+            edit
+            set ff=unix
+            "" save file
+            if a:bang == "!"
+                write!
+            else
+                write
+            endif
+        endif
+        "" cpplint file
         let &l:errorformat = '%f:%l:  %m [%t]'
-        let &l:makeprg = "python"
+        let &l:makeprg = ""
+            \ . " python"
             \ . " \"" . $HOME . "/.vim/cpplint.py\""
-            \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
+            \ . l:file
     elseif &filetype == "javascript"
+        \ && filereadable(expand("~/.vim/jslint.mjs"))
+        "" jslint file
         let &l:errorformat = "%f:%n:%l:%c:%m"
-        let &l:makeprg = "node"
+        let &l:makeprg = &l:makeprg
+            \ . " node"
             \ . " \"" . $HOME . "/.vim/jslint.mjs\""
             \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
             \ . " --mode-vim-plugin"
@@ -310,9 +344,9 @@ function! MySaveAndLint(bang)
         return
     endif
     "" debug makeprg
-    echo &l:makeprg
+    "" echo &l:makeprg
     "" lint file
-    ""!! silent make!
-    ""!! cwindow
-    ""!! redraw!
+    silent make!
+    cwindow
+    redraw!
 endfunction
