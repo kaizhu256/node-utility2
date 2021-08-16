@@ -299,6 +299,7 @@ function! MySaveAndLint(bang)
     let l:tmp = ""
     let l:file0 = fnamemodify(bufname("%"), ":p")
     let l:file = " \"" . fnamemodify(bufname("%"), ":p") . "\" "
+    "" curl -L https://raw.githubusercontent.com/cpplint/cpplint/1.5.5/cpplint.py > ~/.vim/cpplint.py
     if &filetype == "c" || &filetype == "cpp"
         \ && filereadable(expand("~/.vim/cpplint.py"))
         "" indent file
@@ -306,11 +307,14 @@ function! MySaveAndLint(bang)
             \ || filereadable(expand("~/.vim/indent.exe"))
             let l:tmp = ""
                 \ . " \"" . $HOME . "/.vim/indent\""
+                \ . " --blank-lines-after-commas"
+                \ . " --braces-on-func-def-line"
+                \ . " --break-function-decl-args"
+                \ . " --break-function-decl-args-end"
+                \ . " --dont-line-up-parentheses"
+                \ . " --k-and-r-style"
                 \ . " --no-tabs"
-                \ . " -bc"
-                \ . " -brf"
-                \ . " -kr"
-                \ . " -nlp"
+                \ . " -bfde"
                 \ . l:file
             "" debug tmp
             "" echo l:tmp
