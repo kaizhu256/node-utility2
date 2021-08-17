@@ -303,8 +303,10 @@ function! MySaveAndLint(bang)
     if &filetype == "c" || &filetype == "cpp"
         \ && filereadable(expand("~/.vim/cpplint.py"))
         "" indent file
-        if filereadable(expand("~/.vim/indent"))
+        if &filetype == "c" && (
+            \ filereadable(expand("~/.vim/indent"))
             \ || filereadable(expand("~/.vim/indent.exe"))
+        \)
             let l:tmp = ""
                 \ . " \"" . $HOME . "/.vim/indent\""
                 \ . " --blank-lines-after-commas"
