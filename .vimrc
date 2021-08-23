@@ -315,6 +315,7 @@ function! MySaveAndLint(bang)
                 \ . " --break-function-decl-args-end"
                 \ . " --dont-line-up-parentheses"
                 \ . " --k-and-r-style"
+                \ . " --line-length80"
                 \ . " --no-tabs"
                 \ . " -bfde"
                 \ . l:file
