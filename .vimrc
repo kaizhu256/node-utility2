@@ -173,7 +173,6 @@ nnoremap <silent> #/ :call MyCommentRegion("/")<cr>
 nnoremap <silent> #: :call MyCommentRegion(":")<cr>
 nnoremap <silent> #<char-0x23> :call MyCommentRegion("#")<cr>
 nnoremap <silent> #u :call MyCommentRegion("u")<cr>
-nnoremap <silent> <c-s><c-l> :call MySaveAndLint("")<cr>
 "" visual-mode remap
 vnoremap <silent> "+ <esc> :call MyStringifyRegion("+")<cr>
 vnoremap <silent> "\ <esc> :call MyStringifyRegion("\\")<cr>
@@ -311,9 +310,11 @@ function! MySaveAndLint(bang)
             \ . " \"" . $HOME . "/.vim/cpplint.py\""
             \ . l:file
     elseif &filetype == "javascript"
-        \ && filereadable(expand("~/.vim/jslint.mjs"))
         "" jslint file
-        SaveAndJslint
+        if filereadable(expand("~/.vim/jslint.vim"))
+            SaveAndJslint
+        endif
+        return
     else
         return
     endif
@@ -324,3 +325,7 @@ function! MySaveAndLint(bang)
     cwindow
     redraw!
 endfunction
+
+inoremap <c-s><c-l> <esc> :MySaveAndLint <cr>
+nnoremap <c-s><c-l> <esc> :MySaveAndLint <cr>
+vnoremap <c-s><c-l> <esc> :MySaveAndLint <cr>
