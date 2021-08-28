@@ -251,35 +251,7 @@ endfunction
 "" init command :CpplintFileAfterSave
 command! -nargs=* -bang CpplintFileAfterSave call s:CpplintFileAfterSave("<bang>")
 
-
-
-"" colorscheme desert
-"" set columns=80
-"" set lines=40
-
-"" this function will jslint the file of current buffer after saving it.
-"" before using, please save jslint.mjs to ~/.vim/jslint.mjs, e.g.:
-"" curl -L https://www.jslint.com/jslint.mjs > ~/.vim/jslint.mjs
-function! s:JslintFileAfterSave(bang)
-    if a:bang == "!"
-        write!
-    else
-        write
-    endif
-    let &l:makeprg = "node"
-        \ . " \"" . $HOME . "/.vim/jslint.mjs\""
-        \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
-        \ . " --mode-vim-plugin"
-    let &l:errorformat = "%f:%n:%l:%c:%m"
-    silent make!
-    cwindow
-    redraw!
-endfunction
-
-"" init command :JslintFileAfterSave
-command! -nargs=* -bang JslintFileAfterSave call s:JslintFileAfterSave("<bang>")
-
-
+source ~/.vim/jslint.vim
 
 "" init command :MySaveAndLint
 command! -nargs=* -bang MySaveAndLint call MySaveAndLint("<bang>")
@@ -341,12 +313,7 @@ function! MySaveAndLint(bang)
     elseif &filetype == "javascript"
         \ && filereadable(expand("~/.vim/jslint.mjs"))
         "" jslint file
-        let &l:errorformat = "%f:%n:%l:%c:%m"
-        let &l:makeprg = &l:makeprg
-            \ . " node"
-            \ . " \"" . $HOME . "/.vim/jslint.mjs\""
-            \ . " \"" . fnamemodify(bufname("%"), ":p") . "\""
-            \ . " --mode-vim-plugin"
+        SaveAndJslint
     else
         return
     endif
