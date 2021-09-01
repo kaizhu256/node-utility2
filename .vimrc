@@ -29,6 +29,9 @@ augroup My
     autocmd!
     "" autochdir
     autocmd BufEnter * silent! lcd %:p:h
+    "" syntax=c
+    autocmd BufNewFile,BufRead *.h
+        \ setlocal filetype=c
     "" syntax=javascript
     autocmd BufNewFile,BufRead *.cjs,*.js,*.json,*.mjs
         \ setlocal filetype=javascript
